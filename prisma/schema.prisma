@@ -17,6 +17,11 @@ model Organization {
   revealPassword      String?
   revealBaseUrl       String   @default("https://fim.api.us.fleetmatics.com")
   revealOnsiteMeters  Int      @default(400)
+  birdApiKey          String?
+  birdFrom            String?
+  birdWorkspaceId     String?
+  birdChannelId       String?
+  birdSmsEnabled      Boolean  @default(false)
   users               User[]
   farmers             Farmer[]
   pivots              Pivot[]
@@ -33,6 +38,7 @@ model User {
   passwordHash   String
   name           String
   role           String
+  phone          String?
   farmerId       String?
   farmer         Farmer?      @relation(fields: [farmerId], references: [id], onDelete: SetNull)
   tickets        Ticket[]              @relation("TechnicianTickets")
@@ -60,6 +66,17 @@ model Farmer {
   users          User[]
   pivots         Pivot[]
   tickets        Ticket[]
+  contacts       FarmerContact[]
+}
+
+model FarmerContact {
+  id        String   @id @default(cuid())
+  farmerId  String
+  farmer    Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  name      String
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
 }
 
 model Pivot {

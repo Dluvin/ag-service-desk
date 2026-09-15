@@ -21,6 +21,12 @@ async function main() {
       phone: "402-555-0142",
       email: "tom@greenacres.farm",
       address: "14820 County Road 12, York, NE",
+      contacts: {
+        create: [
+          { name: "Tom Walsh", phone: "402-555-0142", email: "tom@greenacres.farm" },
+          { name: "Mary Walsh", phone: "402-555-0143", email: "mary@greenacres.farm" },
+        ],
+      },
     },
   });
   const riverside = await prisma.farmer.create({
@@ -30,6 +36,9 @@ async function main() {
       phone: "402-555-0198",
       email: "pat@riverside.farm",
       address: "880 Platte River Rd, Grand Island, NE",
+      contacts: {
+        create: { name: "Pat Nguyen", phone: "402-555-0198", email: "pat@riverside.farm" },
+      },
     },
   });
   const sandhill = await prisma.farmer.create({
@@ -39,6 +48,9 @@ async function main() {
       phone: "308-555-0110",
       email: "dana@sandhill.farm",
       address: "Thedford, NE",
+      contacts: {
+        create: { name: "Dana Brooks", phone: "308-555-0110", email: "dana@sandhill.farm" },
+      },
     },
   });
 
@@ -58,6 +70,7 @@ async function main() {
       email: "mike@heartland.ag",
       role: "TECHNICIAN",
       passwordHash,
+      phone: "402-555-0188",
     },
   });
   await prisma.user.create({
@@ -67,6 +80,7 @@ async function main() {
       email: "lisa@heartland.ag",
       role: "TECHNICIAN",
       passwordHash,
+      phone: "402-555-0189",
     },
   });
   await prisma.user.create({

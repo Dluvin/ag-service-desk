@@ -18,9 +18,10 @@ export function Nav({ session }: { session: SessionUser }) {
   }
   if (session.role === ROLES.ADMIN) {
     links.push({ href: "/parts", label: "Parts" });
-    links.push({ href: "/farmers", label: "Farmers" });
+    links.push({ href: "/farmers", label: "Farms" });
     links.push({ href: "/technicians", label: "Technicians" });
     links.push({ href: "/reveal", label: "Reveal GPS" });
+    links.push({ href: "/sms", label: "SMS" });
   } else if (session.role === ROLES.TECHNICIAN) {
     links.push({ href: "/parts", label: "Parts" });
   }

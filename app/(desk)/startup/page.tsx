@@ -35,7 +35,7 @@ export default async function StartupBoardPage() {
           <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
               <th className="px-4 py-2">Pivot</th>
-              <th className="px-4 py-2">Farmer</th>
+              <th className="px-4 py-2">Farm</th>
               <th className="px-4 py-2">Status</th>
               <th className="px-4 py-2" />
             </tr>

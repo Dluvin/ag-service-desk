@@ -16,7 +16,7 @@ export default async function ClosedTicketPrintPage({ params }: { params: Promis
     where: { id, ...ticketWhere(session) },
     include: {
       organization: true,
-      farmer: true,
+      farmer: { include: { contacts: { orderBy: { name: "asc" } } } },
       pivot: true,
       technician: true,
       updates: { include: { user: true }, orderBy: { createdAt: "asc" } },

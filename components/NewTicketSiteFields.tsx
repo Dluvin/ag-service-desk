@@ -77,7 +77,7 @@ export function NewTicketSiteFields({
                     onChange={() => setFarmerMode("existing")}
                     disabled={farmers.length === 0}
                   />
-                  Existing farmer
+                  Existing farm
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -87,14 +87,14 @@ export function NewTicketSiteFields({
                     checked={farmerMode === "new"}
                     onChange={() => setFarmerMode("new")}
                   />
-                  New farmer
+                  New farm
                 </label>
               </fieldset>
               {farmerMode === "existing" ? (
                 <label className="block text-sm font-medium">
-                  Farmer / client
+                  Farm
                   <select name="farmerId" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
-                    <option value="">Select farmer</option>
+                    <option value="">Select farm</option>
                     {farmers.map((farmer) => (
                       <option key={farmer.id} value={farmer.id}>
                         {farmer.name}
@@ -108,6 +108,14 @@ export function NewTicketSiteFields({
                     Farm name
                     <input name="farmerName" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
                   </label>
+                  <label className="block text-sm font-medium sm:col-span-2">
+                    Address
+                    <input name="farmerAddress" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                  </label>
+                  <label className="block text-sm font-medium sm:col-span-2">
+                    Contact name
+                    <input name="farmerContactName" placeholder="Person at the farm" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                  </label>
                   <label className="block text-sm font-medium">
                     Phone
                     <input name="farmerPhone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
@@ -116,10 +124,6 @@ export function NewTicketSiteFields({
                     Email
                     <input name="farmerEmail" type="email" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
                   </label>
-                  <label className="block text-sm font-medium sm:col-span-2">
-                    Address
-                    <input name="farmerAddress" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-                  </label>
                 </div>
               )}
             </>
@@ -127,7 +131,7 @@ export function NewTicketSiteFields({
             <label className="block text-sm font-medium">
               Farmer / client
               <select name="farmerId" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
-                <option value="">Select farmer</option>
+                <option value="">Select farm</option>
                 {farmers.map((farmer) => (
                   <option key={farmer.id} value={farmer.id}>
                     {farmer.name}

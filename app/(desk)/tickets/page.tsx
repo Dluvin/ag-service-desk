@@ -29,7 +29,7 @@ export default async function TicketsPage() {
           <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
               <th className="px-4 py-2">Ticket</th>
-              <th className="px-4 py-2">Farmer / pivot</th>
+              <th className="px-4 py-2">Farm / pivot</th>
               <th className="px-4 py-2">Technician</th>
               <th className="px-4 py-2">Priority</th>
               <th className="px-4 py-2">Status</th>

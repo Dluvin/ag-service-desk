@@ -35,10 +35,21 @@ export default async function TechniciansPage() {
             <li key={tech.id} className="px-4 py-3">
               <p className="font-semibold">{tech.name}</p>
               <p className="text-sm text-stone-600">
-                {tech.email} · {tech.tickets.length} active ticket(s)
+                {tech.email}
+                {tech.phone ? ` · ${tech.phone}` : " · no SMS phone"}
+                {` · ${tech.tickets.length} active ticket(s)`}
               </p>
               <ActionForm action={updateTechnicianVehicleAction} className="mt-2 flex flex-wrap items-end gap-2">
                 <input type="hidden" name="technicianId" value={tech.id} />
+                <label className="block min-w-40 flex-1 text-xs font-medium">
+                  Mobile for SMS
+                  <input
+                    name="phone"
+                    defaultValue={tech.phone ?? ""}
+                    placeholder="402-555-0100"
+                    className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1 text-sm"
+                  />
+                </label>
                 <label className="block min-w-56 flex-1 text-xs font-medium">
                   Reveal vehicle
                   {vehicles.length > 0 ? (
@@ -85,6 +96,10 @@ export default async function TechniciansPage() {
           <label className="block text-sm font-medium">
             Password
             <input name="password" type="password" minLength={8} required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+          </label>
+          <label className="block text-sm font-medium">
+            Mobile for SMS
+            <input name="phone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Optional" />
           </label>
           <label className="block text-sm font-medium">
             Reveal vehicle number

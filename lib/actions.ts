@@ -12,9 +12,36 @@ import { parseQuickbooksExport } from "./quickbooks";
 import { parseAgSenseExport } from "./agsense";
 import { closeOpenSiteVisits } from "./onsite";
 import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, listRevealVehicles } from "./reveal";
+import { notifyTicketSms } from "./ticket-sms";
+import { sendBirdSms, toE164 } from "./bird";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
+}
+
+function createFarmWithContact(
+  organizationId: string,
+  input: { name: string; address?: string; contactName?: string; phone?: string; email?: string },
+) {
+  const contactName = input.contactName || input.name;
+  const phone = input.phone || null;
+  const email = input.email || null;
+  return prisma.farmer.create({
+    data: {
+      organizationId,
+      name: input.name,
+      phone,
+      email,
+      address: input.address || null,
+      contacts: {
+        create: {
+          name: contactName,
+          phone,
+          email,
+        },
+      },
+    },
+  });
 }
 
 export async function loginAction(formData: FormData) {
@@ -83,16 +110,14 @@ export async function createFarmerAction(formData: FormData) {
   const address = formString(formData, "address");
   const loginEmail = formString(formData, "loginEmail").toLowerCase();
   const loginPassword = formString(formData, "loginPassword");
-  if (!name) return { error: "Farmer name is required." };
+  if (!name) return { error: "Farm name is required." };
 
-  const farmer = await prisma.farmer.create({
-    data: {
-      organizationId: session.organizationId,
-      name,
-      phone: phone || null,
-      email: email || null,
-      address: address || null,
-    },
+  const farmer = await createFarmWithContact(session.organizationId, {
+    name,
+    address,
+    contactName: formString(formData, "contactName"),
+    phone: formString(formData, "contactPhone") || phone,
+    email: formString(formData, "contactEmail").toLowerCase() || email,
   });
 
   if (loginEmail && loginPassword.length >= 8) {
@@ -111,6 +136,32 @@ export async function createFarmerAction(formData: FormData) {
   redirect(`/farmers/${farmer.id}`);
 }
 
+export async function addFarmerContactAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role === ROLES.FARMER) return { error: "Ask the service company to update farm contacts." };
+
+  const farmerId = formString(formData, "farmerId");
+  const name = formString(formData, "contactName");
+  const email = formString(formData, "contactEmail").toLowerCase();
+  const phone = formString(formData, "contactPhone");
+  if (!name) return { error: "Contact name is required." };
+
+  const farmer = await prisma.farmer.findFirst({
+    where: { id: farmerId, organizationId: session.organizationId },
+  });
+  if (!farmer) return { error: "Farm not found." };
+
+  await prisma.farmerContact.create({
+    data: {
+      farmerId,
+      name,
+      email: email || null,
+      phone: phone || null,
+    },
+  });
+  redirect(`/farmers/${farmerId}`);
+}
+
 export async function createTechnicianAction(formData: FormData) {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can add technicians." };
@@ -118,6 +169,7 @@ export async function createTechnicianAction(formData: FormData) {
   const name = formString(formData, "name");
   const email = formString(formData, "email").toLowerCase();
   const password = formString(formData, "password");
+  const phone = formString(formData, "phone");
   const revealVehicleNumber = formString(formData, "revealVehicleNumber");
   if (!name || !email || password.length < 8) {
     return { error: "Name, email, and an 8+ character password are required." };
@@ -130,6 +182,7 @@ export async function createTechnicianAction(formData: FormData) {
       email,
       role: ROLES.TECHNICIAN,
       passwordHash: await bcrypt.hash(password, 10),
+      phone: phone || null,
       revealVehicleNumber: revealVehicleNumber || null,
     },
   });
@@ -158,25 +211,23 @@ export async function createPivotAction(formData: FormData) {
   let farmerId = formString(formData, "farmerId");
   if (formString(formData, "farmerMode") === "new") {
     const farmerName = formString(formData, "farmerName");
-    if (!farmerName) return { error: "Farmer name is required." };
-    const created = await prisma.farmer.create({
-      data: {
-        organizationId: session.organizationId,
-        name: farmerName,
-        phone: formString(formData, "farmerPhone") || null,
-        email: formString(formData, "farmerEmail").toLowerCase() || null,
-        address: formString(formData, "farmerAddress") || null,
-      },
+    if (!farmerName) return { error: "Farm name is required." };
+    const created = await createFarmWithContact(session.organizationId, {
+      name: farmerName,
+      address: formString(formData, "farmerAddress"),
+      contactName: formString(formData, "farmerContactName"),
+      phone: formString(formData, "farmerPhone"),
+      email: formString(formData, "farmerEmail").toLowerCase(),
     });
     farmerId = created.id;
   }
 
-  if (!farmerId) return { error: "Select a farmer or add a new one." };
+  if (!farmerId) return { error: "Select a farm or add a new one." };
 
   const farmer = await prisma.farmer.findFirst({
     where: { id: farmerId, organizationId: session.organizationId },
   });
-  if (!farmer) return { error: "Farmer not found." };
+  if (!farmer) return { error: "Farm not found." };
 
   const pivot = await prisma.pivot.create({
     data: {
@@ -251,24 +302,22 @@ export async function createTicketAction(formData: FormData) {
       farmerId = session.farmerId ?? "";
     } else if (formString(formData, "farmerMode") === "new") {
       const farmerName = formString(formData, "farmerName");
-      if (!farmerName) return { error: "Farmer name is required." };
-      const farmer = await prisma.farmer.create({
-        data: {
-          organizationId: session.organizationId,
-          name: farmerName,
-          phone: formString(formData, "farmerPhone") || null,
-          email: formString(formData, "farmerEmail").toLowerCase() || null,
-          address: formString(formData, "farmerAddress") || null,
-        },
+      if (!farmerName) return { error: "Farm name is required." };
+      const farmer = await createFarmWithContact(session.organizationId, {
+        name: farmerName,
+        address: formString(formData, "farmerAddress"),
+        contactName: formString(formData, "farmerContactName"),
+        phone: formString(formData, "farmerPhone"),
+        email: formString(formData, "farmerEmail").toLowerCase(),
       });
       farmerId = farmer.id;
     }
 
-    if (!farmerId) return { error: "Select a farmer or add a new one." };
+    if (!farmerId) return { error: "Select a farm or add a new one." };
     const farmer = await prisma.farmer.findFirst({
       where: { id: farmerId, organizationId: session.organizationId },
     });
-    if (!farmer) return { error: "Farmer not found." };
+    if (!farmer) return { error: "Farm not found." };
 
     pivot = await prisma.pivot.create({
       data: {
@@ -309,6 +358,14 @@ export async function createTicketAction(formData: FormData) {
     description,
     priority,
   });
+  if (assigned) {
+    await notifyTicketSms({
+      organizationId: session.organizationId,
+      ticketId: ticket.id,
+      kind: "assigned",
+      actorUserId: session.userId,
+    });
+  }
   redirect(`/tickets/${ticket.id}`);
 }
 
@@ -329,6 +386,13 @@ export async function updateTicketAction(formData: FormData) {
     if (!message) return { error: "Add a note for the service team." };
     await prisma.ticketUpdate.create({
       data: { ticketId, userId: session.userId, message },
+    });
+    await notifyTicketSms({
+      organizationId: session.organizationId,
+      ticketId,
+      kind: "updated",
+      actorUserId: session.userId,
+      note: message,
     });
     redirect(`/tickets/${ticketId}`);
   }
@@ -361,6 +425,7 @@ export async function updateTicketAction(formData: FormData) {
       ? technicianId || null
       : ticket.technicianId;
 
+  const previousTech = ticket.technicianId;
   await prisma.ticket.update({
     where: { id: ticketId },
     data: {
@@ -374,15 +439,22 @@ export async function updateTicketAction(formData: FormData) {
     await closeOpenSiteVisits(ticketId);
   }
 
+  const note = message || `Status set to ${status.replaceAll("_", " ").toLowerCase()}.`;
   await prisma.ticketUpdate.create({
     data: {
       ticketId,
       userId: session.userId,
-      message: message || `Status set to ${status.replaceAll("_", " ").toLowerCase()}.`,
+      message: note,
       status,
     },
   });
-
+  await notifyTicketSms({
+    organizationId: session.organizationId,
+    ticketId,
+    kind: nextTech && nextTech !== previousTech ? "assigned" : "updated",
+    actorUserId: session.userId,
+    note,
+  });
   redirect(`/tickets/${ticketId}`);
 }
 
@@ -412,6 +484,7 @@ export async function assignTicketAction(formData: FormData) {
     return { error: "Close this ticket from the ticket page and enter an invoice number." };
   }
 
+  const previousTech = ticket.technicianId;
   await prisma.ticket.update({
     where: { id: ticketId },
     data: { technicianId: nextTech, status: nextStatus },
@@ -423,6 +496,13 @@ export async function assignTicketAction(formData: FormData) {
       message: "Updated from the dispatch board.",
       status: nextStatus,
     },
+  });
+  await notifyTicketSms({
+    organizationId: session.organizationId,
+    ticketId,
+    kind: nextTech && nextTech !== previousTech ? "assigned" : "updated",
+    actorUserId: session.userId,
+    note: "Updated from the dispatch board.",
   });
   redirect("/dispatch");
 }
@@ -750,6 +830,13 @@ export async function saveStartupChecksAction(formData: FormData) {
       priority: "HIGH",
     });
     ticketId = ticket.id;
+    await notifyTicketSms({
+      organizationId: session.organizationId,
+      ticketId: ticket.id,
+      kind: "assigned",
+      actorUserId: session.userId,
+      note: ticket.description,
+    });
   }
 
   await prisma.startupInspection.update({
@@ -770,6 +857,7 @@ export async function updateTechnicianVehicleAction(formData: FormData) {
 
   const technicianId = formString(formData, "technicianId");
   const revealVehicleNumber = formString(formData, "revealVehicleNumber");
+  const phone = formString(formData, "phone");
   const tech = await prisma.user.findFirst({
     where: { id: technicianId, organizationId: session.organizationId, role: ROLES.TECHNICIAN },
   });
@@ -777,7 +865,10 @@ export async function updateTechnicianVehicleAction(formData: FormData) {
 
   await prisma.user.update({
     where: { id: technicianId },
-    data: { revealVehicleNumber: revealVehicleNumber || null },
+    data: {
+      revealVehicleNumber: revealVehicleNumber || null,
+      phone: phone || null,
+    },
   });
   redirect("/technicians");
 }
@@ -831,4 +922,65 @@ export async function testRevealConnectionAction() {
 
 export async function currentUser() {
   return getSession();
+}
+
+export async function saveBirdSettingsAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can save Bird SMS settings." };
+
+  const apiKey = formString(formData, "birdApiKey");
+  const from = formString(formData, "birdFrom");
+  const workspaceId = formString(formData, "birdWorkspaceId");
+  const channelId = formString(formData, "birdChannelId");
+  const enabled = formString(formData, "birdSmsEnabled") === "on";
+
+  const existing = await prisma.organization.findUnique({ where: { id: session.organizationId } });
+  if (!existing) return { error: "Company not found." };
+  const nextKey = apiKey || existing.birdApiKey;
+  if (enabled && !nextKey) return { error: "Paste a Bird API key before turning SMS on." };
+  if (enabled && nextKey?.startsWith("bk_") && !from) {
+    return { error: "Sender ID or from-number is required for Bird SMS keys." };
+  }
+  if (enabled && nextKey && !nextKey.startsWith("bk_") && (!workspaceId || !channelId)) {
+    return { error: "Access Key sends need a workspace ID and SMS channel ID." };
+  }
+
+  await prisma.organization.update({
+    where: { id: session.organizationId },
+    data: {
+      birdApiKey: nextKey,
+      birdFrom: from || null,
+      birdWorkspaceId: workspaceId || null,
+      birdChannelId: channelId || null,
+      birdSmsEnabled: enabled,
+    },
+  });
+  redirect("/sms");
+}
+
+export async function testBirdSmsAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can send a test SMS." };
+
+  const to = toE164(formString(formData, "testPhone"));
+  if (!to) return { error: "Enter a valid mobile number." };
+
+  const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
+  if (!org?.birdApiKey) return { error: "Save a Bird API key first." };
+
+  try {
+    await sendBirdSms(
+      {
+        apiKey: org.birdApiKey,
+        from: org.birdFrom || org.name.slice(0, 11),
+        workspaceId: org.birdWorkspaceId || "",
+        channelId: org.birdChannelId || "",
+      },
+      to,
+      `${org.name}: test SMS from AG Service Desk.`,
+    );
+    return { ok: `Test accepted for ${to}.` };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Bird SMS failed." };
+  }
 }

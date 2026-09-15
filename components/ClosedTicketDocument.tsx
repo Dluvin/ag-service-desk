@@ -12,7 +12,13 @@ type PrintTicket = {
   closedAt: Date | null;
   updatedAt: Date;
   organization: { name: string };
-  farmer: { name: string; phone: string | null; email: string | null; address: string | null };
+  farmer: {
+    name: string;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+    contacts?: { name: string; phone: string | null; email: string | null }[];
+  };
   pivot: { name: string; serialNumber: string | null; latitude: number; longitude: number; locationNote: string | null };
   technician: { name: string } | null;
   siteVisits?: { startedAt: Date; endedAt: Date | null }[];
@@ -56,11 +62,19 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2 text-sm">
         <section>
-          <h2 className="font-display text-lg">Farmer / client</h2>
+          <h2 className="font-display text-lg">Farm</h2>
           <p className="font-medium">{ticket.farmer.name}</p>
           {ticket.farmer.address ? <p>{ticket.farmer.address}</p> : null}
-          {ticket.farmer.phone ? <p>{ticket.farmer.phone}</p> : null}
-          {ticket.farmer.email ? <p>{ticket.farmer.email}</p> : null}
+          {(ticket.farmer.contacts?.length
+            ? ticket.farmer.contacts
+            : [{ name: ticket.farmer.name, phone: ticket.farmer.phone, email: ticket.farmer.email }]
+          ).map((contact, index) => (
+            <p key={`${contact.name}-${index}`} className="mt-2">
+              <span className="font-medium">{contact.name}</span>
+              {contact.phone ? ` · ${contact.phone}` : ""}
+              {contact.email ? ` · ${contact.email}` : ""}
+            </p>
+          ))}
         </section>
         <section>
           <h2 className="font-display text-lg">Pivot</h2>

@@ -46,7 +46,7 @@ export default async function DashboardPage() {
         <Stat label="Active tickets" value={String(openTickets.length)} />
         <Stat label="Pivots" value={String(pivots)} />
         <Stat
-          label={session.role === ROLES.ADMIN ? "Farmers / techs" : "Your role"}
+          label={session.role === ROLES.ADMIN ? "Farms / techs" : "Your role"}
           value={
             session.role === ROLES.ADMIN
               ? `${farmers} / ${techs}`

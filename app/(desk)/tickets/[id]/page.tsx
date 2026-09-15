@@ -20,7 +20,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   const ticket = await prisma.ticket.findFirst({
     where: { id, ...ticketWhere(session) },
     include: {
-      farmer: true,
+      farmer: { include: { contacts: { orderBy: { name: "asc" } } } },
       pivot: true,
       technician: true,
       updates: { include: { user: true }, orderBy: { createdAt: "asc" } },
@@ -66,6 +66,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           <Link href={`/farmers/${ticket.farmerId}`} className="text-emerald-800 hover:underline">
             {ticket.farmer.name}
           </Link>
+          {ticket.farmer.contacts.length
+            ? ` · ${ticket.farmer.contacts.map((contact) => [contact.name, contact.phone].filter(Boolean).join(" ")).join("; ")}`
+            : ticket.farmer.phone
+              ? ` · ${ticket.farmer.phone}`
+              : ""}
           {" · "}
           <Link href={`/pivots/${ticket.pivotId}`} className="text-emerald-800 hover:underline">
             {ticket.pivot.name}
