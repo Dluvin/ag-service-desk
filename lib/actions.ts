@@ -141,7 +141,6 @@ export async function createPivotAction(formData: FormData) {
   if (session.role === ROLES.FARMER) return { error: "Farmers cannot add pivots." };
 
   const name = formString(formData, "name");
-  const farmerId = formString(formData, "farmerId");
   const serialNumber = formString(formData, "serialNumber");
   const locationNote = formString(formData, "locationNote");
   const mapsInput = formString(formData, "mapsInput");
@@ -152,9 +151,27 @@ export async function createPivotAction(formData: FormData) {
   const lat = parsed?.latitude ?? latitude;
   const lng = parsed?.longitude ?? longitude;
 
-  if (!name || !farmerId || Number.isNaN(lat) || Number.isNaN(lng)) {
-    return { error: "Name, farmer, and a Google Maps location are required." };
+  if (!name || Number.isNaN(lat) || Number.isNaN(lng)) {
+    return { error: "Name and a map location are required." };
   }
+
+  let farmerId = formString(formData, "farmerId");
+  if (formString(formData, "farmerMode") === "new") {
+    const farmerName = formString(formData, "farmerName");
+    if (!farmerName) return { error: "Farmer name is required." };
+    const created = await prisma.farmer.create({
+      data: {
+        organizationId: session.organizationId,
+        name: farmerName,
+        phone: formString(formData, "farmerPhone") || null,
+        email: formString(formData, "farmerEmail").toLowerCase() || null,
+        address: formString(formData, "farmerAddress") || null,
+      },
+    });
+    farmerId = created.id;
+  }
+
+  if (!farmerId) return { error: "Select a farmer or add a new one." };
 
   const farmer = await prisma.farmer.findFirst({
     where: { id: farmerId, organizationId: session.organizationId },
@@ -197,27 +214,86 @@ export async function addPivotNoteAction(formData: FormData) {
 
 export async function createTicketAction(formData: FormData) {
   const session = await requireSession();
-  const pivotId = formString(formData, "pivotId");
   const title = formString(formData, "title");
   const description = formString(formData, "description");
   const priority = formString(formData, "priority") || "NORMAL";
   const technicianId = formString(formData, "technicianId") || null;
+  const siteMode = formString(formData, "siteMode") || "existing";
 
-  if (!pivotId || !title || !description) {
-    return { error: "Pivot, title, and description are required." };
+  if (!title || !description) {
+    return { error: "Title and description are required." };
   }
   if (!PRIORITIES.includes(priority as (typeof PRIORITIES)[number])) {
     return { error: "Invalid priority." };
   }
 
-  const pivot = await prisma.pivot.findFirst({
-    where: { id: pivotId, organizationId: session.organizationId },
-    include: { farmer: true },
-  });
-  if (!pivot) return { error: "Pivot not found." };
-  if (session.role === ROLES.FARMER && session.farmerId !== pivot.farmerId) {
-    return { error: "You can only open tickets on your own pivots." };
+  let pivot = null as Awaited<ReturnType<typeof prisma.pivot.findFirst>>;
+
+  if (siteMode === "new") {
+    if (session.role === ROLES.FARMER && !session.farmerId) {
+      return { error: "Your farmer account is not linked." };
+    }
+
+    const pivotName = formString(formData, "pivotName");
+    const serialNumber = formString(formData, "serialNumber");
+    const mapsInput = formString(formData, "mapsInput");
+    const latitude = Number(formString(formData, "latitude"));
+    const longitude = Number(formString(formData, "longitude"));
+    const parsed = mapsInput ? parseMapsLocation(mapsInput) : null;
+    const lat = parsed?.latitude ?? latitude;
+    const lng = parsed?.longitude ?? longitude;
+    if (!pivotName || Number.isNaN(lat) || Number.isNaN(lng)) {
+      return { error: "Pivot name and a map location are required." };
+    }
+
+    let farmerId = formString(formData, "farmerId");
+    if (session.role === ROLES.FARMER) {
+      farmerId = session.farmerId ?? "";
+    } else if (formString(formData, "farmerMode") === "new") {
+      const farmerName = formString(formData, "farmerName");
+      if (!farmerName) return { error: "Farmer name is required." };
+      const farmer = await prisma.farmer.create({
+        data: {
+          organizationId: session.organizationId,
+          name: farmerName,
+          phone: formString(formData, "farmerPhone") || null,
+          email: formString(formData, "farmerEmail").toLowerCase() || null,
+          address: formString(formData, "farmerAddress") || null,
+        },
+      });
+      farmerId = farmer.id;
+    }
+
+    if (!farmerId) return { error: "Select a farmer or add a new one." };
+    const farmer = await prisma.farmer.findFirst({
+      where: { id: farmerId, organizationId: session.organizationId },
+    });
+    if (!farmer) return { error: "Farmer not found." };
+
+    pivot = await prisma.pivot.create({
+      data: {
+        organizationId: session.organizationId,
+        farmerId,
+        name: pivotName,
+        latitude: lat,
+        longitude: lng,
+        serialNumber: serialNumber || null,
+        locationNote: mapsInput || null,
+      },
+    });
+  } else {
+    const pivotId = formString(formData, "pivotId");
+    if (!pivotId) return { error: "Select a pivot or add a new location." };
+    pivot = await prisma.pivot.findFirst({
+      where: { id: pivotId, organizationId: session.organizationId },
+    });
+    if (!pivot) return { error: "Pivot not found." };
+    if (session.role === ROLES.FARMER && session.farmerId !== pivot.farmerId) {
+      return { error: "You can only open tickets on your own pivots." };
+    }
   }
+
+  if (!pivot) return { error: "Pivot not found." };
 
   let assigned: string | null = technicianId;
   if (session.role === ROLES.FARMER) assigned = null;
