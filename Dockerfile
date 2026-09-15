@@ -13,7 +13,7 @@ RUN DATABASE_URL="file:./build.db" npx prisma generate \
   && DATABASE_URL="file:./build.db" npx prisma db push \
   && DATABASE_URL="file:./build.db" npm run build
 
-RUN mkdir -p /data
+RUN mkdir -p /data /data/uploads
 
 ENV NODE_ENV=production
 EXPOSE 3000

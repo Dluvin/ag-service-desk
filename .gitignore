@@ -38,6 +38,15 @@ yarn-error.log*
 /prisma/*.db
 /prisma/*.db-journal
 
+# ticket photos
+/uploads
+
+# one-off imports
+/tmp-import.xlsx
+/tmp-import.csv
+/tmp-maps-cache.json
+/tmp-service-call-pivots.csv
+
 # vercel
 .vercel
 

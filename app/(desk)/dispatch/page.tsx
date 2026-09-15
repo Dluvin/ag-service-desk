@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
-import { DISPATCH_STATUSES, ROLES, TICKET_STATUSES, STATUS_LABELS, isFinishedStatus, type TicketStatus } from "@/lib/roles";
+import { DISPATCH_STATUSES, ROLES, TICKET_STATUSES, STATUS_LABELS, canAssignTickets, isFinishedStatus, type TicketStatus } from "@/lib/roles";
 import { assignTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { PriorityBadge } from "@/components/Badges";
@@ -59,7 +59,7 @@ export default async function DispatchPage() {
                     </div>
                     <ActionForm action={assignTicketAction} className="mt-2 space-y-2">
                       <input type="hidden" name="ticketId" value={ticket.id} />
-                      {session.role === ROLES.ADMIN ? (
+                      {canAssignTickets(session.role) ? (
                         <select
                           name="technicianId"
                           defaultValue={ticket.technicianId ?? ""}

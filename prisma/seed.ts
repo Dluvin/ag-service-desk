@@ -63,6 +63,16 @@ async function main() {
       passwordHash,
     },
   });
+  await prisma.user.create({
+    data: {
+      organizationId: heartland.id,
+      name: "Chris Hale",
+      email: "manager@heartland.ag",
+      role: "MANAGER",
+      passwordHash,
+      phone: "402-555-0170",
+    },
+  });
   const mike = await prisma.user.create({
     data: {
       organizationId: heartland.id,

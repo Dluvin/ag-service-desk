@@ -23,10 +23,10 @@ export default async function DashboardPage() {
       orderBy: { updatedAt: "desc" },
     }),
     prisma.pivot.count({ where: pivotWhere(session) }),
-    session.role === ROLES.ADMIN
+    session.role === ROLES.ADMIN || session.role === ROLES.MANAGER
       ? prisma.farmer.count({ where: { organizationId: session.organizationId } })
       : Promise.resolve(null),
-    session.role === ROLES.ADMIN
+    session.role === ROLES.ADMIN || session.role === ROLES.MANAGER
       ? prisma.user.count({ where: { organizationId: session.organizationId, role: ROLES.TECHNICIAN } })
       : Promise.resolve(null),
   ]);
@@ -46,9 +46,9 @@ export default async function DashboardPage() {
         <Stat label="Active tickets" value={String(openTickets.length)} />
         <Stat label="Pivots" value={String(pivots)} />
         <Stat
-          label={session.role === ROLES.ADMIN ? "Farms / techs" : "Your role"}
+          label={session.role === ROLES.ADMIN || session.role === ROLES.MANAGER ? "Farms / techs" : "Your role"}
           value={
-            session.role === ROLES.ADMIN
+            session.role === ROLES.ADMIN || session.role === ROLES.MANAGER
               ? `${farmers} / ${techs}`
               : session.role === ROLES.TECHNICIAN
                 ? "Technician"

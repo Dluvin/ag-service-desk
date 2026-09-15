@@ -18,7 +18,7 @@ export default async function LoginPage() {
     <div className="flex min-h-full items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
         <h1 className="font-display text-3xl">Log in</h1>
-        <p className="mt-1 text-sm text-stone-600">Farmers, technicians, and company admins use the same door.</p>
+        <p className="mt-1 text-sm text-stone-600">Farmers, technicians, managers, and company admins use the same door.</p>
         {userCount === 0 ? (
           <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
             This host has no users yet. Demo emails from your PC will not work here.{" "}
@@ -51,6 +51,7 @@ export default async function LoginPage() {
           <div className="mt-6 rounded-lg bg-stone-50 p-3 text-xs text-stone-600">
             <p className="font-semibold text-stone-800">Demo (password: demo1234)</p>
             <p>Admin: admin@heartland.ag</p>
+            <p>Manager: manager@heartland.ag</p>
             <p>Technician: mike@heartland.ag</p>
             <p>Farmer: tom@greenacres.farm</p>
             <p>Second tenant admin: admin@prairie.ag</p>

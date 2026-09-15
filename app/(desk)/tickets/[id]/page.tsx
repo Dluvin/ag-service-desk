@@ -3,12 +3,15 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
-import { ROLES, STATUS_LABELS, isPrintableStatus } from "@/lib/roles";
-import { updateTicketAction, addTicketPartAction } from "@/lib/actions";
+import { ROLES, STATUS_LABELS, canAssignTickets, canDeleteRecords, isPrintableStatus, isShopStaff } from "@/lib/roles";
+import { updateTicketAction, addTicketPartAction, deleteTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { DeleteButton } from "@/components/DeleteButton";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
 import { PriorityBadge, StatusBadge } from "@/components/Badges";
 import { TicketStatusFields } from "@/components/TicketStatusFields";
+import { TicketPhotoFields } from "@/components/TicketPhotoFields";
+import { TicketPhotoGrid } from "@/components/TicketPhotoGrid";
 import { PartsPicker } from "@/components/PartsPicker";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
 
@@ -23,14 +26,15 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
       farmer: { include: { contacts: { orderBy: { name: "asc" } } } },
       pivot: true,
       technician: true,
-      updates: { include: { user: true }, orderBy: { createdAt: "asc" } },
-      parts: { include: { user: true }, orderBy: { createdAt: "asc" } },
-      siteVisits: { orderBy: { startedAt: "asc" } },
+        updates: { include: { user: true, photos: true }, orderBy: { createdAt: "asc" } },
+        parts: { include: { user: true }, orderBy: { createdAt: "asc" } },
+        siteVisits: { orderBy: { startedAt: "asc" } },
+        photos: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!ticket) notFound();
 
-  const technicians = session.role === ROLES.ADMIN ? await loadTechnicians(session.organizationId) : [];
+  const technicians = canAssignTickets(session.role) ? await loadTechnicians(session.organizationId) : [];
   const catalogParts =
     session.role === ROLES.FARMER
       ? []
@@ -39,7 +43,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           orderBy: { name: "asc" },
           select: { id: true, name: true, sku: true, price: true },
         });
-  const canDispatch = session.role === ROLES.ADMIN || session.role === ROLES.TECHNICIAN;
+  const canDispatch = isShopStaff(session.role);
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -59,6 +63,15 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             >
               Print ticket
             </Link>
+          ) : null}
+          {canDeleteRecords(session.role) ? (
+            <DeleteButton
+              action={deleteTicketAction}
+              name="ticketId"
+              value={ticket.id}
+              label="Delete ticket"
+              confirmText={`Delete ticket #${ticket.number}? This cannot be undone.`}
+            />
           ) : null}
         </div>
         <p className="mt-4 whitespace-pre-wrap text-stone-700">{ticket.description}</p>
@@ -106,16 +119,17 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 {update.status ? ` · ${STATUS_LABELS[update.status as keyof typeof STATUS_LABELS] ?? update.status}` : ""}
               </p>
               <p className="mt-1 text-sm text-stone-800">{update.message}</p>
+              <TicketPhotoGrid photos={update.photos} />
             </li>
           ))}
         </ol>
 
-        <ActionForm action={updateTicketAction} className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+        <ActionForm action={updateTicketAction} encType="multipart/form-data" className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
           <input type="hidden" name="ticketId" value={ticket.id} />
           {canDispatch ? (
             <>
               <TicketStatusFields status={ticket.status} invoiceNumber={ticket.invoiceNumber} />
-              {session.role === ROLES.ADMIN ? (
+              {canAssignTickets(session.role) ? (
                 <label className="block text-sm font-medium">
                   Technician
                   <select name="technicianId" defaultValue={ticket.technicianId ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
@@ -139,7 +153,6 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             <textarea
               name="message"
               rows={4}
-              required={!canDispatch}
               placeholder={
                 canDispatch
                   ? "What was done, parts needed, follow-up…"
@@ -148,10 +161,18 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
             />
           </label>
+          <TicketPhotoFields />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
             {canDispatch ? "Save update" : "Add to ticket"}
           </button>
         </ActionForm>
+
+        {ticket.photos.length > 0 ? (
+          <section className="mt-8">
+            <h2 className="font-display text-xl">Photos</h2>
+            <TicketPhotoGrid photos={ticket.photos} />
+          </section>
+        ) : null}
 
         <h2 className="font-display mt-8 text-xl">Parts used</h2>
         <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">

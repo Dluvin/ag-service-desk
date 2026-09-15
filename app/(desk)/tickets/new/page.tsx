@@ -2,10 +2,11 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pivotWhere, loadTechnicians } from "@/lib/scope";
-import { ROLES, PRIORITIES } from "@/lib/roles";
+import { PRIORITIES, ROLES, canAssignTickets, isShopStaff } from "@/lib/roles";
 import { createTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { NewTicketSiteFields } from "@/components/NewTicketSiteFields";
+import { TicketPhotoFields } from "@/components/TicketPhotoFields";
 
 export default async function NewTicketPage({
   searchParams,
@@ -40,9 +41,9 @@ export default async function NewTicketPage({
       <p className="mt-1 text-sm text-stone-600">
         {session.role === ROLES.FARMER
           ? "Pick one of your pivots or add a new location, then describe the problem. The shop will get the ticket."
-          : "Use an existing pivot, or add a new pivot (and a new farm if needed) and drop a pin on Google Maps."}
+          : "Pick a farm (start typing the name), then pick a pivot. You can still add a new pivot if needed."}
       </p>
-      <ActionForm action={createTicketAction} className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
+      <ActionForm action={createTicketAction} encType="multipart/form-data" className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
         <NewTicketSiteFields
           pivots={pivots.map((pivot) => ({
             id: pivot.id,
@@ -51,7 +52,7 @@ export default async function NewTicketPage({
             farmerId: pivot.farmerId,
           }))}
           farmers={farmers}
-          canAddFarmer={session.role === ROLES.ADMIN || session.role === ROLES.TECHNICIAN}
+          canAddFarmer={isShopStaff(session.role)}
           mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}
           lockedFarmerId={session.role === ROLES.FARMER ? session.farmerId : null}
           defaultPivotId={query.pivotId}
@@ -74,7 +75,7 @@ export default async function NewTicketPage({
             ))}
           </select>
         </label>
-        {session.role === ROLES.ADMIN ? (
+        {canAssignTickets(session.role) ? (
           <label className="block text-sm font-medium">
             Assign technician
             <select name="technicianId" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
@@ -87,6 +88,7 @@ export default async function NewTicketPage({
             </select>
           </label>
         ) : null}
+        <TicketPhotoFields />
         <button className="rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white">
           {session.role === ROLES.FARMER ? "Send to the shop" : "Create ticket"}
         </button>

@@ -20,10 +20,17 @@ export function Nav({ session }: { session: SessionUser }) {
     links.push({ href: "/parts", label: "Parts" });
     links.push({ href: "/farmers", label: "Farms" });
     links.push({ href: "/technicians", label: "Technicians" });
+    links.push({ href: "/managers", label: "Managers" });
+    links.push({ href: "/staff", label: "Staff" });
     links.push({ href: "/reveal", label: "Reveal GPS" });
     links.push({ href: "/sms", label: "SMS" });
+  } else if (session.role === ROLES.MANAGER) {
+    links.push({ href: "/parts", label: "Parts" });
+    links.push({ href: "/farmers", label: "Farms" });
+    links.push({ href: "/technicians", label: "Technicians" });
   } else if (session.role === ROLES.TECHNICIAN) {
     links.push({ href: "/parts", label: "Parts" });
+    links.push({ href: "/farmers", label: "Farms" });
   }
 
   return (

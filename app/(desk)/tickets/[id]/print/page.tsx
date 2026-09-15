@@ -19,7 +19,7 @@ export default async function ClosedTicketPrintPage({ params }: { params: Promis
       farmer: { include: { contacts: { orderBy: { name: "asc" } } } },
       pivot: true,
       technician: true,
-      updates: { include: { user: true }, orderBy: { createdAt: "asc" } },
+      updates: { include: { user: true, photos: true }, orderBy: { createdAt: "asc" } },
       parts: { orderBy: { createdAt: "asc" } },
       siteVisits: { orderBy: { startedAt: "asc" } },
     },

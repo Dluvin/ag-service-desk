@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pivotWhere } from "@/lib/scope";
-import { ROLES } from "@/lib/roles";
+import { canImportPivots, isShopStaff } from "@/lib/roles";
 import { importAgSensePivotsAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 
@@ -16,7 +16,8 @@ export default async function PivotsPage({
   if (!session) redirect("/login");
 
   const query = await searchParams;
-  const canImport = session.role !== ROLES.FARMER;
+  const canAdd = isShopStaff(session.role);
+  const canImport = canImportPivots(session.role);
   const [pivots, farmers] = await Promise.all([
     prisma.pivot.findMany({
       where: pivotWhere(session),
@@ -40,7 +41,7 @@ export default async function PivotsPage({
       <div className="lg:col-span-3">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-3xl">Pivots</h1>
-          {canImport ? (
+          {canAdd ? (
             <Link href="/pivots/new" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
               Add pivot
             </Link>
@@ -73,12 +74,12 @@ export default async function PivotsPage({
         </ul>
       </div>
       {canImport ? (
-        <div className="lg:col-span-2">
-          <h2 className="font-display text-xl">Import from AgSense</h2>
+        <div id="import" className="lg:col-span-2">
+          <h2 className="font-display text-xl">Import pivots</h2>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-stone-600">
-            <li>In AgSense 365, open the device list (or Map / Reports).</li>
-            <li>Export devices to CSV. Include name, grower, and GPS coordinates.</li>
-            <li>Upload that file. Matching serial numbers update; new devices are added.</li>
+            <li>CSV with farm/grower, pivot name, and GPS (or a Google Maps link).</li>
+            <li>AgSense device export also works if it has name, grower, and coordinates.</li>
+            <li>Matching serial numbers or the same farm + pivot name update; new rows are added.</li>
           </ol>
           <p className="mt-2 text-sm">
             <a href="/agsense-pivots-template.csv" className="text-emerald-800 hover:underline">

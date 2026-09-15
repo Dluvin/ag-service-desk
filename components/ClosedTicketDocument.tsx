@@ -1,4 +1,4 @@
-import { STATUS_LABELS, type TicketStatus } from "@/lib/roles";
+import { TicketPhotoGrid } from "@/components/TicketPhotoGrid";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
 
 type PrintTicket = {
@@ -23,7 +23,13 @@ type PrintTicket = {
   technician: { name: string } | null;
   siteVisits?: { startedAt: Date; endedAt: Date | null }[];
   parts: { quantity: number; name: string; sku: string | null; unitPrice: number | null }[];
-  updates: { message: string; status: string | null; createdAt: Date; user: { name: string } }[];
+  updates: {
+    message: string;
+    status: string | null;
+    createdAt: Date;
+    user: { name: string };
+    photos?: { id: string; fileName: string }[];
+  }[];
 };
 
 function money(value: number) {
@@ -147,6 +153,7 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
               {update.status ? ` · ${STATUS_LABELS[update.status as TicketStatus] ?? update.status}` : ""}
             </p>
             <p>{update.message}</p>
+            {update.photos?.length ? <TicketPhotoGrid photos={update.photos} /> : null}
           </li>
         ))}
       </ol>

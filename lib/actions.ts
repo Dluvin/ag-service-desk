@@ -4,16 +4,31 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { createSession, destroySession, getSession, requireSession, verifyLogin } from "./auth";
-import { PRIORITIES, ROLES, TICKET_STATUSES, isFinishedStatus, requiresInvoice, slugify, type TicketStatus } from "./roles";
+import {
+  PRIORITIES,
+  ROLES,
+  TICKET_STATUSES,
+  isAdmin,
+  canAddTechnicians,
+  canAssignTickets,
+  canDeleteRecords,
+  canImportPivots,
+  canImportStaff,
+  isFinishedStatus,
+  requiresInvoice,
+  slugify,
+  type TicketStatus,
+} from "./roles";
 import { openServiceTicket } from "./tickets";
 import { INSPECTION_STATUS, STARTUP_CHECKS, STARTUP_SEASON_YEAR } from "./startup";
 import { parseMapsLocation } from "./maps";
 import { parseQuickbooksExport } from "./quickbooks";
 import { parseAgSenseExport } from "./agsense";
+import { parseStaffImport, isShopStaffRole } from "./staff-import";
 import { closeOpenSiteVisits } from "./onsite";
 import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, listRevealVehicles } from "./reveal";
 import { notifyTicketSms } from "./ticket-sms";
-import { sendBirdSms, toE164 } from "./bird";
+import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./ticket-photos";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -102,7 +117,7 @@ export async function signupAction(formData: FormData) {
 
 export async function createFarmerAction(formData: FormData) {
   const session = await requireSession();
-  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can add farmers." };
+  if (session.role === ROLES.FARMER) return { error: "Ask the service company to add a farm." };
 
   const name = formString(formData, "name");
   const phone = formString(formData, "phone");
@@ -207,7 +222,7 @@ export async function updateFarmerContactAction(formData: FormData) {
 
 export async function createTechnicianAction(formData: FormData) {
   const session = await requireSession();
-  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can add technicians." };
+  if (!canAddTechnicians(session.role)) return { error: "Only managers and admins can add technicians." };
 
   const name = formString(formData, "name");
   const email = formString(formData, "email").toLowerCase();
@@ -230,6 +245,214 @@ export async function createTechnicianAction(formData: FormData) {
     },
   });
   redirect("/technicians");
+}
+
+export async function createStaffAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can add staff." };
+
+  const name = formString(formData, "name");
+  const email = formString(formData, "email").toLowerCase();
+  const password = formString(formData, "password");
+  const phone = formString(formData, "phone");
+  const revealVehicleNumber = formString(formData, "revealVehicleNumber");
+  const role = formString(formData, "role");
+  if (!name || !email || password.length < 8) {
+    return { error: "Name, email, and an 8+ character password are required." };
+  }
+  if (!isShopStaffRole(role)) return { error: "Role must be admin, manager, or technician." };
+
+  await prisma.user.create({
+    data: {
+      organizationId: session.organizationId,
+      name,
+      email,
+      role,
+      passwordHash: await bcrypt.hash(password, 10),
+      phone: phone || null,
+      revealVehicleNumber: role === ROLES.TECHNICIAN ? revealVehicleNumber || null : null,
+    },
+  });
+  redirect("/staff");
+}
+
+export async function importStaffAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canImportStaff(session.role)) return { error: "Only company admins can import staff." };
+
+  const file = formData.get("file");
+  const defaultPassword = formString(formData, "defaultPassword");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose a CSV of staff to import." };
+  }
+  if (file.size > 1_000_000) return { error: "File is too large. Keep it under 1 MB." };
+
+  const rows = parseStaffImport(await file.text());
+  if (rows.length === 0) {
+    return { error: "No staff found. Use columns Name, Email, Role (Admin, Manager, or Technician)." };
+  }
+
+  let created = 0;
+  let updated = 0;
+  let skipped = 0;
+  const adminCount = await prisma.user.count({
+    where: { organizationId: session.organizationId, role: ROLES.ADMIN },
+  });
+  let remainingAdmins = adminCount;
+
+  for (const row of rows.slice(0, 500)) {
+    const existing = await prisma.user.findFirst({
+      where: { organizationId: session.organizationId, email: row.email },
+    });
+    if (existing && !isShopStaffRole(existing.role)) {
+      skipped += 1;
+      continue;
+    }
+    if (existing) {
+      if (existing.id === session.userId && row.role !== existing.role) {
+        skipped += 1;
+        continue;
+      }
+      if (existing.role === ROLES.ADMIN && row.role !== ROLES.ADMIN && remainingAdmins <= 1) {
+        skipped += 1;
+        continue;
+      }
+      if (existing.role === ROLES.ADMIN && row.role !== ROLES.ADMIN) remainingAdmins -= 1;
+      if (existing.role !== ROLES.ADMIN && row.role === ROLES.ADMIN) remainingAdmins += 1;
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          name: row.name,
+          role: row.role,
+          phone: row.phone || existing.phone,
+          revealVehicleNumber:
+            row.role === ROLES.TECHNICIAN
+              ? row.revealVehicleNumber || existing.revealVehicleNumber
+              : null,
+          ...(row.password && row.password.length >= 8
+            ? { passwordHash: await bcrypt.hash(row.password, 10) }
+            : {}),
+        },
+      });
+      updated += 1;
+      continue;
+    }
+    const password = row.password && row.password.length >= 8 ? row.password : defaultPassword;
+    if (!password || password.length < 8) {
+      skipped += 1;
+      continue;
+    }
+    await prisma.user.create({
+      data: {
+        organizationId: session.organizationId,
+        name: row.name,
+        email: row.email,
+        role: row.role,
+        passwordHash: await bcrypt.hash(password, 10),
+        phone: row.phone,
+        revealVehicleNumber: row.role === ROLES.TECHNICIAN ? row.revealVehicleNumber : null,
+      },
+    });
+    if (row.role === ROLES.ADMIN) remainingAdmins += 1;
+    created += 1;
+  }
+
+  redirect(`/staff?imported=${created}&updated=${updated}&skipped=${skipped}`);
+}
+
+export async function createManagerAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can add managers." };
+
+  const name = formString(formData, "name");
+  const email = formString(formData, "email").toLowerCase();
+  const password = formString(formData, "password");
+  const phone = formString(formData, "phone");
+  if (!name || !email || password.length < 8) {
+    return { error: "Name, email, and an 8+ character password are required." };
+  }
+
+  await prisma.user.create({
+    data: {
+      organizationId: session.organizationId,
+      name,
+      email,
+      role: ROLES.MANAGER,
+      passwordHash: await bcrypt.hash(password, 10),
+      phone: phone || null,
+    },
+  });
+  redirect("/managers");
+}
+
+export async function deleteFarmerAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canDeleteRecords(session.role)) return { error: "Only company admins can delete." };
+  const farmerId = formString(formData, "farmerId");
+  const farmer = await prisma.farmer.findFirst({
+    where: { id: farmerId, organizationId: session.organizationId },
+  });
+  if (!farmer) return { error: "Farm not found." };
+  await prisma.farmer.delete({ where: { id: farmerId } });
+  redirect("/farmers");
+}
+
+export async function deleteFarmerContactAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canDeleteRecords(session.role)) return { error: "Only company admins can delete." };
+  const contactId = formString(formData, "contactId");
+  const contact = await prisma.farmerContact.findFirst({
+    where: { id: contactId, farmer: { organizationId: session.organizationId } },
+  });
+  if (!contact) return { error: "Contact not found." };
+  const farmerId = contact.farmerId;
+  await prisma.farmerContact.delete({ where: { id: contactId } });
+  redirect(`/farmers/${farmerId}`);
+}
+
+export async function deletePivotAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canDeleteRecords(session.role)) return { error: "Only company admins can delete." };
+  const pivotId = formString(formData, "pivotId");
+  const pivot = await prisma.pivot.findFirst({
+    where: { id: pivotId, organizationId: session.organizationId },
+  });
+  if (!pivot) return { error: "Pivot not found." };
+  await prisma.pivot.delete({ where: { id: pivotId } });
+  redirect("/pivots");
+}
+
+export async function deleteTicketAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canDeleteRecords(session.role)) return { error: "Only company admins can delete." };
+  const ticketId = formString(formData, "ticketId");
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, organizationId: session.organizationId },
+  });
+  if (!ticket) return { error: "Ticket not found." };
+  await prisma.ticket.delete({ where: { id: ticketId } });
+  redirect("/tickets");
+}
+
+export async function deleteStaffAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canDeleteRecords(session.role)) return { error: "Only company admins can delete." };
+  const userId = formString(formData, "userId");
+  if (userId === session.userId) return { error: "You cannot delete your own login." };
+  const user = await prisma.user.findFirst({
+    where: { id: userId, organizationId: session.organizationId },
+  });
+  if (!user || !isShopStaffRole(user.role)) {
+    return { error: "Staff member not found." };
+  }
+  if (user.role === ROLES.ADMIN) {
+    const admins = await prisma.user.count({
+      where: { organizationId: session.organizationId, role: ROLES.ADMIN },
+    });
+    if (admins <= 1) return { error: "Keep at least one company admin." };
+  }
+  await prisma.user.delete({ where: { id: userId } });
+  redirect("/staff");
 }
 
 export async function createPivotAction(formData: FormData) {
@@ -437,9 +660,14 @@ export async function createTicketAction(formData: FormData) {
 
   if (!pivot) return { error: "Pivot not found." };
 
+  const photos = photoFilesFromForm(formData);
+  const photoCheck = validatePhotoFiles(photos);
+  if (photoCheck.error) return photoCheck;
+
   let assigned: string | null = technicianId;
   if (session.role === ROLES.FARMER) assigned = null;
-  if (session.role === ROLES.TECHNICIAN) assigned = session.userId;
+  else if (session.role === ROLES.TECHNICIAN) assigned = session.userId;
+  else if (!canAssignTickets(session.role)) assigned = null;
 
   const ticket = await openServiceTicket({
     organizationId: session.organizationId,
@@ -467,6 +695,19 @@ export async function createTicketAction(formData: FormData) {
       note: description,
     });
   }
+
+  const opened = await prisma.ticketUpdate.findFirst({
+    where: { ticketId: ticket.id },
+    orderBy: { createdAt: "asc" },
+  });
+  const saved = await saveTicketPhotos({
+    files: photos,
+    ticketId: ticket.id,
+    updateId: opened?.id,
+    userId: session.userId,
+  });
+  if (saved.error) return saved;
+
   redirect(`/tickets/${ticket.id}`);
 }
 
@@ -482,27 +723,37 @@ export async function updateTicketAction(formData: FormData) {
   });
   if (!ticket) return { error: "Ticket not found." };
 
+  const photos = photoFilesFromForm(formData);
+  const photoCheck = validatePhotoFiles(photos);
+  if (photoCheck.error) return photoCheck;
+
   if (session.role === ROLES.FARMER) {
     if (session.farmerId !== ticket.farmerId) return { error: "Not allowed." };
-    if (!message) return { error: "Add a note for the service team." };
+    if (!message && photos.length === 0) return { error: "Add a note or a photo for the service team." };
+    const note = message || `Added ${photos.length} photo${photos.length === 1 ? "" : "s"}.`;
     const stamp = new Date().toLocaleString();
-    await prisma.$transaction([
-      prisma.ticketUpdate.create({
-        data: { ticketId, userId: session.userId, message },
-      }),
-      prisma.ticket.update({
-        where: { id: ticketId },
-        data: {
-          description: `${ticket.description}\n\n[Farm update ${stamp}]\n${message}`,
-        },
-      }),
-    ]);
+    const update = await prisma.ticketUpdate.create({
+      data: { ticketId, userId: session.userId, message: note },
+    });
+    await prisma.ticket.update({
+      where: { id: ticketId },
+      data: {
+        description: `${ticket.description}\n\n[Farm update ${stamp}]\n${note}`,
+      },
+    });
+    const saved = await saveTicketPhotos({
+      files: photos,
+      ticketId,
+      updateId: update.id,
+      userId: session.userId,
+    });
+    if (saved.error) return saved;
     await notifyTicketSms({
       organizationId: session.organizationId,
       ticketId,
       kind: "updated",
       actorUserId: session.userId,
-      note: message,
+      note,
     });
     redirect(`/tickets/${ticketId}`);
   }
@@ -531,7 +782,7 @@ export async function updateTicketAction(formData: FormData) {
   }
 
   const nextTech =
-    session.role === ROLES.ADMIN
+    canAssignTickets(session.role)
       ? technicianId || null
       : ticket.technicianId;
 
@@ -550,7 +801,7 @@ export async function updateTicketAction(formData: FormData) {
   }
 
   const note = message || `Status set to ${status.replaceAll("_", " ").toLowerCase()}.`;
-  await prisma.ticketUpdate.create({
+  const update = await prisma.ticketUpdate.create({
     data: {
       ticketId,
       userId: session.userId,
@@ -558,6 +809,13 @@ export async function updateTicketAction(formData: FormData) {
       status,
     },
   });
+  const saved = await saveTicketPhotos({
+    files: photos,
+    ticketId,
+    updateId: update.id,
+    userId: session.userId,
+  });
+  if (saved.error) return saved;
   await notifyTicketSms({
     organizationId: session.organizationId,
     ticketId,
@@ -586,7 +844,7 @@ export async function assignTicketAction(formData: FormData) {
   }
 
   const nextTech =
-    session.role === ROLES.ADMIN ? technicianId || null : ticket.technicianId;
+    canAssignTickets(session.role) ? technicianId || null : ticket.technicianId;
   let nextStatus: string = TICKET_STATUSES.includes(status as TicketStatus) ? status : ticket.status;
   if (nextTech && nextStatus === "OPEN") nextStatus = "ASSIGNED";
   if (!nextTech && nextStatus === "ASSIGNED") nextStatus = "OPEN";
@@ -777,7 +1035,7 @@ export async function importQuickbooksPartsAction(formData: FormData) {
 
 export async function importAgSensePivotsAction(formData: FormData) {
   const session = await requireSession();
-  if (session.role === ROLES.FARMER) return { error: "Farmers cannot import pivots." };
+  if (!canImportPivots(session.role)) return { error: "Only company admins can import pivots." };
 
   const file = formData.get("file");
   const defaultFarmerId = formString(formData, "defaultFarmerId");
@@ -817,6 +1075,7 @@ export async function importAgSensePivotsAction(formData: FormData) {
         data: {
           organizationId: session.organizationId,
           name: row.grower,
+          contacts: { create: { name: row.grower } },
         },
       });
       farmerByName.set(row.grower.toLowerCase(), farmer);
@@ -970,7 +1229,7 @@ export async function saveStartupChecksAction(formData: FormData) {
 
 export async function updateTechnicianVehicleAction(formData: FormData) {
   const session = await requireSession();
-  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can map Reveal vehicles." };
+  if (!canAddTechnicians(session.role)) return { error: "Only managers and admins can update technicians." };
 
   const technicianId = formString(formData, "technicianId");
   const revealVehicleNumber = formString(formData, "revealVehicleNumber");

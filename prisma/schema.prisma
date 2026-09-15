@@ -43,6 +43,7 @@ model User {
   farmer         Farmer?      @relation(fields: [farmerId], references: [id], onDelete: SetNull)
   tickets        Ticket[]              @relation("TechnicianTickets")
   updates        TicketUpdate[]
+  photos         TicketPhoto[]
   partsLogged    TicketPart[]
   inspections           StartupInspection[]   @relation("Inspector")
   revealVehicleNumber   String?
@@ -126,6 +127,7 @@ model Ticket {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   updates        TicketUpdate[]
+  photos         TicketPhoto[]
   parts          TicketPart[]
   inspections    StartupInspection[]
   siteVisits     SiteVisit[]
@@ -223,4 +225,20 @@ model TicketUpdate {
   message   String
   status    String?
   createdAt DateTime @default(now())
+  photos    TicketPhoto[]
+}
+
+model TicketPhoto {
+  id        String        @id @default(cuid())
+  ticketId  String
+  ticket    Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  updateId  String?
+  update    TicketUpdate? @relation(fields: [updateId], references: [id], onDelete: SetNull)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName  String
+  mimeType  String
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId])
 }

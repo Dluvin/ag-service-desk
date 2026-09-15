@@ -40,6 +40,9 @@ const HEADER_ALIASES: Record<string, keyof Mapped> = {
   "device name": "name",
   "pivot name": "name",
   "equipment name": "name",
+  "job site / location name": "name",
+  "job site": "name",
+  "location name": "name",
   name: "name",
   grower: "grower",
   "grower name": "grower",
@@ -69,6 +72,9 @@ const HEADER_ALIASES: Record<string, keyof Mapped> = {
   gps: "gps",
   location: "gps",
   coordinates: "gps",
+  "google maps link": "gps",
+  "maps link": "gps",
+  "map link": "gps",
   "serial number": "serialNumber",
   serial: "serialNumber",
   "serial no": "serialNumber",
@@ -103,8 +109,11 @@ export function parseAgSenseExport(text: string): ImportedPivot[] {
       if (!field) return;
       raw[field] = (row[i] ?? "").trim();
     });
-    const name = (raw.name ?? "").trim();
+    const nameRaw = (raw.name ?? "").trim();
+    const grower = raw.grower?.trim() || null;
     const type = (raw.deviceType ?? "").trim().toLowerCase();
+    const placeholderSite = !nameRaw || /^\(no site recorded\)$/i.test(nameRaw);
+    const name = placeholderSite ? grower || "" : nameRaw;
     if (!name || SKIP_TYPES.has(type)) continue;
     const coords = coordsFrom(raw);
     if (!coords) continue;
@@ -113,10 +122,10 @@ export function parseAgSenseExport(text: string): ImportedPivot[] {
     }
     const farm = raw.farm?.trim() || null;
     const field = raw.field?.trim() || null;
-    const note = [field, farm].filter(Boolean).join(" · ") || null;
+    const note = [field, farm, placeholderSite ? nameRaw || null : null].filter(Boolean).join(" · ") || null;
     pivots.push({
       name,
-      grower: raw.grower?.trim() || null,
+      grower,
       farm,
       field,
       serialNumber: raw.serialNumber?.trim() || null,

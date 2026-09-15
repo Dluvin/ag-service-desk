@@ -3,11 +3,12 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pivotWhere } from "@/lib/scope";
-import { ROLES } from "@/lib/roles";
+import { ROLES, canDeleteRecords, isShopStaff } from "@/lib/roles";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
 import { StatusBadge } from "@/components/Badges";
-import { addPivotNoteAction, updatePivotAction } from "@/lib/actions";
+import { addPivotNoteAction, deletePivotAction, updatePivotAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { DeleteButton } from "@/components/DeleteButton";
 import { MapLocationPicker } from "@/components/MapLocationPicker";
 
 export default async function PivotDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,7 +22,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
   });
   if (!pivot) notFound();
 
-  const canEdit = session.role === ROLES.ADMIN || session.role === ROLES.TECHNICIAN;
+  const canEdit = isShopStaff(session.role);
   const farms = canEdit
     ? await prisma.farmer.findMany({
         where: { organizationId: session.organizationId },
@@ -74,6 +75,17 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
             />
             <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save pivot</button>
           </ActionForm>
+        ) : null}
+        {canDeleteRecords(session.role) ? (
+          <div className="mt-3">
+            <DeleteButton
+              action={deletePivotAction}
+              name="pivotId"
+              value={pivot.id}
+              label="Delete pivot"
+              confirmText={`Delete ${pivot.name} and its tickets? This cannot be undone.`}
+            />
+          </div>
         ) : null}
         <p className="mt-3 text-sm">
           <Link href="/startup" className="text-emerald-800 hover:underline">

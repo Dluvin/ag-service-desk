@@ -2,9 +2,10 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLES } from "@/lib/roles";
-import { addFarmerContactAction, updateFarmerAction, updateFarmerContactAction } from "@/lib/actions";
+import { ROLES, canDeleteRecords, isShopStaff } from "@/lib/roles";
+import { addFarmerContactAction, deleteFarmerAction, deleteFarmerContactAction, updateFarmerAction, updateFarmerContactAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { DeleteButton } from "@/components/DeleteButton";
 import { SelectableMap } from "@/components/SelectableMap";
 import { StatusBadge } from "@/components/Badges";
 
@@ -19,18 +20,29 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
     where: { id, organizationId: session.organizationId },
     include: {
       contacts: { orderBy: { name: "asc" } },
-      pivots: true,
+      pivots: { orderBy: { name: "asc" } },
       tickets: { include: { pivot: true }, orderBy: { updatedAt: "desc" }, take: 12 },
     },
   });
   if (!farmer) notFound();
 
-  const canEdit = session.role === ROLES.ADMIN || session.role === ROLES.TECHNICIAN;
+  const canEdit = isShopStaff(session.role);
 
   return (
     <div>
       <h1 className="font-display text-3xl">{farmer.name}</h1>
       {farmer.address ? <p className="text-stone-600">{farmer.address}</p> : null}
+      {canDeleteRecords(session.role) ? (
+        <div className="mt-3">
+          <DeleteButton
+            action={deleteFarmerAction}
+            name="farmerId"
+            value={farmer.id}
+            label="Delete farm"
+            confirmText={`Delete ${farmer.name} and its pivots and tickets? This cannot be undone.`}
+          />
+        </div>
+      ) : null}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <SelectableMap
           markers={farmer.pivots.map((pivot) => ({
@@ -80,6 +92,17 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
                       </label>
                       <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save contact</button>
                     </ActionForm>
+                    {canDeleteRecords(session.role) ? (
+                      <div className="mt-3">
+                        <DeleteButton
+                          action={deleteFarmerContactAction}
+                          name="contactId"
+                          value={contact.id}
+                          label="Delete contact"
+                          confirmText={`Delete contact ${contact.name}?`}
+                        />
+                      </div>
+                    ) : null}
                   ) : (
                     <>
                       <p className="font-medium">{contact.name}</p>
@@ -115,32 +138,44 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
               <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save contact</button>
             </ActionForm>
           ) : null}
-          <h2 className="font-display mt-6 text-xl">Pivots</h2>
-          <ul className="mt-2 space-y-2">
-            {farmer.pivots.map((pivot) => (
-              <li key={pivot.id}>
-                <Link href={`/pivots/${pivot.id}`} className="text-emerald-800 hover:underline">
-                  {pivot.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <h2 className="font-display mt-6 text-xl">Tickets</h2>
-          <Link href="/tickets/new" className="mt-1 inline-block text-sm font-semibold text-emerald-800">
-            Request service
-          </Link>
-          <ul className="mt-2 space-y-2">
-            {farmer.tickets.map((ticket) => (
-              <li key={ticket.id} className="flex items-center justify-between gap-2">
-                <Link href={`/tickets/${ticket.id}`} className="hover:underline">
-                  #{ticket.number} {ticket.title}
-                </Link>
-                <StatusBadge status={ticket.status} />
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
+      <h2 className="font-display mt-8 text-xl">Pivots ({farmer.pivots.length})</h2>
+      {farmer.pivots.length ? (
+        <ul
+          className={
+            farmer.pivots.length > 8
+              ? "mt-3 columns-2 gap-x-8 sm:columns-3 lg:columns-4"
+              : farmer.pivots.length > 4
+                ? "mt-3 columns-2 gap-x-8"
+                : "mt-3"
+          }
+        >
+          {farmer.pivots.map((pivot) => (
+            <li key={pivot.id} className="break-inside-avoid py-1">
+              <Link href={`/pivots/${pivot.id}`} className="text-emerald-800 hover:underline">
+                {pivot.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-sm text-stone-600">No pivots on this farm yet.</p>
+      )}
+      <h2 className="font-display mt-8 text-xl">Tickets</h2>
+      <Link href="/tickets/new" className="mt-1 inline-block text-sm font-semibold text-emerald-800">
+        Request service
+      </Link>
+      <ul className="mt-2 space-y-2">
+        {farmer.tickets.map((ticket) => (
+          <li key={ticket.id} className="flex items-center justify-between gap-2">
+            <Link href={`/tickets/${ticket.id}`} className="hover:underline">
+              #{ticket.number} {ticket.title}
+            </Link>
+            <StatusBadge status={ticket.status} />
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

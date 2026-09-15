@@ -20,6 +20,7 @@ Password for all accounts: `demo1234`
 | Role | Email | Tenant |
 | --- | --- | --- |
 | Company admin | admin@heartland.ag | Heartland Irrigation |
+| Manager | manager@heartland.ag | Heartland Irrigation |
 | Technician | mike@heartland.ag | Heartland Irrigation |
 | Farmer | tom@greenacres.farm | Heartland Irrigation |
 | Other company admin | admin@prairie.ag | Prairie Tech Irrigation |
@@ -28,8 +29,9 @@ Prairie Tech is a second tenant so you can confirm data does not leak across com
 
 ## Roles
 
-- **Company admin** — farmers, pivots, technicians, assign tickets, all statuses
-- **Technician** — assigned tickets, status updates, maps for those jobs
+- **Company admin** — farms, pivots, technicians, managers, assign tickets, delete records, import pivots and staff
+- **Manager** — assign and edit tickets, add farms and technicians (cannot delete or import pivots/staff)
+- **Technician** — assigned tickets, status updates, add farms and pivots (cannot delete anything)
 - **Farmer** — own pivots and tickets, request service, read technician notes, see parts used and startup status
 
 ## Extra boards

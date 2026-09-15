@@ -12,7 +12,7 @@ export default async function FarmersPage() {
   if (session.role === ROLES.FARMER && session.farmerId) {
     redirect(`/farmers/${session.farmerId}`);
   }
-  if (session.role !== ROLES.ADMIN) redirect("/dashboard");
+  if (session.role === ROLES.FARMER) redirect("/dashboard");
 
   const farmers = await prisma.farmer.findMany({
     where: { organizationId: session.organizationId },

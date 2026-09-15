@@ -1,5 +1,6 @@
 export const ROLES = {
   ADMIN: "ADMIN",
+  MANAGER: "MANAGER",
   TECHNICIAN: "TECHNICIAN",
   FARMER: "FARMER",
 } as const;
@@ -59,6 +60,34 @@ export function isFinishedStatus(status: string) {
 
 export const PRIORITIES = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
 export type Priority = (typeof PRIORITIES)[number];
+
+export function isAdmin(role: string) {
+  return role === ROLES.ADMIN;
+}
+
+export function canAssignTickets(role: string) {
+  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+}
+
+export function canAddTechnicians(role: string) {
+  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+}
+
+export function canImportPivots(role: string) {
+  return role === ROLES.ADMIN;
+}
+
+export function canImportStaff(role: string) {
+  return role === ROLES.ADMIN;
+}
+
+export function canDeleteRecords(role: string) {
+  return role === ROLES.ADMIN;
+}
+
+export function isShopStaff(role: string) {
+  return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.TECHNICIAN;
+}
 
 export function slugify(value: string) {
   return value

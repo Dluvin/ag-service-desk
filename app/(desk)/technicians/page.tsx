@@ -1,15 +1,24 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLES } from "@/lib/roles";
-import { createTechnicianAction, updateTechnicianVehicleAction } from "@/lib/actions";
+import { ROLES, canAddTechnicians, canDeleteRecords, canImportStaff } from "@/lib/roles";
+import { createTechnicianAction, deleteStaffAction, updateTechnicianVehicleAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { DeleteButton } from "@/components/DeleteButton";
+import { StaffImportForm } from "@/components/StaffImportForm";
 import { listRevealVehicles, loadRevealCreds } from "@/lib/reveal";
 
-export default async function TechniciansPage() {
+export default async function TechniciansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ imported?: string; updated?: string; skipped?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (session.role !== ROLES.ADMIN) redirect("/dashboard");
+  if (!canAddTechnicians(session.role)) redirect("/dashboard");
+  const query = await searchParams;
+  const canImport = canImportStaff(session.role);
+  const canDelete = canDeleteRecords(session.role);
 
   const technicians = await prisma.user.findMany({
     where: { organizationId: session.organizationId, role: ROLES.TECHNICIAN },
@@ -30,10 +39,27 @@ export default async function TechniciansPage() {
     <div className="grid gap-8 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Technicians</h1>
+        {query.imported || query.updated || query.skipped ? (
+          <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
+            Import finished: {query.imported ?? "0"} added, {query.updated ?? "0"} updated
+            {query.skipped && query.skipped !== "0" ? `, ${query.skipped} skipped` : ""}.
+          </p>
+        ) : null}
         <ul className="mt-6 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
           {technicians.map((tech) => (
             <li key={tech.id} className="px-4 py-3">
-              <p className="font-semibold">{tech.name}</p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <p className="font-semibold">{tech.name}</p>
+                {canDelete ? (
+                  <DeleteButton
+                    action={deleteStaffAction}
+                    name="userId"
+                    value={tech.id}
+                    label="Delete"
+                    confirmText={`Delete technician ${tech.name}? Assigned tickets will become unassigned.`}
+                  />
+                ) : null}
+              </div>
               <p className="text-sm text-stone-600">
                 {tech.email}
                 {tech.phone ? ` · ${tech.phone}` : " · no SMS phone"}
@@ -107,6 +133,12 @@ export default async function TechniciansPage() {
           </label>
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save technician</button>
         </ActionForm>
+
+        {canImport ? (
+          <div className="mt-8">
+            <StaffImportForm />
+          </div>
+        ) : null}
       </div>
     </div>
   );
