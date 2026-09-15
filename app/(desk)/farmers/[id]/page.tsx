@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
-import { addFarmerContactAction } from "@/lib/actions";
+import { addFarmerContactAction, updateFarmerAction, updateFarmerContactAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { SelectableMap } from "@/components/SelectableMap";
 import { StatusBadge } from "@/components/Badges";
@@ -25,7 +25,7 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
   });
   if (!farmer) notFound();
 
-  const canEditContacts = session.role === ROLES.ADMIN || session.role === ROLES.TECHNICIAN;
+  const canEdit = session.role === ROLES.ADMIN || session.role === ROLES.TECHNICIAN;
 
   return (
     <div>
@@ -42,15 +42,52 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
           }))}
         />
         <div>
+          {canEdit ? (
+            <ActionForm action={updateFarmerAction} className="mb-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+              <input type="hidden" name="farmerId" value={farmer.id} />
+              <h2 className="font-display text-xl">Edit farm</h2>
+              <label className="block text-sm font-medium">
+                Farm name
+                <input name="name" required defaultValue={farmer.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+              </label>
+              <label className="block text-sm font-medium">
+                Address
+                <input name="address" defaultValue={farmer.address ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+              </label>
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save farm</button>
+            </ActionForm>
+          ) : null}
+
           <h2 className="font-display text-xl">Contacts</h2>
           {farmer.contacts.length ? (
-            <ul className="mt-2 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
+            <ul className="mt-2 space-y-3">
               {farmer.contacts.map((contact) => (
-                <li key={contact.id} className="px-4 py-3">
-                  <p className="font-medium">{contact.name}</p>
-                  <p className="text-sm text-stone-600">
-                    {[contact.phone, contact.email].filter(Boolean).join(" · ") || "No phone or email"}
-                  </p>
+                <li key={contact.id} className="rounded-xl border border-stone-200 bg-white p-4">
+                  {canEdit ? (
+                    <ActionForm action={updateFarmerContactAction} className="space-y-3">
+                      <input type="hidden" name="contactId" value={contact.id} />
+                      <label className="block text-sm font-medium">
+                        Name
+                        <input name="contactName" required defaultValue={contact.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                      </label>
+                      <label className="block text-sm font-medium">
+                        Phone
+                        <input name="contactPhone" defaultValue={contact.phone ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                      </label>
+                      <label className="block text-sm font-medium">
+                        Email
+                        <input name="contactEmail" type="email" defaultValue={contact.email ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                      </label>
+                      <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save contact</button>
+                    </ActionForm>
+                  ) : (
+                    <>
+                      <p className="font-medium">{contact.name}</p>
+                      <p className="text-sm text-stone-600">
+                        {[contact.phone, contact.email].filter(Boolean).join(" · ") || "No phone or email"}
+                      </p>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>
@@ -59,7 +96,7 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
               {[farmer.phone, farmer.email].filter(Boolean).join(" · ") || "No contacts yet."}
             </p>
           )}
-          {canEditContacts ? (
+          {canEdit ? (
             <ActionForm action={addFarmerContactAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
               <input type="hidden" name="farmerId" value={farmer.id} />
               <p className="text-sm font-semibold text-stone-800">Add contact</p>

@@ -162,6 +162,49 @@ export async function addFarmerContactAction(formData: FormData) {
   redirect(`/farmers/${farmerId}`);
 }
 
+export async function updateFarmerAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role === ROLES.FARMER) return { error: "Ask the service company to update the farm." };
+
+  const farmerId = formString(formData, "farmerId");
+  const name = formString(formData, "name");
+  const address = formString(formData, "address");
+  if (!name) return { error: "Farm name is required." };
+
+  const farmer = await prisma.farmer.findFirst({
+    where: { id: farmerId, organizationId: session.organizationId },
+  });
+  if (!farmer) return { error: "Farm not found." };
+
+  await prisma.farmer.update({
+    where: { id: farmerId },
+    data: { name, address: address || null },
+  });
+  redirect(`/farmers/${farmerId}`);
+}
+
+export async function updateFarmerContactAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role === ROLES.FARMER) return { error: "Ask the service company to update farm contacts." };
+
+  const contactId = formString(formData, "contactId");
+  const name = formString(formData, "contactName");
+  const email = formString(formData, "contactEmail").toLowerCase();
+  const phone = formString(formData, "contactPhone");
+  if (!name) return { error: "Contact name is required." };
+
+  const contact = await prisma.farmerContact.findFirst({
+    where: { id: contactId, farmer: { organizationId: session.organizationId } },
+  });
+  if (!contact) return { error: "Contact not found." };
+
+  await prisma.farmerContact.update({
+    where: { id: contactId },
+    data: { name, email: email || null, phone: phone || null },
+  });
+  redirect(`/farmers/${contact.farmerId}`);
+}
+
 export async function createTechnicianAction(formData: FormData) {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can add technicians." };
@@ -241,6 +284,56 @@ export async function createPivotAction(formData: FormData) {
     },
   });
   redirect(`/pivots/${pivot.id}`);
+}
+
+export async function updatePivotAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role === ROLES.FARMER) return { error: "Farmers cannot edit pivots." };
+
+  const pivotId = formString(formData, "pivotId");
+  const name = formString(formData, "name");
+  const serialNumber = formString(formData, "serialNumber");
+  const locationNote = formString(formData, "locationNote");
+  const farmerId = formString(formData, "farmerId");
+  const mapsInput = formString(formData, "mapsInput");
+  const latitude = Number(formString(formData, "latitude"));
+  const longitude = Number(formString(formData, "longitude"));
+  const parsed = mapsInput ? parseMapsLocation(mapsInput) : null;
+  const lat = parsed?.latitude ?? latitude;
+  const lng = parsed?.longitude ?? longitude;
+
+  if (!name || Number.isNaN(lat) || Number.isNaN(lng)) {
+    return { error: "Name and a map location are required." };
+  }
+
+  const pivot = await prisma.pivot.findFirst({
+    where: { id: pivotId, organizationId: session.organizationId },
+  });
+  if (!pivot) return { error: "Pivot not found." };
+
+  const farmer = await prisma.farmer.findFirst({
+    where: { id: farmerId, organizationId: session.organizationId },
+  });
+  if (!farmer) return { error: "Farm not found." };
+
+  await prisma.pivot.update({
+    where: { id: pivotId },
+    data: {
+      farmerId,
+      name,
+      latitude: lat,
+      longitude: lng,
+      serialNumber: serialNumber || null,
+      locationNote: locationNote || null,
+    },
+  });
+  if (farmerId !== pivot.farmerId) {
+    await prisma.ticket.updateMany({
+      where: { pivotId, organizationId: session.organizationId },
+      data: { farmerId },
+    });
+  }
+  redirect(`/pivots/${pivotId}`);
 }
 
 export async function addPivotNoteAction(formData: FormData) {

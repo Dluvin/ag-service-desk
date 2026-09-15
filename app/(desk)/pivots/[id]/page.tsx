@@ -3,10 +3,12 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pivotWhere } from "@/lib/scope";
+import { ROLES } from "@/lib/roles";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
 import { StatusBadge } from "@/components/Badges";
-import { addPivotNoteAction } from "@/lib/actions";
+import { addPivotNoteAction, updatePivotAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { MapLocationPicker } from "@/components/MapLocationPicker";
 
 export default async function PivotDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -19,6 +21,15 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
   });
   if (!pivot) notFound();
 
+  const canEdit = session.role === ROLES.ADMIN || session.role === ROLES.TECHNICIAN;
+  const farms = canEdit
+    ? await prisma.farmer.findMany({
+        where: { organizationId: session.organizationId },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      })
+    : [];
+
   return (
     <div className="grid gap-6 lg:grid-cols-5">
       <div className="lg:col-span-3">
@@ -30,6 +41,40 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
           {pivot.serialNumber ? ` · SN ${pivot.serialNumber}` : ""}
         </p>
         {pivot.locationNote ? <p className="mt-2 text-sm">{pivot.locationNote}</p> : null}
+        {canEdit ? (
+          <ActionForm action={updatePivotAction} className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+            <input type="hidden" name="pivotId" value={pivot.id} />
+            <h2 className="font-display text-xl">Edit pivot</h2>
+            <label className="block text-sm font-medium">
+              Farm
+              <select name="farmerId" defaultValue={pivot.farmerId} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
+                {farms.map((farm) => (
+                  <option key={farm.id} value={farm.id}>
+                    {farm.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium">
+              Pivot name
+              <input name="name" required defaultValue={pivot.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            </label>
+            <label className="block text-sm font-medium">
+              Serial number
+              <input name="serialNumber" defaultValue={pivot.serialNumber ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            </label>
+            <label className="block text-sm font-medium">
+              Location note
+              <input name="locationNote" defaultValue={pivot.locationNote ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            </label>
+            <MapLocationPicker
+              apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}
+              defaultLat={pivot.latitude}
+              defaultLng={pivot.longitude}
+            />
+            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save pivot</button>
+          </ActionForm>
+        ) : null}
         <p className="mt-3 text-sm">
           <Link href="/startup" className="text-emerald-800 hover:underline">
             Pre-season startup checklist
