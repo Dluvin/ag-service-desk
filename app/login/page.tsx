@@ -3,8 +3,15 @@ import { loginAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
-  const userCount = await prisma.user.count();
+  let userCount = 0;
+  try {
+    userCount = await prisma.user.count();
+  } catch {
+    userCount = 0;
+  }
   const showDemo = process.env.NODE_ENV !== "production";
 
   return (
