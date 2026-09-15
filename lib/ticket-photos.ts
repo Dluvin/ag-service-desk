@@ -13,7 +13,8 @@ export function uploadDir() {
 }
 
 export function photoFilePath(photoId: string) {
-  return path.join(uploadDir(), photoId);
+  const safeId = photoId.replace(/[^a-zA-Z0-9_-]/g, "");
+  return path.join(/*turbopackIgnore: true*/ uploadDir(), safeId);
 }
 
 export function photoFilesFromForm(formData: FormData) {
@@ -55,12 +56,12 @@ export async function saveTicketPhotos(input: {
   ticketId: string;
   updateId?: string | null;
   userId: string;
-}) {
+}): Promise<{ error?: string; count: number }> {
   if (input.files.length === 0) return { count: 0 };
   const invalid = validatePhotoFiles(input.files);
-  if (invalid.error) return invalid;
+  if (invalid.error) return { error: invalid.error, count: 0 };
 
-  await mkdir(uploadDir(), { recursive: true });
+  await mkdir(/*turbopackIgnore: true*/ uploadDir(), { recursive: true });
   let count = 0;
   for (const file of input.files) {
     const photo = await prisma.ticketPhoto.create({
@@ -72,12 +73,12 @@ export async function saveTicketPhotos(input: {
         mimeType: mimeFor(file),
       },
     });
-    await writeFile(photoFilePath(photo.id), Buffer.from(await file.arrayBuffer()));
+    await writeFile(/*turbopackIgnore: true*/ photoFilePath(photo.id), Buffer.from(await file.arrayBuffer()));
     count += 1;
   }
   return { count };
 }
 
 export async function readTicketPhotoFile(photoId: string) {
-  return readFile(photoFilePath(photoId));
+  return readFile(/*turbopackIgnore: true*/ photoFilePath(photoId));
 }

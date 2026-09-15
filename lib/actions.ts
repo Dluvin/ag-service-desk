@@ -28,6 +28,7 @@ import { parseStaffImport, isShopStaffRole } from "./staff-import";
 import { closeOpenSiteVisits } from "./onsite";
 import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, listRevealVehicles } from "./reveal";
 import { notifyTicketSms } from "./ticket-sms";
+import { sendBirdSms, toE164 } from "./bird";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./ticket-photos";
 
 function formString(formData: FormData, key: string) {

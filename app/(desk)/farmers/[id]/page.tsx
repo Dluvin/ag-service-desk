@@ -76,33 +76,35 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
               {farmer.contacts.map((contact) => (
                 <li key={contact.id} className="rounded-xl border border-stone-200 bg-white p-4">
                   {canEdit ? (
-                    <ActionForm action={updateFarmerContactAction} className="space-y-3">
-                      <input type="hidden" name="contactId" value={contact.id} />
-                      <label className="block text-sm font-medium">
-                        Name
-                        <input name="contactName" required defaultValue={contact.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-                      </label>
-                      <label className="block text-sm font-medium">
-                        Phone
-                        <input name="contactPhone" defaultValue={contact.phone ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-                      </label>
-                      <label className="block text-sm font-medium">
-                        Email
-                        <input name="contactEmail" type="email" defaultValue={contact.email ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-                      </label>
-                      <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save contact</button>
-                    </ActionForm>
-                    {canDeleteRecords(session.role) ? (
-                      <div className="mt-3">
-                        <DeleteButton
-                          action={deleteFarmerContactAction}
-                          name="contactId"
-                          value={contact.id}
-                          label="Delete contact"
-                          confirmText={`Delete contact ${contact.name}?`}
-                        />
-                      </div>
-                    ) : null}
+                    <>
+                      <ActionForm action={updateFarmerContactAction} className="space-y-3">
+                        <input type="hidden" name="contactId" value={contact.id} />
+                        <label className="block text-sm font-medium">
+                          Name
+                          <input name="contactName" required defaultValue={contact.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                        </label>
+                        <label className="block text-sm font-medium">
+                          Phone
+                          <input name="contactPhone" defaultValue={contact.phone ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                        </label>
+                        <label className="block text-sm font-medium">
+                          Email
+                          <input name="contactEmail" type="email" defaultValue={contact.email ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                        </label>
+                        <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save contact</button>
+                      </ActionForm>
+                      {canDeleteRecords(session.role) ? (
+                        <div className="mt-3">
+                          <DeleteButton
+                            action={deleteFarmerContactAction}
+                            name="contactId"
+                            value={contact.id}
+                            label="Delete contact"
+                            confirmText={`Delete contact ${contact.name}?`}
+                          />
+                        </div>
+                      ) : null}
+                    </>
                   ) : (
                     <>
                       <p className="font-medium">{contact.name}</p>

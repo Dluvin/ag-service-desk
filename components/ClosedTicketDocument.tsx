@@ -1,4 +1,5 @@
 import { TicketPhotoGrid } from "@/components/TicketPhotoGrid";
+import { STATUS_LABELS, type TicketStatus } from "@/lib/roles";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
 
 type PrintTicket = {

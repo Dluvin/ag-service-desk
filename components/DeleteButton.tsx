@@ -15,7 +15,9 @@ export function DeleteButton({
 }) {
   return (
     <form
-      action={action}
+      action={async (formData) => {
+        await action(formData);
+      }}
       onSubmit={(event) => {
         if (!window.confirm(confirmText)) event.preventDefault();
       }}
