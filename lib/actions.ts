@@ -458,6 +458,14 @@ export async function createTicketAction(formData: FormData) {
       kind: "assigned",
       actorUserId: session.userId,
     });
+  } else if (session.role === ROLES.FARMER) {
+    await notifyTicketSms({
+      organizationId: session.organizationId,
+      ticketId: ticket.id,
+      kind: "opened",
+      actorUserId: session.userId,
+      note: description,
+    });
   }
   redirect(`/tickets/${ticket.id}`);
 }
@@ -477,9 +485,18 @@ export async function updateTicketAction(formData: FormData) {
   if (session.role === ROLES.FARMER) {
     if (session.farmerId !== ticket.farmerId) return { error: "Not allowed." };
     if (!message) return { error: "Add a note for the service team." };
-    await prisma.ticketUpdate.create({
-      data: { ticketId, userId: session.userId, message },
-    });
+    const stamp = new Date().toLocaleString();
+    await prisma.$transaction([
+      prisma.ticketUpdate.create({
+        data: { ticketId, userId: session.userId, message },
+      }),
+      prisma.ticket.update({
+        where: { id: ticketId },
+        data: {
+          description: `${ticket.description}\n\n[Farm update ${stamp}]\n${message}`,
+        },
+      }),
+    ]);
     await notifyTicketSms({
       organizationId: session.organizationId,
       ticketId,
@@ -656,6 +673,13 @@ export async function addTicketPartAction(formData: FormData) {
       userId: session.userId,
       message: `Parts logged: ${quantity} × ${name}${sku ? ` (${sku})` : ""}.`,
     },
+  });
+  await notifyTicketSms({
+    organizationId: session.organizationId,
+    ticketId,
+    kind: "updated",
+    actorUserId: session.userId,
+    note: `Parts logged: ${quantity} × ${name}.`,
   });
   redirect(`/tickets/${ticketId}`);
 }

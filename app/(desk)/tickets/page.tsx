@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ticketWhere } from "@/lib/scope";
-import { isPrintableStatus, requiresInvoice } from "@/lib/roles";
+import { isPrintableStatus, requiresInvoice, ROLES } from "@/lib/roles";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
 
 export default async function TicketsPage() {
@@ -21,7 +21,7 @@ export default async function TicketsPage() {
       <div className="flex items-center justify-between gap-3">
         <h1 className="font-display text-3xl">Service tickets</h1>
         <Link href="/tickets/new" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-          New ticket
+          {session.role === ROLES.FARMER ? "Request service" : "New ticket"}
         </Link>
       </div>
       <div className="mt-6 overflow-hidden rounded-xl border border-stone-200 bg-white">

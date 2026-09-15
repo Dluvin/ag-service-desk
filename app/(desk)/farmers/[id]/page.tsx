@@ -126,6 +126,9 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
             ))}
           </ul>
           <h2 className="font-display mt-6 text-xl">Tickets</h2>
+          <Link href="/tickets/new" className="mt-1 inline-block text-sm font-semibold text-emerald-800">
+            Request service
+          </Link>
           <ul className="mt-2 space-y-2">
             {farmer.tickets.map((ticket) => (
               <li key={ticket.id} className="flex items-center justify-between gap-2">

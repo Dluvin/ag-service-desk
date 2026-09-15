@@ -12,14 +12,18 @@ export function NewTicketSiteFields({
   canAddFarmer,
   mapsApiKey,
   lockedFarmerId,
+  defaultPivotId,
 }: {
   pivots: PivotOption[];
   farmers: FarmerOption[];
   canAddFarmer: boolean;
   mapsApiKey?: string;
   lockedFarmerId?: string | null;
+  defaultPivotId?: string;
 }) {
-  const [siteMode, setSiteMode] = useState<"existing" | "new">(pivots.length ? "existing" : "new");
+  const [siteMode, setSiteMode] = useState<"existing" | "new">(
+    defaultPivotId || pivots.length ? "existing" : "new",
+  );
   const [farmerMode, setFarmerMode] = useState<"existing" | "new">(farmers.length && !lockedFarmerId ? "existing" : "new");
 
   return (
@@ -51,7 +55,12 @@ export function NewTicketSiteFields({
       {siteMode === "existing" ? (
         <label className="block text-sm font-medium">
           Pivot
-          <select name="pivotId" required={siteMode === "existing"} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
+          <select
+            name="pivotId"
+            required={siteMode === "existing"}
+            defaultValue={defaultPivotId ?? ""}
+            className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+          >
             <option value="">Select a pivot</option>
             {pivots.map((pivot) => (
               <option key={pivot.id} value={pivot.id}>

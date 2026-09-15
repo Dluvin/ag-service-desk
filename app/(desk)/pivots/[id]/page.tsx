@@ -126,7 +126,10 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
             ))
           )}
         </ul>
-        <Link href="/tickets/new" className="mt-4 inline-block text-sm font-semibold text-emerald-800">
+        <Link
+          href={session.role === ROLES.FARMER ? `/tickets/new?pivotId=${pivot.id}` : "/tickets/new"}
+          className="mt-4 inline-block text-sm font-semibold text-emerald-800"
+        >
           Open a ticket for this pivot
         </Link>
       </div>

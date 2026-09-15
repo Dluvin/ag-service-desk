@@ -36,7 +36,7 @@ export default async function DashboardPage() {
       <h1 className="font-display text-3xl">Dashboard</h1>
       <p className="mt-1 text-stone-600">
         {session.role === ROLES.FARMER
-          ? "Status on your pivots and service calls."
+          ? "Open a service ticket or add information on an existing call."
           : session.role === ROLES.TECHNICIAN
             ? "Tickets assigned to you."
             : "Dispatch across your company."}
@@ -63,8 +63,15 @@ export default async function DashboardPage() {
             Dispatch board
           </Link>
         ) : null}
-        <Link href="/tickets/new" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-          New service ticket
+        <Link
+          href="/tickets/new"
+          className={
+            session.role === ROLES.FARMER
+              ? "rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white"
+              : "rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold"
+          }
+        >
+          {session.role === ROLES.FARMER ? "Request service" : "New service ticket"}
         </Link>
         <Link href="/startup" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
           {STARTUP_SEASON_YEAR} startup

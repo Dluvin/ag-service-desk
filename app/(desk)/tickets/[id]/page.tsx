@@ -135,11 +135,21 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             <input type="hidden" name="status" value={ticket.status} />
           )}
           <label className="block text-sm font-medium">
-            {canDispatch ? "Work note" : "Message to the service team"}
-            <textarea name="message" rows={3} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            {canDispatch ? "Work note" : "Add information"}
+            <textarea
+              name="message"
+              rows={4}
+              required={!canDispatch}
+              placeholder={
+                canDispatch
+                  ? "What was done, parts needed, follow-up…"
+                  : "More detail for the service team: what you see, when it started, who to call on site…"
+              }
+              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+            />
           </label>
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-            {canDispatch ? "Save update" : "Send update"}
+            {canDispatch ? "Save update" : "Add to ticket"}
           </button>
         </ActionForm>
 

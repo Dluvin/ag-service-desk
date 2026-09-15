@@ -7,9 +7,14 @@ import { createTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { NewTicketSiteFields } from "@/components/NewTicketSiteFields";
 
-export default async function NewTicketPage() {
+export default async function NewTicketPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ pivotId?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const query = await searchParams;
 
   const [pivots, technicians, farmers] = await Promise.all([
     prisma.pivot.findMany({
@@ -29,10 +34,13 @@ export default async function NewTicketPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className="font-display text-3xl">New service ticket</h1>
+      <h1 className="font-display text-3xl">
+        {session.role === ROLES.FARMER ? "Request service" : "New service ticket"}
+      </h1>
       <p className="mt-1 text-sm text-stone-600">
-        Use an existing pivot, or add a new pivot (and a new farmer if needed) and drop a pin on
-        Google Maps.
+        {session.role === ROLES.FARMER
+          ? "Pick one of your pivots or add a new location, then describe the problem. The shop will get the ticket."
+          : "Use an existing pivot, or add a new pivot (and a new farm if needed) and drop a pin on Google Maps."}
       </p>
       <ActionForm action={createTicketAction} className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
         <NewTicketSiteFields
@@ -46,6 +54,7 @@ export default async function NewTicketPage() {
           canAddFarmer={session.role === ROLES.ADMIN || session.role === ROLES.TECHNICIAN}
           mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}
           lockedFarmerId={session.role === ROLES.FARMER ? session.farmerId : null}
+          defaultPivotId={query.pivotId}
         />
         <label className="block text-sm font-medium">
           Title
@@ -78,7 +87,9 @@ export default async function NewTicketPage() {
             </select>
           </label>
         ) : null}
-        <button className="rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white">Create ticket</button>
+        <button className="rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white">
+          {session.role === ROLES.FARMER ? "Send to the shop" : "Create ticket"}
+        </button>
       </ActionForm>
     </div>
   );

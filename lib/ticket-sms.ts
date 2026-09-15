@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { STATUS_LABELS, type TicketStatus } from "./roles";
+import { ROLES, STATUS_LABELS, type TicketStatus } from "./roles";
 import { isPlaceholderUsNumber, sendBirdSms, toE164 } from "./bird";
 
 function clip(text: string, max = 140) {
@@ -10,7 +10,7 @@ function clip(text: string, max = 140) {
 export async function notifyTicketSms(input: {
   organizationId: string;
   ticketId: string;
-  kind: "assigned" | "updated";
+  kind: "assigned" | "updated" | "opened";
   actorUserId?: string | null;
   note?: string;
 }) {
@@ -28,10 +28,12 @@ export async function notifyTicketSms(input: {
   if (!ticket) return;
 
   const statusLabel = STATUS_LABELS[ticket.status as TicketStatus] ?? ticket.status;
-  const assignedLine =
+  const body =
     input.kind === "assigned"
       ? `${org.name}: Ticket #${ticket.number} ${ticket.title} assigned to ${ticket.technician?.name ?? "a technician"}. Farm: ${ticket.farmer.name}. Pivot: ${ticket.pivot.name}.`
-      : `${org.name}: Ticket #${ticket.number} ${ticket.title} updated (${statusLabel}). ${clip(input.note || "")} Farm: ${ticket.farmer.name}.`;
+      : input.kind === "opened"
+        ? `${org.name}: New ticket #${ticket.number} ${ticket.title} from ${ticket.farmer.name} (${ticket.pivot.name}). ${clip(input.note || "")}`
+        : `${org.name}: Ticket #${ticket.number} ${ticket.title} updated (${statusLabel}). ${clip(input.note || "")} Farm: ${ticket.farmer.name}.`;
 
   const recipients = new Map<string, string>();
   const addPhone = (raw: string | null | undefined) => {
@@ -41,10 +43,17 @@ export async function notifyTicketSms(input: {
   };
 
   for (const contact of ticket.farmer.contacts) addPhone(contact.phone);
-  addPhone(ticket.farmer.phone);
+  if (ticket.farmer.contacts.length === 0) addPhone(ticket.farmer.phone);
 
-  const skipTech = Boolean(input.actorUserId && ticket.technicianId === input.actorUserId);
-  if (ticket.technician?.phone && !skipTech) addPhone(ticket.technician.phone);
+  addPhone(ticket.technician?.phone);
+
+  if (input.kind === "opened" && !ticket.technicianId) {
+    const techs = await prisma.user.findMany({
+      where: { organizationId: input.organizationId, role: ROLES.TECHNICIAN },
+      select: { phone: true },
+    });
+    for (const tech of techs) addPhone(tech.phone);
+  }
 
   const config = {
     apiKey: org.birdApiKey,
@@ -55,7 +64,7 @@ export async function notifyTicketSms(input: {
 
   await Promise.allSettled(
     [...recipients.keys()].map((to) =>
-      sendBirdSms(config, to, assignedLine).catch((error) => {
+      sendBirdSms(config, to, body).catch((error) => {
         console.error(`Bird SMS to ${to} failed`, error);
       }),
     ),
