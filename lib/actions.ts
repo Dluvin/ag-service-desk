@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { createSession, destroySession, getSession, requireSession, verifyLogin } from "./auth";
-import { PRIORITIES, ROLES, TICKET_STATUSES, slugify, type TicketStatus } from "./roles";
+import { PRIORITIES, ROLES, TICKET_STATUSES, isFinishedStatus, requiresInvoice, slugify, type TicketStatus } from "./roles";
 import { openServiceTicket } from "./tickets";
 import { INSPECTION_STATUS, STARTUP_CHECKS, STARTUP_SEASON_YEAR } from "./startup";
 import { parseMapsLocation } from "./maps";
@@ -175,6 +175,26 @@ export async function createPivotAction(formData: FormData) {
   redirect(`/pivots/${pivot.id}`);
 }
 
+export async function addPivotNoteAction(formData: FormData) {
+  const session = await requireSession();
+  const pivotId = formString(formData, "pivotId");
+  const message = formString(formData, "message");
+  if (!message) return { error: "Write a note before saving." };
+
+  const pivot = await prisma.pivot.findFirst({
+    where: { id: pivotId, organizationId: session.organizationId },
+  });
+  if (!pivot) return { error: "Pivot not found." };
+  if (session.role === ROLES.FARMER && session.farmerId !== pivot.farmerId) {
+    return { error: "You can only add notes on your own pivots." };
+  }
+
+  await prisma.pivotNote.create({
+    data: { pivotId, userId: session.userId, message },
+  });
+  redirect(`/pivots/${pivotId}`);
+}
+
 export async function createTicketAction(formData: FormData) {
   const session = await requireSession();
   const pivotId = formString(formData, "pivotId");
@@ -244,7 +264,7 @@ export async function updateTicketAction(formData: FormData) {
   if (!TICKET_STATUSES.includes(status)) return { error: "Invalid status." };
 
   const invoiceNumber = formString(formData, "invoiceNumber");
-  if (status === "COMPLETED") {
+  if (requiresInvoice(status)) {
     if (!invoiceNumber) {
       return { error: "An invoice number is required before a ticket can be closed." };
     }
@@ -271,10 +291,10 @@ export async function updateTicketAction(formData: FormData) {
       status,
       technicianId: nextTech,
       invoiceNumber: invoiceNumber || ticket.invoiceNumber,
-      closedAt: status === "COMPLETED" ? (ticket.closedAt ?? new Date()) : ticket.closedAt,
+      closedAt: requiresInvoice(status) ? (ticket.closedAt ?? new Date()) : ticket.closedAt,
     },
   });
-  if (status === "COMPLETED" || status === "CANCELLED") {
+  if (isFinishedStatus(status) || status === "REPAIR_DONE") {
     await closeOpenSiteVisits(ticketId);
   }
 
@@ -312,7 +332,7 @@ export async function assignTicketAction(formData: FormData) {
   let nextStatus: string = TICKET_STATUSES.includes(status as TicketStatus) ? status : ticket.status;
   if (nextTech && nextStatus === "OPEN") nextStatus = "ASSIGNED";
   if (!nextTech && nextStatus === "ASSIGNED") nextStatus = "OPEN";
-  if (nextStatus === "COMPLETED" && !ticket.invoiceNumber) {
+  if (requiresInvoice(nextStatus) && !ticket.invoiceNumber) {
     return { error: "Close this ticket from the ticket page and enter an invoice number." };
   }
 

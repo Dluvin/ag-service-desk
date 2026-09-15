@@ -1,3 +1,5 @@
+import { OPEN_TICKET_STATUSES } from "./roles";
+
 export type MapPin = {
   id: string;
   name: string;
@@ -8,7 +10,7 @@ export type MapPin = {
   kind?: "ticket" | "vehicle";
 };
 
-export const OPEN_TICKET_STATUSES = ["OPEN", "ASSIGNED", "IN_PROGRESS", "WAITING_PARTS"] as const;
+export { OPEN_TICKET_STATUSES };
 
 export function ticketPins(
   tickets: {

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ticketWhere } from "@/lib/scope";
+import { isPrintableStatus, requiresInvoice } from "@/lib/roles";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
 
 export default async function TicketsPage() {
@@ -58,16 +59,16 @@ export default async function TicketsPage() {
                 <td className="px-4 py-3">
                   {ticket.invoiceNumber ? (
                     <span className="text-stone-700">{ticket.invoiceNumber}</span>
-                  ) : ticket.status === "COMPLETED" ? (
+                  ) : requiresInvoice(ticket.status) ? (
                     <span className="text-red-700">Missing</span>
                   ) : (
                     "—"
                   )}
-                  {ticket.status === "COMPLETED" && ticket.invoiceNumber ? (
+                  {isPrintableStatus(ticket.status) ? (
                     <>
                       <br />
-                      <Link href={`/tickets/${ticket.id}/print`} className="text-xs text-emerald-800 hover:underline">
-                        Print / PDF
+                      <Link href={`/tickets/${ticket.id}/print`} className="text-xs font-semibold text-emerald-800 hover:underline">
+                        Print
                       </Link>
                     </>
                   ) : null}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TICKET_STATUSES, STATUS_LABELS, type TicketStatus } from "@/lib/roles";
+import { TICKET_STATUSES, STATUS_LABELS, requiresInvoice, type TicketStatus } from "@/lib/roles";
 
 export function TicketStatusFields({
   status,
@@ -11,7 +11,7 @@ export function TicketStatusFields({
   invoiceNumber?: string | null;
 }) {
   const [current, setCurrent] = useState(status);
-  const needsInvoice = current === "COMPLETED";
+  const needsInvoice = requiresInvoice(current);
 
   return (
     <>

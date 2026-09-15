@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ticketWhere } from "@/lib/scope";
+import { isPrintableStatus } from "@/lib/roles";
 import { ClosedTicketDocument } from "@/components/ClosedTicketDocument";
 import { PrintButton } from "@/components/PrintButton";
 
@@ -24,7 +25,7 @@ export default async function ClosedTicketPrintPage({ params }: { params: Promis
     },
   });
   if (!ticket) notFound();
-  if (ticket.status !== "COMPLETED" || !ticket.invoiceNumber) {
+  if (!isPrintableStatus(ticket.status)) {
     redirect(`/tickets/${ticket.id}`);
   }
 

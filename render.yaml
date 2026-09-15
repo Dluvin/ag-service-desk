@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ag-service-desk
+    runtime: docker
+    plan: free
+    healthCheckPath: /login
+    envVars:
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        value: file:/data/prod.db
+      - key: NODE_ENV
+        value: production

@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
-import { ROLES, TICKET_STATUSES, STATUS_LABELS, type TicketStatus } from "@/lib/roles";
+import { DISPATCH_STATUSES, ROLES, TICKET_STATUSES, STATUS_LABELS, isFinishedStatus, type TicketStatus } from "@/lib/roles";
 import { assignTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { PriorityBadge } from "@/components/Badges";
 import { DispatchFleetMap } from "@/components/DispatchFleetMap";
 import { ticketPins } from "@/lib/map-pins";
 
-const COLUMNS: TicketStatus[] = ["OPEN", "ASSIGNED", "IN_PROGRESS", "WAITING_PARTS"];
+const COLUMNS: TicketStatus[] = [...DISPATCH_STATUSES];
 
 export default async function DispatchPage() {
   const session = await getSession();
@@ -36,7 +36,7 @@ export default async function DispatchPage() {
         Open work by status, assign a technician, and see every open ticket on the map.
       </p>
 
-      <div className="mt-6 grid gap-3 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 lg:grid-cols-5">
         {COLUMNS.map((column) => {
           const items = tickets.filter((ticket) => ticket.status === column);
           return (
@@ -80,7 +80,7 @@ export default async function DispatchPage() {
                         defaultValue={ticket.status}
                         className="w-full rounded-md border border-stone-300 px-2 py-1 text-xs"
                       >
-                        {TICKET_STATUSES.filter((status) => status !== "CANCELLED" && status !== "COMPLETED").map((status) => (
+                        {TICKET_STATUSES.filter((status) => !isFinishedStatus(status)).map((status) => (
                           <option key={status} value={status}>
                             {STATUS_LABELS[status]}
                           </option>

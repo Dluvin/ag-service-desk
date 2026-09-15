@@ -40,7 +40,7 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
         </div>
         <div className="text-right text-sm">
           <p className="font-semibold">Ticket #{ticket.number}</p>
-          <p>Invoice {ticket.invoiceNumber}</p>
+          <p>{ticket.invoiceNumber ? `Invoice ${ticket.invoiceNumber}` : "No invoice number"}</p>
           <p>
             Closed{" "}
             {(ticket.closedAt ?? ticket.updatedAt).toLocaleDateString()}

@@ -41,6 +41,7 @@ model User {
   inspections           StartupInspection[]   @relation("Inspector")
   revealVehicleNumber   String?
   siteVisits            SiteVisit[]
+  pivotNotes            PivotNote[]
   createdAt             DateTime              @default(now())
 
   @@unique([organizationId, email])
@@ -75,6 +76,17 @@ model Pivot {
   createdAt      DateTime     @default(now())
   tickets        Ticket[]
   inspections    StartupInspection[]
+  notes          PivotNote[]
+}
+
+model PivotNote {
+  id        String   @id @default(cuid())
+  pivotId   String
+  pivot     Pivot    @relation(fields: [pivotId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  createdAt DateTime @default(now())
 }
 
 model Ticket {

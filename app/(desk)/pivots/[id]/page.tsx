@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { pivotWhere } from "@/lib/scope";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
 import { StatusBadge } from "@/components/Badges";
+import { addPivotNoteAction } from "@/lib/actions";
+import { ActionForm } from "@/components/ActionForm";
 
 export default async function PivotDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -13,7 +15,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
 
   const pivot = await prisma.pivot.findFirst({
     where: { id, ...pivotWhere(session) },
-    include: { farmer: true, tickets: { orderBy: { updatedAt: "desc" } } },
+    include: { farmer: true, tickets: { orderBy: { updatedAt: "desc" } }, notes: { include: { user: true }, orderBy: { createdAt: "desc" } } },
   });
   if (!pivot) notFound();
 
@@ -33,6 +35,37 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
             Pre-season startup checklist
           </Link>
         </p>
+
+        <h2 className="font-display mt-8 text-xl">Notes</h2>
+        <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
+          {pivot.notes.length === 0 ? (
+            <li className="p-4 text-sm text-stone-600">No notes on this pivot yet.</li>
+          ) : (
+            pivot.notes.map((note) => (
+              <li key={note.id} className="px-4 py-3">
+                <p className="text-xs text-stone-500">
+                  {note.user.name} · {new Date(note.createdAt).toLocaleString()}
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-stone-800">{note.message}</p>
+              </li>
+            ))
+          )}
+        </ul>
+        <ActionForm action={addPivotNoteAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+          <input type="hidden" name="pivotId" value={pivot.id} />
+          <label className="block text-sm font-medium">
+            Add a note
+            <textarea
+              name="message"
+              rows={3}
+              required
+              placeholder="Access, span issues, last service, farmer requests…"
+              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+            />
+          </label>
+          <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save note</button>
+        </ActionForm>
+
         <h2 className="font-display mt-8 text-xl">Tickets</h2>
         <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
           {pivot.tickets.length === 0 ? (

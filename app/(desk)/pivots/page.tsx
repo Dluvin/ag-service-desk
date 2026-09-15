@@ -20,7 +20,11 @@ export default async function PivotsPage({
   const [pivots, farmers] = await Promise.all([
     prisma.pivot.findMany({
       where: pivotWhere(session),
-      include: { farmer: true, tickets: { where: { status: { notIn: ["COMPLETED", "CANCELLED"] } } } },
+      include: {
+        farmer: true,
+        tickets: { where: { status: { notIn: ["COMPLETED", "CANCELLED"] } } },
+        _count: { select: { notes: true } },
+      },
       orderBy: { name: "asc" },
     }),
     canImport
@@ -60,7 +64,10 @@ export default async function PivotsPage({
                 {pivot.latitude.toFixed(5)}, {pivot.longitude.toFixed(5)}
                 {pivot.serialNumber ? ` · ${pivot.serialNumber}` : ""}
               </p>
-              <p className="mt-2 text-sm">{pivot.tickets.length} open ticket(s)</p>
+              <p className="mt-2 text-sm">
+                {pivot.tickets.length} open ticket(s)
+                {pivot._count.notes > 0 ? ` · ${pivot._count.notes} note(s)` : ""}
+              </p>
             </li>
           ))}
         </ul>

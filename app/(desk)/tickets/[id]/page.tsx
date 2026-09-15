@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
-import { ROLES, STATUS_LABELS } from "@/lib/roles";
+import { ROLES, STATUS_LABELS, isPrintableStatus } from "@/lib/roles";
 import { updateTicketAction, addTicketPartAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
@@ -52,9 +52,12 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           {ticket.invoiceNumber ? (
             <span className="text-sm font-medium text-stone-700">Invoice {ticket.invoiceNumber}</span>
           ) : null}
-          {ticket.status === "COMPLETED" && ticket.invoiceNumber ? (
-            <Link href={`/tickets/${ticket.id}/print`} className="text-sm font-semibold text-emerald-800 hover:underline">
-              Print / Save PDF
+          {isPrintableStatus(ticket.status) ? (
+            <Link
+              href={`/tickets/${ticket.id}/print`}
+              className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              Print ticket
             </Link>
           ) : null}
         </div>

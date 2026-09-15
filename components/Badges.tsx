@@ -5,6 +5,7 @@ const TONES: Record<TicketStatus, string> = {
   ASSIGNED: "bg-indigo-100 text-indigo-900",
   IN_PROGRESS: "bg-amber-100 text-amber-950",
   WAITING_PARTS: "bg-orange-100 text-orange-950",
+  REPAIR_DONE: "bg-lime-100 text-lime-950",
   COMPLETED: "bg-emerald-100 text-emerald-900",
   CANCELLED: "bg-stone-200 text-stone-700",
 };

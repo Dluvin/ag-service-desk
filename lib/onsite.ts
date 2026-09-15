@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { metersBetween } from "./geo";
+import { OPEN_TICKET_STATUSES } from "./roles";
 
 const MIN_VISIT_MS = 2 * 60 * 1000;
 
@@ -47,7 +48,7 @@ export async function syncOnsiteVisits(args: {
   const tickets = await prisma.ticket.findMany({
     where: {
       organizationId: args.organizationId,
-      status: { in: ["OPEN", "ASSIGNED", "IN_PROGRESS", "WAITING_PARTS"] },
+      status: { in: [...OPEN_TICKET_STATUSES] },
     },
     include: { pivot: true },
   });
