@@ -1,0 +1,109 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { pivotWhere } from "@/lib/scope";
+import { ROLES } from "@/lib/roles";
+import { importAgSensePivotsAction } from "@/lib/actions";
+import { ActionForm } from "@/components/ActionForm";
+
+export default async function PivotsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ imported?: string; updated?: string; skipped?: string; farmers?: string }>;
+}) {
+  const session = await getSession();
+  if (!session) redirect("/login");
+
+  const query = await searchParams;
+  const canImport = session.role !== ROLES.FARMER;
+  const [pivots, farmers] = await Promise.all([
+    prisma.pivot.findMany({
+      where: pivotWhere(session),
+      include: { farmer: true, tickets: { where: { status: { notIn: ["COMPLETED", "CANCELLED"] } } } },
+      orderBy: { name: "asc" },
+    }),
+    canImport
+      ? prisma.farmer.findMany({
+          where: { organizationId: session.organizationId },
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-5">
+      <div className="lg:col-span-3">
+        <div className="flex items-center justify-between">
+          <h1 className="font-display text-3xl">Pivots</h1>
+          {canImport ? (
+            <Link href="/pivots/new" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
+              Add pivot
+            </Link>
+          ) : null}
+        </div>
+        {query.imported || query.updated || query.skipped || query.farmers ? (
+          <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
+            AgSense import finished: {query.imported ?? "0"} added, {query.updated ?? "0"} updated
+            {query.farmers && query.farmers !== "0" ? `, ${query.farmers} farmer(s) created` : ""}
+            {query.skipped && query.skipped !== "0" ? `, ${query.skipped} skipped` : ""}.
+          </p>
+        ) : null}
+        <ul className="mt-6 grid gap-4 md:grid-cols-2">
+          {pivots.map((pivot) => (
+            <li key={pivot.id} className="rounded-xl border border-stone-200 bg-white p-4">
+              <Link href={`/pivots/${pivot.id}`} className="font-semibold text-emerald-900 hover:underline">
+                {pivot.name}
+              </Link>
+              <p className="text-sm text-stone-600">{pivot.farmer.name}</p>
+              <p className="mt-1 text-xs text-stone-500">
+                {pivot.latitude.toFixed(5)}, {pivot.longitude.toFixed(5)}
+                {pivot.serialNumber ? ` · ${pivot.serialNumber}` : ""}
+              </p>
+              <p className="mt-2 text-sm">{pivot.tickets.length} open ticket(s)</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {canImport ? (
+        <div className="lg:col-span-2">
+          <h2 className="font-display text-xl">Import from AgSense</h2>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-stone-600">
+            <li>In AgSense 365, open the device list (or Map / Reports).</li>
+            <li>Export devices to CSV. Include name, grower, and GPS coordinates.</li>
+            <li>Upload that file. Matching serial numbers update; new devices are added.</li>
+          </ol>
+          <p className="mt-2 text-sm">
+            <a href="/agsense-pivots-template.csv" className="text-emerald-800 hover:underline">
+              Download a sample CSV
+            </a>
+          </p>
+          <ActionForm action={importAgSensePivotsAction} encType="multipart/form-data" className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+            <label className="block text-sm font-medium">
+              AgSense file
+              <input name="file" type="file" accept=".csv,.txt" required className="mt-1 w-full text-sm" />
+            </label>
+            <label className="block text-sm font-medium">
+              Default farmer if Grower is blank
+              <select name="defaultFarmerId" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
+                <option value="">None — skip rows without a grower</option>
+                {farmers.map((farmer) => (
+                  <option key={farmer.id} value={farmer.id}>
+                    {farmer.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="createFarmers" defaultChecked className="rounded border-stone-300" />
+              Create farmers from new Grower names
+            </label>
+            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
+              Import pivots
+            </button>
+          </ActionForm>
+        </div>
+      ) : null}
+    </div>
+  );
+}

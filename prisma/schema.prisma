@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  createdAt           DateTime @default(now())
+  revealAppId         String?
+  revealUsername      String?
+  revealPassword      String?
+  revealBaseUrl       String   @default("https://fim.api.us.fleetmatics.com")
+  revealOnsiteMeters  Int      @default(400)
+  users               User[]
+  farmers             Farmer[]
+  pivots              Pivot[]
+  tickets             Ticket[]
+  inspections         StartupInspection[]
+  catalogParts        CatalogPart[]
+}
+
+model User {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  passwordHash   String
+  name           String
+  role           String
+  farmerId       String?
+  farmer         Farmer?      @relation(fields: [farmerId], references: [id], onDelete: SetNull)
+  tickets        Ticket[]              @relation("TechnicianTickets")
+  updates        TicketUpdate[]
+  partsLogged    TicketPart[]
+  inspections           StartupInspection[]   @relation("Inspector")
+  revealVehicleNumber   String?
+  siteVisits            SiteVisit[]
+  createdAt             DateTime              @default(now())
+
+  @@unique([organizationId, email])
+}
+
+model Farmer {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  phone          String?
+  email          String?
+  address        String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  users          User[]
+  pivots         Pivot[]
+  tickets        Ticket[]
+}
+
+model Pivot {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  farmerId       String
+  farmer         Farmer       @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  name           String
+  latitude       Float
+  longitude      Float
+  locationNote   String?
+  serialNumber   String?
+  createdAt      DateTime     @default(now())
+  tickets        Ticket[]
+  inspections    StartupInspection[]
+}
+
+model Ticket {
+  id             String        @id @default(cuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  farmerId       String
+  farmer         Farmer        @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  pivotId        String
+  pivot          Pivot         @relation(fields: [pivotId], references: [id], onDelete: Cascade)
+  technicianId   String?
+  technician     User?         @relation("TechnicianTickets", fields: [technicianId], references: [id], onDelete: SetNull)
+  number         Int
+  title          String
+  description    String
+  status         String        @default("OPEN")
+  priority       String        @default("NORMAL")
+  invoiceNumber  String?
+  closedAt       DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  updates        TicketUpdate[]
+  parts          TicketPart[]
+  inspections    StartupInspection[]
+  siteVisits     SiteVisit[]
+
+  @@unique([organizationId, number])
+}
+
+model SiteVisit {
+  id               String    @id @default(cuid())
+  ticketId         String
+  ticket           Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  technicianId     String?
+  technician       User?     @relation(fields: [technicianId], references: [id], onDelete: SetNull)
+  vehicleNumber    String
+  startedAt        DateTime
+  endedAt          DateTime?
+  lastSeenAt       DateTime
+  metersFromPivot  Float?
+
+  @@index([ticketId])
+  @@index([technicianId, endedAt])
+}
+
+model CatalogPart {
+  id              String       @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name            String
+  sku             String?
+  description     String?
+  itemType        String?
+  price           Float?
+  cost            Float?
+  quantityOnHand  Float?
+  active          Boolean      @default(true)
+  source          String       @default("MANUAL")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  ticketParts     TicketPart[]
+
+  @@unique([organizationId, name])
+}
+
+model TicketPart {
+  id             String        @id @default(cuid())
+  ticketId       String
+  ticket         Ticket        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  catalogPartId  String?
+  catalogPart    CatalogPart?  @relation(fields: [catalogPartId], references: [id], onDelete: SetNull)
+  name           String
+  quantity       Float
+  sku            String?
+  unitPrice      Float?
+  createdAt      DateTime      @default(now())
+}
+
+model StartupInspection {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  pivotId        String
+  pivot          Pivot        @relation(fields: [pivotId], references: [id], onDelete: Cascade)
+  seasonYear     Int
+  status         String       @default("IN_PROGRESS")
+  inspectorId    String?
+  inspector      User?        @relation("Inspector", fields: [inspectorId], references: [id], onDelete: SetNull)
+  ticketId       String?
+  ticket         Ticket?      @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  checks         StartupCheck[]
+
+  @@unique([pivotId, seasonYear])
+}
+
+model StartupCheck {
+  id            String             @id @default(cuid())
+  inspectionId  String
+  inspection    StartupInspection  @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  checkKey      String
+  result        String             @default("PENDING")
+  notes         String?
+
+  @@unique([inspectionId, checkKey])
+}
+
+model TicketUpdate {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  status    String?
+  createdAt DateTime @default(now())
+}
