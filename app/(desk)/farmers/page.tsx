@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 import { createFarmerAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { FarmDirectory } from "@/components/FarmDirectory";
 
 export default async function FarmersPage() {
   const session = await getSession();
@@ -27,21 +27,16 @@ export default async function FarmersPage() {
     <div className="grid gap-8 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Farms</h1>
-        <ul className="mt-6 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
-          {farmers.map((farmer) => (
-            <li key={farmer.id} className="px-4 py-3">
-              <Link href={`/farmers/${farmer.id}`} className="font-semibold text-emerald-900 hover:underline">
-                {farmer.name}
-              </Link>
-              <p className="text-sm text-stone-600">
-                {farmer._count.pivots} pivots · {farmer._count.tickets} tickets
-                {farmer.contacts.length
-                  ? ` · ${farmer.contacts.map((contact) => contact.name).join(", ")}`
-                  : ""}
-              </p>
-            </li>
-          ))}
-        </ul>
+        <FarmDirectory
+          farms={farmers.map((farmer) => ({
+            id: farmer.id,
+            name: farmer.name,
+            address: farmer.address,
+            pivotCount: farmer._count.pivots,
+            ticketCount: farmer._count.tickets,
+            contacts: farmer.contacts.map((contact) => contact.name).join(", "),
+          }))}
+        />
       </div>
       <div className="lg:col-span-2">
         <h2 className="font-display text-xl">Add farm</h2>

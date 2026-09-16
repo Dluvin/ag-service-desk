@@ -2,6 +2,14 @@
 
 import { useMemo, useState } from "react";
 
+export type PivotChoice = {
+  id: string;
+  name: string;
+  latitude?: number;
+  longitude?: number;
+  locationNote?: string | null;
+};
+
 export function PivotTypeahead({
   pivots,
   pivotId,
@@ -9,15 +17,16 @@ export function PivotTypeahead({
   required,
   disabled,
 }: {
-  pivots: { id: string; name: string }[];
+  pivots: PivotChoice[];
   pivotId: string;
-  onSelect: (pivot: { id: string; name: string } | null) => void;
+  onSelect: (pivot: PivotChoice | null) => void;
   required?: boolean;
   disabled?: boolean;
 }) {
   const selected = pivots.find((pivot) => pivot.id === pivotId) ?? null;
   const [text, setText] = useState(selected?.name ?? "");
   const [open, setOpen] = useState(false);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const matches = useMemo(() => {
     const q = text.trim().toLowerCase();
@@ -32,9 +41,12 @@ export function PivotTypeahead({
       .slice(0, 40);
   }, [pivots, text]);
 
-  function choose(pivot: { id: string; name: string }) {
+  const hovered = matches.find((pivot) => pivot.id === hoveredId) ?? null;
+
+  function choose(pivot: PivotChoice) {
     setText(pivot.name);
     setOpen(false);
+    setHoveredId(null);
     onSelect(pivot);
   }
 
@@ -61,29 +73,60 @@ export function PivotTypeahead({
           window.setTimeout(() => {
             const exact = pivots.filter((pivot) => pivot.name.toLowerCase() === text.trim().toLowerCase());
             if (exact.length === 1) choose(exact[0]);
-            else setOpen(false);
-          }, 120);
+            else {
+              setOpen(false);
+              setHoveredId(null);
+            }
+          }, 180);
         }}
       />
       {open && !disabled ? (
-        <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-stone-200 bg-white py-1 text-sm shadow-lg">
-          {matches.length === 0 ? (
-            <li className="px-3 py-2 text-stone-500">No matching pivots</li>
-          ) : (
-            matches.map((pivot) => (
-              <li key={pivot.id}>
-                <button
-                  type="button"
-                  className={`block w-full px-3 py-2 text-left hover:bg-emerald-50 ${pivot.id === pivotId ? "bg-emerald-50 font-medium" : ""}`}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => choose(pivot)}
-                >
-                  {pivot.name}
-                </button>
-              </li>
-            ))
-          )}
-        </ul>
+        <div className="absolute z-20 mt-1 w-full">
+          <ul
+            className="max-h-64 overflow-auto rounded-lg border border-stone-200 bg-white py-1 text-sm shadow-lg"
+            onMouseLeave={() => setHoveredId(null)}
+          >
+            {matches.length === 0 ? (
+              <li className="px-3 py-2 text-stone-500">No matching pivots</li>
+            ) : (
+              matches.map((pivot) => (
+                <li key={pivot.id}>
+                  <button
+                    type="button"
+                    className={`block w-full px-3 py-2 text-left hover:bg-emerald-50 ${pivot.id === pivotId ? "bg-emerald-50 font-medium" : ""}`}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => setHoveredId(pivot.id)}
+                    onClick={() => choose(pivot)}
+                  >
+                    <span className="block">{pivot.name}</span>
+                    {pivot.latitude != null && pivot.longitude != null ? (
+                      <span className="block text-xs font-normal text-stone-500">
+                        {pivot.latitude.toFixed(5)}, {pivot.longitude.toFixed(5)}
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+          {hovered && hovered.latitude != null && hovered.longitude != null ? (
+            <div className="absolute top-0 left-full z-30 ml-2 hidden w-64 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-lg lg:block">
+              <iframe
+                title={`Map for ${hovered.name}`}
+                src={`https://maps.google.com/maps?q=${hovered.latitude},${hovered.longitude}&z=15&output=embed`}
+                className="h-44 w-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              <p className="px-2 py-1.5 text-xs text-stone-600">
+                {hovered.name}
+                <span className="block text-stone-500">
+                  {hovered.latitude.toFixed(5)}, {hovered.longitude.toFixed(5)}
+                </span>
+              </p>
+            </div>
+          ) : null}
+        </div>
       ) : null}
     </label>
   );

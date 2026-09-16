@@ -5,7 +5,15 @@ import { MapLocationPicker } from "@/components/MapLocationPicker";
 import { FarmTypeahead } from "@/components/FarmTypeahead";
 import { PivotTypeahead } from "@/components/PivotTypeahead";
 
-type PivotOption = { id: string; name: string; farmerName: string; farmerId: string };
+type PivotOption = {
+  id: string;
+  name: string;
+  farmerName: string;
+  farmerId: string;
+  latitude: number;
+  longitude: number;
+  locationNote: string | null;
+};
 type FarmerOption = { id: string; name: string };
 
 export function NewTicketSiteFields({

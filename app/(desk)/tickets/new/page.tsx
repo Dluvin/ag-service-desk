@@ -50,6 +50,9 @@ export default async function NewTicketPage({
             name: pivot.name,
             farmerName: pivot.farmer.name,
             farmerId: pivot.farmerId,
+            latitude: pivot.latitude,
+            longitude: pivot.longitude,
+            locationNote: pivot.locationNote,
           }))}
           farmers={farmers}
           canAddFarmer={isShopStaff(session.role)}

@@ -6,6 +6,7 @@ import { pivotWhere } from "@/lib/scope";
 import { canImportPivots, isShopStaff } from "@/lib/roles";
 import { importAgSensePivotsAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { PivotDirectory } from "@/components/PivotDirectory";
 
 export default async function PivotsPage({
   searchParams,
@@ -54,24 +55,18 @@ export default async function PivotsPage({
             {query.skipped && query.skipped !== "0" ? `, ${query.skipped} skipped` : ""}.
           </p>
         ) : null}
-        <ul className="mt-6 grid gap-4 md:grid-cols-2">
-          {pivots.map((pivot) => (
-            <li key={pivot.id} className="rounded-xl border border-stone-200 bg-white p-4">
-              <Link href={`/pivots/${pivot.id}`} className="font-semibold text-emerald-900 hover:underline">
-                {pivot.name}
-              </Link>
-              <p className="text-sm text-stone-600">{pivot.farmer.name}</p>
-              <p className="mt-1 text-xs text-stone-500">
-                {pivot.latitude.toFixed(5)}, {pivot.longitude.toFixed(5)}
-                {pivot.serialNumber ? ` · ${pivot.serialNumber}` : ""}
-              </p>
-              <p className="mt-2 text-sm">
-                {pivot.tickets.length} open ticket(s)
-                {pivot._count.notes > 0 ? ` · ${pivot._count.notes} note(s)` : ""}
-              </p>
-            </li>
-          ))}
-        </ul>
+        <PivotDirectory
+          pivots={pivots.map((pivot) => ({
+            id: pivot.id,
+            name: pivot.name,
+            farmerName: pivot.farmer.name,
+            latitude: pivot.latitude,
+            longitude: pivot.longitude,
+            serialNumber: pivot.serialNumber,
+            openTickets: pivot.tickets.length,
+            notes: pivot._count.notes,
+          }))}
+        />
       </div>
       {canImport ? (
         <div id="import" className="lg:col-span-2">
