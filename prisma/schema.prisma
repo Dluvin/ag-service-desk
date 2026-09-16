@@ -29,6 +29,7 @@ model Organization {
   pivots              Pivot[]
   tickets             Ticket[]
   inspections         StartupInspection[]
+  startupChecks       StartupCheckTemplate[]
   catalogParts        CatalogPart[]
 }
 
@@ -212,10 +213,25 @@ model StartupCheck {
   inspectionId  String
   inspection    StartupInspection  @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
   checkKey      String
+  label         String             @default("")
+  detail        String             @default("")
+  sortOrder     Int                @default(0)
   result        String             @default("PENDING")
   notes         String?
 
   @@unique([inspectionId, checkKey])
+}
+
+model StartupCheckTemplate {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  checkKey       String
+  label          String
+  detail         String       @default("")
+  sortOrder      Int          @default(0)
+
+  @@unique([organizationId, checkKey])
 }
 
 model TicketUpdate {

@@ -37,6 +37,7 @@ export function Nav({
           { href: "/managers", label: "Managers" },
           { href: "/staff", label: "Staff" },
           { href: "/company", label: "Logo" },
+          { href: "/startup/checklist", label: "Startup checklist" },
           { href: "/sms", label: "SMS" },
           { href: "/reveal", label: "Reveal GPS" },
         ]

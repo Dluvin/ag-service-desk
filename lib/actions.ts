@@ -14,13 +14,14 @@ import {
   canDeleteRecords,
   canImportPivots,
   canImportStaff,
+  canEditStartupChecklist,
   isFinishedStatus,
   requiresInvoice,
   slugify,
   type TicketStatus,
 } from "./roles";
 import { openServiceTicket } from "./tickets";
-import { INSPECTION_STATUS, STARTUP_CHECKS, STARTUP_SEASON_YEAR } from "./startup";
+import { INSPECTION_STATUS, STARTUP_CHECKS, STARTUP_SEASON_YEAR, checkLabel, ensureStartupTemplates, uniqueCheckKey } from "./startup";
 import { parseMapsLocation } from "./maps";
 import { parseQuickbooksExport } from "./quickbooks";
 import { parseAgSenseExport } from "./agsense";
@@ -99,6 +100,14 @@ export async function signupAction(formData: FormData) {
           role: ROLES.ADMIN,
           passwordHash: await bcrypt.hash(password, 10),
         },
+      },
+      startupChecks: {
+        create: STARTUP_CHECKS.map((check, index) => ({
+          checkKey: check.key,
+          label: check.label,
+          detail: check.detail,
+          sortOrder: index,
+        })),
       },
     },
     include: { users: true },
@@ -1140,6 +1149,9 @@ export async function startStartupInspectionAction(formData: FormData) {
   });
   if (existing) redirect(`/startup/${existing.id}`);
 
+  const templates = await ensureStartupTemplates(session.organizationId);
+  if (templates.length === 0) return { error: "Add at least one checklist item before starting an inspection." };
+
   const inspection = await prisma.startupInspection.create({
     data: {
       organizationId: session.organizationId,
@@ -1148,8 +1160,11 @@ export async function startStartupInspectionAction(formData: FormData) {
       status: INSPECTION_STATUS.IN_PROGRESS,
       inspectorId: session.userId,
       checks: {
-        create: STARTUP_CHECKS.map((check) => ({
-          checkKey: check.key,
+        create: templates.map((check) => ({
+          checkKey: check.checkKey,
+          label: check.label,
+          detail: check.detail,
+          sortOrder: check.sortOrder,
           result: "PENDING",
         })),
       },
@@ -1169,10 +1184,11 @@ export async function saveStartupChecksAction(formData: FormData) {
   });
   if (!inspection) return { error: "Inspection not found." };
 
-  const results = STARTUP_CHECKS.map((check) => ({
-    key: check.key,
-    result: formString(formData, `result_${check.key}`) || "PENDING",
-    notes: formString(formData, `notes_${check.key}`),
+  const results = inspection.checks.map((check) => ({
+    key: check.checkKey,
+    label: checkLabel(check),
+    result: formString(formData, `result_${check.checkKey}`) || "PENDING",
+    notes: formString(formData, `notes_${check.checkKey}`),
   }));
 
   await prisma.$transaction(
@@ -1194,9 +1210,7 @@ export async function saveStartupChecksAction(formData: FormData) {
 
   let ticketId = inspection.ticketId;
   if (failed.length > 0 && !ticketId) {
-    const failLabels = failed
-      .map((item) => STARTUP_CHECKS.find((check) => check.key === item.key)?.label ?? item.key)
-      .join(", ");
+    const failLabels = failed.map((item) => item.label).join(", ");
     const ticket = await openServiceTicket({
       organizationId: session.organizationId,
       farmerId: inspection.pivot.farmerId,
@@ -1227,6 +1241,67 @@ export async function saveStartupChecksAction(formData: FormData) {
   });
 
   redirect(`/startup/${inspectionId}`);
+}
+
+export async function addStartupCheckTemplateAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canEditStartupChecklist(session.role)) {
+    return { error: "Only managers and admins can edit the startup checklist." };
+  }
+  const label = formString(formData, "label");
+  const detail = formString(formData, "detail");
+  if (!label) return { error: "Item name is required." };
+  const templates = await ensureStartupTemplates(session.organizationId);
+  const used = new Set(templates.map((item) => item.checkKey));
+  const maxOrder = templates.reduce((max, item) => Math.max(max, item.sortOrder), -1);
+  await prisma.startupCheckTemplate.create({
+    data: {
+      organizationId: session.organizationId,
+      checkKey: uniqueCheckKey(label, used),
+      label,
+      detail,
+      sortOrder: maxOrder + 1,
+    },
+  });
+  redirect("/startup/checklist");
+}
+
+export async function updateStartupCheckTemplateAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canEditStartupChecklist(session.role)) {
+    return { error: "Only managers and admins can edit the startup checklist." };
+  }
+  const id = formString(formData, "id");
+  const label = formString(formData, "label");
+  const detail = formString(formData, "detail");
+  if (!label) return { error: "Item name is required." };
+  const item = await prisma.startupCheckTemplate.findFirst({
+    where: { id, organizationId: session.organizationId },
+  });
+  if (!item) return { error: "Checklist item not found." };
+  await prisma.startupCheckTemplate.update({
+    where: { id },
+    data: { label, detail },
+  });
+  redirect("/startup/checklist");
+}
+
+export async function deleteStartupCheckTemplateAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canEditStartupChecklist(session.role)) {
+    return { error: "Only managers and admins can edit the startup checklist." };
+  }
+  const id = formString(formData, "id");
+  const count = await prisma.startupCheckTemplate.count({
+    where: { organizationId: session.organizationId },
+  });
+  if (count <= 1) return { error: "Keep at least one checklist item." };
+  const item = await prisma.startupCheckTemplate.findFirst({
+    where: { id, organizationId: session.organizationId },
+  });
+  if (!item) return { error: "Checklist item not found." };
+  await prisma.startupCheckTemplate.delete({ where: { id } });
+  redirect("/startup/checklist");
 }
 
 export async function updateTechnicianVehicleAction(formData: FormData) {

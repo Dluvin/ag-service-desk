@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pivotWhere } from "@/lib/scope";
-import { ROLES } from "@/lib/roles";
+import { canEditStartupChecklist, ROLES } from "@/lib/roles";
 import { startStartupInspectionAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { INSPECTION_STATUS, STARTUP_SEASON_YEAR, inspectionLabel } from "@/lib/startup";
@@ -29,6 +29,13 @@ export default async function StartupBoardPage() {
       <p className="mt-1 text-stone-600">
         Checklist per pivot. A failed item opens a high-priority service ticket automatically.
       </p>
+      {canEditStartupChecklist(session.role) ? (
+        <p className="mt-2 text-sm">
+          <Link href="/startup/checklist" className="font-semibold text-emerald-800 hover:underline">
+            Add or remove checklist items
+          </Link>
+        </p>
+      ) : null}
 
       <div className="mt-6 overflow-hidden rounded-xl border border-stone-200 bg-white">
         <table className="w-full text-left text-sm">

@@ -1,3 +1,6 @@
+import { prisma } from "./prisma";
+import { slugify } from "./roles";
+
 export const STARTUP_SEASON_YEAR = new Date().getFullYear();
 
 export const STARTUP_CHECKS = [
@@ -9,8 +12,6 @@ export const STARTUP_CHECKS = [
   { key: "endgun", label: "End gun", detail: "Coupling, booster, and shutoff." },
   { key: "controls", label: "Control panel", detail: "Direction, speed, and percent timer." },
 ] as const;
-
-export type StartupCheckKey = (typeof STARTUP_CHECKS)[number]["key"];
 
 export const INSPECTION_STATUS = {
   NOT_STARTED: "NOT_STARTED",
@@ -24,4 +25,42 @@ export function inspectionLabel(status: string) {
   if (status === INSPECTION_STATUS.FAILED) return "Failed — ticket opened";
   if (status === INSPECTION_STATUS.IN_PROGRESS) return "In progress";
   return "Not started";
+}
+
+export function checkLabel(check: { checkKey: string; label?: string | null }) {
+  if (check.label) return check.label;
+  return STARTUP_CHECKS.find((item) => item.key === check.checkKey)?.label ?? check.checkKey;
+}
+
+export async function ensureStartupTemplates(organizationId: string) {
+  const existing = await prisma.startupCheckTemplate.findMany({
+    where: { organizationId },
+    orderBy: { sortOrder: "asc" },
+  });
+  if (existing.length > 0) return existing;
+  await prisma.startupCheckTemplate.createMany({
+    data: STARTUP_CHECKS.map((check, index) => ({
+      organizationId,
+      checkKey: check.key,
+      label: check.label,
+      detail: check.detail,
+      sortOrder: index,
+    })),
+  });
+  return prisma.startupCheckTemplate.findMany({
+    where: { organizationId },
+    orderBy: { sortOrder: "asc" },
+  });
+}
+
+export function uniqueCheckKey(label: string, used: Set<string>) {
+  let base = slugify(label) || "check";
+  if (base.length < 2) base = "check";
+  let key = base;
+  let n = 2;
+  while (used.has(key)) {
+    key = `${base}-${n}`;
+    n += 1;
+  }
+  return key;
 }

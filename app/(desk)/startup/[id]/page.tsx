@@ -6,7 +6,7 @@ import { pivotWhere } from "@/lib/scope";
 import { ROLES } from "@/lib/roles";
 import { saveStartupChecksAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
-import { STARTUP_CHECKS, inspectionLabel } from "@/lib/startup";
+import { checkLabel, inspectionLabel } from "@/lib/startup";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
 
 export default async function StartupInspectionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,7 +31,7 @@ export default async function StartupInspectionPage({ params }: { params: Promis
   if (!allowed) notFound();
 
   const canEdit = session.role !== ROLES.FARMER;
-  const byKey = Object.fromEntries(inspection.checks.map((check) => [check.checkKey, check]));
+  const checks = [...inspection.checks].sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label));
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -58,20 +58,18 @@ export default async function StartupInspectionPage({ params }: { params: Promis
 
         <ActionForm action={saveStartupChecksAction} className="mt-6 space-y-4">
           <input type="hidden" name="inspectionId" value={inspection.id} />
-          {STARTUP_CHECKS.map((item) => {
-            const current = byKey[item.key];
-            return (
-              <fieldset key={item.key} className="rounded-xl border border-stone-200 bg-white p-4">
-                <legend className="px-1 text-sm font-semibold">{item.label}</legend>
-                <p className="text-xs text-stone-500">{item.detail}</p>
+          {checks.map((item) => (
+              <fieldset key={item.checkKey} className="rounded-xl border border-stone-200 bg-white p-4">
+                <legend className="px-1 text-sm font-semibold">{checkLabel(item)}</legend>
+                {item.detail ? <p className="text-xs text-stone-500">{item.detail}</p> : null}
                 <div className="mt-3 flex flex-wrap gap-3 text-sm">
                   {(["PASS", "FAIL", "PENDING"] as const).map((result) => (
                     <label key={result} className="flex items-center gap-1.5">
                       <input
                         type="radio"
-                        name={`result_${item.key}`}
+                        name={`result_${item.checkKey}`}
                         value={result}
-                        defaultChecked={(current?.result ?? "PENDING") === result}
+                        defaultChecked={(item.result ?? "PENDING") === result}
                         disabled={!canEdit}
                       />
                       {result === "PASS" ? "Pass" : result === "FAIL" ? "Fail" : "Pending"}
@@ -79,15 +77,14 @@ export default async function StartupInspectionPage({ params }: { params: Promis
                   ))}
                 </div>
                 <input
-                  name={`notes_${item.key}`}
-                  defaultValue={current?.notes ?? ""}
+                  name={`notes_${item.checkKey}`}
+                  defaultValue={item.notes ?? ""}
                   disabled={!canEdit}
                   placeholder="Notes"
                   className="mt-2 w-full rounded-lg border border-stone-300 px-3 py-2 text-sm disabled:bg-stone-50"
                 />
               </fieldset>
-            );
-          })}
+          ))}
           {canEdit ? (
             <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
               Save checklist

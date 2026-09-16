@@ -69,6 +69,10 @@ export function canAssignTickets(role: string) {
   return role === ROLES.ADMIN || role === ROLES.MANAGER;
 }
 
+export function canEditStartupChecklist(role: string) {
+  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+}
+
 export function canAddTechnicians(role: string) {
   return role === ROLES.ADMIN || role === ROLES.MANAGER;
 }
