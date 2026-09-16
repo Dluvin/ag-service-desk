@@ -30,6 +30,7 @@ import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, listRevealVehicles } from 
 import { notifyTicketSms } from "./ticket-sms";
 import { sendBirdSms, toE164 } from "./bird";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./ticket-photos";
+import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -1299,6 +1300,31 @@ export async function testRevealConnectionAction() {
 
 export async function currentUser() {
   return getSession();
+}
+
+export async function saveCompanyLogoAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can change the company logo." };
+  const file = formData.get("logo");
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose a logo image." };
+  const saved = await saveCompanyLogoFile(session.organizationId, file);
+  if (saved.error || !saved.mimeType) return { error: saved.error ?? "Could not save the logo." };
+  await prisma.organization.update({
+    where: { id: session.organizationId },
+    data: { logoMimeType: saved.mimeType, logoFileName: saved.fileName },
+  });
+  redirect("/company");
+}
+
+export async function removeCompanyLogoAction(_formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can change the company logo." };
+  await removeCompanyLogoFile(session.organizationId);
+  await prisma.organization.update({
+    where: { id: session.organizationId },
+    data: { logoMimeType: null, logoFileName: null },
+  });
+  redirect("/company");
 }
 
 export async function saveBirdSettingsAction(formData: FormData) {

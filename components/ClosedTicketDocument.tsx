@@ -12,7 +12,7 @@ type PrintTicket = {
   createdAt: Date;
   closedAt: Date | null;
   updatedAt: Date;
-  organization: { name: string };
+  organization: { name: string; logoMimeType?: string | null };
   farmer: {
     name: string;
     phone: string | null;
@@ -47,9 +47,15 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
   return (
     <article className="print-sheet mx-auto max-w-3xl bg-white p-8 text-stone-900 shadow-sm print:max-w-none print:p-0 print:shadow-none">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-300 pb-4">
-        <div>
-          <p className="font-display text-2xl">{ticket.organization.name}</p>
-          <p className="text-sm text-stone-600">Closed service ticket</p>
+        <div className="flex items-start gap-3">
+          {ticket.organization.logoMimeType ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/api/company-logo" alt="" className="h-12 max-w-36 object-contain" />
+          ) : null}
+          <div>
+            <p className="font-display text-2xl">{ticket.organization.name}</p>
+            <p className="text-sm text-stone-600">Closed service ticket</p>
+          </div>
         </div>
         <div className="text-right text-sm">
           <p className="font-semibold">Ticket #{ticket.number}</p>

@@ -3,8 +3,17 @@ import { logoutAction } from "@/lib/actions";
 import { roleLabel } from "@/lib/scope";
 import type { SessionUser } from "@/lib/auth";
 import { ROLES } from "@/lib/roles";
+import { NavDropdown } from "@/components/NavDropdown";
 
-export function Nav({ session }: { session: SessionUser }) {
+export function Nav({
+  session,
+  companyName,
+  hasLogo,
+}: {
+  session: SessionUser;
+  companyName?: string;
+  hasLogo?: boolean;
+}) {
   const links = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/dispatch", label: "Dispatch" },
@@ -16,31 +25,44 @@ export function Nav({ session }: { session: SessionUser }) {
   if (session.role === ROLES.FARMER) {
     links.splice(1, 1);
   }
-  if (session.role === ROLES.ADMIN) {
-    links.push({ href: "/parts", label: "Parts" });
-    links.push({ href: "/farmers", label: "Farms" });
-    links.push({ href: "/technicians", label: "Technicians" });
-    links.push({ href: "/managers", label: "Managers" });
-    links.push({ href: "/staff", label: "Staff" });
-    links.push({ href: "/reveal", label: "Reveal GPS" });
-    links.push({ href: "/sms", label: "SMS" });
-  } else if (session.role === ROLES.MANAGER) {
-    links.push({ href: "/parts", label: "Parts" });
-    links.push({ href: "/farmers", label: "Farms" });
-    links.push({ href: "/technicians", label: "Technicians" });
-  } else if (session.role === ROLES.TECHNICIAN) {
+  if (session.role !== ROLES.FARMER) {
     links.push({ href: "/parts", label: "Parts" });
     links.push({ href: "/farmers", label: "Farms" });
   }
 
+  const adminLinks =
+    session.role === ROLES.ADMIN
+      ? [
+          { href: "/technicians", label: "Technicians" },
+          { href: "/managers", label: "Managers" },
+          { href: "/staff", label: "Staff" },
+          { href: "/company", label: "Logo" },
+          { href: "/sms", label: "SMS" },
+          { href: "/reveal", label: "Reveal GPS" },
+        ]
+      : [];
+
+  const managerLinks =
+    session.role === ROLES.MANAGER ? [{ href: "/technicians", label: "Technicians" }] : [];
+
   return (
     <header className="no-print border-b border-emerald-950/20 bg-emerald-950 text-emerald-50">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/dashboard" className="font-display text-lg tracking-tight">
-          AG Service Desk
+        <Link href="/dashboard" className="flex items-center gap-2 font-display text-lg tracking-tight">
+          {hasLogo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/api/company-logo" alt="" className="h-8 max-w-40 object-contain" />
+          ) : null}
+          <span>{companyName || "AG Service Desk"}</span>
         </Link>
         <nav className="flex max-w-3xl flex-wrap items-center gap-4 text-sm">
           {links.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-white">
+              {link.label}
+            </Link>
+          ))}
+          {adminLinks.length ? <NavDropdown label="Admin" links={adminLinks} /> : null}
+          {managerLinks.map((link) => (
             <Link key={link.href} href={link.href} className="hover:text-white">
               {link.label}
             </Link>

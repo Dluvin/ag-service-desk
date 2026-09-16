@@ -22,6 +22,8 @@ model Organization {
   birdWorkspaceId     String?
   birdChannelId       String?
   birdSmsEnabled      Boolean  @default(false)
+  logoMimeType        String?
+  logoFileName        String?
   users               User[]
   farmers             Farmer[]
   pivots              Pivot[]
