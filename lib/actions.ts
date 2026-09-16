@@ -989,7 +989,9 @@ export async function createCatalogPartAction(formData: FormData) {
   redirect("/parts");
 }
 
-export async function importCatalogPartsBatchAction(parts: unknown) {
+export async function importCatalogPartsBatchAction(
+  parts: unknown,
+): Promise<{ created: number; updated: number } | { error: string }> {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can import parts." };
   if (!Array.isArray(parts) || parts.length === 0) {

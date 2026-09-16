@@ -53,7 +53,7 @@ export function PartsImportForm() {
         const batch = parts.slice(i, i + BATCH_SIZE);
         setStatus(`Saving ${Math.min(i + BATCH_SIZE, parts.length).toLocaleString()} of ${parts.length.toLocaleString()} parts…`);
         const result = await importCatalogPartsBatchAction(batch);
-        if (result && "error" in result && result.error) {
+        if ("error" in result) {
           setError(
             `${result.error} Saved ${created.toLocaleString()} new and ${updated.toLocaleString()} updated before this stopped. Run the import again to finish.`,
           );
