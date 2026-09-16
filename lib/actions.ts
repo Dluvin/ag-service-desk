@@ -23,8 +23,8 @@ import {
 import { openServiceTicket } from "./tickets";
 import { INSPECTION_STATUS, STARTUP_CHECKS, STARTUP_SEASON_YEAR, checkLabel, ensureStartupTemplates, uniqueCheckKey } from "./startup";
 import { parseMapsLocation } from "./maps";
-import { parseQuickbooksExport } from "./quickbooks";
 import { parseAgSenseExport } from "./agsense";
+import { importCatalogPartBatch } from "./catalog-import";
 import { parseStaffImport, isShopStaffRole } from "./staff-import";
 import { closeOpenSiteVisits } from "./onsite";
 import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, listRevealVehicles } from "./reveal";
@@ -989,59 +989,20 @@ export async function createCatalogPartAction(formData: FormData) {
   redirect("/parts");
 }
 
-export async function importQuickbooksPartsAction(formData: FormData) {
+export async function importCatalogPartsBatchAction(parts: unknown) {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can import parts." };
-
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
-    return { error: "Choose a QuickBooks CSV or IIF file to import." };
+  if (!Array.isArray(parts) || parts.length === 0) {
+    return { error: "No parts in this batch." };
   }
-  if (file.size > 2_000_000) return { error: "File is too large. Keep the export under 2 MB." };
+  if (parts.length > 400) return { error: "Each import batch must be 400 parts or fewer." };
 
-  const parts = parseQuickbooksExport(await file.text());
-  if (parts.length === 0) {
-    return {
-      error:
-        "No parts found. Export Products and Services from QuickBooks as CSV (or INVITEM IIF) with a Name column.",
-    };
+  try {
+    return await importCatalogPartBatch(session.organizationId, parts);
+  } catch (error) {
+    console.error("Parts import batch failed", error);
+    return { error: "This batch failed to save. Try the import again; already-imported names will update." };
   }
-
-  let created = 0;
-  let updated = 0;
-  for (const part of parts.slice(0, 5000)) {
-    const existing = await prisma.catalogPart.findUnique({
-      where: { organizationId_name: { organizationId: session.organizationId, name: part.name } },
-    });
-    await prisma.catalogPart.upsert({
-      where: { organizationId_name: { organizationId: session.organizationId, name: part.name } },
-      create: {
-        organizationId: session.organizationId,
-        name: part.name,
-        sku: part.sku,
-        description: part.description,
-        itemType: part.itemType,
-        price: part.price,
-        cost: part.cost,
-        quantityOnHand: part.quantityOnHand,
-        source: "QUICKBOOKS",
-      },
-      update: {
-        sku: part.sku ?? existing?.sku ?? null,
-        description: part.description ?? existing?.description ?? null,
-        itemType: part.itemType ?? existing?.itemType ?? null,
-        price: part.price ?? existing?.price ?? null,
-        cost: part.cost ?? existing?.cost ?? null,
-        quantityOnHand: part.quantityOnHand ?? existing?.quantityOnHand ?? null,
-        source: "QUICKBOOKS",
-        active: true,
-      },
-    });
-    if (existing) updated += 1;
-    else created += 1;
-  }
-
-  redirect(`/parts?imported=${created}&updated=${updated}`);
 }
 
 export async function importAgSensePivotsAction(formData: FormData) {

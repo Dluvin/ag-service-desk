@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
-import { ROLES, STATUS_LABELS, canAssignTickets, canDeleteRecords, isPrintableStatus, isShopStaff } from "@/lib/roles";
+import { STATUS_LABELS, canAssignTickets, canDeleteRecords, isPrintableStatus, isShopStaff } from "@/lib/roles";
 import { updateTicketAction, addTicketPartAction, deleteTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
@@ -35,14 +35,6 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   if (!ticket) notFound();
 
   const technicians = canAssignTickets(session.role) ? await loadTechnicians(session.organizationId) : [];
-  const catalogParts =
-    session.role === ROLES.FARMER
-      ? []
-      : await prisma.catalogPart.findMany({
-          where: { organizationId: session.organizationId, active: true },
-          orderBy: { name: "asc" },
-          select: { id: true, name: true, sku: true, price: true },
-        });
   const canDispatch = isShopStaff(session.role);
 
   return (
@@ -198,7 +190,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         {canDispatch ? (
           <ActionForm action={addTicketPartAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
             <input type="hidden" name="ticketId" value={ticket.id} />
-            <PartsPicker parts={catalogParts} />
+            <PartsPicker />
             <label className="block text-sm font-medium">
               Custom name
               <input name="name" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Only if it is not in the catalog" />

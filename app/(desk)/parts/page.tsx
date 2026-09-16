@@ -3,23 +3,32 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
-import { createCatalogPartAction, importQuickbooksPartsAction } from "@/lib/actions";
+import { searchCatalogParts } from "@/lib/catalog";
+import { createCatalogPartAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { PartsImportForm } from "@/components/PartsImportForm";
+
+export const maxDuration = 120;
 
 export default async function PartsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ imported?: string; updated?: string }>;
+  searchParams: Promise<{ imported?: string; updated?: string; q?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role === ROLES.FARMER) redirect("/dashboard");
 
   const query = await searchParams;
-  const parts = await prisma.catalogPart.findMany({
-    where: { organizationId: session.organizationId },
-    orderBy: { name: "asc" },
-  });
+  const q = (query.q ?? "").trim();
+  const [total, shown] = await Promise.all([
+    prisma.catalogPart.count({ where: { organizationId: session.organizationId } }),
+    searchCatalogParts({
+      organizationId: session.organizationId,
+      query: q,
+      take: 150,
+    }),
+  ]);
   const isAdmin = session.role === ROLES.ADMIN;
 
   return (
@@ -34,7 +43,25 @@ export default async function PartsPage({
             QuickBooks import finished: {query.imported ?? "0"} added, {query.updated ?? "0"} updated.
           </p>
         ) : null}
-        <div className="mt-6 overflow-hidden rounded-xl border border-stone-200 bg-white">
+        <form className="mt-4" action="/parts">
+          <label className="block text-sm font-medium">
+            Search catalog
+            <input
+              name="q"
+              defaultValue={q}
+              placeholder="Name or SKU"
+              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+            />
+          </label>
+        </form>
+        <p className="mt-2 text-sm text-stone-500">
+          {total === 0
+            ? "No parts in the catalog yet."
+            : q
+              ? `Showing ${shown.length.toLocaleString()} of ${total.toLocaleString()} parts matching “${q}”.`
+              : `Showing first ${shown.length.toLocaleString()} of ${total.toLocaleString()} parts. Search to find one.`}
+        </p>
+        <div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
               <tr>
@@ -46,14 +73,14 @@ export default async function PartsPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {parts.length === 0 ? (
+              {shown.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-6 text-stone-600">
-                    No parts in the catalog yet.
+                    {total === 0 ? "No parts in the catalog yet." : "No parts match that search."}
                   </td>
                 </tr>
               ) : (
-                parts.map((part) => (
+                shown.map((part) => (
                   <tr key={part.id} className={part.active ? "" : "text-stone-400"}>
                     <td className="px-4 py-3">
                       <p className="font-medium text-stone-900">{part.name}</p>
@@ -80,20 +107,15 @@ export default async function PartsPage({
                 <li>Export to Excel, then save as CSV — or export IIF INVITEM rows.</li>
                 <li>Upload that file here. Matching names update; new names are added.</li>
               </ol>
+              <p className="mt-2 text-sm text-stone-600">
+                Large lists (~12,000 parts) are imported in small batches so the upload does not time out. Save Excel as CSV or IIF, under 20 MB.
+              </p>
               <p className="mt-2 text-sm">
                 <a href="/quickbooks-parts-template.csv" className="text-emerald-800 hover:underline">
                   Download a sample CSV
                 </a>
               </p>
-              <ActionForm action={importQuickbooksPartsAction} encType="multipart/form-data" className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-                <label className="block text-sm font-medium">
-                  QuickBooks file
-                  <input name="file" type="file" accept=".csv,.txt,.iif" required className="mt-1 w-full text-sm" />
-                </label>
-                <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-                  Import parts
-                </button>
-              </ActionForm>
+              <PartsImportForm />
             </section>
             <section>
               <h2 className="font-display text-xl">Add one part</h2>

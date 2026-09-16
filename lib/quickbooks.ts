@@ -16,35 +16,57 @@ const SKIP_TYPES = new Set([
   "sales tax",
   "salestax",
   "group",
+  "header",
 ]);
 
 const HEADER_ALIASES: Record<string, keyof ImportedPart | "skip"> = {
   "product/service name": "name",
   "product/service": "name",
-  "item": "name",
+  "product / service name": "name",
+  "product / service": "name",
+  "product service name": "name",
+  "product name": "name",
+  item: "name",
   "item name": "name",
+  "item description": "description",
+  "inventory item": "name",
   name: "name",
+  fullname: "name",
   sku: "sku",
   "item sku": "sku",
   "manuf. sku": "sku",
+  "mfg part number": "sku",
+  "manufacturer part number": "sku",
+  "manufactpartnumber": "sku",
+  "item number": "sku",
+  "part number": "sku",
+  upc: "sku",
+  "upc/ean": "sku",
   type: "itemType",
   "item type": "itemType",
   "product/service type": "itemType",
+  "product/service type name": "itemType",
   "sales description": "description",
   description: "description",
   "purchase description": "description",
   "sales price": "price",
   "sales price / rate": "price",
   "sales price/rate": "price",
+  "sales price (usd)": "price",
   price: "price",
   rate: "price",
+  "price/rate": "price",
   "purchase cost": "cost",
+  "purchase cost (usd)": "cost",
   cost: "cost",
   "quantity on hand": "quantityOnHand",
   "qty on hand": "quantityOnHand",
+  "qty. on hand": "quantityOnHand",
+  "on hand": "quantityOnHand",
   quantity: "quantityOnHand",
   qty: "quantityOnHand",
   qnty: "quantityOnHand",
+  qoh: "quantityOnHand",
 };
 
 function normalizeHeader(value: string) {
@@ -58,7 +80,17 @@ function parseMoney(value: string) {
   return Number.isFinite(n) ? n : null;
 }
 
-function parseCsv(text: string): string[][] {
+function detectDelimiter(text: string) {
+  const sample = text.slice(0, 8000);
+  const commas = (sample.match(/,/g) || []).length;
+  const semis = (sample.match(/;/g) || []).length;
+  const tabs = (sample.match(/\t/g) || []).length;
+  if (tabs > commas && tabs > semis) return "\t";
+  if (semis > commas) return ";";
+  return ",";
+}
+
+function parseDelimited(text: string, delimiter: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let cell = "";
@@ -82,7 +114,7 @@ function parseCsv(text: string): string[][] {
     }
     if (ch === '"') {
       inQuotes = true;
-    } else if (ch === "," || ch === "\t") {
+    } else if (ch === delimiter) {
       row.push(cell);
       cell = "";
     } else if (ch === "\n") {
@@ -99,14 +131,25 @@ function parseCsv(text: string): string[][] {
   return rows;
 }
 
+function headerIndexes(headers: string[]) {
+  return headers.map((header) => HEADER_ALIASES[normalizeHeader(header)] ?? null);
+}
+
+function findHeaderRow(rows: string[][]) {
+  const limit = Math.min(rows.length, 80);
+  for (let i = 0; i < limit; i++) {
+    if (headerIndexes(rows[i]).includes("name")) return i;
+  }
+  return -1;
+}
+
 function mapCsvRows(rows: string[][]): ImportedPart[] {
-  if (rows.length < 2) return [];
-  const headers = rows[0].map(normalizeHeader);
-  const indexes = headers.map((header) => HEADER_ALIASES[header] ?? null);
-  if (!indexes.includes("name")) return [];
+  const headerIndex = findHeaderRow(rows);
+  if (headerIndex < 0) return [];
+  const indexes = headerIndexes(rows[headerIndex]);
 
   const parts: ImportedPart[] = [];
-  for (const row of rows.slice(1)) {
+  for (const row of rows.slice(headerIndex + 1)) {
     const raw: Partial<ImportedPart> = {};
     indexes.forEach((field, i) => {
       if (!field || field === "skip") return;
@@ -145,6 +188,7 @@ function parseIif(text: string): ImportedPart[] {
   const typeI = columns.indexOf("INVITEMTYPE");
   const priceI = columns.indexOf("PRICE");
   const costI = columns.indexOf("COST");
+  const skuI = columns.findIndex((col) => col === "MANUFACTPARTNUMBER" || col === "PARTNUM" || col === "UPC");
   const qtyI = columns.indexOf("QNTY") >= 0 ? columns.indexOf("QNTY") : columns.indexOf("QUANTITY");
   if (nameI < 0) return [];
 
@@ -157,7 +201,7 @@ function parseIif(text: string): ImportedPart[] {
     if (!name || SKIP_TYPES.has(type.toLowerCase())) continue;
     parts.push({
       name,
-      sku: null,
+      sku: skuI >= 0 ? cols[skuI]?.trim() || null : null,
       description: descI >= 0 ? cols[descI]?.trim() || null : null,
       itemType: type || null,
       price: priceI >= 0 ? parseMoney(cols[priceI] ?? "") : null,
@@ -168,11 +212,27 @@ function parseIif(text: string): ImportedPart[] {
   return parts;
 }
 
+export function decodeImportBytes(bytes: Uint8Array) {
+  if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xfe) {
+    return new TextDecoder("utf-16le").decode(bytes);
+  }
+  if (bytes.length >= 2 && bytes[0] === 0xfe && bytes[1] === 0xff) {
+    return new TextDecoder("utf-16be").decode(bytes);
+  }
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
 export function parseQuickbooksExport(text: string): ImportedPart[] {
   const trimmed = text.trim();
   if (!trimmed) return [];
   if (trimmed.includes("!INVITEM") || trimmed.split("\n")[0]?.startsWith("INVITEM")) {
     return parseIif(trimmed);
   }
-  return mapCsvRows(parseCsv(trimmed));
+  return mapCsvRows(parseDelimited(trimmed, detectDelimiter(trimmed)));
+}
+
+export function uniqueImportedParts(parts: ImportedPart[]) {
+  const unique = new Map<string, ImportedPart>();
+  for (const part of parts) unique.set(part.name, part);
+  return [...unique.values()];
 }
