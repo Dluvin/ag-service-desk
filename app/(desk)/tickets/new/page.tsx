@@ -40,8 +40,8 @@ export default async function NewTicketPage({
       </h1>
       <p className="mt-1 text-sm text-stone-600">
         {session.role === ROLES.FARMER
-          ? "Pick one of your pivots or add a new location, then describe the problem. The shop will get the ticket."
-          : "Pick a farm (start typing the name), then pick a pivot. You can still add a new pivot if needed."}
+          ? "Start typing a pivot name, or add a new location, then describe the problem. The shop will get the ticket."
+          : "Pick a farm (start typing the name), then start typing the pivot name. You can still add a new pivot if needed."}
       </p>
       <ActionForm action={createTicketAction} encType="multipart/form-data" className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
         <NewTicketSiteFields

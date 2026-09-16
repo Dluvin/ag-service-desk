@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { MapLocationPicker } from "@/components/MapLocationPicker";
 import { FarmTypeahead } from "@/components/FarmTypeahead";
+import { PivotTypeahead } from "@/components/PivotTypeahead";
 
 type PivotOption = { id: string; name: string; farmerName: string; farmerId: string };
 type FarmerOption = { id: string; name: string };
@@ -79,24 +80,14 @@ export function NewTicketSiteFields({
           ) : (
             <FarmTypeahead farms={farmers} farmerId={farmerId} onSelect={selectFarm} required />
           )}
-          <label className="block text-sm font-medium">
-            Pivot
-            <select
-              name="pivotId"
-              required={siteMode === "existing"}
-              value={pivotId}
-              disabled={!farmerId}
-              onChange={(event) => setPivotId(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 disabled:bg-stone-100"
-            >
-              <option value="">{farmerId ? "Select a pivot" : "Select a farm first"}</option>
-              {farmPivots.map((pivot) => (
-                <option key={pivot.id} value={pivot.id}>
-                  {pivot.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <PivotTypeahead
+            key={farmerId || "no-farm"}
+            pivots={farmPivots}
+            pivotId={pivotId}
+            onSelect={(pivot) => setPivotId(pivot?.id ?? "")}
+            required={siteMode === "existing"}
+            disabled={!farmerId}
+          />
         </div>
       ) : (
         <div className="space-y-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
