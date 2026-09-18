@@ -5,6 +5,7 @@ import Link from "next/link";
 import { startStartupInspectionAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { ListSearch } from "@/components/ListSearch";
+import { FarmTypeahead } from "@/components/FarmTypeahead";
 
 type MaintenancePivot = {
   id: string;
@@ -66,21 +67,13 @@ export function MaintenanceBoard({
   return (
     <>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="block text-sm font-medium">
-          Farm
-          <select
-            value={farmId}
-            onChange={(event) => setFarmId(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2"
-          >
-            <option value="">All farms</option>
-            {farms.map((farm) => (
-              <option key={farm.id} value={farm.id}>
-                {farm.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <FarmTypeahead
+          farms={farms}
+          farmerId={farmId}
+          allowEmpty
+          emptyLabel="All farms"
+          onSelect={(farm) => setFarmId(farm?.id ?? "")}
+        />
         <ListSearch
           value={query}
           onChange={setQuery}

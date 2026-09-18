@@ -7,11 +7,15 @@ export function FarmTypeahead({
   farmerId,
   onSelect,
   required,
+  allowEmpty,
+  emptyLabel = "All farms",
 }: {
   farms: { id: string; name: string }[];
   farmerId: string;
   onSelect: (farm: { id: string; name: string } | null) => void;
   required?: boolean;
+  allowEmpty?: boolean;
+  emptyLabel?: string;
 }) {
   const selected = farms.find((farm) => farm.id === farmerId) ?? null;
   const [text, setText] = useState(selected?.name ?? "");
@@ -32,8 +36,8 @@ export function FarmTypeahead({
       .slice(0, 30);
   }, [farms, text]);
 
-  function choose(farm: { id: string; name: string }) {
-    setText(farm.name);
+  function choose(farm: { id: string; name: string } | null) {
+    setText(farm?.name ?? "");
     setOpen(false);
     onSelect(farm);
   }
@@ -58,12 +62,25 @@ export function FarmTypeahead({
           window.setTimeout(() => {
             const exact = farms.filter((farm) => farm.name.toLowerCase() === text.trim().toLowerCase());
             if (exact.length === 1) choose(exact[0]);
+            else if (allowEmpty && !text.trim()) choose(null);
             else setOpen(false);
           }, 120);
         }}
       />
       {open ? (
-        <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-stone-200 bg-white py-1 text-sm shadow-lg">
+        <ul className="absolute z-40 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-stone-200 bg-white py-1 text-sm shadow-lg">
+          {allowEmpty && !text.trim() ? (
+            <li>
+              <button
+                type="button"
+                className={`block w-full px-3 py-2 text-left hover:bg-emerald-50 ${!farmerId ? "bg-emerald-50 font-medium" : ""}`}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => choose(null)}
+              >
+                {emptyLabel}
+              </button>
+            </li>
+          ) : null}
           {matches.length === 0 ? (
             <li className="px-3 py-2 text-stone-500">No matching farms</li>
           ) : (
