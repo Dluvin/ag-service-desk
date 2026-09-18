@@ -15,10 +15,14 @@ export function DispatchCalendar({
   tickets,
   month,
   store,
+  basePath = "/dispatch",
+  compact = false,
 }: {
   tickets: CalTicket[];
   month?: string;
   store: string;
+  basePath?: string;
+  compact?: boolean;
 }) {
   const monthStart = parseMonthParam(month);
   const days = calendarDays(monthStart);
@@ -36,18 +40,20 @@ export function DispatchCalendar({
     const params = new URLSearchParams();
     if (store && store !== STORE_ALL) params.set("store", store);
     params.set("month", monthKey(nextMonth));
-    return `/dispatch?${params.toString()}`;
+    return `${basePath}?${params.toString()}`;
   }
 
   const label = monthStart.toLocaleString(undefined, { month: "long", year: "numeric" });
 
   return (
-    <section className="mt-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-display text-xl">Schedule</h2>
-          <p className="mt-1 text-sm text-stone-600">Tickets with a scheduled time land on this calendar.</p>
-        </div>
+    <section className={compact ? "mt-4" : "mt-10"}>
+      <div className={`flex flex-wrap items-center gap-3 ${compact ? "justify-end" : "justify-between"}`}>
+        {compact ? null : (
+          <div>
+            <h2 className="font-display text-xl">Schedule</h2>
+            <p className="mt-1 text-sm text-stone-600">Tickets with a scheduled time land on this calendar.</p>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <Link href={hrefFor(shiftMonth(monthStart, -1))} className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm">
             Previous

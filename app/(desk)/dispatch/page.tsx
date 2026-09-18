@@ -11,7 +11,7 @@ import { DispatchFleetMap } from "@/components/DispatchFleetMap";
 import { ticketPins } from "@/lib/map-pins";
 import { parseStoreParam, storeTicketWhere } from "@/lib/stores";
 import { StoreFilter } from "@/components/StoreFilter";
-import { DispatchCalendar } from "@/components/DispatchCalendar";
+import { DispatchCalendarToggle } from "@/components/DispatchCalendarToggle";
 import { formatSchedule } from "@/lib/schedule";
 
 const COLUMNS: TicketStatus[] = [...DISPATCH_STATUSES];
@@ -120,7 +120,7 @@ export default async function DispatchPage({
         })}
       </div>
 
-      <DispatchCalendar tickets={tickets} month={query.month} store={selectedStore} />
+      <DispatchCalendarToggle tickets={tickets} month={query.month} store={selectedStore} />
 
       <h2 className="font-display mt-10 text-xl">Open tickets map</h2>
       <p className="mt-1 text-sm text-stone-600">
