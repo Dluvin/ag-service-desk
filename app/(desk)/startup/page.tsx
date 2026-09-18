@@ -4,9 +4,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pivotWhere } from "@/lib/scope";
 import { canEditStartupChecklist, ROLES } from "@/lib/roles";
-import { startStartupInspectionAction } from "@/lib/actions";
-import { ActionForm } from "@/components/ActionForm";
 import { INSPECTION_STATUS, STARTUP_SEASON_YEAR, inspectionLabel } from "@/lib/startup";
+import { MaintenanceBoard } from "@/components/MaintenanceBoard";
 
 export default async function StartupBoardPage() {
   const session = await getSession();
@@ -21,13 +20,12 @@ export default async function StartupBoardPage() {
     orderBy: [{ farmer: { name: "asc" } }, { name: "asc" }],
   });
 
-  const canInspect = session.role !== ROLES.FARMER;
-
   return (
     <div>
       <h1 className="font-display text-3xl">{STARTUP_SEASON_YEAR} maintenance</h1>
       <p className="mt-1 text-stone-600">
-        Select a pivot to open a maintenance ticket. The checklist stays on that visit; failed items mark the ticket high priority.
+        Pick a farm or search, then select a pivot to open a maintenance ticket. The checklist stays on
+        that visit; failed items mark the ticket high priority.
       </p>
       {canEditStartupChecklist(session.role) ? (
         <p className="mt-2 text-sm">
@@ -36,69 +34,24 @@ export default async function StartupBoardPage() {
           </Link>
         </p>
       ) : null}
-
-      <div className="mt-6 overflow-hidden rounded-xl border border-stone-200 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
-            <tr>
-              <th className="px-4 py-2">Pivot</th>
-              <th className="px-4 py-2">Farm</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-stone-100">
-            {pivots.map((pivot) => {
-              const inspection = pivot.inspections[0];
-              const status = inspection?.status ?? INSPECTION_STATUS.NOT_STARTED;
-              return (
-                <tr key={pivot.id} className="hover:bg-stone-50">
-                  <td className="px-4 py-3 font-medium">{pivot.name}</td>
-                  <td className="px-4 py-3 text-stone-600">{pivot.farmer.name}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        status === INSPECTION_STATUS.PASSED
-                          ? "bg-emerald-100 text-emerald-900"
-                          : status === INSPECTION_STATUS.FAILED
-                            ? "bg-red-100 text-red-900"
-                            : status === INSPECTION_STATUS.IN_PROGRESS
-                              ? "bg-amber-100 text-amber-950"
-                              : "bg-stone-100 text-stone-700"
-                      }`}
-                    >
-                      {inspectionLabel(status)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {inspection?.ticketId ? (
-                      <span className="inline-flex flex-wrap justify-end gap-3">
-                        <Link href={`/tickets/${inspection.ticketId}`} className="text-emerald-800 hover:underline">
-                          Open ticket
-                        </Link>
-                        <Link href={`/startup/${inspection.id}`} className="text-stone-600 hover:underline">
-                          Checklist
-                        </Link>
-                      </span>
-                    ) : canInspect ? (
-                      <ActionForm action={startStartupInspectionAction}>
-                        <input type="hidden" name="pivotId" value={pivot.id} />
-                        <button className="text-emerald-800 hover:underline">Start maintenance</button>
-                      </ActionForm>
-                    ) : inspection ? (
-                      <Link href={`/startup/${inspection.id}`} className="text-emerald-800 hover:underline">
-                        Open checklist
-                      </Link>
-                    ) : (
-                      <span className="text-stone-400">Waiting on shop</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <MaintenanceBoard
+        canInspect={session.role !== ROLES.FARMER}
+        pivots={pivots.map((pivot) => {
+          const inspection = pivot.inspections[0];
+          const status = inspection?.status ?? INSPECTION_STATUS.NOT_STARTED;
+          return {
+            id: pivot.id,
+            name: pivot.name,
+            farmerId: pivot.farmerId,
+            farmerName: pivot.farmer.name,
+            serialNumber: pivot.serialNumber,
+            status,
+            statusLabel: inspectionLabel(status),
+            inspectionId: inspection?.id ?? null,
+            ticketId: inspection?.ticketId ?? null,
+          };
+        })}
+      />
     </div>
   );
 }

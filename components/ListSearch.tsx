@@ -5,14 +5,16 @@ export function ListSearch({
   onChange,
   placeholder,
   label,
+  className = "mt-4 block text-sm font-medium",
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
   label: string;
+  className?: string;
 }) {
   return (
-    <label className="mt-4 block text-sm font-medium">
+    <label className={className}>
       {label}
       <input
         value={value}
