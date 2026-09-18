@@ -38,7 +38,7 @@ export default async function StartupInspectionPage({ params }: { params: Promis
       <div className="lg:col-span-3">
         <p className="text-sm text-stone-500">
           <Link href="/startup" className="hover:underline">
-            {inspection.seasonYear} startup
+            {inspection.seasonYear} maintenance
           </Link>
         </p>
         <h1 className="font-display text-3xl">{inspection.pivot.name}</h1>
@@ -49,7 +49,7 @@ export default async function StartupInspectionPage({ params }: { params: Promis
         <p className="mt-2 text-sm font-medium">{inspectionLabel(inspection.status)}</p>
         {inspection.ticket ? (
           <p className="mt-2 text-sm">
-            Auto-opened{" "}
+            Maintenance{" "}
             <Link href={`/tickets/${inspection.ticket.id}`} className="text-emerald-800 hover:underline">
               ticket #{inspection.ticket.number}
             </Link>

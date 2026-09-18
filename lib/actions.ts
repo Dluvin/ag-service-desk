@@ -14,6 +14,7 @@ import {
   canDeleteRecords,
   canImportPivots,
   canImportStaff,
+  canManageParts,
   canEditStartupChecklist,
   isFinishedStatus,
   isShopStaff,
@@ -1113,14 +1114,15 @@ export async function addTicketPartAction(formData: FormData) {
 
 export async function createCatalogPartAction(formData: FormData) {
   const session = await requireSession();
-  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can add catalog parts." };
+  if (!canManageParts(session.role)) return { error: "Only admins and managers can add catalog parts." };
 
   const name = formString(formData, "name");
   const sku = formString(formData, "sku");
   const description = formString(formData, "description");
   const itemType = formString(formData, "itemType");
-  const price = formString(formData, "price");
-  const cost = formString(formData, "cost");
+  const price = parseMoneyInput(formString(formData, "price"));
+  const cost = parseMoneyInput(formString(formData, "cost"));
+  const quantityOnHand = parseMoneyInput(formString(formData, "quantityOnHand"));
   if (!name) return { error: "Part name is required." };
 
   await prisma.catalogPart.upsert({
@@ -1131,27 +1133,80 @@ export async function createCatalogPartAction(formData: FormData) {
       sku: sku || null,
       description: description || null,
       itemType: itemType || null,
-      price: price ? Number(price) : null,
-      cost: cost ? Number(cost) : null,
+      price,
+      cost,
+      quantityOnHand,
       source: "MANUAL",
     },
     update: {
       sku: sku || null,
       description: description || null,
       itemType: itemType || null,
-      price: price ? Number(price) : null,
-      cost: cost ? Number(cost) : null,
+      price,
+      cost,
+      quantityOnHand,
       active: true,
     },
   });
-  redirect("/parts");
+  redirect(partsListHref(formData));
+}
+
+export async function updateCatalogPartAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canManageParts(session.role)) return { error: "Only admins and managers can edit catalog parts." };
+
+  const id = formString(formData, "id");
+  const name = formString(formData, "name");
+  const sku = formString(formData, "sku");
+  const description = formString(formData, "description");
+  const itemType = formString(formData, "itemType");
+  const price = parseMoneyInput(formString(formData, "price"));
+  const cost = parseMoneyInput(formString(formData, "cost"));
+  const quantityOnHand = parseMoneyInput(formString(formData, "quantityOnHand"));
+  if (!name) return { error: "Part name is required." };
+
+  const part = await prisma.catalogPart.findFirst({
+    where: { id, organizationId: session.organizationId },
+  });
+  if (!part) return { error: "Part not found." };
+
+  const clash = await prisma.catalogPart.findFirst({
+    where: { organizationId: session.organizationId, name, NOT: { id } },
+    select: { id: true },
+  });
+  if (clash) return { error: "Another part already uses that name." };
+
+  await prisma.catalogPart.update({
+    where: { id },
+    data: {
+      name,
+      sku: sku || null,
+      description: description || null,
+      itemType: itemType || null,
+      price,
+      cost,
+      quantityOnHand,
+      active: true,
+    },
+  });
+  redirect(partsListHref(formData));
+}
+
+function partsListHref(formData: FormData) {
+  const q = formString(formData, "q");
+  const page = formString(formData, "page");
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (page && page !== "1") params.set("page", page);
+  const qs = params.toString();
+  return qs ? `/parts?${qs}` : "/parts";
 }
 
 export async function importCatalogPartsBatchAction(
   parts: unknown,
 ): Promise<{ created: number; updated: number } | { error: string }> {
   const session = await requireSession();
-  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can import parts." };
+  if (!canManageParts(session.role)) return { error: "Only admins and managers can import parts." };
   if (!Array.isArray(parts) || parts.length === 0) {
     return { error: "No parts in this batch." };
   }
@@ -1373,9 +1428,45 @@ export async function importAgSensePivotsAction(formData: FormData) {
   );
 }
 
+async function openMaintenanceTicketForPivot(input: {
+  organizationId: string;
+  userId: string;
+  role: string;
+  pivot: { id: string; name: string; farmerId: string };
+}) {
+  const actor = await prisma.user.findFirst({
+    where: { id: input.userId },
+    select: { storeId: true },
+  });
+  const farm = await prisma.farmer.findFirst({
+    where: { id: input.pivot.farmerId },
+    select: { storeId: true, name: true },
+  });
+  const technicianId = input.role === ROLES.TECHNICIAN ? input.userId : null;
+  const ticket = await openServiceTicket({
+    organizationId: input.organizationId,
+    farmerId: input.pivot.farmerId,
+    pivotId: input.pivot.id,
+    technicianId,
+    storeId: actor?.storeId ?? farm?.storeId ?? null,
+    userId: input.userId,
+    title: `${STARTUP_SEASON_YEAR} maintenance: ${input.pivot.name}`,
+    description: `${STARTUP_SEASON_YEAR} maintenance for ${input.pivot.name}${farm?.name ? ` at ${farm.name}` : ""}.`,
+    priority: "NORMAL",
+  });
+  await notifyTicketSms({
+    organizationId: input.organizationId,
+    ticketId: ticket.id,
+    kind: technicianId ? "assigned" : "opened",
+    actorUserId: input.userId,
+    note: ticket.description,
+  });
+  return ticket;
+}
+
 export async function startStartupInspectionAction(formData: FormData) {
   const session = await requireSession();
-  if (session.role === ROLES.FARMER) return { error: "Farmers cannot run startup inspections." };
+  if (session.role === ROLES.FARMER) return { error: "Farmers cannot start maintenance." };
 
   const pivotId = formString(formData, "pivotId");
   const pivot = await prisma.pivot.findFirst({
@@ -1383,33 +1474,49 @@ export async function startStartupInspectionAction(formData: FormData) {
   });
   if (!pivot) return { error: "Pivot not found." };
 
-  const existing = await prisma.startupInspection.findUnique({
+  let inspection = await prisma.startupInspection.findUnique({
     where: { pivotId_seasonYear: { pivotId, seasonYear: STARTUP_SEASON_YEAR } },
   });
-  if (existing) redirect(`/startup/${existing.id}`);
 
-  const templates = await ensureStartupTemplates(session.organizationId);
-  if (templates.length === 0) return { error: "Add at least one checklist item before starting an inspection." };
-
-  const inspection = await prisma.startupInspection.create({
-    data: {
-      organizationId: session.organizationId,
-      pivotId,
-      seasonYear: STARTUP_SEASON_YEAR,
-      status: INSPECTION_STATUS.IN_PROGRESS,
-      inspectorId: session.userId,
-      checks: {
-        create: templates.map((check) => ({
-          checkKey: check.checkKey,
-          label: check.label,
-          detail: check.detail,
-          sortOrder: check.sortOrder,
-          result: "PENDING",
-        })),
+  if (!inspection) {
+    const templates = await ensureStartupTemplates(session.organizationId);
+    if (templates.length === 0) return { error: "Add at least one checklist item before starting maintenance." };
+    inspection = await prisma.startupInspection.create({
+      data: {
+        organizationId: session.organizationId,
+        pivotId,
+        seasonYear: STARTUP_SEASON_YEAR,
+        status: INSPECTION_STATUS.IN_PROGRESS,
+        inspectorId: session.userId,
+        checks: {
+          create: templates.map((check) => ({
+            checkKey: check.checkKey,
+            label: check.label,
+            detail: check.detail,
+            sortOrder: check.sortOrder,
+            result: "PENDING",
+          })),
+        },
       },
-    },
-  });
-  redirect(`/startup/${inspection.id}`);
+    });
+  }
+
+  let ticketId = inspection.ticketId;
+  if (!ticketId) {
+    const ticket = await openMaintenanceTicketForPivot({
+      organizationId: session.organizationId,
+      userId: session.userId,
+      role: session.role,
+      pivot,
+    });
+    ticketId = ticket.id;
+    await prisma.startupInspection.update({
+      where: { id: inspection.id },
+      data: { ticketId, inspectorId: session.userId },
+    });
+  }
+
+  redirect(`/tickets/${ticketId}`);
 }
 
 export async function saveStartupChecksAction(formData: FormData) {
@@ -1448,35 +1555,41 @@ export async function saveStartupChecksAction(formData: FormData) {
   else if (pending.length === 0) status = INSPECTION_STATUS.PASSED;
 
   let ticketId = inspection.ticketId;
-  if (failed.length > 0 && !ticketId) {
+  if (failed.length > 0) {
     const failLabels = failed.map((item) => item.label).join(", ");
-    const actor = await prisma.user.findFirst({
-      where: { id: session.userId },
-      select: { storeId: true },
-    });
-    const farm = await prisma.farmer.findFirst({
-      where: { id: inspection.pivot.farmerId },
-      select: { storeId: true },
-    });
-    const ticket = await openServiceTicket({
-      organizationId: session.organizationId,
-      farmerId: inspection.pivot.farmerId,
-      pivotId: inspection.pivotId,
-      technicianId: session.role === ROLES.TECHNICIAN ? session.userId : inspection.inspectorId,
-      storeId: actor?.storeId ?? farm?.storeId ?? null,
-      userId: session.userId,
-      title: `${STARTUP_SEASON_YEAR} startup fail: ${inspection.pivot.name}`,
-      description: `Pre-season startup failed on: ${failLabels}.`,
-      priority: "HIGH",
-    });
-    ticketId = ticket.id;
-    await notifyTicketSms({
-      organizationId: session.organizationId,
-      ticketId: ticket.id,
-      kind: "assigned",
-      actorUserId: session.userId,
-      note: ticket.description,
-    });
+    const failNote = `Maintenance failed on: ${failLabels}.`;
+    if (!ticketId) {
+      const ticket = await openMaintenanceTicketForPivot({
+        organizationId: session.organizationId,
+        userId: session.userId,
+        role: session.role,
+        pivot: inspection.pivot,
+      });
+      ticketId = ticket.id;
+      await prisma.ticket.update({
+        where: { id: ticketId },
+        data: { priority: "HIGH", description: failNote },
+      });
+    } else if (inspection.status !== INSPECTION_STATUS.FAILED) {
+      await prisma.ticket.update({
+        where: { id: ticketId },
+        data: { priority: "HIGH" },
+      });
+      await prisma.ticketUpdate.create({
+        data: {
+          ticketId,
+          userId: session.userId,
+          message: failNote,
+        },
+      });
+      await notifyTicketSms({
+        organizationId: session.organizationId,
+        ticketId,
+        kind: "updated",
+        actorUserId: session.userId,
+        note: failNote,
+      });
+    }
   }
 
   await prisma.startupInspection.update({

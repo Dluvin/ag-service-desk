@@ -27,7 +27,7 @@ export default async function StartupBoardPage() {
     <div>
       <h1 className="font-display text-3xl">{STARTUP_SEASON_YEAR} maintenance</h1>
       <p className="mt-1 text-stone-600">
-        Checklist per pivot. A failed item opens a high-priority service ticket automatically.
+        Select a pivot to open a maintenance ticket. The checklist stays on that visit; failed items mark the ticket high priority.
       </p>
       {canEditStartupChecklist(session.role) ? (
         <p className="mt-2 text-sm">
@@ -71,15 +71,24 @@ export default async function StartupBoardPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {inspection ? (
-                      <Link href={`/startup/${inspection.id}`} className="text-emerald-800 hover:underline">
-                        Open checklist
-                      </Link>
+                    {inspection?.ticketId ? (
+                      <span className="inline-flex flex-wrap justify-end gap-3">
+                        <Link href={`/tickets/${inspection.ticketId}`} className="text-emerald-800 hover:underline">
+                          Open ticket
+                        </Link>
+                        <Link href={`/startup/${inspection.id}`} className="text-stone-600 hover:underline">
+                          Checklist
+                        </Link>
+                      </span>
                     ) : canInspect ? (
                       <ActionForm action={startStartupInspectionAction}>
                         <input type="hidden" name="pivotId" value={pivot.id} />
-                        <button className="text-emerald-800 hover:underline">Start inspection</button>
+                        <button className="text-emerald-800 hover:underline">Start maintenance</button>
                       </ActionForm>
+                    ) : inspection ? (
+                      <Link href={`/startup/${inspection.id}`} className="text-emerald-800 hover:underline">
+                        Open checklist
+                      </Link>
                     ) : (
                       <span className="text-stone-400">Waiting on shop</span>
                     )}

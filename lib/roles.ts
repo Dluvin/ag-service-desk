@@ -85,6 +85,10 @@ export function canImportStaff(role: string) {
   return role === ROLES.ADMIN;
 }
 
+export function canManageParts(role: string) {
+  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+}
+
 export function canDeleteRecords(role: string) {
   return role === ROLES.ADMIN;
 }

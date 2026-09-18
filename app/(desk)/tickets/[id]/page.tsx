@@ -36,6 +36,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         labor: { include: { user: true }, orderBy: { createdAt: "asc" } },
         siteVisits: { orderBy: { startedAt: "asc" } },
         photos: { orderBy: { createdAt: "desc" } },
+        inspections: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!ticket) notFound();
@@ -83,6 +84,13 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             />
           ) : null}
         </div>
+        {ticket.inspections[0] ? (
+          <p className="mt-2 text-sm">
+            <Link href={`/startup/${ticket.inspections[0].id}`} className="text-emerald-800 hover:underline">
+              Maintenance checklist
+            </Link>
+          </p>
+        ) : null}
         <p className="mt-4 whitespace-pre-wrap text-stone-700">{ticket.description}</p>
         <p className="mt-3 text-sm text-stone-600">
           <Link href={`/farmers/${ticket.farmerId}`} className="text-emerald-800 hover:underline">

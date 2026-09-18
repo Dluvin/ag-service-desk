@@ -1,88 +1,87 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 
-function likePattern(query: string) {
-  return `%${query.trim().replace(/[%_]/g, "")}%`;
+export const CATALOG_PAGE_SIZE = 50;
+
+function searchTokens(query: string) {
+  return query
+    .trim()
+    .split(/\s+/)
+    .map((token) => token.replace(/[%_]/g, "").trim())
+    .filter((token) => token.length > 0)
+    .slice(0, 6);
+}
+
+function catalogWhere(organizationId: string, query: string, activeOnly?: boolean) {
+  const tokens = searchTokens(query);
+  return {
+    organizationId,
+    ...(activeOnly ? { active: true } : {}),
+    ...(tokens.length
+      ? {
+          AND: tokens.map((token) => ({
+            OR: [
+              { name: { contains: token } },
+              { sku: { contains: token } },
+              { description: { contains: token } },
+            ],
+          })),
+        }
+      : {}),
+  };
+}
+
+export function parseCatalogPage(value: string | undefined) {
+  const page = Number(value);
+  if (!Number.isFinite(page) || page < 1) return 1;
+  return Math.floor(page);
 }
 
 export async function searchCatalogParts(options: {
   organizationId: string;
   query: string;
   take: number;
+  skip?: number;
   activeOnly?: boolean;
 }) {
-  const q = options.query.trim();
-  if (!q) {
-    return prisma.catalogPart.findMany({
-      where: {
-        organizationId: options.organizationId,
-        ...(options.activeOnly ? { active: true } : {}),
-      },
-      orderBy: { name: "asc" },
-      take: options.take,
-    });
-  }
+  return prisma.catalogPart.findMany({
+    where: catalogWhere(options.organizationId, options.query, options.activeOnly),
+    orderBy: { name: "asc" },
+    take: options.take,
+    skip: options.skip ?? 0,
+  });
+}
 
-  const pattern = likePattern(q);
-  return prisma.$queryRaw<
-    Array<{
-      id: string;
-      name: string;
-      sku: string | null;
-      description: string | null;
-      itemType: string | null;
-      price: number | null;
-      cost: number | null;
-      quantityOnHand: number | null;
-      active: boolean;
-    }>
-  >`
-    SELECT id, name, sku, description, itemType, price, cost, quantityOnHand, active
-    FROM CatalogPart
-    WHERE organizationId = ${options.organizationId}
-      ${options.activeOnly ? Prisma.sql`AND active = 1` : Prisma.empty}
-      AND (name LIKE ${pattern} COLLATE NOCASE OR IFNULL(sku, '') LIKE ${pattern} COLLATE NOCASE)
-    ORDER BY name COLLATE NOCASE
-    LIMIT ${options.take}
-  `;
+export async function countCatalogParts(options: {
+  organizationId: string;
+  query: string;
+  activeOnly?: boolean;
+}) {
+  return prisma.catalogPart.count({
+    where: catalogWhere(options.organizationId, options.query, options.activeOnly),
+  });
 }
 
 export async function searchCatalogLabor(options: {
   organizationId: string;
   query: string;
   take: number;
+  skip?: number;
   activeOnly?: boolean;
 }) {
-  const q = options.query.trim();
-  if (!q) {
-    return prisma.catalogLabor.findMany({
-      where: {
-        organizationId: options.organizationId,
-        ...(options.activeOnly ? { active: true } : {}),
-      },
-      orderBy: { name: "asc" },
-      take: options.take,
-    });
-  }
+  return prisma.catalogLabor.findMany({
+    where: catalogWhere(options.organizationId, options.query, options.activeOnly),
+    orderBy: { name: "asc" },
+    take: options.take,
+    skip: options.skip ?? 0,
+  });
+}
 
-  const pattern = likePattern(q);
-  return prisma.$queryRaw<
-    Array<{
-      id: string;
-      name: string;
-      sku: string | null;
-      description: string | null;
-      itemType: string | null;
-      rate: number | null;
-      active: boolean;
-    }>
-  >`
-    SELECT id, name, sku, description, itemType, rate, active
-    FROM CatalogLabor
-    WHERE organizationId = ${options.organizationId}
-      ${options.activeOnly ? Prisma.sql`AND active = 1` : Prisma.empty}
-      AND (name LIKE ${pattern} COLLATE NOCASE OR IFNULL(sku, '') LIKE ${pattern} COLLATE NOCASE)
-    ORDER BY name COLLATE NOCASE
-    LIMIT ${options.take}
-  `;
+export async function countCatalogLabor(options: {
+  organizationId: string;
+  query: string;
+  activeOnly?: boolean;
+}) {
+  return prisma.catalogLabor.count({
+    where: catalogWhere(options.organizationId, options.query, options.activeOnly),
+  });
 }

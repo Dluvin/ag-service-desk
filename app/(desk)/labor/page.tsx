@@ -3,17 +3,19 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
-import { searchCatalogLabor } from "@/lib/catalog";
+import { CATALOG_PAGE_SIZE, countCatalogLabor, parseCatalogPage, searchCatalogLabor } from "@/lib/catalog";
 import { createCatalogLaborAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { LaborImportForm } from "@/components/LaborImportForm";
+import { CatalogSearchBox } from "@/components/CatalogSearchBox";
+import { CatalogPager } from "@/components/CatalogPager";
 
 export const maxDuration = 120;
 
 export default async function LaborPage({
   searchParams,
 }: {
-  searchParams: Promise<{ imported?: string; updated?: string; q?: string }>;
+  searchParams: Promise<{ imported?: string; updated?: string; q?: string; page?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -21,14 +23,21 @@ export default async function LaborPage({
 
   const query = await searchParams;
   const q = (query.q ?? "").trim();
-  const [total, shown] = await Promise.all([
+  const requestedPage = parseCatalogPage(query.page);
+  const [total, matched] = await Promise.all([
     prisma.catalogLabor.count({ where: { organizationId: session.organizationId } }),
-    searchCatalogLabor({
-      organizationId: session.organizationId,
-      query: q,
-      take: 150,
-    }),
+    countCatalogLabor({ organizationId: session.organizationId, query: q }),
   ]);
+  const pageCount = Math.max(1, Math.ceil(matched / CATALOG_PAGE_SIZE));
+  const page = Math.min(requestedPage, pageCount);
+  const shown = await searchCatalogLabor({
+    organizationId: session.organizationId,
+    query: q,
+    take: CATALOG_PAGE_SIZE,
+    skip: (page - 1) * CATALOG_PAGE_SIZE,
+  });
+  const from = matched === 0 ? 0 : (page - 1) * CATALOG_PAGE_SIZE + 1;
+  const to = (page - 1) * CATALOG_PAGE_SIZE + shown.length;
   const isAdmin = session.role === ROLES.ADMIN;
 
   return (
@@ -43,24 +52,15 @@ export default async function LaborPage({
             Import finished: {query.imported ?? "0"} added, {query.updated ?? "0"} updated.
           </p>
         ) : null}
-        <form className="mt-4" action="/labor">
-          <label className="block text-sm font-medium">
-            Search catalog
-            <input
-              name="q"
-              defaultValue={q}
-              placeholder="Name or code"
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
-            />
-          </label>
-        </form>
+        <CatalogSearchBox action="/labor" defaultQuery={q} placeholder="Name, code, or description" />
         <p className="mt-2 text-sm text-stone-500">
           {total === 0
             ? "No labor items in the catalog yet."
             : q
-              ? `Showing ${shown.length.toLocaleString()} of ${total.toLocaleString()} items matching “${q}”.`
-              : `Showing first ${shown.length.toLocaleString()} of ${total.toLocaleString()} items. Search to find one.`}
+              ? `Showing ${from.toLocaleString()}–${to.toLocaleString()} of ${matched.toLocaleString()} items matching “${q}” (${total.toLocaleString()} in catalog).`
+              : `Showing ${from.toLocaleString()}–${to.toLocaleString()} of ${total.toLocaleString()} items.`}
         </p>
+        <CatalogPager action="/labor" query={q} page={page} pageCount={pageCount} />
         <div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
           <table className="w-full text-left text-sm">
             <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
@@ -94,6 +94,7 @@ export default async function LaborPage({
             </tbody>
           </table>
         </div>
+        <CatalogPager action="/labor" query={q} page={page} pageCount={pageCount} />
       </div>
       <div className="lg:col-span-2 space-y-8">
         {isAdmin ? (
