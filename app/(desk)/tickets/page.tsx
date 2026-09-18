@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { ticketWhere } from "@/lib/scope";
 import { isPrintableStatus, requiresInvoice, ROLES } from "@/lib/roles";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
+import { formatSchedule } from "@/lib/schedule";
+import { formatMoney } from "@/lib/money";
 
 export default async function TicketsPage() {
   const session = await getSession();
@@ -33,6 +35,7 @@ export default async function TicketsPage() {
               <th className="px-4 py-2">Technician</th>
               <th className="px-4 py-2">Priority</th>
               <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">Scheduled</th>
               <th className="px-4 py-2">Invoice</th>
             </tr>
           </thead>
@@ -56,9 +59,15 @@ export default async function TicketsPage() {
                 <td className="px-4 py-3">
                   <StatusBadge status={ticket.status} />
                 </td>
+                <td className="px-4 py-3 text-stone-600">
+                  {formatSchedule(ticket.scheduledAt) ?? "—"}
+                </td>
                 <td className="px-4 py-3">
                   {ticket.invoiceNumber ? (
-                    <span className="text-stone-700">{ticket.invoiceNumber}</span>
+                    <span className="text-stone-700">
+                      {ticket.invoiceNumber}
+                      {ticket.invoiceAmount != null ? ` · ${formatMoney(ticket.invoiceAmount)}` : ""}
+                    </span>
                   ) : requiresInvoice(ticket.status) ? (
                     <span className="text-red-700">Missing</span>
                   ) : (

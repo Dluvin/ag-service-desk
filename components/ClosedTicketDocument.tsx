@@ -9,6 +9,7 @@ type PrintTicket = {
   status: string;
   priority: string;
   invoiceNumber: string | null;
+  invoiceAmount: number | null;
   createdAt: Date;
   closedAt: Date | null;
   updatedAt: Date;
@@ -59,7 +60,10 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
         </div>
         <div className="text-right text-sm">
           <p className="font-semibold">Ticket #{ticket.number}</p>
-          <p>{ticket.invoiceNumber ? `Invoice ${ticket.invoiceNumber}` : "No invoice number"}</p>
+          <p>
+            {ticket.invoiceNumber ? `Invoice ${ticket.invoiceNumber}` : "No invoice number"}
+            {ticket.invoiceAmount != null ? ` · ${money(ticket.invoiceAmount)}` : ""}
+          </p>
           <p>
             Closed{" "}
             {(ticket.closedAt ?? ticket.updatedAt).toLocaleDateString()}

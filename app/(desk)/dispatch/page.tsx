@@ -11,13 +11,15 @@ import { DispatchFleetMap } from "@/components/DispatchFleetMap";
 import { ticketPins } from "@/lib/map-pins";
 import { parseStoreParam, storeTicketWhere } from "@/lib/stores";
 import { StoreFilter } from "@/components/StoreFilter";
+import { DispatchCalendar } from "@/components/DispatchCalendar";
+import { formatSchedule } from "@/lib/schedule";
 
 const COLUMNS: TicketStatus[] = [...DISPATCH_STATUSES];
 
 export default async function DispatchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ store?: string }>;
+  searchParams: Promise<{ store?: string; month?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -71,6 +73,9 @@ export default async function DispatchPage({
                       {ticket.farmer.name}
                       {ticket.farmer.store ? ` · ${ticket.farmer.store.name}` : ""} · {ticket.pivot.name}
                     </p>
+                    {ticket.scheduledAt ? (
+                      <p className="mt-1 text-xs font-medium text-emerald-900">{formatSchedule(ticket.scheduledAt)}</p>
+                    ) : null}
                     <div className="mt-1">
                       <PriorityBadge priority={ticket.priority} />
                     </div>
@@ -114,6 +119,8 @@ export default async function DispatchPage({
           );
         })}
       </div>
+
+      <DispatchCalendar tickets={tickets} month={query.month} store={selectedStore} />
 
       <h2 className="font-display mt-10 text-xl">Open tickets map</h2>
       <p className="mt-1 text-sm text-stone-600">

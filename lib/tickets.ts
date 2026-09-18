@@ -17,6 +17,7 @@ export async function openServiceTicket(input: {
   title: string;
   description: string;
   priority?: string;
+  scheduledAt?: Date | null;
 }) {
   const number = await nextTicketNumber(input.organizationId);
   const status = input.technicianId ? "ASSIGNED" : "OPEN";
@@ -31,6 +32,7 @@ export async function openServiceTicket(input: {
       description: input.description,
       priority: input.priority ?? "NORMAL",
       status,
+      scheduledAt: input.scheduledAt ?? null,
       updates: {
         create: {
           userId: input.userId,

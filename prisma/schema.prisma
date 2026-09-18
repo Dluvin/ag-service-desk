@@ -142,6 +142,8 @@ model Ticket {
   status         String        @default("OPEN")
   priority       String        @default("NORMAL")
   invoiceNumber  String?
+  invoiceAmount  Float?
+  scheduledAt    DateTime?
   closedAt       DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt

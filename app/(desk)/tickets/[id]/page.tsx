@@ -14,6 +14,7 @@ import { TicketPhotoFields } from "@/components/TicketPhotoFields";
 import { TicketPhotoGrid } from "@/components/TicketPhotoGrid";
 import { PartsPicker } from "@/components/PartsPicker";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
+import { formatSchedule, toDateTimeLocalValue } from "@/lib/schedule";
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -46,7 +47,10 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           <StatusBadge status={ticket.status} />
           <PriorityBadge priority={ticket.priority} />
           {ticket.invoiceNumber ? (
-            <span className="text-sm font-medium text-stone-700">Invoice {ticket.invoiceNumber}</span>
+            <span className="text-sm font-medium text-stone-700">
+              Invoice {ticket.invoiceNumber}
+              {ticket.invoiceAmount != null ? ` · $${ticket.invoiceAmount.toFixed(2)}` : ""}
+            </span>
           ) : null}
           {isPrintableStatus(ticket.status) ? (
             <Link
@@ -82,6 +86,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           </Link>
           {" · "}
           {ticket.technician ? `Assigned to ${ticket.technician.name}` : "Unassigned"}
+          {ticket.scheduledAt ? ` · Scheduled ${formatSchedule(ticket.scheduledAt)}` : ""}
         </p>
 
         {ticket.siteVisits.length > 0 ? (
@@ -120,7 +125,20 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           <input type="hidden" name="ticketId" value={ticket.id} />
           {canDispatch ? (
             <>
-              <TicketStatusFields status={ticket.status} invoiceNumber={ticket.invoiceNumber} />
+              <TicketStatusFields
+                status={ticket.status}
+                invoiceNumber={ticket.invoiceNumber}
+                invoiceAmount={ticket.invoiceAmount}
+              />
+              <label className="block text-sm font-medium">
+                Scheduled for
+                <input
+                  name="scheduledAt"
+                  type="datetime-local"
+                  defaultValue={toDateTimeLocalValue(ticket.scheduledAt)}
+                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+                />
+              </label>
               {canAssignTickets(session.role) ? (
                 <label className="block text-sm font-medium">
                   Technician

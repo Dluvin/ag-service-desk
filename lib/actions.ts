@@ -33,6 +33,8 @@ import { notifyTicketSms } from "./ticket-sms";
 import { sendBirdSms, toE164 } from "./bird";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./ticket-photos";
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
+import { parseDateTimeLocal } from "./schedule";
+import { parseMoneyInput } from "./money";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -797,6 +799,7 @@ export async function createTicketAction(formData: FormData) {
     title,
     description,
     priority,
+    scheduledAt: parseDateTimeLocal(formString(formData, "scheduledAt")),
   });
   if (assigned) {
     await notifyTicketSms({
@@ -884,9 +887,13 @@ export async function updateTicketAction(formData: FormData) {
   if (!TICKET_STATUSES.includes(status)) return { error: "Invalid status." };
 
   const invoiceNumber = formString(formData, "invoiceNumber");
+  const invoiceAmount = parseMoneyInput(formString(formData, "invoiceAmount"));
   if (requiresInvoice(status)) {
     if (!invoiceNumber) {
       return { error: "An invoice number is required before a ticket can be closed." };
+    }
+    if (invoiceAmount == null) {
+      return { error: "An invoice amount is required before a ticket can be closed." };
     }
     const clash = await prisma.ticket.findFirst({
       where: {
@@ -912,6 +919,8 @@ export async function updateTicketAction(formData: FormData) {
       status,
       technicianId: nextTech,
       invoiceNumber: invoiceNumber || ticket.invoiceNumber,
+      invoiceAmount: requiresInvoice(status) ? invoiceAmount : ticket.invoiceAmount,
+      scheduledAt: parseDateTimeLocal(formString(formData, "scheduledAt")),
       closedAt: requiresInvoice(status) ? (ticket.closedAt ?? new Date()) : ticket.closedAt,
     },
   });
@@ -967,8 +976,8 @@ export async function assignTicketAction(formData: FormData) {
   let nextStatus: string = TICKET_STATUSES.includes(status as TicketStatus) ? status : ticket.status;
   if (nextTech && nextStatus === "OPEN") nextStatus = "ASSIGNED";
   if (!nextTech && nextStatus === "ASSIGNED") nextStatus = "OPEN";
-  if (requiresInvoice(nextStatus) && !ticket.invoiceNumber) {
-    return { error: "Close this ticket from the ticket page and enter an invoice number." };
+  if (requiresInvoice(nextStatus) && (!ticket.invoiceNumber || ticket.invoiceAmount == null)) {
+    return { error: "Close this ticket from the ticket page and enter an invoice number and amount." };
   }
 
   const previousTech = ticket.technicianId;
