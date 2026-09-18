@@ -26,6 +26,7 @@ type PrintTicket = {
   siteVisits?: { startedAt: Date; endedAt: Date | null }[];
   parts: { quantity: number; name: string; sku: string | null; unitPrice: number | null }[];
   labor?: { hours: number; name: string; sku: string | null; unitRate: number | null }[];
+  equipment?: { hours: number; name: string; sku: string | null; unitRate: number | null }[];
   updates: {
     message: string;
     status: string | null;
@@ -41,6 +42,7 @@ function money(value: number) {
 
 export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
   const labor = ticket.labor ?? [];
+  const equipment = ticket.equipment ?? [];
   const partsTotal = ticket.parts.reduce(
     (sum, part) => sum + part.quantity * (part.unitPrice ?? 0),
     0,
@@ -49,8 +51,13 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
     (sum, item) => sum + item.hours * (item.unitRate ?? 0),
     0,
   );
+  const equipmentTotal = equipment.reduce(
+    (sum, item) => sum + item.hours * (item.unitRate ?? 0),
+    0,
+  );
   const hasPrices = ticket.parts.some((part) => part.unitPrice != null);
   const hasLaborRates = labor.some((item) => item.unitRate != null);
+  const hasEquipmentRates = equipment.some((item) => item.unitRate != null);
 
   return (
     <article className="print-sheet mx-auto max-w-3xl bg-white p-8 text-stone-900 shadow-sm print:max-w-none print:p-0 print:shadow-none">
@@ -200,6 +207,50 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
                   Labor total
                 </td>
                 <td className="pt-2 text-right font-semibold">{money(laborTotal)}</td>
+              </tr>
+            </tfoot>
+          ) : null}
+        </table>
+      )}
+
+      <h2 className="font-display mt-8 text-lg">Equipment used</h2>
+      {equipment.length === 0 ? (
+        <p className="mt-2 text-sm text-stone-600">No equipment logged.</p>
+      ) : (
+        <table className="mt-2 w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-stone-300">
+              <th className="py-1">Hours</th>
+              <th className="py-1">Equipment</th>
+              <th className="py-1">Code</th>
+              {hasEquipmentRates ? <th className="py-1 text-right">Rate</th> : null}
+              {hasEquipmentRates ? <th className="py-1 text-right">Amount</th> : null}
+            </tr>
+          </thead>
+          <tbody>
+            {equipment.map((item, index) => (
+              <tr key={`${item.name}-${index}`} className="border-b border-stone-100">
+                <td className="py-1">{item.hours}</td>
+                <td className="py-1">{item.name}</td>
+                <td className="py-1">{item.sku ?? "—"}</td>
+                {hasEquipmentRates ? (
+                  <td className="py-1 text-right">{item.unitRate != null ? money(item.unitRate) : "—"}</td>
+                ) : null}
+                {hasEquipmentRates ? (
+                  <td className="py-1 text-right">
+                    {item.unitRate != null ? money(item.hours * item.unitRate) : "—"}
+                  </td>
+                ) : null}
+              </tr>
+            ))}
+          </tbody>
+          {hasEquipmentRates ? (
+            <tfoot>
+              <tr>
+                <td colSpan={4} className="pt-2 text-right font-semibold">
+                  Equipment total
+                </td>
+                <td className="pt-2 text-right font-semibold">{money(equipmentTotal)}</td>
               </tr>
             </tfoot>
           ) : null}

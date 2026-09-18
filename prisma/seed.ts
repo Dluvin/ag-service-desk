@@ -221,6 +221,15 @@ async function main() {
     ],
   });
 
+  await prisma.catalogEquipment.createMany({
+    data: [
+      { organizationId: heartland.id, name: "Service truck", sku: "EQ-TRUCK", itemType: "Equipment", rate: 85, source: "QUICKBOOKS" },
+      { organizationId: heartland.id, name: "Trencher", sku: "EQ-TRENCH", itemType: "Equipment", rate: 95, source: "QUICKBOOKS" },
+      { organizationId: heartland.id, name: "Boom truck", sku: "EQ-BOOM", itemType: "Equipment", rate: 125, source: "QUICKBOOKS" },
+      { organizationId: heartland.id, name: "Welder", sku: "EQ-WELD", itemType: "Equipment", rate: 45, source: "QUICKBOOKS" },
+    ],
+  });
+
   await prisma.ticket.create({
     data: {
       organizationId: heartland.id,

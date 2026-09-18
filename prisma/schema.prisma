@@ -32,6 +32,7 @@ model Organization {
   startupChecks       StartupCheckTemplate[]
   catalogParts        CatalogPart[]
   catalogLabor        CatalogLabor[]
+  catalogEquipment    CatalogEquipment[]
   stores              Store[]
 }
 
@@ -68,6 +69,7 @@ model User {
   photos         TicketPhoto[]
   partsLogged    TicketPart[]
   laborLogged    TicketLabor[]
+  equipmentLogged TicketEquipment[]
   inspections           StartupInspection[]   @relation("Inspector")
   revealVehicleNumber   String?
   siteVisits            SiteVisit[]
@@ -159,6 +161,7 @@ model Ticket {
   photos         TicketPhoto[]
   parts          TicketPart[]
   labor          TicketLabor[]
+  equipment      TicketEquipment[]
   inspections    StartupInspection[]
   siteVisits     SiteVisit[]
 
@@ -247,6 +250,39 @@ model TicketLabor {
   sku             String?
   unitRate        Float?
   createdAt       DateTime       @default(now())
+}
+
+model CatalogEquipment {
+  id             String            @id @default(cuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  sku            String?
+  description    String?
+  itemType       String?
+  rate           Float?
+  active         Boolean           @default(true)
+  source         String            @default("MANUAL")
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  ticketEquipment TicketEquipment[]
+
+  @@unique([organizationId, name])
+}
+
+model TicketEquipment {
+  id                  String            @id @default(cuid())
+  ticketId            String
+  ticket              Ticket            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId              String
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  catalogEquipmentId  String?
+  catalogEquipment    CatalogEquipment? @relation(fields: [catalogEquipmentId], references: [id], onDelete: SetNull)
+  name                String
+  hours               Float
+  sku                 String?
+  unitRate            Float?
+  createdAt           DateTime          @default(now())
 }
 
 model StartupInspection {

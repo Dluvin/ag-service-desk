@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
 import { STATUS_LABELS, canAssignTickets, canDeleteRecords, isPrintableStatus, isShopStaff } from "@/lib/roles";
-import { updateTicketAction, addTicketPartAction, addTicketLaborAction, deleteTicketAction } from "@/lib/actions";
+import { updateTicketAction, addTicketPartAction, addTicketLaborAction, addTicketEquipmentAction, deleteTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
@@ -14,6 +14,7 @@ import { TicketPhotoFields } from "@/components/TicketPhotoFields";
 import { TicketPhotoGrid } from "@/components/TicketPhotoGrid";
 import { PartsPicker } from "@/components/PartsPicker";
 import { LaborPicker } from "@/components/LaborPicker";
+import { EquipmentPicker } from "@/components/EquipmentPicker";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
 import { formatSchedule, toDateTimeLocalValue } from "@/lib/schedule";
 import { StoreSelect } from "@/components/StoreSelect";
@@ -34,6 +35,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         updates: { include: { user: true, photos: true }, orderBy: { createdAt: "asc" } },
         parts: { include: { user: true }, orderBy: { createdAt: "asc" } },
         labor: { include: { user: true }, orderBy: { createdAt: "asc" } },
+        equipment: { include: { user: true }, orderBy: { createdAt: "asc" } },
         siteVisits: { orderBy: { startedAt: "asc" } },
         photos: { orderBy: { createdAt: "desc" } },
         inspections: { orderBy: { createdAt: "desc" } },
@@ -290,6 +292,49 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               </label>
             </div>
             <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Log labor</button>
+          </ActionForm>
+        ) : null}
+
+        <h2 className="font-display mt-8 text-xl">Equipment used</h2>
+        <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
+          {ticket.equipment.length === 0 ? (
+            <li className="p-4 text-sm text-stone-600">No equipment logged on this call yet.</li>
+          ) : (
+            ticket.equipment.map((item) => (
+              <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
+                <span>
+                  <span className="font-medium">{item.hours} hr × {item.name}</span>
+                  {item.sku ? <span className="text-stone-500"> · {item.sku}</span> : null}
+                  {item.unitRate != null ? (
+                    <span className="text-stone-500"> · ${item.unitRate.toFixed(2)}/hr</span>
+                  ) : null}
+                </span>
+                <span className="text-xs text-stone-500">
+                  {item.user.name} · {new Date(item.createdAt).toLocaleString()}
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
+        {canDispatch ? (
+          <ActionForm action={addTicketEquipmentAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+            <input type="hidden" name="ticketId" value={ticket.id} />
+            <EquipmentPicker />
+            <label className="block text-sm font-medium">
+              Custom name
+              <input name="name" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Only if it is not in the catalog" />
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block text-sm font-medium">
+                Hours
+                <input name="hours" type="number" min="0.25" step="0.25" defaultValue="1" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+              </label>
+              <label className="block text-sm font-medium">
+                Code
+                <input name="sku" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Filled from catalog if selected" />
+              </label>
+            </div>
+            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Log equipment</button>
           </ActionForm>
         ) : null}
       </div>

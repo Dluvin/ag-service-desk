@@ -28,6 +28,7 @@ import { parseMapsLocation } from "./maps";
 import { parseAgSenseExport } from "./agsense";
 import { importCatalogPartBatch } from "./catalog-import";
 import { importCatalogLaborBatch } from "./labor-import";
+import { importCatalogEquipmentBatch } from "./equipment-import";
 import { parseStaffImport, isShopStaffRole } from "./staff-import";
 import { closeOpenSiteVisits } from "./onsite";
 import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, listRevealVehicles } from "./reveal";
@@ -1285,6 +1286,124 @@ export async function addTicketLaborAction(formData: FormData) {
     note: `Labor logged: ${hours} hr × ${name}.`,
   });
   redirect(`/tickets/${ticketId}`);
+}
+
+export async function addTicketEquipmentAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role === ROLES.FARMER) return { error: "Farmers can view equipment but not log it." };
+
+  const ticketId = formString(formData, "ticketId");
+  const catalogEquipmentId = formString(formData, "catalogEquipmentId");
+  const customName = formString(formData, "name");
+  const hours = Number(formString(formData, "hours") || "1");
+  const skuInput = formString(formData, "sku");
+
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, organizationId: session.organizationId },
+  });
+  if (!ticket) return { error: "Ticket not found." };
+  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+    return { error: "This ticket is not assigned to you." };
+  }
+  if (Number.isNaN(hours) || hours <= 0) {
+    return { error: "Hours must be greater than 0." };
+  }
+
+  let name = customName;
+  let sku: string | null = skuInput || null;
+  let unitRate: number | null = null;
+  let catalogId: string | null = null;
+
+  if (catalogEquipmentId) {
+    const catalog = await prisma.catalogEquipment.findFirst({
+      where: { id: catalogEquipmentId, organizationId: session.organizationId, active: true },
+    });
+    if (!catalog) return { error: "That equipment item was not found." };
+    name = catalog.name;
+    sku = catalog.sku;
+    unitRate = catalog.rate;
+    catalogId = catalog.id;
+  }
+
+  if (!name) return { error: "Pick equipment or type a custom name." };
+
+  await prisma.ticketEquipment.create({
+    data: {
+      ticketId,
+      userId: session.userId,
+      catalogEquipmentId: catalogId,
+      name,
+      hours,
+      sku,
+      unitRate,
+    },
+  });
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId,
+      userId: session.userId,
+      message: `Equipment used: ${hours} hr × ${name}${sku ? ` (${sku})` : ""}.`,
+    },
+  });
+  await notifyTicketSms({
+    organizationId: session.organizationId,
+    ticketId,
+    kind: "updated",
+    actorUserId: session.userId,
+    note: `Equipment used: ${hours} hr × ${name}.`,
+  });
+  redirect(`/tickets/${ticketId}`);
+}
+
+export async function createCatalogEquipmentAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canManageParts(session.role)) return { error: "Only admins and managers can add equipment." };
+
+  const name = formString(formData, "name");
+  const sku = formString(formData, "sku");
+  const description = formString(formData, "description");
+  const itemType = formString(formData, "itemType");
+  const rate = formString(formData, "rate");
+  if (!name) return { error: "Equipment name is required." };
+
+  await prisma.catalogEquipment.upsert({
+    where: { organizationId_name: { organizationId: session.organizationId, name } },
+    create: {
+      organizationId: session.organizationId,
+      name,
+      sku: sku || null,
+      description: description || null,
+      itemType: itemType || "Equipment",
+      rate: rate ? Number(rate) : null,
+      source: "MANUAL",
+    },
+    update: {
+      sku: sku || null,
+      description: description || null,
+      itemType: itemType || "Equipment",
+      rate: rate ? Number(rate) : null,
+      active: true,
+    },
+  });
+  redirect("/equipment");
+}
+
+export async function importCatalogEquipmentBatchAction(
+  items: unknown,
+): Promise<{ created: number; updated: number } | { error: string }> {
+  const session = await requireSession();
+  if (!canManageParts(session.role)) return { error: "Only admins and managers can import equipment." };
+  if (!Array.isArray(items) || items.length === 0) {
+    return { error: "No equipment items in this batch." };
+  }
+  if (items.length > 400) return { error: "Each import batch must be 400 equipment items or fewer." };
+
+  try {
+    return await importCatalogEquipmentBatch(session.organizationId, items);
+  } catch (error) {
+    console.error("Equipment import batch failed", error);
+    return { error: "This batch failed to save. Try the import again; already-imported names will update." };
+  }
 }
 
 export async function createCatalogLaborAction(formData: FormData) {

@@ -1,0 +1,6 @@
+Name,SKU,Type,Sales Description,Rate
+Service truck,EQ-TRUCK,Equipment,Field service truck per hour,85.00
+Trencher,EQ-TRENCH,Equipment,Trencher per hour,95.00
+Boom truck,EQ-BOOM,Equipment,Boom truck per hour,125.00
+Telehandler,EQ-TELE,Equipment,Telehandler per hour,110.00
+Welder,EQ-WELD,Equipment,Field welder per hour,45.00

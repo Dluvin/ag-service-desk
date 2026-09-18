@@ -85,3 +85,28 @@ export async function countCatalogLabor(options: {
     where: catalogWhere(options.organizationId, options.query, options.activeOnly),
   });
 }
+
+export async function searchCatalogEquipment(options: {
+  organizationId: string;
+  query: string;
+  take: number;
+  skip?: number;
+  activeOnly?: boolean;
+}) {
+  return prisma.catalogEquipment.findMany({
+    where: catalogWhere(options.organizationId, options.query, options.activeOnly),
+    orderBy: { name: "asc" },
+    take: options.take,
+    skip: options.skip ?? 0,
+  });
+}
+
+export async function countCatalogEquipment(options: {
+  organizationId: string;
+  query: string;
+  activeOnly?: boolean;
+}) {
+  return prisma.catalogEquipment.count({
+    where: catalogWhere(options.organizationId, options.query, options.activeOnly),
+  });
+}

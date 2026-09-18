@@ -31,6 +31,7 @@ export function Nav({
       ? [
           { href: "/parts", label: "Parts" },
           { href: "/labor", label: "Labor" },
+          { href: "/equipment", label: "Equipment" },
           { href: "/farmers", label: "Farms" },
         ]
       : []),

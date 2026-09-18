@@ -8,6 +8,7 @@ export const closedTicketPrintInclude = {
   updates: { include: { user: true, photos: true }, orderBy: { createdAt: "asc" as const } },
   parts: { orderBy: { createdAt: "asc" as const } },
   labor: { orderBy: { createdAt: "asc" as const } },
+  equipment: { orderBy: { createdAt: "asc" as const } },
   siteVisits: { orderBy: { startedAt: "asc" as const } },
 } satisfies Prisma.TicketInclude;
 
