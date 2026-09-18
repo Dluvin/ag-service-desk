@@ -12,9 +12,11 @@ import {
   canAddTechnicians,
   canAssignTickets,
   canDeleteRecords,
+  canEditStaffMember,
   canImportPivots,
   canImportStaff,
   canManageParts,
+  canManageShopStaff,
   canEditStartupChecklist,
   isFinishedStatus,
   isShopStaff,
@@ -308,7 +310,7 @@ export async function createTechnicianAction(formData: FormData) {
 
 export async function createStaffAction(formData: FormData) {
   const session = await requireSession();
-  if (!isAdmin(session.role)) return { error: "Only company admins can add staff." };
+  if (!canManageShopStaff(session.role)) return { error: "Only managers and admins can add staff." };
 
   const name = formString(formData, "name");
   const email = formString(formData, "email").toLowerCase();
@@ -319,7 +321,9 @@ export async function createStaffAction(formData: FormData) {
   if (!name || !email || password.length < 8) {
     return { error: "Name, email, and an 8+ character password are required." };
   }
-  if (!isShopStaffRole(role)) return { error: "Role must be admin, manager, or technician." };
+  if (!canEditStaffMember(session.role, role)) {
+    return { error: "You cannot add staff with that role." };
+  }
 
   await prisma.user.create({
     data: {
@@ -422,7 +426,9 @@ export async function importStaffAction(formData: FormData) {
 
 export async function createManagerAction(formData: FormData) {
   const session = await requireSession();
-  if (!isAdmin(session.role)) return { error: "Only company admins can add managers." };
+  if (!canEditStaffMember(session.role, ROLES.MANAGER)) {
+    return { error: "Only managers and admins can add managers." };
+  }
 
   const name = formString(formData, "name");
   const email = formString(formData, "email").toLowerCase();
@@ -527,15 +533,73 @@ export async function updateStaffStoreAction(formData: FormData) {
     where: { id: userId, organizationId: session.organizationId },
   });
   if (!user || !isShopStaffRole(user.role)) return { error: "Staff member not found." };
-  if (user.role === ROLES.TECHNICIAN) {
-    if (!canAddTechnicians(session.role)) return { error: "Only managers and admins can update technicians." };
-  } else if (!isAdmin(session.role)) {
-    return { error: "Only company admins can update this staff member." };
+  if (!canEditStaffMember(session.role, user.role)) {
+    return { error: "You cannot update this staff member." };
   }
 
   await prisma.user.update({
     where: { id: userId },
     data: { storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")) },
+  });
+  redirect(destination);
+}
+
+export async function updateStaffAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canManageShopStaff(session.role)) return { error: "Only managers and admins can edit staff." };
+
+  const userId = formString(formData, "userId");
+  const nextPath = formString(formData, "next");
+  const allowedNext = ["/staff", "/technicians", "/managers"];
+  const destination = allowedNext.includes(nextPath) ? nextPath : "/staff";
+  const name = formString(formData, "name");
+  const email = formString(formData, "email").toLowerCase();
+  const password = formString(formData, "password");
+  const phone = formString(formData, "phone");
+  const role = formString(formData, "role");
+  const revealVehicleNumber = formString(formData, "revealVehicleNumber");
+  if (!name || !email) return { error: "Name and email are required." };
+  if (password && password.length < 8) return { error: "New password must be at least 8 characters." };
+  if (!canEditStaffMember(session.role, role)) {
+    return { error: "You cannot assign that role." };
+  }
+
+  const user = await prisma.user.findFirst({
+    where: { id: userId, organizationId: session.organizationId },
+  });
+  if (!user || !isShopStaffRole(user.role)) return { error: "Staff member not found." };
+  if (!canEditStaffMember(session.role, user.role)) {
+    return { error: "You cannot edit this staff member." };
+  }
+
+  if (user.role === ROLES.ADMIN && role !== ROLES.ADMIN) {
+    const admins = await prisma.user.count({
+      where: { organizationId: session.organizationId, role: ROLES.ADMIN },
+    });
+    if (admins <= 1) return { error: "Keep at least one company admin." };
+  }
+
+  const emailTaken = await prisma.user.findFirst({
+    where: {
+      organizationId: session.organizationId,
+      email,
+      NOT: { id: userId },
+    },
+    select: { id: true },
+  });
+  if (emailTaken) return { error: "That email is already in use." };
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name,
+      email,
+      role,
+      phone: phone || null,
+      revealVehicleNumber: role === ROLES.TECHNICIAN ? revealVehicleNumber || null : null,
+      storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
+      ...(password ? { passwordHash: await bcrypt.hash(password, 10) } : {}),
+    },
   });
   redirect(destination);
 }

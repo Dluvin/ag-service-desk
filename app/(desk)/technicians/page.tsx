@@ -1,12 +1,13 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLES, canAddTechnicians, canDeleteRecords, canImportStaff } from "@/lib/roles";
-import { createTechnicianAction, deleteStaffAction, updateTechnicianVehicleAction } from "@/lib/actions";
+import { ROLES, canAddTechnicians, canDeleteRecords, canImportStaff, staffRolesAssignableBy } from "@/lib/roles";
+import { createTechnicianAction, deleteStaffAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { StaffImportForm } from "@/components/StaffImportForm";
 import { StoreSelect } from "@/components/StoreSelect";
+import { StaffEditForm } from "@/components/StaffEditForm";
 import { listRevealVehicles, loadRevealCreds } from "@/lib/reveal";
 
 export default async function TechniciansPage({
@@ -20,6 +21,7 @@ export default async function TechniciansPage({
   const query = await searchParams;
   const canImport = canImportStaff(session.role);
   const canDelete = canDeleteRecords(session.role);
+  const roleOptions = staffRolesAssignableBy(session.role);
 
   const technicians = await prisma.user.findMany({
     where: { organizationId: session.organizationId, role: ROLES.TECHNICIAN },
@@ -72,64 +74,13 @@ export default async function TechniciansPage({
                 {tech.store ? ` · ${tech.store.name}` : ""}
                 {` · ${tech.tickets.length} active ticket(s)`}
               </p>
-              <ActionForm action={updateTechnicianVehicleAction} className="mt-2 flex flex-wrap items-end gap-2">
-                <input type="hidden" name="technicianId" value={tech.id} />
-                <label className="block min-w-40 flex-1 text-xs font-medium">
-                  Mobile for SMS
-                  <input
-                    name="phone"
-                    defaultValue={tech.phone ?? ""}
-                    placeholder="402-555-0100"
-                    className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1 text-sm"
-                  />
-                </label>
-                <label className="block min-w-56 flex-1 text-xs font-medium">
-                  Reveal vehicle
-                  {vehicles.length > 0 ? (
-                    <select
-                      name="revealVehicleNumber"
-                      defaultValue={tech.revealVehicleNumber ?? ""}
-                      className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1 text-sm"
-                    >
-                      <option value="">Not mapped</option>
-                      {vehicles.map((vehicle) => (
-                        <option key={vehicle.number} value={vehicle.number}>
-                          {vehicle.name} ({vehicle.number})
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      name="revealVehicleNumber"
-                      defaultValue={tech.revealVehicleNumber ?? ""}
-                      placeholder="Vehicle number"
-                      className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1 text-sm"
-                    />
-                  )}
-                </label>
-                <label className="block min-w-48 flex-1 text-xs font-medium">
-                  Default store
-                  {stores.length > 0 ? (
-                    <select
-                      name="storeId"
-                      defaultValue={tech.storeId ?? ""}
-                      className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1 text-sm"
-                    >
-                      <option value="">No store</option>
-                      {stores.map((store) => (
-                        <option key={store.id} value={store.id}>
-                          {store.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input type="hidden" name="storeId" value="" />
-                  )}
-                </label>
-                <button className="rounded-md bg-emerald-800 px-3 py-1.5 text-xs font-semibold text-white">
-                  Save
-                </button>
-              </ActionForm>
+              <StaffEditForm
+                person={tech}
+                stores={stores}
+                next="/technicians"
+                roleOptions={roleOptions}
+                vehicles={vehicles}
+              />
             </li>
           ))}
         </ul>

@@ -23,36 +23,41 @@ export function Nav({
     { href: "/tickets", label: "All tickets" },
     { href: "/map", label: "Ticket map" },
     { href: "/startup", label: "Maintenance" },
-  ];
-  const afterTickets = [
-    { href: "/reports", label: "Reports" },
-    { href: "/pivots", label: "Pivots" },
     ...(!farmer
       ? [
           { href: "/parts", label: "Parts" },
           { href: "/labor", label: "Labor" },
           { href: "/equipment", label: "Equipment" },
-          { href: "/farmers", label: "Farms" },
         ]
       : []),
   ];
+  const afterTickets = [
+    { href: "/reports", label: "Reports" },
+    { href: "/pivots", label: "Pivots" },
+    ...(!farmer ? [{ href: "/farmers", label: "Farms" }] : []),
+  ];
 
-  const adminLinks =
+  const staffMenu = {
+    href: "/staff",
+    label: "Staff",
+    children: [
+      { href: "/technicians", label: "Technicians" },
+      { href: "/managers", label: "Managers" },
+    ],
+  };
+  const settingsLinks =
     session.role === ROLES.ADMIN
       ? [
-          { href: "/technicians", label: "Technicians" },
-          { href: "/managers", label: "Managers" },
-          { href: "/staff", label: "Staff" },
+          staffMenu,
           { href: "/stores", label: "Stores" },
           { href: "/company", label: "Logo" },
           { href: "/startup/checklist", label: "Maintenance checklist" },
           { href: "/sms", label: "SMS" },
           { href: "/reveal", label: "Reveal GPS" },
         ]
-      : [];
-
-  const managerLinks =
-    session.role === ROLES.MANAGER ? [{ href: "/technicians", label: "Technicians" }] : [];
+      : session.role === ROLES.MANAGER
+        ? [staffMenu]
+        : [];
 
   return (
     <header className="no-print relative z-50 border-b border-emerald-950/20 bg-emerald-950 text-emerald-50">
@@ -76,12 +81,7 @@ export function Nav({
               {link.label}
             </Link>
           ))}
-          {adminLinks.length ? <NavDropdown label="Admin" links={adminLinks} /> : null}
-          {managerLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-white">
-              {link.label}
-            </Link>
-          ))}
+          {settingsLinks.length ? <NavDropdown label="Settings" links={settingsLinks} /> : null}
         </nav>
         <div className="flex items-center gap-3 text-sm">
           <div className="text-right">

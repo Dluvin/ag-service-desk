@@ -10,7 +10,7 @@ export function StoreSelect({
   label?: string;
 }) {
   if (stores.length === 0) {
-    return <p className="text-sm text-stone-600">Add stores under Admin first, then you can assign a default store.</p>;
+    return <p className="text-sm text-stone-600">Add stores under Settings first, then you can assign a default store.</p>;
   }
 
   return (

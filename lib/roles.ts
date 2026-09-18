@@ -77,6 +77,26 @@ export function canAddTechnicians(role: string) {
   return role === ROLES.ADMIN || role === ROLES.MANAGER;
 }
 
+export function canManageShopStaff(role: string) {
+  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+}
+
+export function canEditStaffMember(actorRole: string, targetRole: string) {
+  if (actorRole === ROLES.ADMIN) {
+    return targetRole === ROLES.ADMIN || targetRole === ROLES.MANAGER || targetRole === ROLES.TECHNICIAN;
+  }
+  if (actorRole === ROLES.MANAGER) {
+    return targetRole === ROLES.MANAGER || targetRole === ROLES.TECHNICIAN;
+  }
+  return false;
+}
+
+export function staffRolesAssignableBy(actorRole: string) {
+  if (actorRole === ROLES.ADMIN) return [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN];
+  if (actorRole === ROLES.MANAGER) return [ROLES.MANAGER, ROLES.TECHNICIAN];
+  return [];
+}
+
 export function canImportPivots(role: string) {
   return role === ROLES.ADMIN;
 }

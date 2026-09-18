@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLES, canDeleteRecords, isAdmin } from "@/lib/roles";
+import { ROLES, canDeleteRecords, canEditStaffMember, canImportStaff, staffRolesAssignableBy } from "@/lib/roles";
 import { createManagerAction, deleteStaffAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { StaffImportForm } from "@/components/StaffImportForm";
 import { StoreSelect } from "@/components/StoreSelect";
-import { StaffStoreForm } from "@/components/StaffStoreForm";
+import { StaffEditForm } from "@/components/StaffEditForm";
 
 export default async function ManagersPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (!isAdmin(session.role)) redirect("/dashboard");
+  if (!canEditStaffMember(session.role, ROLES.MANAGER)) redirect("/dashboard");
 
   const [managers, stores] = await Promise.all([
     prisma.user.findMany({
@@ -26,39 +26,44 @@ export default async function ManagersPage() {
       select: { id: true, name: true },
     }),
   ]);
+  const roleOptions = staffRolesAssignableBy(session.role);
+  const canImport = canImportStaff(session.role);
+  const canDelete = canDeleteRecords(session.role);
 
   return (
     <div className="grid gap-8 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Managers</h1>
         <p className="mt-1 text-sm text-stone-600">
-          Managers can assign and edit tickets, add farms, and add technicians. Only admins can
-          delete records or import pivots and staff.
+          Managers can assign and edit tickets, add farms, and edit managers and technicians. Only
+          admins can edit other admins, delete records, or import pivots and staff.
         </p>
         <ul className="mt-6 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
           {managers.length === 0 ? (
             <li className="px-4 py-3 text-sm text-stone-600">No managers yet.</li>
           ) : (
             managers.map((manager) => (
-              <li key={manager.id} className="flex flex-wrap items-start justify-between gap-3 px-4 py-3">
-                <div>
-                  <p className="font-semibold">{manager.name}</p>
-                  <p className="text-sm text-stone-600">
-                    {manager.email}
-                    {manager.phone ? ` · ${manager.phone}` : " · no SMS phone"}
-                    {manager.store ? ` · ${manager.store.name}` : ""}
-                  </p>
-                  <StaffStoreForm userId={manager.id} stores={stores} defaultValue={manager.storeId} next="/managers" />
+              <li key={manager.id} className="px-4 py-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{manager.name}</p>
+                    <p className="text-sm text-stone-600">
+                      {manager.email}
+                      {manager.phone ? ` · ${manager.phone}` : " · no SMS phone"}
+                      {manager.store ? ` · ${manager.store.name}` : ""}
+                    </p>
+                  </div>
+                  {canDelete && manager.id !== session.userId ? (
+                    <DeleteButton
+                      action={deleteStaffAction}
+                      name="userId"
+                      value={manager.id}
+                      label="Delete"
+                      confirmText={`Delete manager ${manager.name}? Their login will stop working.`}
+                    />
+                  ) : null}
                 </div>
-                {canDeleteRecords(session.role) ? (
-                  <DeleteButton
-                    action={deleteStaffAction}
-                    name="userId"
-                    value={manager.id}
-                    label="Delete"
-                    confirmText={`Delete manager ${manager.name}? Their login will stop working.`}
-                  />
-                ) : null}
+                <StaffEditForm person={manager} stores={stores} next="/managers" roleOptions={roleOptions} />
               </li>
             ))
           )}
@@ -86,9 +91,11 @@ export default async function ManagersPage() {
           <StoreSelect stores={stores} label="Default store" />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save manager</button>
         </ActionForm>
-        <div className="mt-8">
-          <StaffImportForm />
-        </div>
+        {canImport ? (
+          <div className="mt-8">
+            <StaffImportForm />
+          </div>
+        ) : null}
       </div>
     </div>
   );
