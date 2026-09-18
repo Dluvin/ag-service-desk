@@ -9,21 +9,36 @@ import { ActionForm } from "@/components/ActionForm";
 import { PriorityBadge } from "@/components/Badges";
 import { DispatchFleetMap } from "@/components/DispatchFleetMap";
 import { ticketPins } from "@/lib/map-pins";
+import { parseStoreParam, storeTicketWhere } from "@/lib/stores";
+import { StoreFilter } from "@/components/StoreFilter";
 
 const COLUMNS: TicketStatus[] = [...DISPATCH_STATUSES];
 
-export default async function DispatchPage() {
+export default async function DispatchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ store?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role === ROLES.FARMER) redirect("/dashboard");
+
+  const query = await searchParams;
+  const stores = await prisma.store.findMany({
+    where: { organizationId: session.organizationId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+  const selectedStore = parseStoreParam(query.store, stores);
 
   const [tickets, technicians] = await Promise.all([
     prisma.ticket.findMany({
       where: {
         ...ticketWhere(session),
+        ...storeTicketWhere(selectedStore),
         status: { in: COLUMNS },
       },
-      include: { farmer: true, pivot: true, technician: true },
+      include: { farmer: { include: { store: true } }, pivot: true, technician: true },
       orderBy: [{ priority: "desc" }, { updatedAt: "desc" }],
     }),
     loadTechnicians(session.organizationId),
@@ -33,8 +48,9 @@ export default async function DispatchPage() {
     <div>
       <h1 className="font-display text-3xl">Dispatch board</h1>
       <p className="mt-1 text-stone-600">
-        Open work by status, assign a technician, and see every open ticket on the map.
+        Open work by status, assign a technician, and see every open ticket on the map. Filter by store to work one shop at a time.
       </p>
+      <StoreFilter stores={stores} selected={selectedStore} pathname="/dispatch" />
 
       <div className="mt-6 grid gap-3 lg:grid-cols-5">
         {COLUMNS.map((column) => {
@@ -52,7 +68,8 @@ export default async function DispatchPage() {
                       #{ticket.number} {ticket.title}
                     </Link>
                     <p className="mt-1 text-xs text-stone-600">
-                      {ticket.farmer.name} · {ticket.pivot.name}
+                      {ticket.farmer.name}
+                      {ticket.farmer.store ? ` · ${ticket.farmer.store.name}` : ""} · {ticket.pivot.name}
                     </p>
                     <div className="mt-1">
                       <PriorityBadge priority={ticket.priority} />

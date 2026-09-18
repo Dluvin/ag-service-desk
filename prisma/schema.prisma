@@ -31,6 +31,20 @@ model Organization {
   inspections         StartupInspection[]
   startupChecks       StartupCheckTemplate[]
   catalogParts        CatalogPart[]
+  stores              Store[]
+}
+
+model Store {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  address        String?
+  phone          String?
+  createdAt      DateTime     @default(now())
+  farmers        Farmer[]
+
+  @@unique([organizationId, name])
 }
 
 model User {
@@ -61,6 +75,8 @@ model Farmer {
   id             String       @id @default(cuid())
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  storeId        String?
+  store          Store?       @relation(fields: [storeId], references: [id], onDelete: SetNull)
   name           String
   phone          String?
   email          String?

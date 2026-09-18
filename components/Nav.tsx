@@ -36,6 +36,7 @@ export function Nav({
           { href: "/technicians", label: "Technicians" },
           { href: "/managers", label: "Managers" },
           { href: "/staff", label: "Staff" },
+          { href: "/stores", label: "Stores" },
           { href: "/company", label: "Logo" },
           { href: "/startup/checklist", label: "Startup checklist" },
           { href: "/sms", label: "SMS" },

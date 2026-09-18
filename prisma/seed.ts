@@ -14,9 +14,20 @@ async function main() {
     data: { name: "Prairie Tech Irrigation", slug: "prairie-tech" },
   });
 
+  const york = await prisma.store.create({
+    data: { organizationId: heartland.id, name: "York shop", address: "York, NE", phone: "402-555-0100" },
+  });
+  const grandIsland = await prisma.store.create({
+    data: { organizationId: heartland.id, name: "Grand Island shop", address: "Grand Island, NE", phone: "308-555-0101" },
+  });
+  const thedford = await prisma.store.create({
+    data: { organizationId: prairie.id, name: "Thedford shop", address: "Thedford, NE" },
+  });
+
   const greenAcres = await prisma.farmer.create({
     data: {
       organizationId: heartland.id,
+      storeId: york.id,
       name: "Green Acres Farm",
       phone: "402-555-0142",
       email: "tom@greenacres.farm",
@@ -32,6 +43,7 @@ async function main() {
   const riverside = await prisma.farmer.create({
     data: {
       organizationId: heartland.id,
+      storeId: grandIsland.id,
       name: "Riverside Farms",
       phone: "402-555-0198",
       email: "pat@riverside.farm",
@@ -44,6 +56,7 @@ async function main() {
   const sandhill = await prisma.farmer.create({
     data: {
       organizationId: prairie.id,
+      storeId: thedford.id,
       name: "Sandhill Cattle Co.",
       phone: "308-555-0110",
       email: "dana@sandhill.farm",

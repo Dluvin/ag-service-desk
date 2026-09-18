@@ -8,6 +8,7 @@ type FarmRow = {
   id: string;
   name: string;
   address: string | null;
+  store: string | null;
   pivotCount: number;
   ticketCount: number;
   contacts: string;
@@ -19,7 +20,7 @@ export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
     const q = query.trim().toLowerCase();
     if (!q) return farms;
     return farms.filter((farm) =>
-      [farm.name, farm.address, farm.contacts].filter(Boolean).join(" ").toLowerCase().includes(q),
+      [farm.name, farm.address, farm.store, farm.contacts].filter(Boolean).join(" ").toLowerCase().includes(q),
     );
   }, [farms, query]);
 
@@ -36,6 +37,7 @@ export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
                 {farmer.name}
               </Link>
               <p className="text-sm text-stone-600">
+                {farmer.store ? `${farmer.store} · ` : ""}
                 {farmer.pivotCount} pivots · {farmer.ticketCount} tickets
                 {farmer.contacts ? ` · ${farmer.contacts}` : ""}
               </p>

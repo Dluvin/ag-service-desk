@@ -5,6 +5,7 @@ import { ROLES } from "@/lib/roles";
 import { createFarmerAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { FarmDirectory } from "@/components/FarmDirectory";
+import { StoreSelect } from "@/components/StoreSelect";
 
 export default async function FarmersPage() {
   const session = await getSession();
@@ -14,14 +15,22 @@ export default async function FarmersPage() {
   }
   if (session.role === ROLES.FARMER) redirect("/dashboard");
 
-  const farmers = await prisma.farmer.findMany({
-    where: { organizationId: session.organizationId },
-    include: {
-      contacts: { orderBy: { name: "asc" } },
-      _count: { select: { pivots: true, tickets: true } },
-    },
-    orderBy: { name: "asc" },
-  });
+  const [farmers, stores] = await Promise.all([
+    prisma.farmer.findMany({
+      where: { organizationId: session.organizationId },
+      include: {
+        store: true,
+        contacts: { orderBy: { name: "asc" } },
+        _count: { select: { pivots: true, tickets: true } },
+      },
+      orderBy: { name: "asc" },
+    }),
+    prisma.store.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   return (
     <div className="grid gap-8 lg:grid-cols-5">
@@ -32,6 +41,7 @@ export default async function FarmersPage() {
             id: farmer.id,
             name: farmer.name,
             address: farmer.address,
+            store: farmer.store?.name ?? null,
             pivotCount: farmer._count.pivots,
             ticketCount: farmer._count.tickets,
             contacts: farmer.contacts.map((contact) => contact.name).join(", "),
@@ -49,6 +59,7 @@ export default async function FarmersPage() {
             Address
             <input name="address" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
           </label>
+          <StoreSelect stores={stores} />
           <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Primary contact</p>
           <label className="block text-sm font-medium">
             Contact name

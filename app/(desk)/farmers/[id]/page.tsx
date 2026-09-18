@@ -3,11 +3,12 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES, canDeleteRecords, isShopStaff } from "@/lib/roles";
-import { addFarmerContactAction, deleteFarmerAction, deleteFarmerContactAction, updateFarmerAction, updateFarmerContactAction } from "@/lib/actions";
+import { addFarmerContactAction, deleteFarmerAction, deleteFarmerContactAction, updateFarmerAction, updateFarmerContactAction, updateFarmerStoreAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { SelectableMap } from "@/components/SelectableMap";
 import { StatusBadge } from "@/components/Badges";
+import { StoreSelect } from "@/components/StoreSelect";
 
 export default async function FarmerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -19,6 +20,7 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
   const farmer = await prisma.farmer.findFirst({
     where: { id, organizationId: session.organizationId },
     include: {
+      store: true,
       contacts: { orderBy: { name: "asc" } },
       pivots: { orderBy: { name: "asc" } },
       tickets: { include: { pivot: true }, orderBy: { updatedAt: "desc" }, take: 12 },
@@ -26,12 +28,18 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
   });
   if (!farmer) notFound();
 
+  const stores = await prisma.store.findMany({
+    where: { organizationId: session.organizationId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
   const canEdit = isShopStaff(session.role);
 
   return (
     <div>
       <h1 className="font-display text-3xl">{farmer.name}</h1>
       {farmer.address ? <p className="text-stone-600">{farmer.address}</p> : null}
+      {farmer.store ? <p className="text-sm text-stone-600">Default store: {farmer.store.name}</p> : null}
       {canDeleteRecords(session.role) ? (
         <div className="mt-3">
           <DeleteButton
@@ -66,7 +74,16 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
                 Address
                 <input name="address" defaultValue={farmer.address ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
               </label>
+              <StoreSelect stores={stores} defaultValue={farmer.storeId} />
               <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save farm</button>
+            </ActionForm>
+          ) : session.role === ROLES.FARMER ? (
+            <ActionForm action={updateFarmerStoreAction} className="mb-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+              <input type="hidden" name="farmerId" value={farmer.id} />
+              <h2 className="font-display text-xl">Default store</h2>
+              <p className="text-sm text-stone-600">Pick the shop that should see your service calls on dispatch.</p>
+              <StoreSelect stores={stores} defaultValue={farmer.storeId} />
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save default store</button>
             </ActionForm>
           ) : null}
 

@@ -8,23 +8,52 @@ import { redirect } from "next/navigation";
 import { STARTUP_SEASON_YEAR } from "@/lib/startup";
 import { AllTicketsMap } from "@/components/AllTicketsMap";
 import { OPEN_TICKET_STATUSES, ticketPins } from "@/lib/map-pins";
+import { parseStoreParam, storeFarmerWhere, storePivotWhere, storeQuery, storeTicketWhere } from "@/lib/stores";
+import { StoreFilter } from "@/components/StoreFilter";
+import { ActionForm } from "@/components/ActionForm";
+import { StoreSelect } from "@/components/StoreSelect";
+import { updateFarmerStoreAction } from "@/lib/actions";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ store?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
+
+  const query = await searchParams;
+  const stores = await prisma.store.findMany({
+    where: { organizationId: session.organizationId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+  const selectedStore = parseStoreParam(query.store, stores);
+  const storeTickets = session.role === ROLES.FARMER ? {} : storeTicketWhere(selectedStore);
+  const storePivots = session.role === ROLES.FARMER ? {} : storePivotWhere(selectedStore);
+  const storeFarms = session.role === ROLES.FARMER ? {} : storeFarmerWhere(selectedStore);
+
+  const farmer =
+    session.role === ROLES.FARMER && session.farmerId
+      ? await prisma.farmer.findFirst({
+          where: { id: session.farmerId, organizationId: session.organizationId },
+          select: { id: true, storeId: true, store: { select: { name: true } } },
+        })
+      : null;
 
   const [openTickets, pivots, farmers, techs] = await Promise.all([
     prisma.ticket.findMany({
       where: {
         ...ticketWhere(session),
+        ...storeTickets,
         status: { in: [...OPEN_TICKET_STATUSES] },
       },
-      include: { farmer: true, pivot: true, technician: true },
+      include: { farmer: { include: { store: true } }, pivot: true, technician: true },
       orderBy: { updatedAt: "desc" },
     }),
-    prisma.pivot.count({ where: pivotWhere(session) }),
+    prisma.pivot.count({ where: { ...pivotWhere(session), ...storePivots } }),
     session.role === ROLES.ADMIN || session.role === ROLES.MANAGER
-      ? prisma.farmer.count({ where: { organizationId: session.organizationId } })
+      ? prisma.farmer.count({ where: { organizationId: session.organizationId, ...storeFarms } })
       : Promise.resolve(null),
     session.role === ROLES.ADMIN || session.role === ROLES.MANAGER
       ? prisma.user.count({ where: { organizationId: session.organizationId, role: ROLES.TECHNICIAN } })
@@ -39,8 +68,20 @@ export default async function DashboardPage() {
           ? "Open a service ticket or add information on an existing call."
           : session.role === ROLES.TECHNICIAN
             ? "Tickets assigned to you."
-            : "Dispatch across your company."}
+            : "Dispatch across your company. Filter by store to see one shop at a time."}
       </p>
+      {session.role !== ROLES.FARMER ? (
+        <StoreFilter stores={stores} selected={selectedStore} pathname="/dashboard" />
+      ) : farmer ? (
+        <ActionForm action={updateFarmerStoreAction} className="mt-4 max-w-md space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+          <input type="hidden" name="farmerId" value={farmer.id} />
+          <p className="text-sm text-stone-600">
+            {farmer.store ? `Your default store is ${farmer.store.name}.` : "No default store yet."} Dispatch uses this so the right shop sees your calls.
+          </p>
+          <StoreSelect stores={stores} defaultValue={farmer.storeId} />
+          <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save default store</button>
+        </ActionForm>
+      ) : null}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Stat label="Active tickets" value={String(openTickets.length)} />
@@ -59,7 +100,7 @@ export default async function DashboardPage() {
 
       <div className="mt-8 flex flex-wrap gap-3">
         {session.role !== ROLES.FARMER ? (
-          <Link href="/dispatch" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
+          <Link href={`/dispatch${storeQuery(selectedStore)}`} className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
             Dispatch board
           </Link>
         ) : null}
@@ -104,7 +145,8 @@ export default async function DashboardPage() {
                   <div>
                     <p className="font-medium">#{ticket.number} {ticket.title}</p>
                     <p className="text-sm text-stone-600">
-                      {ticket.farmer.name} · {ticket.pivot.name}
+                      {ticket.farmer.name}
+                      {ticket.farmer.store ? ` · ${ticket.farmer.store.name}` : ""} · {ticket.pivot.name}
                       {ticket.technician ? ` · ${ticket.technician.name}` : ""}
                     </p>
                   </div>

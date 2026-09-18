@@ -16,6 +16,7 @@ import {
   canImportStaff,
   canEditStartupChecklist,
   isFinishedStatus,
+  isShopStaff,
   requiresInvoice,
   slugify,
   type TicketStatus,
@@ -39,7 +40,14 @@ function formString(formData: FormData, key: string) {
 
 function createFarmWithContact(
   organizationId: string,
-  input: { name: string; address?: string; contactName?: string; phone?: string; email?: string },
+  input: {
+    name: string;
+    address?: string;
+    contactName?: string;
+    phone?: string;
+    email?: string;
+    storeId?: string | null;
+  },
 ) {
   const contactName = input.contactName || input.name;
   const phone = input.phone || null;
@@ -47,6 +55,7 @@ function createFarmWithContact(
   return prisma.farmer.create({
     data: {
       organizationId,
+      storeId: input.storeId || null,
       name: input.name,
       phone,
       email,
@@ -60,6 +69,12 @@ function createFarmWithContact(
       },
     },
   });
+}
+
+async function resolveStoreId(organizationId: string, storeId: string) {
+  if (!storeId) return null;
+  const store = await prisma.store.findFirst({ where: { id: storeId, organizationId } });
+  return store?.id ?? null;
 }
 
 export async function loginAction(formData: FormData) {
@@ -144,6 +159,7 @@ export async function createFarmerAction(formData: FormData) {
     contactName: formString(formData, "contactName"),
     phone: formString(formData, "contactPhone") || phone,
     email: formString(formData, "contactEmail").toLowerCase() || email,
+    storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
   });
 
   if (loginEmail && loginPassword.length >= 8) {
@@ -204,9 +220,35 @@ export async function updateFarmerAction(formData: FormData) {
 
   await prisma.farmer.update({
     where: { id: farmerId },
-    data: { name, address: address || null },
+    data: {
+      name,
+      address: address || null,
+      storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
+    },
   });
   redirect(`/farmers/${farmerId}`);
+}
+
+export async function updateFarmerStoreAction(formData: FormData) {
+  const session = await requireSession();
+  const farmerId = formString(formData, "farmerId");
+  if (session.role === ROLES.FARMER && session.farmerId !== farmerId) {
+    return { error: "You can only set the store for your farm." };
+  }
+  if (session.role !== ROLES.FARMER && !isShopStaff(session.role)) {
+    return { error: "You cannot set a farm store." };
+  }
+
+  const farmer = await prisma.farmer.findFirst({
+    where: { id: farmerId, organizationId: session.organizationId },
+  });
+  if (!farmer) return { error: "Farm not found." };
+
+  await prisma.farmer.update({
+    where: { id: farmerId },
+    data: { storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")) },
+  });
+  redirect(session.role === ROLES.FARMER ? "/dashboard" : `/farmers/${farmerId}`);
 }
 
 export async function updateFarmerContactAction(formData: FormData) {
@@ -464,6 +506,72 @@ export async function deleteStaffAction(formData: FormData) {
   }
   await prisma.user.delete({ where: { id: userId } });
   redirect("/staff");
+}
+
+export async function createStoreAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can add stores." };
+
+  const name = formString(formData, "name");
+  const address = formString(formData, "address");
+  const phone = formString(formData, "phone");
+  if (!name) return { error: "Store name is required." };
+
+  const existing = await prisma.store.findFirst({
+    where: { organizationId: session.organizationId, name },
+  });
+  if (existing) return { error: "A store with that name already exists." };
+
+  await prisma.store.create({
+    data: {
+      organizationId: session.organizationId,
+      name,
+      address: address || null,
+      phone: phone || null,
+    },
+  });
+  redirect("/stores");
+}
+
+export async function updateStoreAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can edit stores." };
+
+  const storeId = formString(formData, "storeId");
+  const name = formString(formData, "name");
+  const address = formString(formData, "address");
+  const phone = formString(formData, "phone");
+  if (!name) return { error: "Store name is required." };
+
+  const store = await prisma.store.findFirst({
+    where: { id: storeId, organizationId: session.organizationId },
+  });
+  if (!store) return { error: "Store not found." };
+
+  const clash = await prisma.store.findFirst({
+    where: { organizationId: session.organizationId, name, NOT: { id: storeId } },
+  });
+  if (clash) return { error: "A store with that name already exists." };
+
+  await prisma.store.update({
+    where: { id: storeId },
+    data: { name, address: address || null, phone: phone || null },
+  });
+  redirect("/stores");
+}
+
+export async function deleteStoreAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canDeleteRecords(session.role)) return { error: "Only company admins can delete stores." };
+
+  const storeId = formString(formData, "storeId");
+  const store = await prisma.store.findFirst({
+    where: { id: storeId, organizationId: session.organizationId },
+  });
+  if (!store) return { error: "Store not found." };
+
+  await prisma.store.delete({ where: { id: storeId } });
+  redirect("/stores");
 }
 
 export async function createPivotAction(formData: FormData) {
