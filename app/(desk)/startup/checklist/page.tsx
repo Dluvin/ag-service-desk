@@ -23,7 +23,7 @@ export default async function StartupChecklistPage() {
       <div className="lg:col-span-3">
         <p className="text-sm text-stone-500">
           <Link href="/startup" className="hover:underline">
-            Startup
+            Maintenance
           </Link>
         </p>
         <h1 className="font-display text-3xl">Pre-season checklist</h1>

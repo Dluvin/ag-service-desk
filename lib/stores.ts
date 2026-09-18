@@ -19,8 +19,19 @@ export function storeFarmerWhere(selected: string): Prisma.FarmerWhereInput {
 
 export function storeTicketWhere(selected: string): Prisma.TicketWhereInput {
   if (selected === STORE_ALL) return {};
-  if (selected === STORE_NONE) return { farmer: { storeId: null } };
-  return { farmer: { storeId: selected } };
+  if (selected === STORE_NONE) {
+    return { storeId: null, farmer: { storeId: null } };
+  }
+  return {
+    OR: [{ storeId: selected }, { storeId: null, farmer: { storeId: selected } }],
+  };
+}
+
+export function ticketStoreName(ticket: {
+  store?: { name: string } | null;
+  farmer?: { store?: { name: string } | null } | null;
+}) {
+  return ticket.store?.name ?? ticket.farmer?.store?.name ?? null;
 }
 
 export function storePivotWhere(selected: string): Prisma.PivotWhereInput {

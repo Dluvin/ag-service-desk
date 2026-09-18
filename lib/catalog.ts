@@ -46,3 +46,43 @@ export async function searchCatalogParts(options: {
     LIMIT ${options.take}
   `;
 }
+
+export async function searchCatalogLabor(options: {
+  organizationId: string;
+  query: string;
+  take: number;
+  activeOnly?: boolean;
+}) {
+  const q = options.query.trim();
+  if (!q) {
+    return prisma.catalogLabor.findMany({
+      where: {
+        organizationId: options.organizationId,
+        ...(options.activeOnly ? { active: true } : {}),
+      },
+      orderBy: { name: "asc" },
+      take: options.take,
+    });
+  }
+
+  const pattern = likePattern(q);
+  return prisma.$queryRaw<
+    Array<{
+      id: string;
+      name: string;
+      sku: string | null;
+      description: string | null;
+      itemType: string | null;
+      rate: number | null;
+      active: boolean;
+    }>
+  >`
+    SELECT id, name, sku, description, itemType, rate, active
+    FROM CatalogLabor
+    WHERE organizationId = ${options.organizationId}
+      ${options.activeOnly ? Prisma.sql`AND active = 1` : Prisma.empty}
+      AND (name LIKE ${pattern} COLLATE NOCASE OR IFNULL(sku, '') LIKE ${pattern} COLLATE NOCASE)
+    ORDER BY name COLLATE NOCASE
+    LIMIT ${options.take}
+  `;
+}

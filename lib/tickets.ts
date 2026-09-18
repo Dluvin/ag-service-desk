@@ -13,6 +13,7 @@ export async function openServiceTicket(input: {
   farmerId: string;
   pivotId: string;
   technicianId: string | null;
+  storeId?: string | null;
   userId: string;
   title: string;
   description: string;
@@ -27,6 +28,7 @@ export async function openServiceTicket(input: {
       farmerId: input.farmerId,
       pivotId: input.pivotId,
       technicianId: input.technicianId,
+      storeId: input.storeId ?? null,
       number,
       title: input.title,
       description: input.description,

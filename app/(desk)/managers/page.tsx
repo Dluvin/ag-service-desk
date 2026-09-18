@@ -6,16 +6,26 @@ import { createManagerAction, deleteStaffAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { StaffImportForm } from "@/components/StaffImportForm";
+import { StoreSelect } from "@/components/StoreSelect";
+import { StaffStoreForm } from "@/components/StaffStoreForm";
 
 export default async function ManagersPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (!isAdmin(session.role)) redirect("/dashboard");
 
-  const managers = await prisma.user.findMany({
-    where: { organizationId: session.organizationId, role: ROLES.MANAGER },
-    orderBy: { name: "asc" },
-  });
+  const [managers, stores] = await Promise.all([
+    prisma.user.findMany({
+      where: { organizationId: session.organizationId, role: ROLES.MANAGER },
+      include: { store: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.store.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   return (
     <div className="grid gap-8 lg:grid-cols-5">
@@ -36,7 +46,9 @@ export default async function ManagersPage() {
                   <p className="text-sm text-stone-600">
                     {manager.email}
                     {manager.phone ? ` · ${manager.phone}` : " · no SMS phone"}
+                    {manager.store ? ` · ${manager.store.name}` : ""}
                   </p>
+                  <StaffStoreForm userId={manager.id} stores={stores} defaultValue={manager.storeId} next="/managers" />
                 </div>
                 {canDeleteRecords(session.role) ? (
                   <DeleteButton
@@ -71,6 +83,7 @@ export default async function ManagersPage() {
             Mobile for SMS
             <input name="phone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Optional" />
           </label>
+          <StoreSelect stores={stores} label="Default store" />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save manager</button>
         </ActionForm>
         <div className="mt-8">

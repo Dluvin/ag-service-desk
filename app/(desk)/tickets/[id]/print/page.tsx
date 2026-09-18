@@ -6,6 +6,7 @@ import { ticketWhere } from "@/lib/scope";
 import { isPrintableStatus } from "@/lib/roles";
 import { ClosedTicketDocument } from "@/components/ClosedTicketDocument";
 import { PrintButton } from "@/components/PrintButton";
+import { closedTicketPrintInclude } from "@/lib/ticket-print";
 
 export default async function ClosedTicketPrintPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -14,15 +15,7 @@ export default async function ClosedTicketPrintPage({ params }: { params: Promis
 
   const ticket = await prisma.ticket.findFirst({
     where: { id, ...ticketWhere(session) },
-    include: {
-      organization: true,
-      farmer: { include: { contacts: { orderBy: { name: "asc" } } } },
-      pivot: true,
-      technician: true,
-      updates: { include: { user: true, photos: true }, orderBy: { createdAt: "asc" } },
-      parts: { orderBy: { createdAt: "asc" } },
-      siteVisits: { orderBy: { startedAt: "asc" } },
-    },
+    include: closedTicketPrintInclude,
   });
   if (!ticket) notFound();
   if (!isPrintableStatus(ticket.status)) {

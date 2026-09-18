@@ -6,6 +6,7 @@ import { createTechnicianAction, deleteStaffAction, updateTechnicianVehicleActio
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { StaffImportForm } from "@/components/StaffImportForm";
+import { StoreSelect } from "@/components/StoreSelect";
 import { listRevealVehicles, loadRevealCreds } from "@/lib/reveal";
 
 export default async function TechniciansPage({
@@ -22,8 +23,13 @@ export default async function TechniciansPage({
 
   const technicians = await prisma.user.findMany({
     where: { organizationId: session.organizationId, role: ROLES.TECHNICIAN },
-    include: { tickets: { where: { status: { notIn: ["COMPLETED", "CANCELLED"] } } } },
+    include: { tickets: { where: { status: { notIn: ["COMPLETED", "CANCELLED"] } } }, store: true },
     orderBy: { name: "asc" },
+  });
+  const stores = await prisma.store.findMany({
+    where: { organizationId: session.organizationId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
   });
 
   let vehicles: { number: string; name: string }[] = [];
@@ -63,6 +69,7 @@ export default async function TechniciansPage({
               <p className="text-sm text-stone-600">
                 {tech.email}
                 {tech.phone ? ` · ${tech.phone}` : " · no SMS phone"}
+                {tech.store ? ` · ${tech.store.name}` : ""}
                 {` · ${tech.tickets.length} active ticket(s)`}
               </p>
               <ActionForm action={updateTechnicianVehicleAction} className="mt-2 flex flex-wrap items-end gap-2">
@@ -100,6 +107,25 @@ export default async function TechniciansPage({
                     />
                   )}
                 </label>
+                <label className="block min-w-48 flex-1 text-xs font-medium">
+                  Default store
+                  {stores.length > 0 ? (
+                    <select
+                      name="storeId"
+                      defaultValue={tech.storeId ?? ""}
+                      className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1 text-sm"
+                    >
+                      <option value="">No store</option>
+                      {stores.map((store) => (
+                        <option key={store.id} value={store.id}>
+                          {store.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input type="hidden" name="storeId" value="" />
+                  )}
+                </label>
                 <button className="rounded-md bg-emerald-800 px-3 py-1.5 text-xs font-semibold text-white">
                   Save
                 </button>
@@ -131,6 +157,7 @@ export default async function TechniciansPage({
             Reveal vehicle number
             <input name="revealVehicleNumber" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Optional" />
           </label>
+          <StoreSelect stores={stores} label="Default store" />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save technician</button>
         </ActionForm>
 

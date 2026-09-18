@@ -7,6 +7,7 @@ import { createTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { NewTicketSiteFields } from "@/components/NewTicketSiteFields";
 import { TicketPhotoFields } from "@/components/TicketPhotoFields";
+import { StoreSelect } from "@/components/StoreSelect";
 
 export default async function NewTicketPage({
   searchParams,
@@ -17,7 +18,7 @@ export default async function NewTicketPage({
   if (!session) redirect("/login");
   const query = await searchParams;
 
-  const [pivots, technicians, farmers] = await Promise.all([
+  const [pivots, technicians, farmers, stores, actor] = await Promise.all([
     prisma.pivot.findMany({
       where: pivotWhere(session),
       include: { farmer: true },
@@ -31,6 +32,15 @@ export default async function NewTicketPage({
           orderBy: { name: "asc" },
           select: { id: true, name: true },
         }),
+    prisma.store.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.user.findFirst({
+      where: { id: session.userId },
+      select: { storeId: true },
+    }),
   ]);
 
   return (
@@ -78,6 +88,9 @@ export default async function NewTicketPage({
             ))}
           </select>
         </label>
+        {isShopStaff(session.role) ? (
+          <StoreSelect stores={stores} defaultValue={actor?.storeId} label="Store" />
+        ) : null}
         {canAssignTickets(session.role) ? (
           <label className="block text-sm font-medium">
             Assign technician

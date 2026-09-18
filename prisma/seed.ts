@@ -74,6 +74,7 @@ async function main() {
       email: "admin@heartland.ag",
       role: "ADMIN",
       passwordHash,
+      storeId: york.id,
     },
   });
   await prisma.user.create({
@@ -84,6 +85,7 @@ async function main() {
       role: "MANAGER",
       passwordHash,
       phone: "402-555-0170",
+      storeId: york.id,
     },
   });
   const mike = await prisma.user.create({
@@ -94,6 +96,7 @@ async function main() {
       role: "TECHNICIAN",
       passwordHash,
       phone: "402-555-0188",
+      storeId: york.id,
     },
   });
   await prisma.user.create({
@@ -104,6 +107,7 @@ async function main() {
       role: "TECHNICIAN",
       passwordHash,
       phone: "402-555-0189",
+      storeId: grandIsland.id,
     },
   });
   await prisma.user.create({
@@ -205,6 +209,15 @@ async function main() {
       { organizationId: heartland.id, name: "U-joint", sku: "UJ-1350", itemType: "Inventory", price: 64, cost: 31, quantityOnHand: 15, source: "QUICKBOOKS" },
       { organizationId: heartland.id, name: "Contactor", sku: "CNT-30", itemType: "Inventory", price: 78, cost: 39, quantityOnHand: 9, source: "QUICKBOOKS" },
       { organizationId: heartland.id, name: "Startup inspection", sku: "SVC-START", itemType: "Service", price: 185, cost: 0, quantityOnHand: 0, source: "QUICKBOOKS" },
+    ],
+  });
+
+  await prisma.catalogLabor.createMany({
+    data: [
+      { organizationId: heartland.id, name: "Shop labor", sku: "LAB-SHOP", itemType: "Service", rate: 125, source: "QUICKBOOKS" },
+      { organizationId: heartland.id, name: "Field service", sku: "LAB-FIELD", itemType: "Service", rate: 145, source: "QUICKBOOKS" },
+      { organizationId: heartland.id, name: "After hours", sku: "LAB-OT", itemType: "Service", rate: 185, source: "QUICKBOOKS" },
+      { organizationId: heartland.id, name: "Travel time", sku: "LAB-TRAVEL", itemType: "Service", rate: 95, source: "QUICKBOOKS" },
     ],
   });
 

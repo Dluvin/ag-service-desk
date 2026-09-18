@@ -8,6 +8,8 @@ import { createStaffAction, deleteStaffAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { StaffImportForm } from "@/components/StaffImportForm";
+import { StoreSelect } from "@/components/StoreSelect";
+import { StaffStoreForm } from "@/components/StaffStoreForm";
 
 export default async function StaffPage({
   searchParams,
@@ -19,13 +21,21 @@ export default async function StaffPage({
   if (!isAdmin(session.role)) redirect("/dashboard");
   const query = await searchParams;
 
-  const staff = await prisma.user.findMany({
-    where: {
-      organizationId: session.organizationId,
-      role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN] },
-    },
-    orderBy: [{ role: "asc" }, { name: "asc" }],
-  });
+  const [staff, stores] = await Promise.all([
+    prisma.user.findMany({
+      where: {
+        organizationId: session.organizationId,
+        role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN] },
+      },
+      include: { store: true },
+      orderBy: [{ role: "asc" }, { name: "asc" }],
+    }),
+    prisma.store.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   const groups = [
     { role: ROLES.ADMIN, title: "Admins" },
@@ -38,8 +48,8 @@ export default async function StaffPage({
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Staff</h1>
         <p className="mt-1 text-sm text-stone-600">
-          Add company admins, managers, and technicians one at a time or from a CSV. Farm logins stay
-          on the Farms page.
+          Add company admins, managers, and technicians one at a time or from a CSV. Assign a default
+          store so new tickets they open start at that shop. Farm logins stay on the Farms page.
         </p>
         {query.imported || query.updated || query.skipped ? (
           <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
@@ -64,7 +74,9 @@ export default async function StaffPage({
                           {person.email}
                           {person.phone ? ` · ${person.phone}` : ""}
                           {` · ${roleLabel(person.role)}`}
+                          {person.store ? ` · ${person.store.name}` : ""}
                         </p>
+                        <StaffStoreForm userId={person.id} stores={stores} defaultValue={person.storeId} next="/staff" />
                       </div>
                       {canDeleteRecords(session.role) && person.id !== session.userId ? (
                         <DeleteButton
@@ -119,6 +131,7 @@ export default async function StaffPage({
             Mobile for SMS
             <input name="phone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Optional" />
           </label>
+          <StoreSelect stores={stores} label="Default store" />
           <label className="block text-sm font-medium">
             Reveal vehicle number
             <input name="revealVehicleNumber" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Technicians only" />

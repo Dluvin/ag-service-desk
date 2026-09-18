@@ -25,7 +25,7 @@ export default async function StartupBoardPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl">{STARTUP_SEASON_YEAR} pre-season startup</h1>
+      <h1 className="font-display text-3xl">{STARTUP_SEASON_YEAR} maintenance</h1>
       <p className="mt-1 text-stone-600">
         Checklist per pivot. A failed item opens a high-priority service ticket automatically.
       </p>

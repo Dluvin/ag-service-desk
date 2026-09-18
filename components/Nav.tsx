@@ -14,21 +14,27 @@ export function Nav({
   companyName?: string;
   hasLogo?: boolean;
 }) {
-  const links = [
+  const farmer = session.role === ROLES.FARMER;
+  const beforeTickets = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/dispatch", label: "Dispatch" },
-    { href: "/tickets", label: "Tickets" },
-    { href: "/startup", label: "Startup" },
-    { href: "/pivots", label: "Pivots" },
-    { href: "/map", label: "Ticket map" },
+    ...(!farmer ? [{ href: "/dispatch", label: "Dispatch" }] : []),
   ];
-  if (session.role === ROLES.FARMER) {
-    links.splice(1, 1);
-  }
-  if (session.role !== ROLES.FARMER) {
-    links.push({ href: "/parts", label: "Parts" });
-    links.push({ href: "/farmers", label: "Farms" });
-  }
+  const ticketLinks = [
+    { href: "/tickets", label: "All tickets" },
+    { href: "/map", label: "Ticket map" },
+    { href: "/startup", label: "Maintenance" },
+  ];
+  const afterTickets = [
+    { href: "/reports", label: "Reports" },
+    { href: "/pivots", label: "Pivots" },
+    ...(!farmer
+      ? [
+          { href: "/parts", label: "Parts" },
+          { href: "/labor", label: "Labor" },
+          { href: "/farmers", label: "Farms" },
+        ]
+      : []),
+  ];
 
   const adminLinks =
     session.role === ROLES.ADMIN
@@ -38,7 +44,7 @@ export function Nav({
           { href: "/staff", label: "Staff" },
           { href: "/stores", label: "Stores" },
           { href: "/company", label: "Logo" },
-          { href: "/startup/checklist", label: "Startup checklist" },
+          { href: "/startup/checklist", label: "Maintenance checklist" },
           { href: "/sms", label: "SMS" },
           { href: "/reveal", label: "Reveal GPS" },
         ]
@@ -48,7 +54,7 @@ export function Nav({
     session.role === ROLES.MANAGER ? [{ href: "/technicians", label: "Technicians" }] : [];
 
   return (
-    <header className="no-print border-b border-emerald-950/20 bg-emerald-950 text-emerald-50">
+    <header className="no-print relative z-50 border-b border-emerald-950/20 bg-emerald-950 text-emerald-50">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <Link href="/dashboard" className="flex items-center gap-2 font-display text-lg tracking-tight">
           {hasLogo ? (
@@ -58,7 +64,13 @@ export function Nav({
           <span>{companyName || "AG Service Desk"}</span>
         </Link>
         <nav className="flex max-w-3xl flex-wrap items-center gap-4 text-sm">
-          {links.map((link) => (
+          {beforeTickets.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-white">
+              {link.label}
+            </Link>
+          ))}
+          <NavDropdown label="Tickets" links={ticketLinks} />
+          {afterTickets.map((link) => (
             <Link key={link.href} href={link.href} className="hover:text-white">
               {link.label}
             </Link>

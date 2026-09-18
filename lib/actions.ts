@@ -26,6 +26,7 @@ import { INSPECTION_STATUS, STARTUP_CHECKS, STARTUP_SEASON_YEAR, checkLabel, ens
 import { parseMapsLocation } from "./maps";
 import { parseAgSenseExport } from "./agsense";
 import { importCatalogPartBatch } from "./catalog-import";
+import { importCatalogLaborBatch } from "./labor-import";
 import { parseStaffImport, isShopStaffRole } from "./staff-import";
 import { closeOpenSiteVisits } from "./onsite";
 import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, listRevealVehicles } from "./reveal";
@@ -297,6 +298,7 @@ export async function createTechnicianAction(formData: FormData) {
       passwordHash: await bcrypt.hash(password, 10),
       phone: phone || null,
       revealVehicleNumber: revealVehicleNumber || null,
+      storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
     },
   });
   redirect("/technicians");
@@ -326,6 +328,7 @@ export async function createStaffAction(formData: FormData) {
       passwordHash: await bcrypt.hash(password, 10),
       phone: phone || null,
       revealVehicleNumber: role === ROLES.TECHNICIAN ? revealVehicleNumber || null : null,
+      storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
     },
   });
   redirect("/staff");
@@ -435,6 +438,7 @@ export async function createManagerAction(formData: FormData) {
       role: ROLES.MANAGER,
       passwordHash: await bcrypt.hash(password, 10),
       phone: phone || null,
+      storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
     },
   });
   redirect("/managers");
@@ -508,6 +512,30 @@ export async function deleteStaffAction(formData: FormData) {
   }
   await prisma.user.delete({ where: { id: userId } });
   redirect("/staff");
+}
+
+export async function updateStaffStoreAction(formData: FormData) {
+  const session = await requireSession();
+  const userId = formString(formData, "userId");
+  const nextPath = formString(formData, "next");
+  const allowedNext = ["/staff", "/technicians", "/managers"];
+  const destination = allowedNext.includes(nextPath) ? nextPath : "/staff";
+
+  const user = await prisma.user.findFirst({
+    where: { id: userId, organizationId: session.organizationId },
+  });
+  if (!user || !isShopStaffRole(user.role)) return { error: "Staff member not found." };
+  if (user.role === ROLES.TECHNICIAN) {
+    if (!canAddTechnicians(session.role)) return { error: "Only managers and admins can update technicians." };
+  } else if (!isAdmin(session.role)) {
+    return { error: "Only company admins can update this staff member." };
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")) },
+  });
+  redirect(destination);
 }
 
 export async function createStoreAction(formData: FormData) {
@@ -790,11 +818,21 @@ export async function createTicketAction(formData: FormData) {
   else if (session.role === ROLES.TECHNICIAN) assigned = session.userId;
   else if (!canAssignTickets(session.role)) assigned = null;
 
+  const farmer = await prisma.farmer.findFirst({
+    where: { id: pivot.farmerId, organizationId: session.organizationId },
+    select: { storeId: true },
+  });
+  const storeId =
+    session.role === ROLES.FARMER
+      ? farmer?.storeId ?? null
+      : await resolveStoreId(session.organizationId, formString(formData, "storeId"));
+
   const ticket = await openServiceTicket({
     organizationId: session.organizationId,
     farmerId: pivot.farmerId,
     pivotId: pivot.id,
     technicianId: assigned,
+    storeId,
     userId: session.userId,
     title,
     description,
@@ -922,6 +960,9 @@ export async function updateTicketAction(formData: FormData) {
       invoiceAmount: requiresInvoice(status) ? invoiceAmount : ticket.invoiceAmount,
       scheduledAt: parseDateTimeLocal(formString(formData, "scheduledAt")),
       closedAt: requiresInvoice(status) ? (ticket.closedAt ?? new Date()) : ticket.closedAt,
+      ...(isShopStaff(session.role) && formData.has("storeId")
+        ? { storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")) }
+        : {}),
     },
   });
   if (isFinishedStatus(status) || status === "REPAIR_DONE") {
@@ -1124,6 +1165,124 @@ export async function importCatalogPartsBatchAction(
   }
 }
 
+export async function addTicketLaborAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role === ROLES.FARMER) return { error: "Farmers can view labor but not log it." };
+
+  const ticketId = formString(formData, "ticketId");
+  const catalogLaborId = formString(formData, "catalogLaborId");
+  const customName = formString(formData, "name");
+  const hours = Number(formString(formData, "hours") || "1");
+  const skuInput = formString(formData, "sku");
+
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, organizationId: session.organizationId },
+  });
+  if (!ticket) return { error: "Ticket not found." };
+  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+    return { error: "This ticket is not assigned to you." };
+  }
+  if (Number.isNaN(hours) || hours <= 0) {
+    return { error: "Hours must be greater than 0." };
+  }
+
+  let name = customName;
+  let sku: string | null = skuInput || null;
+  let unitRate: number | null = null;
+  let catalogId: string | null = null;
+
+  if (catalogLaborId) {
+    const catalog = await prisma.catalogLabor.findFirst({
+      where: { id: catalogLaborId, organizationId: session.organizationId, active: true },
+    });
+    if (!catalog) return { error: "That labor item was not found." };
+    name = catalog.name;
+    sku = catalog.sku;
+    unitRate = catalog.rate;
+    catalogId = catalog.id;
+  }
+
+  if (!name) return { error: "Pick a labor item or type a custom name." };
+
+  await prisma.ticketLabor.create({
+    data: {
+      ticketId,
+      userId: session.userId,
+      catalogLaborId: catalogId,
+      name,
+      hours,
+      sku,
+      unitRate,
+    },
+  });
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId,
+      userId: session.userId,
+      message: `Labor logged: ${hours} hr × ${name}${sku ? ` (${sku})` : ""}.`,
+    },
+  });
+  await notifyTicketSms({
+    organizationId: session.organizationId,
+    ticketId,
+    kind: "updated",
+    actorUserId: session.userId,
+    note: `Labor logged: ${hours} hr × ${name}.`,
+  });
+  redirect(`/tickets/${ticketId}`);
+}
+
+export async function createCatalogLaborAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can add labor items." };
+
+  const name = formString(formData, "name");
+  const sku = formString(formData, "sku");
+  const description = formString(formData, "description");
+  const itemType = formString(formData, "itemType");
+  const rate = formString(formData, "rate");
+  if (!name) return { error: "Labor name is required." };
+
+  await prisma.catalogLabor.upsert({
+    where: { organizationId_name: { organizationId: session.organizationId, name } },
+    create: {
+      organizationId: session.organizationId,
+      name,
+      sku: sku || null,
+      description: description || null,
+      itemType: itemType || "Service",
+      rate: rate ? Number(rate) : null,
+      source: "MANUAL",
+    },
+    update: {
+      sku: sku || null,
+      description: description || null,
+      itemType: itemType || "Service",
+      rate: rate ? Number(rate) : null,
+      active: true,
+    },
+  });
+  redirect("/labor");
+}
+
+export async function importCatalogLaborBatchAction(
+  items: unknown,
+): Promise<{ created: number; updated: number } | { error: string }> {
+  const session = await requireSession();
+  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can import labor." };
+  if (!Array.isArray(items) || items.length === 0) {
+    return { error: "No labor items in this batch." };
+  }
+  if (items.length > 400) return { error: "Each import batch must be 400 labor items or fewer." };
+
+  try {
+    return await importCatalogLaborBatch(session.organizationId, items);
+  } catch (error) {
+    console.error("Labor import batch failed", error);
+    return { error: "This batch failed to save. Try the import again; already-imported names will update." };
+  }
+}
+
 export async function importAgSensePivotsAction(formData: FormData) {
   const session = await requireSession();
   if (!canImportPivots(session.role)) return { error: "Only company admins can import pivots." };
@@ -1291,11 +1450,20 @@ export async function saveStartupChecksAction(formData: FormData) {
   let ticketId = inspection.ticketId;
   if (failed.length > 0 && !ticketId) {
     const failLabels = failed.map((item) => item.label).join(", ");
+    const actor = await prisma.user.findFirst({
+      where: { id: session.userId },
+      select: { storeId: true },
+    });
+    const farm = await prisma.farmer.findFirst({
+      where: { id: inspection.pivot.farmerId },
+      select: { storeId: true },
+    });
     const ticket = await openServiceTicket({
       organizationId: session.organizationId,
       farmerId: inspection.pivot.farmerId,
       pivotId: inspection.pivotId,
       technicianId: session.role === ROLES.TECHNICIAN ? session.userId : inspection.inspectorId,
+      storeId: actor?.storeId ?? farm?.storeId ?? null,
       userId: session.userId,
       title: `${STARTUP_SEASON_YEAR} startup fail: ${inspection.pivot.name}`,
       description: `Pre-season startup failed on: ${failLabels}.`,
@@ -1401,6 +1569,7 @@ export async function updateTechnicianVehicleAction(formData: FormData) {
     data: {
       revealVehicleNumber: revealVehicleNumber || null,
       phone: phone || null,
+      storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
     },
   });
   redirect("/technicians");

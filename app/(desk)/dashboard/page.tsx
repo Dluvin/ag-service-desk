@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { STARTUP_SEASON_YEAR } from "@/lib/startup";
 import { AllTicketsMap } from "@/components/AllTicketsMap";
 import { OPEN_TICKET_STATUSES, ticketPins } from "@/lib/map-pins";
-import { parseStoreParam, storeFarmerWhere, storePivotWhere, storeQuery, storeTicketWhere } from "@/lib/stores";
+import { parseStoreParam, storeFarmerWhere, storePivotWhere, storeQuery, storeTicketWhere, ticketStoreName } from "@/lib/stores";
 import { StoreFilter } from "@/components/StoreFilter";
 import { ActionForm } from "@/components/ActionForm";
 import { StoreSelect } from "@/components/StoreSelect";
@@ -48,7 +48,7 @@ export default async function DashboardPage({
         ...storeTickets,
         status: { in: [...OPEN_TICKET_STATUSES] },
       },
-      include: { farmer: { include: { store: true } }, pivot: true, technician: true },
+      include: { farmer: { include: { store: true } }, pivot: true, technician: true, store: true },
       orderBy: { updatedAt: "desc" },
     }),
     prisma.pivot.count({ where: { ...pivotWhere(session), ...storePivots } }),
@@ -115,7 +115,7 @@ export default async function DashboardPage({
           {session.role === ROLES.FARMER ? "Request service" : "New service ticket"}
         </Link>
         <Link href="/startup" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-          {STARTUP_SEASON_YEAR} startup
+          {STARTUP_SEASON_YEAR} maintenance
         </Link>
         <Link href="/map" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
           Open tickets map
@@ -146,7 +146,7 @@ export default async function DashboardPage({
                     <p className="font-medium">#{ticket.number} {ticket.title}</p>
                     <p className="text-sm text-stone-600">
                       {ticket.farmer.name}
-                      {ticket.farmer.store ? ` · ${ticket.farmer.store.name}` : ""} · {ticket.pivot.name}
+                      {ticketStoreName(ticket) ? ` · ${ticketStoreName(ticket)}` : ""} · {ticket.pivot.name}
                       {ticket.technician ? ` · ${ticket.technician.name}` : ""}
                     </p>
                   </div>

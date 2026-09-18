@@ -9,7 +9,7 @@ import { ActionForm } from "@/components/ActionForm";
 import { PriorityBadge } from "@/components/Badges";
 import { DispatchFleetMap } from "@/components/DispatchFleetMap";
 import { ticketPins } from "@/lib/map-pins";
-import { parseStoreParam, storeTicketWhere } from "@/lib/stores";
+import { parseStoreParam, storeTicketWhere, ticketStoreName } from "@/lib/stores";
 import { StoreFilter } from "@/components/StoreFilter";
 import { DispatchCalendarToggle } from "@/components/DispatchCalendarToggle";
 import { formatSchedule } from "@/lib/schedule";
@@ -40,7 +40,7 @@ export default async function DispatchPage({
         ...storeTicketWhere(selectedStore),
         status: { in: COLUMNS },
       },
-      include: { farmer: { include: { store: true } }, pivot: true, technician: true },
+      include: { farmer: { include: { store: true } }, pivot: true, technician: true, store: true },
       orderBy: [{ priority: "desc" }, { updatedAt: "desc" }],
     }),
     loadTechnicians(session.organizationId),
@@ -71,7 +71,7 @@ export default async function DispatchPage({
                     </Link>
                     <p className="mt-1 text-xs text-stone-600">
                       {ticket.farmer.name}
-                      {ticket.farmer.store ? ` · ${ticket.farmer.store.name}` : ""} · {ticket.pivot.name}
+                      {ticketStoreName(ticket) ? ` · ${ticketStoreName(ticket)}` : ""} · {ticket.pivot.name}
                     </p>
                     {ticket.scheduledAt ? (
                       <p className="mt-1 text-xs font-medium text-emerald-900">{formatSchedule(ticket.scheduledAt)}</p>

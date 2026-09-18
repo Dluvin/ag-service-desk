@@ -7,6 +7,7 @@ import { isPrintableStatus, requiresInvoice, ROLES } from "@/lib/roles";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
 import { formatSchedule } from "@/lib/schedule";
 import { formatMoney } from "@/lib/money";
+import { ticketStoreName } from "@/lib/stores";
 
 export default async function TicketsPage() {
   const session = await getSession();
@@ -14,17 +15,22 @@ export default async function TicketsPage() {
 
   const tickets = await prisma.ticket.findMany({
     where: ticketWhere(session),
-    include: { farmer: true, pivot: true, technician: true },
+    include: { farmer: { include: { store: true } }, pivot: true, technician: true, store: true },
     orderBy: { updatedAt: "desc" },
   });
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-3xl">Service tickets</h1>
-        <Link href="/tickets/new" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-          {session.role === ROLES.FARMER ? "Request service" : "New ticket"}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/tickets/print" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
+            Batch print closed tickets
+          </Link>
+          <Link href="/tickets/new" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
+            {session.role === ROLES.FARMER ? "Request service" : "New ticket"}
+          </Link>
+        </div>
       </div>
       <div className="mt-6 overflow-hidden rounded-xl border border-stone-200 bg-white">
         <table className="w-full text-left text-sm">
@@ -49,6 +55,7 @@ export default async function TicketsPage() {
                 </td>
                 <td className="px-4 py-3 text-stone-600">
                   {ticket.farmer.name}
+                  {ticketStoreName(ticket) ? ` · ${ticketStoreName(ticket)}` : ""}
                   <br />
                   {ticket.pivot.name}
                 </td>

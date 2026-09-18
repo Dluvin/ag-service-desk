@@ -1,0 +1,6 @@
+Name,SKU,Type,Sales Description,Rate
+Shop labor,LAB-SHOP,Service,Standard shop labor per hour,125.00
+Field service,LAB-FIELD,Service,On-farm service labor per hour,145.00
+After hours,LAB-OT,Service,After-hours / weekend labor per hour,185.00
+Travel time,LAB-TRAVEL,Service,Travel time per hour,95.00
+Startup labor,LAB-START,Service,Pre-season startup labor per hour,135.00
