@@ -313,6 +313,19 @@ export async function syncRevealVehicles(organizationId: string): Promise<Reveal
   return storedRevealVehicles(organizationId);
 }
 
+function locationKey(value: string) {
+  return value.trim().toLowerCase();
+}
+
+async function fetchOneLocation(creds: RevealCreds, number: string): Promise<RevealLocation | null> {
+  try {
+    const json = await revealFetch(creds, `/rad/v1/vehicles/${encodeURIComponent(number)}/location`);
+    return locationsFromPayload(json, [number])[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchRevealLocations(
   organizationId: string,
   vehicleNumbers?: string[],
@@ -340,7 +353,12 @@ export async function fetchRevealLocations(
   }
   if (numbers.length === 0) return [];
 
-  const locations: RevealLocation[] = [];
+  const byNumber = new Map<string, RevealLocation>();
+  const addLocation = (location: RevealLocation, requested?: string) => {
+    byNumber.set(locationKey(location.vehicleNumber), location);
+    if (requested) byNumber.set(locationKey(requested), location);
+  };
+
   for (let i = 0; i < numbers.length; i += 100) {
     const chunk = numbers.slice(i, i + 100);
     try {
@@ -348,30 +366,24 @@ export async function fetchRevealLocations(
         method: "POST",
         body: JSON.stringify(chunk),
       });
-      locations.push(...locationsFromPayload(json, chunk));
+      locationsFromPayload(json, chunk).forEach((location, index) => addLocation(location, chunk[index]));
     } catch {
-      // Fall through to per-vehicle GET below.
+      // Per-vehicle GET fills gaps below.
     }
   }
 
-  if (locations.length === 0) {
-    for (let i = 0; i < numbers.length; i += 8) {
-      const chunk = numbers.slice(i, i + 8);
-      const got = await Promise.all(
-        chunk.map(async (number) => {
-          try {
-            const json = await revealFetch(creds, `/rad/v1/vehicles/${encodeURIComponent(number)}/location`);
-            return locationsFromPayload(json, [number])[0] ?? null;
-          } catch {
-            return null;
-          }
-        }),
-      );
-      for (const location of got) if (location) locations.push(location);
-    }
+  const missing = numbers.filter((number) => !byNumber.has(locationKey(number)));
+  for (let i = 0; i < missing.length; i += 6) {
+    const chunk = missing.slice(i, i + 6);
+    const got = await Promise.all(chunk.map((number) => fetchOneLocation(creds, number)));
+    got.forEach((location, index) => {
+      if (location) addLocation(location, chunk[index]);
+    });
   }
 
-  return locations;
+  return numbers
+    .map((number) => byNumber.get(locationKey(number)))
+    .filter((location): location is RevealLocation => Boolean(location));
 }
 
 export function clearRevealTokenCache() {
