@@ -810,9 +810,20 @@ function nextRevealPath(json: unknown, baseUrl: string) {
   }
 }
 
+export function parsePlaceCategoryInput(raw: string) {
+  const tokens = raw
+    .split(/[\n,;]+/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const named = tokens.filter((value) => !/^(all|\*)$/i.test(value));
+  const wantsAll = tokens.length === 0 || tokens.some((value) => /^(all|\*)$/i.test(value));
+  return { named, wantsAll };
+}
+
 export async function listRevealPlaces(
   organizationId: string,
   extraCategories: string[] = [],
+  wantsAll = extraCategories.length === 0,
 ): Promise<RevealPlace[]> {
   const creds = await loadRevealCreds(organizationId);
   if (!creds) throw new Error("Verizon Connect Reveal is not configured.");
@@ -854,28 +865,39 @@ export async function listRevealPlaces(
     }
   };
 
+  const queriedCategories = new Set<string>();
+  const queryCategories = async (names: string[]) => {
+    for (const category of uniqueIds(names)) {
+      const key = locationKey(category);
+      if (!key || queriedCategories.has(key)) continue;
+      queriedCategories.add(key);
+      await tryGeo(`categoryName=${encodeURIComponent(category)}`);
+    }
+  };
+
+  await queryCategories(extraCategories);
+
   const groupIds: string[] = [];
   const groupNames: string[] = [];
-  for (const path of ["/cmd/v1/groups", "/cmd/v1/vehiclegroups", "/gpm/v1/groups"] as const) {
-    try {
-      for (const group of asList(await revealFetch(creds, path))) {
-        const row = flattenRevealItem(group);
-        const groupId = pickString(row, ["GroupId", "groupId", "Id", "id", "GroupNumber", "groupNumber"]);
-        const groupName = pickString(row, ["GroupName", "groupName", "Name", "name"]);
-        if (groupId) groupIds.push(groupId);
-        if (groupName) groupNames.push(groupName);
+  if (wantsAll) {
+    for (const path of ["/cmd/v1/groups", "/cmd/v1/vehiclegroups", "/gpm/v1/groups"] as const) {
+      try {
+        for (const group of asList(await revealFetch(creds, path))) {
+          const row = flattenRevealItem(group);
+          const groupId = pickString(row, ["GroupId", "groupId", "Id", "id", "GroupNumber", "groupNumber"]);
+          const groupName = pickString(row, ["GroupName", "groupName", "Name", "name"]);
+          if (groupId) groupIds.push(groupId);
+          if (groupName) groupNames.push(groupName);
+        }
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : String(error));
       }
-    } catch (error) {
-      errors.push(error instanceof Error ? error.message : String(error));
     }
-  }
-
-  const categories = uniqueIds([...extraCategories, ...groupNames]);
-  for (const category of categories) {
-    await tryGeo(`categoryName=${encodeURIComponent(category)}`);
-  }
-  for (const groupId of uniqueIds(groupIds)) {
-    await tryGeo(`groupId=${encodeURIComponent(groupId)}`);
+    await queryCategories(groupNames);
+    for (const groupId of uniqueIds(groupIds)) {
+      await tryGeo(`groupId=${encodeURIComponent(groupId)}`);
+    }
+    await queryCategories([...found.values()].map((place) => place.category));
   }
 
   if (found.size === 0) {
@@ -886,13 +908,13 @@ export async function listRevealPlaces(
       errors[0];
     if (extraCategories.length === 0) {
       throw new Error(
-        "Verizon has no list-all Places call (plain GET /geofences is a 404). In Reveal open Places, copy a category name exactly, paste it in Place category, and download again.",
+        "Verizon has no true All-categories API. Type ALL to try every truck group, or paste every Places category (one per line or commas) into one download.",
       );
     }
     throw new Error(
       verizon
-        ? `No Places in category "${extraCategories[0]}". Spelling must match Reveal → Places. Verizon: ${verizon}`
-        : `No Places in category "${extraCategories[0]}". Spelling must match Reveal → Places.`,
+        ? `No Places in ${extraCategories.map((name) => `"${name}"`).join(", ")}. Spelling must match Reveal → Places. Verizon: ${verizon}`
+        : `No Places in ${extraCategories.map((name) => `"${name}"`).join(", ")}. Spelling must match Reveal → Places.`,
     );
   }
 

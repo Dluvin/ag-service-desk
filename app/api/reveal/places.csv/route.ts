@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { isAdmin } from "@/lib/roles";
-import { listRevealPlaces, revealPlacesToCsv } from "@/lib/reveal";
+import { listRevealPlaces, parsePlaceCategoryInput, revealPlacesToCsv } from "@/lib/reveal";
 
 export async function GET(request: Request) {
   const session = await getSession();
@@ -13,8 +13,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const category = new URL(request.url).searchParams.get("category")?.trim() ?? "";
-    const places = await listRevealPlaces(session.organizationId, category ? [category] : []);
+    const raw = new URL(request.url).searchParams.get("category")?.trim() ?? "";
+    const { named, wantsAll } = parsePlaceCategoryInput(raw);
+    const places = await listRevealPlaces(session.organizationId, named, wantsAll);
     const csv = revealPlacesToCsv(places);
     const stamp = new Date().toISOString().slice(0, 10);
     return new NextResponse(csv, {

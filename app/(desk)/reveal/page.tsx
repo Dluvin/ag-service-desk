@@ -102,16 +102,17 @@ export default async function RevealSettingsPage() {
       {configured ? (
         <form method="get" action="/api/reveal/places.csv" className="mt-4 space-y-2">
           <label className="block text-sm font-medium">
-            Place category
-            <input
+            Place categories
+            <textarea
               name="category"
+              rows={4}
               className="mt-1 w-full max-w-md rounded-lg border border-stone-300 px-3 py-2"
-              placeholder="Exact name from Reveal → Places"
+              placeholder={"ALL\nor Customer, Yard, Shop"}
             />
           </label>
           <p className="text-xs text-stone-500">
-            Verizon does not have a list-all Places API. Copy a category from the Reveal Places
-            tab exactly (spelling and spaces). Leave blank to try every truck group name.
+            Verizon has no single All-categories API. Type ALL to try every truck group in one
+            sheet, or paste every Places category (commas or one per line) to combine them.
           </p>
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
             Download Places (Excel)
