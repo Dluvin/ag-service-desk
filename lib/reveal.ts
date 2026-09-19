@@ -8,6 +8,8 @@ export type RevealVehicleInfo = {
   name: string;
 };
 
+type CmdVehicle = RevealVehicleInfo & { gpsIds: string[] };
+
 export type RevealLocation = {
   vehicleNumber: string;
   name?: string;
@@ -326,41 +328,17 @@ function uniqueIds(values: string[]) {
   return ids;
 }
 
-function hrefVehicleIds(record: Record<string, unknown>) {
-  const ids: string[] = [];
-  const walk = (value: unknown, depth = 0) => {
-    if (depth > 8 || value == null) return;
-    if (typeof value === "string") {
-      for (const match of value.matchAll(/\/vehicles\/([^/"?]+)/gi)) {
-        try {
-          ids.push(decodeURIComponent(match[1]));
-        } catch {
-          ids.push(match[1]);
-        }
-      }
-      return;
-    }
-    if (Array.isArray(value)) {
-      value.forEach((item) => walk(item, depth + 1));
-      return;
-    }
-    if (typeof value === "object") Object.values(value as Record<string, unknown>).forEach((item) => walk(item, depth + 1));
-  };
-  walk(record);
-  return ids;
-}
-
-function parseCmdVehicle(item: Record<string, unknown>): { number: string; name: string; aliases: string[] } | null {
+function parseCmdVehicle(item: Record<string, unknown>): CmdVehicle | null {
   const row = flattenRevealItem(item);
   const name =
     pickString(row, ["VehicleName", "vehicleName", "Name", "name", "Description", "description", "DisplayName"]);
   const vehicleNumber = pickString(row, ["VehicleNumber", "vehicleNumber"]);
   const registration = pickString(row, ["RegistrationNumber", "registrationNumber"]);
   const otherId = pickString(row, ["Number", "number", "VehicleId", "vehicleId"]);
-  const aliases = uniqueIds([vehicleNumber, registration, otherId, name, ...hrefVehicleIds(item)]);
-  const number = vehicleNumber || registration || otherId || aliases[0] || "";
+  const gpsIds = uniqueIds([vehicleNumber, registration]);
+  const number = vehicleNumber || otherId || registration || name;
   if (!number) return null;
-  return { number, name: name || number, aliases };
+  return { number, name: name || number, gpsIds };
 }
 
 export async function listRevealVehicles(organizationId: string): Promise<RevealVehicleInfo[]> {
@@ -388,7 +366,7 @@ async function listRevealVehicleRecords(organizationId: string) {
             if (!parsed) continue;
             const existing = byNumber.get(locationKey(parsed.number));
             if (existing) {
-              existing.aliases = uniqueIds([...existing.aliases, ...parsed.aliases]);
+              existing.gpsIds = uniqueIds([...existing.gpsIds, ...parsed.gpsIds]);
             } else {
               byNumber.set(locationKey(parsed.number), parsed);
             }
@@ -470,14 +448,14 @@ async function fetchCmdVehicleAliases(creds: RevealCreds, id: string) {
     const json = await revealFetch(creds, `/cmd/v1/vehicles/${encodeURIComponent(id)}`);
     const record = asRecord(json) ?? asList(json)[0];
     if (!record) return [];
-    return parseCmdVehicle(record)?.aliases ?? [];
+    return parseCmdVehicle(record)?.gpsIds ?? [];
   } catch {
     return [];
   }
 }
 
-async function fetchGetLocation(creds: RevealCreds, aliases: string[], canonicalNumber: string) {
-  const queue = uniqueIds(aliases.concat(canonicalNumber));
+async function fetchGetLocation(creds: RevealCreds, gpsIds: string[], canonicalNumber: string) {
+  const queue = uniqueIds(gpsIds);
   const seen = new Set(queue.map(locationKey));
   let lastError = "";
   let notFound = 0;
@@ -524,7 +502,12 @@ export async function fetchRevealLocations(
 export async function fetchRevealLocationReport(
   organizationId: string,
   vehicleNumbers?: string[],
-): Promise<{ locations: RevealLocation[]; errors: string[]; requested: number }> {
+): Promise<{
+  locations: RevealLocation[];
+  errors: string[];
+  requested: number;
+  withoutVehicleNumber: string[];
+}> {
   const creds = await loadRevealCreds(organizationId);
   if (!creds) throw new Error("Verizon Connect Reveal is not configured.");
 
@@ -546,11 +529,11 @@ export async function fetchRevealLocationReport(
       }
     }
   }
-  if (numbers.length === 0) return { locations: [], errors: [], requested: 0 };
+  if (numbers.length === 0) return { locations: [], errors: [], requested: 0, withoutVehicleNumber: [] };
 
   const stored = await storedRevealVehicles(organizationId);
   const catalog = stored.length > 0 ? stored : numbers.map((number) => ({ number, name: number }));
-  let live: { number: string; name: string; aliases: string[] }[] = [];
+  let live: CmdVehicle[] = [];
   try {
     live = await listRevealVehicleRecords(organizationId);
   } catch {
@@ -562,17 +545,20 @@ export async function fetchRevealLocationReport(
       wanted.size === 0 ||
       wanted.has(locationKey(vehicle.number)) ||
       wanted.has(locationKey(vehicle.name)) ||
-      vehicle.aliases.some((alias) => wanted.has(locationKey(alias))),
+      vehicle.gpsIds.some((id) => wanted.has(locationKey(id))),
   );
-  const jobs =
+  const jobs: CmdVehicle[] =
     live.length > 0
       ? fromLive.length > 0
         ? fromLive
         : live
       : numbers.map((number) => {
           const hit = catalog.find((vehicle) => locationKey(vehicle.number) === locationKey(number));
-          return { number, name: hit?.name || number, aliases: uniqueIds([number, hit?.name || ""]) };
+          return { number, name: hit?.name || number, gpsIds: uniqueIds([number]) };
         });
+
+  const withGpsId = jobs.filter((job) => job.gpsIds.length > 0);
+  const withoutGpsId = jobs.filter((job) => job.gpsIds.length === 0);
 
   const parsed: RevealLocation[] = [];
   const errors: string[] = [];
@@ -580,7 +566,7 @@ export async function fetchRevealLocationReport(
   let notFoundCount = 0;
 
   try {
-    const ids = uniqueIds(jobs.flatMap((job) => [...job.aliases, job.number, job.name])).slice(0, 100);
+    const ids = uniqueIds(withGpsId.flatMap((job) => job.gpsIds)).slice(0, 100);
     if (ids.length > 0) {
       for (const path of ["/rad/v1/vehicles/locations", "/rad/v1/vehicles/statuses"] as const) {
         try {
@@ -603,17 +589,17 @@ export async function fetchRevealLocationReport(
   }
 
   const foundKeys = new Set(parsed.flatMap((location) => [locationKey(location.vehicleNumber), locationKey(location.name || "")]));
-  const remaining = jobs.filter(
+  const remaining = withGpsId.filter(
     (job) =>
       !foundKeys.has(locationKey(job.number)) &&
       !foundKeys.has(locationKey(job.name)) &&
-      !job.aliases.some((alias) => foundKeys.has(locationKey(alias))),
+      !job.gpsIds.some((id) => foundKeys.has(locationKey(id))),
   );
 
   for (let i = 0; i < remaining.length; i += 4) {
     const chunk = remaining.slice(i, i + 4);
     const got = await Promise.all(
-      chunk.map((job) => fetchGetLocation(creds, [...job.aliases, job.number, job.name], job.number)),
+      chunk.map((job) => fetchGetLocation(creds, job.gpsIds, job.number)),
     );
     got.forEach((result) => {
       if (result.location) {
@@ -628,23 +614,28 @@ export async function fetchRevealLocationReport(
 
   const locations = matchLocationsToCatalog(parsed, catalog);
 
-  if (!gotAny && locations.length === 0) {
-    errors.length = 0;
+  errors.length = 0;
+  if (withoutGpsId.length > 0) {
     errors.push(
-      "Vehicle Update API v1 could not locate these Vehicle Numbers. In Reveal open Account Profile → Vehicle List and use the Vehicle # column (not the live map name).",
+      `${withoutGpsId.length} truck${withoutGpsId.length === 1 ? "" : "s"} have no Vehicle # in Reveal, so Vehicle Update cannot locate them. Fill Vehicle Number, then Refresh from Verizon.`,
     );
-  } else if (locations.length < jobs.length) {
-    errors.length = 0;
+  }
+  if (withGpsId.length > 0 && locations.length < withGpsId.length) {
     errors.push(
-      `Vehicle Update API v1 found GPS for ${locations.length} of ${jobs.length} trucks.${
-        notFoundCount ? ` ${notFoundCount} returned 404 Unable to locate vehicle — that ID is not a Vehicle Update Vehicle #.` : ""
-      } GPS uses Reveal Vehicle #, not the truck name on the live map. Check Vehicle List and the integration user’s vehicle group.`,
+      `GPS for ${locations.length} of ${withGpsId.length} trucks that have a Vehicle #.${
+        notFoundCount ? ` ${notFoundCount} still returned 404.` : ""
+      }`,
     );
-  } else {
-    errors.length = 0;
+  } else if (withGpsId.length === 0 && locations.length === 0 && withoutGpsId.length === 0) {
+    errors.push("Vehicle Update API v1 did not return GPS.");
   }
 
-  return { locations, errors, requested: jobs.length };
+  return {
+    locations,
+    errors,
+    requested: jobs.length,
+    withoutVehicleNumber: withoutGpsId.map((job) => job.name || job.number),
+  };
 }
 
 export function clearRevealTokenCache() {

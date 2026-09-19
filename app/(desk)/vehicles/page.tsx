@@ -45,6 +45,7 @@ export default async function VehiclesPage({
   let locationsByNumber = new Map<string, RevealLocation>();
   let locationError: string | null = null;
   let gpsFound = 0;
+  const missingVehicleNumber = new Set<string>();
   if (configured && vehicles.length > 0) {
     try {
       const report = await fetchRevealLocationReport(
@@ -55,8 +56,9 @@ export default async function VehiclesPage({
       locationsByNumber = new Map(
         report.locations.map((location) => [location.vehicleNumber.trim().toLowerCase(), location]),
       );
-      if (report.locations.length < vehicles.length && report.errors.length > 0) {
-        locationError = `GPS for ${report.locations.length} of ${vehicles.length} trucks. ${report.errors[0]}`;
+      report.withoutVehicleNumber.forEach((name) => missingVehicleNumber.add(name.trim().toLowerCase()));
+      if (report.errors.length > 0) {
+        locationError = report.errors.join(" ");
       }
     } catch (error) {
       locationError = error instanceof Error ? error.message : "Could not load current locations.";
@@ -67,9 +69,9 @@ export default async function VehiclesPage({
     <div className="max-w-3xl">
       <h1 className="font-display text-3xl">Verizon vehicles</h1>
       <p className="mt-2 text-stone-600">
-        These trucks come from Reveal. Assign one to each technician so Dispatch GPS and on-site
-        time match the right person. If the Verizon live map shows trucks this page does not, the
-        integration login cannot read their GPS yet.{" "}
+        These trucks come from Reveal. Vehicle Update GPS needs a Vehicle # in Verizon. If that
+        field is blank, fill it in Reveal, then Refresh from Verizon. Assign a numbered truck to
+        each technician so Dispatch pins match.{" "}
         <Link href="/reveal" className="text-emerald-800 hover:underline">
           Reveal GPS login
         </Link>
@@ -139,6 +141,12 @@ export default async function VehiclesPage({
                     >
                       Map
                     </a>
+                  </p>
+                ) : configured &&
+                  (missingVehicleNumber.has(vehicle.name.trim().toLowerCase()) ||
+                    missingVehicleNumber.has(vehicle.number.trim().toLowerCase())) ? (
+                  <p className="mt-1 text-xs text-stone-500">
+                    No Vehicle # in Reveal. Add one, then Refresh from Verizon.
                   </p>
                 ) : configured ? (
                   <p className="mt-1 text-xs text-stone-500">No current location from Verizon.</p>
