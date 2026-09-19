@@ -41,6 +41,7 @@ import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./tick
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
 import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelcomeLoginEmail, userFromPasswordToken, welcomeQuery } from "./welcome-mail";
 import { getPlatformSession } from "./platform";
+import { parseDateTimeLocal } from "./schedule";
 import { parseMoneyInput } from "./money";
 
 function formString(formData: FormData, key: string) {

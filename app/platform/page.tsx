@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getPlatformSession } from "@/lib/platform";
 import { ROLES } from "@/lib/roles";
 import { PlatformHeader } from "@/components/PlatformHeader";
+import { ActionForm } from "@/components/ActionForm";
 import {
   deleteTenantAction,
   impersonateTenantAction,
@@ -63,22 +64,22 @@ export default async function PlatformHomePage() {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <form action={impersonateTenantAction}>
+                      <ActionForm action={impersonateTenantAction}>
                         <input type="hidden" name="organizationId" value={org.id} />
                         <button className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700">
                           Open company
                         </button>
-                      </form>
-                      <form action={pauseTenantAction}>
+                      </ActionForm>
+                      <ActionForm action={pauseTenantAction}>
                         <input type="hidden" name="organizationId" value={org.id} />
                         <input type="hidden" name="paused" value={org.paused ? "0" : "1"} />
                         <button className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-semibold hover:bg-stone-50">
                           {org.paused ? "Resume access" : "Pause access"}
                         </button>
-                      </form>
+                      </ActionForm>
                     </div>
                   </div>
-                  <form action={deleteTenantAction} className="mt-4 border-t border-stone-100 pt-3">
+                  <ActionForm action={deleteTenantAction} className="mt-4 border-t border-stone-100 pt-3">
                     <input type="hidden" name="organizationId" value={org.id} />
                     <label className="block text-xs font-medium text-stone-600">
                       Type {org.name} to delete this company
@@ -94,7 +95,7 @@ export default async function PlatformHomePage() {
                     >
                       Delete company
                     </button>
-                  </form>
+                  </ActionForm>
                 </li>
               );
             })

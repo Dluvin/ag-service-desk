@@ -10,7 +10,12 @@ export function VehicleMapToggle({
   showOnMap: boolean;
 }) {
   return (
-    <form action={toggleRevealVehicleMapAction} className="shrink-0">
+    <form
+      action={async (formData) => {
+        await toggleRevealVehicleMapAction(formData);
+      }}
+      className="shrink-0"
+    >
       <input type="hidden" name="vehicleId" value={vehicleId} />
       <input type="hidden" name="showOnMap" value={showOnMap ? "0" : "1"} />
       <label className="flex cursor-pointer items-center gap-2 text-xs text-stone-600">
