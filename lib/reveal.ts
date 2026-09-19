@@ -397,28 +397,79 @@ export async function storedRevealVehicles(organizationId: string): Promise<Reve
 }
 
 export async function syncRevealVehicles(organizationId: string): Promise<RevealVehicleInfo[]> {
-  const live = await listRevealVehicles(organizationId);
-  const byNumber = new Map(live.map((vehicle) => [vehicle.number, vehicle]));
-  const unique = [...byNumber.values()];
-  const numbers = unique.map((vehicle) => vehicle.number);
+  const live = await listRevealVehicleRecords(organizationId);
+  const byName = new Map<string, (typeof live)[number]>();
+  for (const vehicle of live) {
+    const key = locationKey(vehicle.name || vehicle.number);
+    const previous = byName.get(key);
+    if (!previous || vehicle.gpsIds.length > previous.gpsIds.length) byName.set(key, vehicle);
+  }
+  const unique = [...byName.values()];
   const syncedAt = new Date();
   await prisma.$transaction(async (tx) => {
+    const existing = await tx.revealVehicle.findMany({ where: { organizationId } });
+    const keepIds = new Set<string>();
+
     for (const vehicle of unique) {
-      await tx.revealVehicle.upsert({
-        where: { organizationId_number: { organizationId, number: vehicle.number } },
-        create: {
-          organizationId,
-          number: vehicle.number,
-          name: vehicle.name,
-          active: true,
-          syncedAt,
-        },
-        update: { name: vehicle.name, active: true, syncedAt },
-      });
+      const byNumber = existing.find(
+        (row) => !keepIds.has(row.id) && locationKey(row.number) === locationKey(vehicle.number),
+      );
+      const byExistingName = existing.find(
+        (row) => !keepIds.has(row.id) && locationKey(row.name) === locationKey(vehicle.name),
+      );
+      const row = byNumber ?? byExistingName;
+      if (!row) {
+        const created = await tx.revealVehicle.create({
+          data: {
+            organizationId,
+            number: vehicle.number,
+            name: vehicle.name,
+            active: true,
+            syncedAt,
+          },
+        });
+        keepIds.add(created.id);
+        continue;
+      }
+
+      keepIds.add(row.id);
+      const oldNumber = row.number;
+      if (oldNumber !== vehicle.number) {
+        const clash = existing.find(
+          (other) => other.id !== row.id && locationKey(other.number) === locationKey(vehicle.number),
+        );
+        if (clash) {
+          keepIds.add(clash.id);
+          keepIds.delete(row.id);
+          await tx.revealVehicle.delete({ where: { id: row.id } });
+          await tx.revealVehicle.update({
+            where: { id: clash.id },
+            data: { number: vehicle.number, name: vehicle.name, active: true, syncedAt },
+          });
+        } else {
+          await tx.revealVehicle.update({
+            where: { id: row.id },
+            data: { number: vehicle.number, name: vehicle.name, active: true, syncedAt },
+          });
+        }
+        await tx.user.updateMany({
+          where: { organizationId, revealVehicleNumber: oldNumber },
+          data: { revealVehicleNumber: vehicle.number },
+        });
+        await tx.siteVisit.updateMany({
+          where: { vehicleNumber: oldNumber, ticket: { organizationId } },
+          data: { vehicleNumber: vehicle.number },
+        });
+      } else {
+        await tx.revealVehicle.update({
+          where: { id: row.id },
+          data: { name: vehicle.name, active: true, syncedAt },
+        });
+      }
     }
-    await tx.revealVehicle.updateMany({
-      where: { organizationId, ...(numbers.length > 0 ? { number: { notIn: numbers } } : {}) },
-      data: { active: false },
+
+    await tx.revealVehicle.deleteMany({
+      where: { organizationId, ...(keepIds.size > 0 ? { id: { notIn: [...keepIds] } } : {}) },
     });
   });
   return storedRevealVehicles(organizationId);
@@ -617,7 +668,7 @@ export async function fetchRevealLocationReport(
   errors.length = 0;
   if (withoutGpsId.length > 0) {
     errors.push(
-      `${withoutGpsId.length} truck${withoutGpsId.length === 1 ? "" : "s"} have no Vehicle # in Reveal, so Vehicle Update cannot locate them. Fill Vehicle Number, then Refresh from Verizon.`,
+      `${withoutGpsId.length} truck${withoutGpsId.length === 1 ? "" : "s"} ${withoutGpsId.length === 1 ? "has" : "have"} no Vehicle # in Reveal, so Vehicle Update cannot locate them. Fill Vehicle Number, then Refresh from Verizon.`,
     );
   }
   if (withGpsId.length > 0 && locations.length < withGpsId.length) {

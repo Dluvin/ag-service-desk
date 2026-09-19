@@ -26,8 +26,8 @@ export default async function VehiclesPage({
 
   const [vehicles, technicians, configured] = await Promise.all([
     prisma.revealVehicle.findMany({
-      where: { organizationId: session.organizationId },
-      orderBy: [{ active: "desc" }, { name: "asc" }],
+      where: { organizationId: session.organizationId, active: true },
+      orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
       where: { organizationId: session.organizationId, role: ROLES.TECHNICIAN, revealVehicleNumber: { not: null } },
