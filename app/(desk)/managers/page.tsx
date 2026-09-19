@@ -8,11 +8,17 @@ import { DeleteButton } from "@/components/DeleteButton";
 import { StaffImportForm } from "@/components/StaffImportForm";
 import { StoreSelect } from "@/components/StoreSelect";
 import { StaffEditForm } from "@/components/StaffEditForm";
+import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 
-export default async function ManagersPage() {
+export default async function ManagersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
   if (!canEditStaffMember(session.role, ROLES.MANAGER)) redirect("/dashboard");
+  const query = await searchParams;
 
   const [managers, stores] = await Promise.all([
     prisma.user.findMany({
@@ -38,6 +44,7 @@ export default async function ManagersPage() {
           Managers can assign and edit tickets, add farms, and edit managers and technicians. Only
           admins can edit other admins, delete records, or import pivots and staff.
         </p>
+        <WelcomeMailNotice status={query.welcome} />
         <ul className="mt-6 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
           {managers.length === 0 ? (
             <li className="px-4 py-3 text-sm text-stone-600">No managers yet.</li>
@@ -82,7 +89,10 @@ export default async function ManagersPage() {
           </label>
           <label className="block text-sm font-medium">
             Password
-            <input name="password" type="password" minLength={8} required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <input name="password" type="password" minLength={8} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <span className="mt-1 block text-xs font-normal text-stone-500">
+              Optional. Leave blank to let them choose one from the welcome email.
+            </span>
           </label>
           <label className="block text-sm font-medium">
             Mobile for SMS

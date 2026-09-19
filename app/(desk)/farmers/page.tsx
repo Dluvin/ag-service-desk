@@ -6,14 +6,20 @@ import { createFarmerAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { FarmDirectory } from "@/components/FarmDirectory";
 import { StoreSelect } from "@/components/StoreSelect";
+import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 
-export default async function FarmersPage() {
+export default async function FarmersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role === ROLES.FARMER && session.farmerId) {
     redirect(`/farmers/${session.farmerId}`);
   }
   if (session.role === ROLES.FARMER) redirect("/dashboard");
+  const query = await searchParams;
 
   const [farmers, stores] = await Promise.all([
     prisma.farmer.findMany({
@@ -36,6 +42,7 @@ export default async function FarmersPage() {
     <div className="grid gap-8 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Farms</h1>
+        <WelcomeMailNotice status={query.welcome} />
         <FarmDirectory
           farms={farmers.map((farmer) => ({
             id: farmer.id,
@@ -81,6 +88,10 @@ export default async function FarmersPage() {
           <label className="block text-sm font-medium">
             Login password
             <input name="loginPassword" type="password" minLength={8} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <span className="mt-1 block text-xs font-normal text-stone-500">
+              Optional if you enter a login email. Leave blank so they set a password from the welcome
+              email.
+            </span>
           </label>
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save farm</button>
         </ActionForm>

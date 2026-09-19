@@ -9,11 +9,19 @@ import { DeleteButton } from "@/components/DeleteButton";
 import { SelectableMap } from "@/components/SelectableMap";
 import { StatusBadge } from "@/components/Badges";
 import { StoreSelect } from "@/components/StoreSelect";
+import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 
-export default async function FarmerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function FarmerDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ welcome?: string }>;
+}) {
   const session = await getSession();
   if (!session) redirect("/login");
   const { id } = await params;
+  const query = await searchParams;
 
   if (session.role === ROLES.FARMER && session.farmerId !== id) notFound();
 
@@ -38,6 +46,7 @@ export default async function FarmerDetailPage({ params }: { params: Promise<{ i
   return (
     <div>
       <h1 className="font-display text-3xl">{farmer.name}</h1>
+      <WelcomeMailNotice status={query.welcome} />
       {farmer.address ? <p className="text-stone-600">{farmer.address}</p> : null}
       {farmer.store ? <p className="text-sm text-stone-600">Default store: {farmer.store.name}</p> : null}
       {canDeleteRecords(session.role) ? (

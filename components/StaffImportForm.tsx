@@ -7,7 +7,8 @@ export function StaffImportForm() {
       <h2 className="font-display text-xl">Bulk import staff</h2>
       <p className="mt-1 text-sm text-stone-600">
         CSV with Name, Email, and Role (Admin, Manager, or Technician). Phone and password can be
-        on each row, or use the default password below. Matching emails update that person.
+        on each row, or use the default password below. Leave passwords blank to send a welcome email
+        so they set one. Matching emails update that person.
       </p>
       <p className="mt-1 text-sm">
         <a href="/staff-template.csv" className="text-emerald-800 hover:underline">

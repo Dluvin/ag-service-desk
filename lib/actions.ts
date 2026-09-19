@@ -22,6 +22,7 @@ import {
   isShopStaff,
   requiresInvoice,
   slugify,
+  type Role,
   type TicketStatus,
 } from "./roles";
 import { openServiceTicket } from "./tickets";
@@ -38,7 +39,7 @@ import { notifyTicketSms } from "./ticket-sms";
 import { sendBirdSms, toE164 } from "./bird";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./ticket-photos";
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
-import { parseDateTimeLocal } from "./schedule";
+import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelcomeLoginEmail, userFromPasswordToken, welcomeQuery } from "./welcome-mail";
 import { parseMoneyInput } from "./money";
 
 function formString(formData: FormData, key: string) {
@@ -96,6 +97,60 @@ export async function loginAction(formData: FormData) {
 export async function logoutAction() {
   await destroySession();
   redirect("/login");
+}
+
+export async function setPasswordFromWelcomeAction(formData: FormData) {
+  const token = formString(formData, "token");
+  const password = formString(formData, "password");
+  const confirm = formString(formData, "confirmPassword");
+  if (!token) return { error: "This set-password link is missing." };
+  if (password.length < 8) return { error: "Use a password with at least 8 characters." };
+  if (password !== confirm) return { error: "Passwords do not match." };
+
+  const row = await userFromPasswordToken(token);
+  if (!row) return { error: "This link is invalid or has expired. Request a new one from the login screen." };
+
+  await prisma.user.update({
+    where: { id: row.userId },
+    data: { passwordHash: await bcrypt.hash(password, 10) },
+  });
+  await prisma.passwordResetToken.delete({ where: { id: row.id } });
+
+  await createSession({
+    userId: row.user.id,
+    organizationId: row.user.organizationId,
+    organizationName: row.user.organization.name,
+    role: row.user.role as Role,
+    farmerId: row.user.farmerId,
+    name: row.user.name,
+    email: row.user.email,
+  });
+  redirect("/dashboard");
+}
+
+export async function requestPasswordResetAction(formData: FormData) {
+  const email = formString(formData, "email").toLowerCase();
+  if (!email) return { error: "Enter the email you use to sign in." };
+  if (!mailIsConfigured()) {
+    return {
+      error:
+        "Password reset email is not set up yet. Ask your dealer for a new password, or have them add EMAIL_FROM and mail settings.",
+    };
+  }
+
+  const users = await prisma.user.findMany({
+    where: { email },
+    include: { organization: true },
+  });
+  for (const user of users) {
+    await sendPasswordResetEmail({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      organizationName: user.organization.name,
+    });
+  }
+  redirect("/forgot?sent=1");
 }
 
 export async function signupAction(formData: FormData) {
@@ -159,6 +214,9 @@ export async function createFarmerAction(formData: FormData) {
   const loginEmail = formString(formData, "loginEmail").toLowerCase();
   const loginPassword = formString(formData, "loginPassword");
   if (!name) return { error: "Farm name is required." };
+  if (loginEmail && loginPassword && loginPassword.length < 8) {
+    return { error: "Login password must be at least 8 characters, or leave it blank." };
+  }
 
   const farmer = await createFarmWithContact(session.organizationId, {
     name,
@@ -169,17 +227,26 @@ export async function createFarmerAction(formData: FormData) {
     storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
   });
 
-  if (loginEmail && loginPassword.length >= 8) {
-    await prisma.user.create({
+  if (loginEmail) {
+    const { hash, hadPassword } = await hashNewUserPassword(loginPassword);
+    const user = await prisma.user.create({
       data: {
         organizationId: session.organizationId,
         farmerId: farmer.id,
         name,
         email: loginEmail,
         role: ROLES.FARMER,
-        passwordHash: await bcrypt.hash(loginPassword, 10),
+        passwordHash: hash,
       },
     });
+    const welcome = await sendWelcomeLoginEmail({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      organizationName: session.organizationName,
+      hadPassword,
+    });
+    redirect(welcomeQuery(`/farmers/${farmer.id}`, welcome));
   }
 
   redirect(`/farmers/${farmer.id}`);
@@ -289,23 +356,30 @@ export async function createTechnicianAction(formData: FormData) {
   const password = formString(formData, "password");
   const phone = formString(formData, "phone");
   const revealVehicleNumber = formString(formData, "revealVehicleNumber");
-  if (!name || !email || password.length < 8) {
-    return { error: "Name, email, and an 8+ character password are required." };
-  }
+  if (!name || !email) return { error: "Name and email are required." };
+  if (password && password.length < 8) return { error: "Password must be at least 8 characters, or leave it blank." };
 
-  await prisma.user.create({
+  const { hash, hadPassword } = await hashNewUserPassword(password);
+  const user = await prisma.user.create({
     data: {
       organizationId: session.organizationId,
       name,
       email,
       role: ROLES.TECHNICIAN,
-      passwordHash: await bcrypt.hash(password, 10),
+      passwordHash: hash,
       phone: phone || null,
       revealVehicleNumber: revealVehicleNumber || null,
       storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
     },
   });
-  redirect("/technicians");
+  const welcome = await sendWelcomeLoginEmail({
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    organizationName: session.organizationName,
+    hadPassword,
+  });
+  redirect(welcomeQuery("/technicians", welcome));
 }
 
 export async function createStaffAction(formData: FormData) {
@@ -318,26 +392,33 @@ export async function createStaffAction(formData: FormData) {
   const phone = formString(formData, "phone");
   const revealVehicleNumber = formString(formData, "revealVehicleNumber");
   const role = formString(formData, "role");
-  if (!name || !email || password.length < 8) {
-    return { error: "Name, email, and an 8+ character password are required." };
-  }
+  if (!name || !email) return { error: "Name and email are required." };
+  if (password && password.length < 8) return { error: "Password must be at least 8 characters, or leave it blank." };
   if (!canEditStaffMember(session.role, role)) {
     return { error: "You cannot add staff with that role." };
   }
 
-  await prisma.user.create({
+  const { hash, hadPassword } = await hashNewUserPassword(password);
+  const user = await prisma.user.create({
     data: {
       organizationId: session.organizationId,
       name,
       email,
       role,
-      passwordHash: await bcrypt.hash(password, 10),
+      passwordHash: hash,
       phone: phone || null,
       revealVehicleNumber: role === ROLES.TECHNICIAN ? revealVehicleNumber || null : null,
       storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
     },
   });
-  redirect("/staff");
+  const welcome = await sendWelcomeLoginEmail({
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    organizationName: session.organizationName,
+    hadPassword,
+  });
+  redirect(welcomeQuery("/staff", welcome));
 }
 
 export async function importStaffAction(formData: FormData) {
@@ -402,20 +483,24 @@ export async function importStaffAction(formData: FormData) {
       continue;
     }
     const password = row.password && row.password.length >= 8 ? row.password : defaultPassword;
-    if (!password || password.length < 8) {
-      skipped += 1;
-      continue;
-    }
-    await prisma.user.create({
+    const { hash, hadPassword } = await hashNewUserPassword(password);
+    const user = await prisma.user.create({
       data: {
         organizationId: session.organizationId,
         name: row.name,
         email: row.email,
         role: row.role,
-        passwordHash: await bcrypt.hash(password, 10),
+        passwordHash: hash,
         phone: row.phone,
         revealVehicleNumber: row.role === ROLES.TECHNICIAN ? row.revealVehicleNumber : null,
       },
+    });
+    await sendWelcomeLoginEmail({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      organizationName: session.organizationName,
+      hadPassword,
     });
     if (row.role === ROLES.ADMIN) remainingAdmins += 1;
     created += 1;
@@ -434,22 +519,29 @@ export async function createManagerAction(formData: FormData) {
   const email = formString(formData, "email").toLowerCase();
   const password = formString(formData, "password");
   const phone = formString(formData, "phone");
-  if (!name || !email || password.length < 8) {
-    return { error: "Name, email, and an 8+ character password are required." };
-  }
+  if (!name || !email) return { error: "Name and email are required." };
+  if (password && password.length < 8) return { error: "Password must be at least 8 characters, or leave it blank." };
 
-  await prisma.user.create({
+  const { hash, hadPassword } = await hashNewUserPassword(password);
+  const user = await prisma.user.create({
     data: {
       organizationId: session.organizationId,
       name,
       email,
       role: ROLES.MANAGER,
-      passwordHash: await bcrypt.hash(password, 10),
+      passwordHash: hash,
       phone: phone || null,
       storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
     },
   });
-  redirect("/managers");
+  const welcome = await sendWelcomeLoginEmail({
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    organizationName: session.organizationName,
+    hadPassword,
+  });
+  redirect(welcomeQuery("/managers", welcome));
 }
 
 export async function deleteFarmerAction(formData: FormData) {

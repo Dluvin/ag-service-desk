@@ -41,11 +41,19 @@ export default async function LoginPage() {
             Sign in
           </button>
         </ActionForm>
+        <p className="mt-3 text-sm">
+          <Link href="/forgot" className="font-medium text-emerald-800 hover:underline">
+            Forgot password?
+          </Link>
+        </p>
         <p className="mt-4 text-sm text-stone-600">
           New company?{" "}
           <Link href="/signup" className="font-medium text-emerald-800 hover:underline">
             Create an account
           </Link>
+        </p>
+        <p className="mt-2 text-sm text-stone-600">
+          Invited and need a password? Use the link in your welcome email, or reset from this screen.
         </p>
         {showDemo ? (
           <div className="mt-6 rounded-lg bg-stone-50 p-3 text-xs text-stone-600">

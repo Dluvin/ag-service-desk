@@ -10,11 +10,12 @@ import { DeleteButton } from "@/components/DeleteButton";
 import { StaffImportForm } from "@/components/StaffImportForm";
 import { StoreSelect } from "@/components/StoreSelect";
 import { StaffEditForm } from "@/components/StaffEditForm";
+import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 
 export default async function StaffPage({
   searchParams,
 }: {
-  searchParams: Promise<{ imported?: string; updated?: string; skipped?: string }>;
+  searchParams: Promise<{ imported?: string; updated?: string; skipped?: string; welcome?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -55,6 +56,7 @@ export default async function StaffPage({
             : "Add and edit managers and technicians. Assign a default store so new tickets they open start at that shop."}{" "}
           Farm logins stay on the Farms page.
         </p>
+        <WelcomeMailNotice status={query.welcome} />
         {query.imported || query.updated || query.skipped ? (
           <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
             Import finished: {query.imported ?? "0"} added, {query.updated ?? "0"} updated
@@ -133,7 +135,11 @@ export default async function StaffPage({
           </label>
           <label className="block text-sm font-medium">
             Password
-            <input name="password" type="password" minLength={8} required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <input name="password" type="password" minLength={8} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <span className="mt-1 block text-xs font-normal text-stone-500">
+              Optional. Leave blank to let them choose one from the welcome email. If you set one, the
+              email will ask them to change it.
+            </span>
           </label>
           <label className="block text-sm font-medium">
             Mobile for SMS
