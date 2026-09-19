@@ -39,12 +39,20 @@ function FitPins({ pins }: { pins: MapPin[] }) {
   return null;
 }
 
-export default function AllTicketsMapCanvas({ pins }: { pins: MapPin[] }) {
+export default function AllTicketsMapCanvas({
+  pins,
+  selectedId,
+  heightClass = "h-[28rem]",
+}: {
+  pins: MapPin[];
+  selectedId?: string;
+  heightClass?: string;
+}) {
   const spread = spreadPins(pins);
   const center: [number, number] = spread[0] ? [spread[0].lat, spread[0].lng] : [41.0, -98.0];
 
   return (
-    <MapContainer center={center} zoom={7} className="h-[28rem] w-full" scrollWheelZoom>
+    <MapContainer center={center} zoom={7} className={`${heightClass} w-full`} scrollWheelZoom>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -52,15 +60,16 @@ export default function AllTicketsMapCanvas({ pins }: { pins: MapPin[] }) {
       <FitPins pins={spread} />
       {spread.map((pin) => {
         const vehicle = pin.kind === "vehicle";
+        const selected = selectedId === pin.id;
         return (
         <CircleMarker
           key={pin.id}
           center={[pin.lat, pin.lng]}
-          radius={vehicle ? 10 : 11}
+          radius={vehicle ? 8 : selected ? 13 : 11}
           pathOptions={
             vehicle
-              ? { color: "#9a3412", fillColor: "#f59e0b", fillOpacity: 0.95, weight: 2 }
-              : { color: "#064e3b", fillColor: "#059669", fillOpacity: 0.95, weight: 2 }
+              ? { color: "#7f1d1d", fillColor: "#dc2626", fillOpacity: 0.95, weight: selected ? 3 : 2 }
+              : { color: "#064e3b", fillColor: "#059669", fillOpacity: 0.95, weight: selected ? 3 : 2 }
           }
         >
           <Popup>
@@ -68,7 +77,7 @@ export default function AllTicketsMapCanvas({ pins }: { pins: MapPin[] }) {
               <p className="font-semibold text-stone-900">{pin.name}</p>
               {pin.subtitle ? <p className="mt-0.5 text-xs text-stone-600">{pin.subtitle}</p> : null}
               <p className="mt-1 text-xs text-stone-500">
-                {vehicle ? "Reveal vehicle · " : ""}
+                {vehicle ? "Assigned Verizon truck · " : ""}
                 {pin.lat.toFixed(5)}, {pin.lng.toFixed(5)}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">

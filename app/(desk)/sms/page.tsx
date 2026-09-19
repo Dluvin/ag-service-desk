@@ -19,8 +19,9 @@ export default async function SmsSettingsPage() {
       <h1 className="font-display text-3xl">Bird SMS</h1>
       <p className="mt-2 text-stone-600">
         When a ticket is opened, assigned, or changed, Bird texts the assigned technician and every
-        farm contact that has a phone number. A farm-opened ticket with no technician yet texts all
-        technicians. Numbers come from farm contacts and each technician&apos;s phone field.
+        farm contact that has a phone number. Each message includes a link to that ticket. A
+        farm-opened ticket with no technician yet texts all technicians. Numbers come from farm
+        contacts and each technician&apos;s phone field.
       </p>
       <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-stone-600">
         <li>In Bird, enable the US (and any other countries you serve) under SMS Destinations.</li>

@@ -1,10 +1,21 @@
 import { prisma } from "./prisma";
 import { ROLES, STATUS_LABELS, type TicketStatus } from "./roles";
 import { isPlaceholderUsNumber, sendBirdSms, toE164 } from "./bird";
+import { appBaseUrl } from "./app-url";
 
 function clip(text: string, max = 140) {
   const compact = text.replace(/\s+/g, " ").trim();
   return compact.length <= max ? compact : `${compact.slice(0, max - 1)}…`;
+}
+
+function ticketLink(ticketId: string) {
+  const base = appBaseUrl();
+  return base ? `${base}/tickets/${ticketId}` : "";
+}
+
+function withTicketLink(body: string, ticketId: string) {
+  const url = ticketLink(ticketId);
+  return url ? `${body} ${url}` : body;
 }
 
 export async function notifyTicketSms(input: {
@@ -28,12 +39,14 @@ export async function notifyTicketSms(input: {
   if (!ticket) return;
 
   const statusLabel = STATUS_LABELS[ticket.status as TicketStatus] ?? ticket.status;
-  const body =
+  const body = withTicketLink(
     input.kind === "assigned"
       ? `${org.name}: Ticket #${ticket.number} ${ticket.title} assigned to ${ticket.technician?.name ?? "a technician"}. Farm: ${ticket.farmer.name}. Pivot: ${ticket.pivot.name}.`
       : input.kind === "opened"
         ? `${org.name}: New ticket #${ticket.number} ${ticket.title} from ${ticket.farmer.name} (${ticket.pivot.name}). ${clip(input.note || "")}`
-        : `${org.name}: Ticket #${ticket.number} ${ticket.title} updated (${statusLabel}). ${clip(input.note || "")} Farm: ${ticket.farmer.name}.`;
+        : `${org.name}: Ticket #${ticket.number} ${ticket.title} updated (${statusLabel}). ${clip(input.note || "")} Farm: ${ticket.farmer.name}.`,
+    ticket.id,
+  );
 
   const recipients = new Map<string, string>();
   const addPhone = (raw: string | null | undefined) => {

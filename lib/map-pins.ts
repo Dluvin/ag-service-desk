@@ -7,7 +7,7 @@ export type MapPin = {
   lng: number;
   subtitle?: string;
   href?: string;
-  kind?: "ticket" | "vehicle";
+  kind?: "ticket" | "vehicle" | "place";
 };
 
 export { OPEN_TICKET_STATUSES };

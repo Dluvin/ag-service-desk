@@ -29,7 +29,12 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
         .map((tech) => [tech.revealVehicleNumber as string, tech]),
     );
 
-    const locations = await fetchRevealLocations(organizationId);
+    const assignedNumbers = [...byVehicle.keys()];
+    if (assignedNumbers.length === 0) {
+      return { configured: true, pins: [], error: null };
+    }
+
+    const locations = await fetchRevealLocations(organizationId, assignedNumbers);
     await syncOnsiteVisits({
       organizationId,
       radiusMeters: org?.revealOnsiteMeters ?? 400,
@@ -43,22 +48,25 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
 
     return {
       configured: true,
-      pins: locations.map((location) => {
-        const tech = byVehicle.get(location.vehicleNumber);
-        const bits = [
-          tech ? tech.name : `Vehicle ${location.vehicleNumber}`,
-          location.displayState,
-          location.address,
-        ].filter(Boolean);
-        return {
-          id: `vehicle-${location.vehicleNumber}`,
-          kind: "vehicle" as const,
-          name: tech?.name ?? location.name ?? location.vehicleNumber,
-          lat: location.lat,
-          lng: location.lng,
-          subtitle: bits.join(" · "),
-        };
-      }),
+      pins: locations
+        .filter((location) => byVehicle.has(location.vehicleNumber))
+        .map((location) => {
+          const tech = byVehicle.get(location.vehicleNumber);
+          const bits = [
+            tech?.name,
+            location.vehicleNumber,
+            location.displayState,
+            location.address,
+          ].filter(Boolean);
+          return {
+            id: `vehicle-${location.vehicleNumber}`,
+            kind: "vehicle" as const,
+            name: tech?.name ?? location.name ?? location.vehicleNumber,
+            lat: location.lat,
+            lng: location.lng,
+            subtitle: bits.join(" · "),
+          };
+        }),
       error: null,
     };
   } catch (error) {
