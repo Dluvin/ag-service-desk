@@ -57,6 +57,10 @@ function asList(value: unknown): Record<string, unknown>[] {
     "locations",
     "VehicleLocations",
     "vehicleLocations",
+    "Places",
+    "places",
+    "Geofences",
+    "geofences",
     "_embedded",
     "d",
   ]) {
@@ -107,9 +111,10 @@ function deepPickNumber(record: Record<string, unknown>, keys: string[], depth =
 
 function flattenRevealItem(record: Record<string, unknown>): Record<string, unknown> {
   const vehicle = asRecord(record.Vehicle) ?? asRecord(record.vehicle);
+  const place = asRecord(record.Place) ?? asRecord(record.place);
   const content = asRecord(record.ContentResource) ?? asRecord(record.contentResource);
   const value = content ? asRecord(content.Value) ?? asRecord(content.value) : null;
-  return { ...record, ...vehicle, ...content, ...value };
+  return { ...record, ...vehicle, ...place, ...content, ...value };
 }
 
 function formatRevealAddress(record: Record<string, unknown>) {
@@ -693,6 +698,160 @@ export async function fetchRevealLocationReport(
     requested: jobs.length,
     withoutVehicleNumber: withoutGpsId.map((job) => job.name || job.number),
   };
+}
+
+export type RevealPlace = {
+  placeId: string;
+  name: string;
+  category: string;
+  address: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  country: string;
+  lat: string;
+  lng: string;
+  shape: string;
+  phone: string;
+  note: string;
+};
+
+function parseRevealPlace(item: Record<string, unknown>): RevealPlace | null {
+  const row = flattenRevealItem(item);
+  const name = pickString(row, ["GeoFenceName", "geofenceName", "Name", "name", "PlaceName"]);
+  const placeId = pickString(row, ["PlaceId", "placeId", "PlaceID", "Id", "id"]);
+  const lat = deepPickNumber(row, ["Latitude", "latitude", "Lat", "lat"]);
+  const lng = deepPickNumber(row, ["Longitude", "longitude", "Lng", "lng", "Lon", "lon"]);
+  if (!name && !placeId && lat == null && lng == null) return null;
+  const address = asRecord(row.Address) ?? asRecord(row.address);
+  return {
+    placeId,
+    name,
+    category: pickString(row, ["CategoryName", "categoryName", "Category"]),
+    address:
+      pickString(row, ["AddressLine1", "addressLine1"]) ||
+      (address ? pickString(address, ["AddressLine1", "addressLine1"]) : "") ||
+      formatRevealAddress(row),
+    city:
+      pickString(row, ["Locality", "locality", "City", "city"]) ||
+      (address ? pickString(address, ["Locality", "locality", "City"]) : ""),
+    region:
+      pickString(row, ["AdministrativeArea", "administrativeArea", "Region"]) ||
+      (address ? pickString(address, ["AdministrativeArea", "administrativeArea"]) : ""),
+    postalCode:
+      pickString(row, ["PostalCode", "postalCode"]) ||
+      (address ? pickString(address, ["PostalCode", "postalCode"]) : ""),
+    country: pickString(row, ["Country", "country"]) || (address ? pickString(address, ["Country"]) : ""),
+    lat: lat == null ? "" : String(lat),
+    lng: lng == null ? "" : String(lng),
+    shape: pickString(row, ["GeoShapeType", "geoShapeType", "Shape"]),
+    phone: pickString(row, ["PhoneNumber", "phoneNumber", "Phone"]),
+    note: pickString(row, ["Note", "note", "Notes"]),
+  };
+}
+
+function placesFromPayload(json: unknown) {
+  return asList(json)
+    .map(parseRevealPlace)
+    .filter((place): place is RevealPlace => Boolean(place));
+}
+
+export async function listRevealPlaces(organizationId: string): Promise<RevealPlace[]> {
+  const creds = await loadRevealCreds(organizationId);
+  if (!creds) throw new Error("Verizon Connect Reveal is not configured.");
+
+  const found = new Map<string, RevealPlace>();
+  const add = (places: RevealPlace[]) => {
+    for (const place of places) {
+      const key = locationKey(place.placeId || `${place.name}|${place.lat}|${place.lng}`);
+      if (!key || found.has(key)) continue;
+      found.set(key, place);
+    }
+  };
+
+  const tryPath = async (path: string) => {
+    try {
+      add(placesFromPayload(await revealFetch(creds, path)));
+    } catch {
+      // Category/group filters are required on some Verizon accounts.
+    }
+  };
+
+  await tryPath("/geo/v1/geofences");
+
+  try {
+    const groups = asList(await revealFetch(creds, "/cmd/v1/groups"));
+    for (const group of groups) {
+      const groupId = pickString(flattenRevealItem(group), ["GroupId", "groupId", "Id", "id", "GroupNumber"]);
+      if (groupId) await tryPath(`/geo/v1/geofences?groupId=${encodeURIComponent(groupId)}`);
+    }
+  } catch {
+    // Groups are optional.
+  }
+
+  const categories = [...new Set([...found.values()].map((place) => place.category).filter(Boolean))];
+  for (const category of categories) {
+    await tryPath(`/geo/v1/geofences?categoryName=${encodeURIComponent(category)}`);
+  }
+  for (const path of ["/geo/v1/categories", "/geo/v1/geofences/categories"] as const) {
+    try {
+      const json = await revealFetch(creds, path);
+      for (const row of asList(json)) {
+        const name = pickString(flattenRevealItem(row), ["CategoryName", "categoryName", "Name", "name"]);
+        if (name) await tryPath(`/geo/v1/geofences?categoryName=${encodeURIComponent(name)}`);
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return [...found.values()].sort((a, b) => a.name.localeCompare(b.name) || a.placeId.localeCompare(b.placeId));
+}
+
+export function revealPlacesToCsv(places: RevealPlace[]) {
+  const header = [
+    "PlaceId",
+    "Name",
+    "Category",
+    "Address",
+    "City",
+    "State",
+    "PostalCode",
+    "Country",
+    "Latitude",
+    "Longitude",
+    "Shape",
+    "Phone",
+    "Note",
+  ];
+  const cell = (value: string) => {
+    const text = value.replaceAll("\r\n", " ").replaceAll("\n", " ");
+    if (/[",]/.test(text)) return `"${text.replaceAll('"', '""')}"`;
+    return text;
+  };
+  const lines = [
+    header.join(","),
+    ...places.map((place) =>
+      [
+        place.placeId,
+        place.name,
+        place.category,
+        place.address,
+        place.city,
+        place.region,
+        place.postalCode,
+        place.country,
+        place.lat,
+        place.lng,
+        place.shape,
+        place.phone,
+        place.note,
+      ]
+        .map(cell)
+        .join(","),
+    ),
+  ];
+  return `\uFEFF${lines.join("\r\n")}\r\n`;
 }
 
 export function clearRevealTokenCache() {

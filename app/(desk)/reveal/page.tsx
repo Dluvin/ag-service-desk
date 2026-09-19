@@ -99,6 +99,21 @@ export default async function RevealSettingsPage() {
         </button>
       </ActionForm>
 
+      {configured ? (
+        <p className="mt-4 text-sm">
+          <a
+            href="/api/reveal/places.csv"
+            className="font-semibold text-emerald-800 hover:underline"
+          >
+            Download Places (Excel)
+          </a>
+          <span className="mt-1 block text-xs font-normal text-stone-500">
+            CSV of Reveal geofences from the Geofence API. Open it in Excel. Needs Geofence API
+            access on this integration user.
+          </span>
+        </p>
+      ) : null}
+
       {configured ? <RevealTestForm /> : null}
 
       {vehicles.length > 0 ? (
