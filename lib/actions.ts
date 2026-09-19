@@ -47,6 +47,13 @@ function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
+function uniqueEmailError(error: unknown) {
+  if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+    return "That email is already used in this company.";
+  }
+  return null;
+}
+
 function createFarmWithContact(
   organizationId: string,
   input: {
@@ -361,25 +368,35 @@ export async function createTechnicianAction(formData: FormData) {
   if (password && password.length < 8) return { error: "Password must be at least 8 characters, or leave it blank." };
 
   const { hash, hadPassword } = await hashNewUserPassword(password);
-  const user = await prisma.user.create({
-    data: {
-      organizationId: session.organizationId,
-      name,
-      email,
-      role: ROLES.TECHNICIAN,
-      passwordHash: hash,
-      phone: phone || null,
-      revealVehicleNumber: revealVehicleNumber || null,
-      storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
-    },
-  });
-  const welcome = await sendWelcomeLoginEmail({
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    organizationName: session.organizationName,
-    hadPassword,
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        organizationId: session.organizationId,
+        name,
+        email,
+        role: ROLES.TECHNICIAN,
+        passwordHash: hash,
+        phone: phone || null,
+        revealVehicleNumber: revealVehicleNumber || null,
+        storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
+      },
+    });
+  } catch (error) {
+    return { error: uniqueEmailError(error) ?? "Could not save that technician. Try a different email." };
+  }
+  let welcome: "sent" | "skipped" | "failed" = "skipped";
+  try {
+    welcome = await sendWelcomeLoginEmail({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      organizationName: session.organizationName,
+      hadPassword,
+    });
+  } catch {
+    welcome = "failed";
+  }
   redirect(welcomeQuery("/technicians", welcome));
 }
 
@@ -400,25 +417,35 @@ export async function createStaffAction(formData: FormData) {
   }
 
   const { hash, hadPassword } = await hashNewUserPassword(password);
-  const user = await prisma.user.create({
-    data: {
-      organizationId: session.organizationId,
-      name,
-      email,
-      role,
-      passwordHash: hash,
-      phone: phone || null,
-      revealVehicleNumber: role === ROLES.TECHNICIAN ? revealVehicleNumber || null : null,
-      storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
-    },
-  });
-  const welcome = await sendWelcomeLoginEmail({
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    organizationName: session.organizationName,
-    hadPassword,
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        organizationId: session.organizationId,
+        name,
+        email,
+        role,
+        passwordHash: hash,
+        phone: phone || null,
+        revealVehicleNumber: role === ROLES.TECHNICIAN ? revealVehicleNumber || null : null,
+        storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
+      },
+    });
+  } catch (error) {
+    return { error: uniqueEmailError(error) ?? "Could not save that staff login. Try a different email." };
+  }
+  let welcome: "sent" | "skipped" | "failed" = "skipped";
+  try {
+    welcome = await sendWelcomeLoginEmail({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      organizationName: session.organizationName,
+      hadPassword,
+    });
+  } catch {
+    welcome = "failed";
+  }
   redirect(welcomeQuery("/staff", welcome));
 }
 
@@ -524,24 +551,34 @@ export async function createManagerAction(formData: FormData) {
   if (password && password.length < 8) return { error: "Password must be at least 8 characters, or leave it blank." };
 
   const { hash, hadPassword } = await hashNewUserPassword(password);
-  const user = await prisma.user.create({
-    data: {
-      organizationId: session.organizationId,
-      name,
-      email,
-      role: ROLES.MANAGER,
-      passwordHash: hash,
-      phone: phone || null,
-      storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
-    },
-  });
-  const welcome = await sendWelcomeLoginEmail({
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    organizationName: session.organizationName,
-    hadPassword,
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        organizationId: session.organizationId,
+        name,
+        email,
+        role: ROLES.MANAGER,
+        passwordHash: hash,
+        phone: phone || null,
+        storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
+      },
+    });
+  } catch (error) {
+    return { error: uniqueEmailError(error) ?? "Could not save that manager. Try a different email." };
+  }
+  let welcome: "sent" | "skipped" | "failed" = "skipped";
+  try {
+    welcome = await sendWelcomeLoginEmail({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      organizationName: session.organizationName,
+      hadPassword,
+    });
+  } catch {
+    welcome = "failed";
+  }
   redirect(welcomeQuery("/managers", welcome));
 }
 

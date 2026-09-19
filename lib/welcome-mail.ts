@@ -83,7 +83,13 @@ async function sendPasswordLinkEmail(input: {
 }): Promise<WelcomeMailStatus> {
   if (!mailIsConfigured()) return "skipped";
 
-  const token = await issuePasswordToken(input.userId, input.days);
+  let token = "";
+  try {
+    token = await issuePasswordToken(input.userId, input.days);
+  } catch (error) {
+    console.error("Password reset token failed", error);
+    return "failed";
+  }
   const base = appBaseUrl();
   const setUrl = base ? `${base}/welcome?token=${token}` : "";
   const loginUrl = base ? `${base}/login` : "";

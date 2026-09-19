@@ -29,8 +29,8 @@ export function VehicleSelect({
         }
       >
         <option value="">Not mapped</option>
-        {options.map((vehicle) => (
-          <option key={vehicle.number} value={vehicle.number}>
+        {options.map((vehicle, index) => (
+          <option key={`${vehicle.number}-${index}`} value={vehicle.number}>
             {vehicle.name} ({vehicle.number})
           </option>
         ))}

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ROLES, canAddTechnicians, isAdmin } from "@/lib/roles";
 import { syncRevealVehiclesAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
-import { fetchRevealLocations, loadRevealCreds, type RevealLocation } from "@/lib/reveal";
+import { fetchRevealLocationReport, loadRevealCreds, type RevealLocation } from "@/lib/reveal";
 
 function formatLocationTime(value?: string) {
   if (!value) return "";
@@ -44,13 +44,20 @@ export default async function VehiclesPage({
 
   let locationsByNumber = new Map<string, RevealLocation>();
   let locationError: string | null = null;
+  let gpsFound = 0;
   if (configured && vehicles.length > 0) {
     try {
-      const locations = await fetchRevealLocations(
+      const report = await fetchRevealLocationReport(
         session.organizationId,
         vehicles.map((vehicle) => vehicle.number),
       );
-      locationsByNumber = new Map(locations.map((location) => [location.vehicleNumber, location]));
+      gpsFound = report.locations.length;
+      locationsByNumber = new Map(
+        report.locations.map((location) => [location.vehicleNumber.trim().toLowerCase(), location]),
+      );
+      if (report.locations.length < vehicles.length && report.errors.length > 0) {
+        locationError = `GPS for ${report.locations.length} of ${vehicles.length} trucks. ${report.errors[0]}`;
+      }
     } catch (error) {
       locationError = error instanceof Error ? error.message : "Could not load current locations.";
     }
@@ -78,6 +85,12 @@ export default async function VehiclesPage({
         </p>
       ) : null}
 
+      {configured && vehicles.length > 0 ? (
+        <p className="mt-3 text-sm text-stone-600">
+          GPS loaded for {gpsFound} of {vehicles.length} trucks.
+        </p>
+      ) : null}
+
       {isAdmin(session.role) ? (
         <ActionForm action={syncRevealVehiclesAction} className="mt-6">
           <button
@@ -99,7 +112,7 @@ export default async function VehiclesPage({
           </li>
         ) : (
           vehicles.map((vehicle) => {
-            const location = locationsByNumber.get(vehicle.number);
+            const location = locationsByNumber.get(vehicle.number.trim().toLowerCase());
             const when = formatLocationTime(location?.updatedAt);
             return (
               <li key={vehicle.id} className={`px-4 py-3 text-sm ${vehicle.active ? "" : "text-stone-400"}`}>

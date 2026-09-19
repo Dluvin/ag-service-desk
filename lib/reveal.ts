@@ -134,9 +134,9 @@ function locationFromRecord(record: Record<string, unknown>, fallbackNumber = ""
   const lng = deepPickNumber(item, ["Longitude", "longitude", "Lng", "lng", "Lon", "lon"]);
   if (lat == null || lng == null) return null;
   const vehicleNumber =
+    fallbackNumber ||
     pickString(item, ["VehicleNumber", "vehicleNumber"]) ||
-    pickString(item, ["Number", "number"]) ||
-    fallbackNumber;
+    pickString(item, ["Number", "number"]);
   if (!vehicleNumber) return null;
   return {
     vehicleNumber,
@@ -278,11 +278,16 @@ export async function listRevealVehicles(organizationId: string): Promise<Reveal
 }
 
 export async function storedRevealVehicles(organizationId: string): Promise<RevealVehicleInfo[]> {
-  return prisma.revealVehicle.findMany({
-    where: { organizationId, active: true },
-    orderBy: { name: "asc" },
-    select: { number: true, name: true },
-  });
+  try {
+    return await prisma.revealVehicle.findMany({
+      where: { organizationId, active: true },
+      orderBy: { name: "asc" },
+      select: { number: true, name: true },
+    });
+  } catch (error) {
+    console.error("storedRevealVehicles failed", error);
+    return [];
+  }
 }
 
 export async function syncRevealVehicles(organizationId: string): Promise<RevealVehicleInfo[]> {
@@ -317,19 +322,41 @@ function locationKey(value: string) {
   return value.trim().toLowerCase();
 }
 
-async function fetchOneLocation(creds: RevealCreds, number: string): Promise<RevealLocation | null> {
-  try {
-    const json = await revealFetch(creds, `/rad/v1/vehicles/${encodeURIComponent(number)}/location`);
-    return locationsFromPayload(json, [number])[0] ?? null;
-  } catch {
-    return null;
+async function fetchOneLocation(
+  creds: RevealCreds,
+  number: string,
+): Promise<{ location: RevealLocation | null; error: string | null }> {
+  const paths: { path: string; init?: RequestInit }[] = [
+    { path: "/rad/v1/vehicles/locations", init: { method: "POST", body: JSON.stringify([number]) } },
+    { path: `/rad/v1/vehicles/${encodeURIComponent(number)}/location` },
+    { path: `/rad/v1/vehicles/${encodeURIComponent(number)}/status` },
+  ];
+  let lastError = `${number}: no GPS in Verizon response`;
+  for (const attempt of paths) {
+    try {
+      const json = await revealFetch(creds, attempt.path, attempt.init);
+      const parsed = locationsFromPayload(json, [number])[0];
+      if (parsed) {
+        return { location: { ...parsed, vehicleNumber: number }, error: null };
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : lastError;
+    }
   }
+  return { location: null, error: lastError };
 }
 
 export async function fetchRevealLocations(
   organizationId: string,
   vehicleNumbers?: string[],
 ): Promise<RevealLocation[]> {
+  return (await fetchRevealLocationReport(organizationId, vehicleNumbers)).locations;
+}
+
+export async function fetchRevealLocationReport(
+  organizationId: string,
+  vehicleNumbers?: string[],
+): Promise<{ locations: RevealLocation[]; errors: string[]; requested: number }> {
   const creds = await loadRevealCreds(organizationId);
   if (!creds) throw new Error("Verizon Connect Reveal is not configured.");
 
@@ -351,39 +378,31 @@ export async function fetchRevealLocations(
       }
     }
   }
-  if (numbers.length === 0) return [];
+  if (numbers.length === 0) return { locations: [], errors: [], requested: 0 };
 
   const byNumber = new Map<string, RevealLocation>();
-  const addLocation = (location: RevealLocation, requested?: string) => {
-    byNumber.set(locationKey(location.vehicleNumber), location);
-    if (requested) byNumber.set(locationKey(requested), location);
-  };
+  const errors: string[] = [];
 
-  for (let i = 0; i < numbers.length; i += 100) {
-    const chunk = numbers.slice(i, i + 100);
-    try {
-      const json = await revealFetch(creds, "/rad/v1/vehicles/locations", {
-        method: "POST",
-        body: JSON.stringify(chunk),
-      });
-      locationsFromPayload(json, chunk).forEach((location, index) => addLocation(location, chunk[index]));
-    } catch {
-      // Per-vehicle GET fills gaps below.
-    }
-  }
-
-  const missing = numbers.filter((number) => !byNumber.has(locationKey(number)));
-  for (let i = 0; i < missing.length; i += 6) {
-    const chunk = missing.slice(i, i + 6);
+  for (let i = 0; i < numbers.length; i += 4) {
+    const chunk = numbers.slice(i, i + 4);
     const got = await Promise.all(chunk.map((number) => fetchOneLocation(creds, number)));
-    got.forEach((location, index) => {
-      if (location) addLocation(location, chunk[index]);
+    got.forEach((result, index) => {
+      const number = chunk[index];
+      if (result.location) {
+        byNumber.set(locationKey(number), result.location);
+      } else if (result.error && errors.length < 4) {
+        errors.push(result.error.slice(0, 220));
+      }
     });
   }
 
-  return numbers
-    .map((number) => byNumber.get(locationKey(number)))
-    .filter((location): location is RevealLocation => Boolean(location));
+  return {
+    locations: numbers
+      .map((number) => byNumber.get(locationKey(number)))
+      .filter((location): location is RevealLocation => Boolean(location)),
+    errors,
+    requested: numbers.length,
+  };
 }
 
 export function clearRevealTokenCache() {
