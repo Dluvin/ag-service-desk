@@ -25,7 +25,15 @@ export function AllTicketsMap({
 }) {
   const fetched = useRevealVehiclePins(vehiclePins === undefined);
   const trucks = vehiclePins ?? fetched.vehicles;
-  const ticketPins = pins.map((pin) => ({ ...pin, kind: pin.kind ?? ("ticket" as const) }));
+  const onSiteTickets = new Set(
+    trucks.map((truck) => truck.onSiteTicketId).filter((id): id is string => Boolean(id)),
+  );
+  const onSiteCount = trucks.filter((truck) => truck.onSite).length;
+  const ticketPins = pins.map((pin) => ({
+    ...pin,
+    kind: pin.kind ?? ("ticket" as const),
+    onSite: pin.onSite || onSiteTickets.has(pin.id),
+  }));
   const all = [...ticketPins, ...trucks];
 
   if (all.length === 0) {
@@ -63,7 +71,8 @@ export function AllTicketsMap({
           {ticketPins.length} open ticket{ticketPins.length === 1 ? "" : "s"}
           {trucks.length > 0
             ? ` · ${trucks.length} assigned truck${trucks.length === 1 ? "" : "s"}`
-            : ""}{" "}
+            : ""}
+          {onSiteCount > 0 ? ` · ${onSiteCount} on site` : ""}{" "}
           on the map
         </p>
         <a
@@ -76,7 +85,8 @@ export function AllTicketsMap({
         </a>
       </div>
       <p className="border-b border-stone-200 px-4 py-2 text-xs text-stone-500">
-        Green = ticket at the pivot. Red = assigned Verizon truck. Truck pins refresh every 45 seconds.
+        Green = ticket at the pivot. Red = assigned Verizon truck. Flashing On-site means GPS is
+        inside the pivot radius and time is being recorded. Truck pins refresh every 45 seconds.
       </p>
       <Canvas pins={all} />
     </div>

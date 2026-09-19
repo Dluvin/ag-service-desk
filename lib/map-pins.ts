@@ -8,6 +8,9 @@ export type MapPin = {
   subtitle?: string;
   href?: string;
   kind?: "ticket" | "vehicle" | "place";
+  onSite?: boolean;
+  onSiteTicketId?: string;
+  onSitePivotId?: string;
 };
 
 export { OPEN_TICKET_STATUSES };

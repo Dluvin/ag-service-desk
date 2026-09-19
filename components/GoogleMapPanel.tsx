@@ -31,9 +31,13 @@ export function GoogleMapPanel({
   onSelect?: (id: string) => void;
 }) {
   const { vehicles } = useRevealVehiclePins();
+  const onSitePivots = new Set(
+    vehicles.map((truck) => truck.onSitePivotId).filter((id): id is string => Boolean(id)),
+  );
   const placePins: MapPin[] = markers.map((marker) => ({
     ...marker,
     kind: "place",
+    onSite: onSitePivots.has(marker.id),
   }));
   const all = [...placePins, ...vehicles];
   const active = markers.find((m) => m.id === selectedId) ?? markers[0];
@@ -69,7 +73,7 @@ export function GoogleMapPanel({
         </a>
       </div>
       <p className="border-b border-stone-200 px-4 py-2 text-xs text-stone-500">
-        Green = pivot. Red = assigned Verizon truck.
+        Green = pivot. Red = assigned Verizon truck. Flashing On-site means GPS time is being recorded.
       </p>
       <Canvas pins={all} selectedId={active?.id} heightClass="h-80" />
       {markers.length > 1 ? (

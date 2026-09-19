@@ -46,16 +46,30 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
       })),
     });
 
+    const openVisits = await prisma.siteVisit.findMany({
+      where: {
+        endedAt: null,
+        ticket: { organizationId },
+      },
+      include: { ticket: { select: { id: true, number: true, pivotId: true } } },
+    });
+    const visitByVehicle = new Map(openVisits.map((visit) => [visit.vehicleNumber, visit]));
+    const now = Date.now();
+
     return {
       configured: true,
       pins: locations
         .filter((location) => byVehicle.has(location.vehicleNumber))
         .map((location) => {
           const tech = byVehicle.get(location.vehicleNumber);
+          const visit = visitByVehicle.get(location.vehicleNumber);
+          const onSiteMinutes = visit
+            ? Math.max(0, Math.round((now - visit.startedAt.getTime()) / 60_000))
+            : 0;
           const bits = [
             tech?.name,
             location.vehicleNumber,
-            location.displayState,
+            visit ? `On-site${onSiteMinutes ? ` ${onSiteMinutes} min` : ""} · ticket #${visit.ticket.number}` : location.displayState,
             location.address,
           ].filter(Boolean);
           return {
@@ -65,6 +79,10 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
             lat: location.lat,
             lng: location.lng,
             subtitle: bits.join(" · "),
+            href: visit ? `/tickets/${visit.ticket.id}` : undefined,
+            onSite: Boolean(visit),
+            onSiteTicketId: visit?.ticket.id,
+            onSitePivotId: visit?.ticket.pivotId,
           };
         }),
       error: null,

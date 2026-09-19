@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import L from "leaflet";
-import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from "react-leaflet";
+import { CircleMarker, MapContainer, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { MapPin } from "@/lib/map-pins";
 
@@ -61,23 +61,29 @@ export default function AllTicketsMapCanvas({
       {spread.map((pin) => {
         const vehicle = pin.kind === "vehicle";
         const selected = selectedId === pin.id;
+        const onSite = Boolean(pin.onSite);
         return (
         <CircleMarker
           key={pin.id}
           center={[pin.lat, pin.lng]}
-          radius={vehicle ? 8 : selected ? 13 : 11}
+          radius={onSite ? 10 : vehicle ? 8 : selected ? 13 : 11}
           pathOptions={
             vehicle
-              ? { color: "#7f1d1d", fillColor: "#dc2626", fillOpacity: 0.95, weight: selected ? 3 : 2 }
-              : { color: "#064e3b", fillColor: "#059669", fillOpacity: 0.95, weight: selected ? 3 : 2 }
+              ? { color: "#7f1d1d", fillColor: onSite ? "#ef4444" : "#dc2626", fillOpacity: 0.95, weight: onSite || selected ? 3 : 2 }
+              : { color: onSite ? "#7f1d1d" : "#064e3b", fillColor: onSite ? "#dc2626" : "#059669", fillOpacity: 0.95, weight: selected || onSite ? 3 : 2 }
           }
         >
+          {onSite ? (
+            <Tooltip permanent direction="top" offset={[0, -12]} className="ag-onsite-label">
+              On-site
+            </Tooltip>
+          ) : null}
           <Popup>
             <div className="min-w-44 text-sm">
               <p className="font-semibold text-stone-900">{pin.name}</p>
               {pin.subtitle ? <p className="mt-0.5 text-xs text-stone-600">{pin.subtitle}</p> : null}
               <p className="mt-1 text-xs text-stone-500">
-                {vehicle ? "Assigned Verizon truck · " : ""}
+                {onSite ? "On-site · time is being recorded · " : vehicle ? "Assigned Verizon truck · " : ""}
                 {pin.lat.toFixed(5)}, {pin.lng.toFixed(5)}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
