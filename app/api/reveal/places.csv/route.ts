@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { isAdmin } from "@/lib/roles";
 import { listRevealPlaces, revealPlacesToCsv } from "@/lib/reveal";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
@@ -13,7 +13,8 @@ export async function GET() {
   }
 
   try {
-    const places = await listRevealPlaces(session.organizationId);
+    const category = new URL(request.url).searchParams.get("category")?.trim() ?? "";
+    const places = await listRevealPlaces(session.organizationId, category ? [category] : []);
     const csv = revealPlacesToCsv(places);
     const stamp = new Date().toISOString().slice(0, 10);
     return new NextResponse(csv, {

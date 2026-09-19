@@ -61,6 +61,10 @@ function asList(value: unknown): Record<string, unknown>[] {
     "places",
     "Geofences",
     "geofences",
+    "ContentResource",
+    "contentResource",
+    "Value",
+    "value",
     "_embedded",
     "d",
   ]) {
@@ -69,6 +73,11 @@ function asList(value: unknown): Record<string, unknown>[] {
       const list = asList(nested);
       if (list.length > 0) return list;
     }
+  }
+  const wrappedPlace = asRecord(record.place) ?? asRecord(record.Place);
+  if (wrappedPlace) {
+    const list = asList(wrappedPlace);
+    if (list.length > 0) return list;
   }
   if (
     pickString(record, ["VehicleNumber", "vehicleNumber", "Name", "name", "VehicleName"]) ||
@@ -716,10 +725,28 @@ export type RevealPlace = {
   note: string;
 };
 
+function collectPlaceRecords(value: unknown, depth = 0): Record<string, unknown>[] {
+  if (depth > 12) return [];
+  if (Array.isArray(value)) return value.flatMap((item) => collectPlaceRecords(item, depth + 1));
+  const record = asRecord(value);
+  if (!record) return [];
+  const item = flattenRevealItem(record);
+  const isPlace = Boolean(
+    pickString(item, ["GeoFenceName", "geofenceName", "PlaceName", "PlaceId", "placeId", "PlaceID"]) ||
+      (pickString(item, ["CategoryName", "categoryName"]) &&
+        pickString(item, ["Name", "name", "GeoFenceName", "geofenceName"])),
+  );
+  const rows = isPlace ? [record] : [];
+  for (const nested of Object.values(record)) {
+    if (nested && typeof nested === "object") rows.push(...collectPlaceRecords(nested, depth + 1));
+  }
+  return rows;
+}
+
 function parseRevealPlace(item: Record<string, unknown>): RevealPlace | null {
   const row = flattenRevealItem(item);
-  const name = pickString(row, ["GeoFenceName", "geofenceName", "Name", "name", "PlaceName"]);
-  const placeId = pickString(row, ["PlaceId", "placeId", "PlaceID", "Id", "id"]);
+  const name = pickString(row, ["GeoFenceName", "geofenceName", "PlaceName", "Name", "name"]);
+  const placeId = pickString(row, ["PlaceId", "placeId", "PlaceID"]);
   const lat = deepPickNumber(row, ["Latitude", "latitude", "Lat", "lat"]);
   const lng = deepPickNumber(row, ["Longitude", "longitude", "Lng", "lng", "Lon", "lon"]);
   if (!name && !placeId && lat == null && lng == null) return null;
@@ -751,16 +778,47 @@ function parseRevealPlace(item: Record<string, unknown>): RevealPlace | null {
 }
 
 function placesFromPayload(json: unknown) {
-  return asList(json)
-    .map(parseRevealPlace)
-    .filter((place): place is RevealPlace => Boolean(place));
+  const rows = collectPlaceRecords(json);
+  const source = rows.length > 0 ? rows : asList(json);
+  const found: RevealPlace[] = [];
+  const seen = new Set<string>();
+  for (const row of source) {
+    const place = parseRevealPlace(row);
+    if (!place) continue;
+    const key = locationKey(place.placeId || `${place.name}|${place.lat}|${place.lng}`);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    found.push(place);
+  }
+  return found;
 }
 
-export async function listRevealPlaces(organizationId: string): Promise<RevealPlace[]> {
+function nextRevealPath(json: unknown, baseUrl: string) {
+  const record = asRecord(json);
+  const links = asRecord(record?._links) ?? asRecord(record?.links);
+  if (!links) return "";
+  const next = asRecord(links.next) ?? asRecord(links.Next);
+  const href =
+    (next ? pickString(next, ["href", "Href"]) : "") ||
+    (typeof links.next === "string" ? links.next.trim() : "");
+  if (!href) return "";
+  try {
+    const url = new URL(href, `${baseUrl}/`);
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return href.startsWith("/") ? href : "";
+  }
+}
+
+export async function listRevealPlaces(
+  organizationId: string,
+  extraCategories: string[] = [],
+): Promise<RevealPlace[]> {
   const creds = await loadRevealCreds(organizationId);
   if (!creds) throw new Error("Verizon Connect Reveal is not configured.");
 
   const found = new Map<string, RevealPlace>();
+  const errors: string[] = [];
   const add = (places: RevealPlace[]) => {
     for (const place of places) {
       const key = locationKey(place.placeId || `${place.name}|${place.lat}|${place.lng}`);
@@ -769,40 +827,95 @@ export async function listRevealPlaces(organizationId: string): Promise<RevealPl
     }
   };
 
+  const fetchPages = async (path: string) => {
+    let next = path;
+    for (let page = 0; page < 40 && next; page += 1) {
+      const json = await revealFetch(creds, next);
+      add(placesFromPayload(json));
+      const following = nextRevealPath(json, creds.baseUrl);
+      next = following && following !== next ? following : "";
+    }
+  };
+
   const tryPath = async (path: string) => {
     try {
-      add(placesFromPayload(await revealFetch(creds, path)));
-    } catch {
-      // Category/group filters are required on some Verizon accounts.
+      await fetchPages(path);
+      return true;
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+      return false;
     }
   };
 
   await tryPath("/geo/v1/geofences");
-
-  try {
-    const groups = asList(await revealFetch(creds, "/cmd/v1/groups"));
-    for (const group of groups) {
-      const groupId = pickString(flattenRevealItem(group), ["GroupId", "groupId", "Id", "id", "GroupNumber"]);
-      if (groupId) await tryPath(`/geo/v1/geofences?groupId=${encodeURIComponent(groupId)}`);
-    }
-  } catch {
-    // Groups are optional.
+  await tryPath("/geo/v1/geofences/");
+  await tryPath("/geo/v1/geofences?categoryName=");
+  await tryPath("/geo/v1/geofences?groupId=");
+  for (const category of uniqueIds(extraCategories)) {
+    await tryPath(`/geo/v1/geofences?categoryName=${encodeURIComponent(category)}`);
   }
 
-  const categories = [...new Set([...found.values()].map((place) => place.category).filter(Boolean))];
+  const groupIds: string[] = [];
+  const groupNames: string[] = [];
+  for (const path of ["/cmd/v1/groups", "/cmd/v1/vehiclegroups", "/gpm/v1/groups"] as const) {
+    try {
+      for (const group of asList(await revealFetch(creds, path))) {
+        const row = flattenRevealItem(group);
+        const groupId = pickString(row, ["GroupId", "groupId", "Id", "id", "GroupNumber", "groupNumber"]);
+        const groupName = pickString(row, ["GroupName", "groupName", "Name", "name"]);
+        if (groupId) groupIds.push(groupId);
+        if (groupName) groupNames.push(groupName);
+      }
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+  for (const groupId of uniqueIds(groupIds)) {
+    await tryPath(`/geo/v1/geofences?groupId=${encodeURIComponent(groupId)}`);
+  }
+
+  const categories = new Set(
+    [
+      ...[...found.values()].map((place) => place.category),
+      ...groupNames,
+      "Customer",
+      "Customers",
+      "Home",
+      "Office",
+      "Yard",
+      "Shop",
+      "Job Site",
+      "Jobsite",
+      "Unauthorized",
+      "Authorized",
+    ].filter(Boolean),
+  );
+  for (const path of [
+    "/geo/v1/categories",
+    "/geo/v1/geofences/categories",
+    "/cmd/v1/geofencecategories",
+    "/cmd/v1/placecategories",
+  ] as const) {
+    try {
+      for (const row of asList(await revealFetch(creds, path))) {
+        const name = pickString(flattenRevealItem(row), ["CategoryName", "categoryName", "Name", "name"]);
+        if (name) categories.add(name);
+      }
+    } catch {
+      // Category catalog endpoints are not on every account.
+    }
+  }
   for (const category of categories) {
     await tryPath(`/geo/v1/geofences?categoryName=${encodeURIComponent(category)}`);
   }
-  for (const path of ["/geo/v1/categories", "/geo/v1/geofences/categories"] as const) {
-    try {
-      const json = await revealFetch(creds, path);
-      for (const row of asList(json)) {
-        const name = pickString(flattenRevealItem(row), ["CategoryName", "categoryName", "Name", "name"]);
-        if (name) await tryPath(`/geo/v1/geofences?categoryName=${encodeURIComponent(name)}`);
-      }
-    } catch {
-      continue;
-    }
+
+  if (found.size === 0) {
+    const verizon = errors.find((line) => /\/geo\/v1\/geofences/.test(line)) || errors[0];
+    throw new Error(
+      verizon
+        ? `Verizon returned no Places. Geofence GET needs a category (Places tab in Reveal) or group. Last error: ${verizon}`
+        : "Verizon returned no Places. In Reveal, open Places and note a category name, then in Integration Manager Test Client run Geofence API GET /geofences with that categoryName.",
+    );
   }
 
   return [...found.values()].sort((a, b) => a.name.localeCompare(b.name) || a.placeId.localeCompare(b.placeId));

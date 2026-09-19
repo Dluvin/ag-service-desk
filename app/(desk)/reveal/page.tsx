@@ -108,8 +108,10 @@ export default async function RevealSettingsPage() {
             Download Places (Excel)
           </a>
           <span className="mt-1 block text-xs font-normal text-stone-500">
-            CSV of Reveal geofences from the Geofence API. Open it in Excel. Needs Geofence API
-            access on this integration user.
+            CSV of Reveal geofences. Verizon only returns them by category or group, so this
+            queries every Reveal group and common Place categories. If Excel is empty, the
+            download will instead show Verizon&apos;s error. App ID must match the Geofence
+            SETUP app.
           </span>
         </p>
       ) : null}
