@@ -314,22 +314,95 @@ async function revealFetch(creds: RevealCreds, path: string, init?: RequestInit)
   return json;
 }
 
+function uniqueIds(values: string[]) {
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (!trimmed || seen.has(locationKey(trimmed))) continue;
+    seen.add(locationKey(trimmed));
+    ids.push(trimmed);
+  }
+  return ids;
+}
+
+function hrefVehicleIds(record: Record<string, unknown>) {
+  const ids: string[] = [];
+  const walk = (value: unknown, depth = 0) => {
+    if (depth > 8 || value == null) return;
+    if (typeof value === "string") {
+      for (const match of value.matchAll(/\/vehicles\/([^/"?]+)/gi)) {
+        try {
+          ids.push(decodeURIComponent(match[1]));
+        } catch {
+          ids.push(match[1]);
+        }
+      }
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item) => walk(item, depth + 1));
+      return;
+    }
+    if (typeof value === "object") Object.values(value as Record<string, unknown>).forEach((item) => walk(item, depth + 1));
+  };
+  walk(record);
+  return ids;
+}
+
+function parseCmdVehicle(item: Record<string, unknown>): { number: string; name: string; aliases: string[] } | null {
+  const row = flattenRevealItem(item);
+  const name =
+    pickString(row, ["VehicleName", "vehicleName", "Name", "name", "Description", "description", "DisplayName"]);
+  const vehicleNumber = pickString(row, ["VehicleNumber", "vehicleNumber"]);
+  const registration = pickString(row, ["RegistrationNumber", "registrationNumber"]);
+  const otherId = pickString(row, ["Number", "number", "VehicleId", "vehicleId"]);
+  const aliases = uniqueIds([vehicleNumber, registration, otherId, name, ...hrefVehicleIds(item)]);
+  const number = vehicleNumber || registration || otherId || aliases[0] || "";
+  if (!number) return null;
+  return { number, name: name || number, aliases };
+}
+
 export async function listRevealVehicles(organizationId: string): Promise<RevealVehicleInfo[]> {
+  return (await listRevealVehicleRecords(organizationId)).map(({ number, name }) => ({ number, name }));
+}
+
+async function listRevealVehicleRecords(organizationId: string) {
   const creds = await loadRevealCreds(organizationId);
   if (!creds) throw new Error("Verizon Connect Reveal is not configured.");
   const json = await revealFetch(creds, "/cmd/v1/vehicles");
-  return asList(json)
-    .map((item) => {
-      const row = flattenRevealItem(item);
-      const number =
-        pickString(row, ["VehicleNumber", "vehicleNumber"]) ||
-        pickString(row, ["Number", "number", "VehicleId", "vehicleId"]);
-      const name =
-        pickString(row, ["VehicleName", "vehicleName", "Name", "name", "Description", "description", "DisplayName"]) ||
-        number;
-      return { number, name };
-    })
-    .filter((item) => item.number);
+  const fromList = asList(json).map(parseCmdVehicle).filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const byNumber = new Map(fromList.map((vehicle) => [locationKey(vehicle.number), vehicle]));
+  try {
+    const groupsJson = await revealFetch(creds, "/cmd/v1/groups");
+    const groups = asList(groupsJson);
+    for (const group of groups) {
+      const groupId =
+        pickString(flattenRevealItem(group), ["GroupId", "groupId", "Id", "id", "GroupNumber", "groupNumber"]);
+      if (!groupId) continue;
+      for (const path of [`/cmd/v1/groups/${encodeURIComponent(groupId)}/vehicles`, `/cmd/v1/vehicles?groupid=${encodeURIComponent(groupId)}`]) {
+        try {
+          const vehiclesJson = await revealFetch(creds, path);
+          for (const item of asList(vehiclesJson)) {
+            const parsed = parseCmdVehicle(item);
+            if (!parsed) continue;
+            const existing = byNumber.get(locationKey(parsed.number));
+            if (existing) {
+              existing.aliases = uniqueIds([...existing.aliases, ...parsed.aliases]);
+            } else {
+              byNumber.set(locationKey(parsed.number), parsed);
+            }
+          }
+          break;
+        } catch {
+          continue;
+        }
+      }
+    }
+  } catch {
+    // Vehicle Update GPS does not require groups; ignore if CMD groups are unavailable.
+  }
+  return [...byNumber.values()];
 }
 
 export async function storedRevealVehicles(organizationId: string): Promise<RevealVehicleInfo[]> {
@@ -392,26 +465,53 @@ function locationForVehicle(json: unknown, number: string): RevealLocation | nul
   return null;
 }
 
-async function fetchGetLocation(creds: RevealCreds, number: string) {
-  const path = `/rad/v1/vehicles/${encodeURIComponent(number)}/location`;
+async function fetchCmdVehicleAliases(creds: RevealCreds, id: string) {
   try {
-    const json = await revealFetch(creds, path);
-    const location = locationForVehicle(json, number);
-    if (location) return { location, error: null as string | null };
-    return { location: null as RevealLocation | null, error: `${number}: Vehicle Update API v1 returned no GPS` };
-  } catch (error) {
-    return {
-      location: null as RevealLocation | null,
-      error: error instanceof Error ? error.message : `${number}: Vehicle Update API v1 location failed`,
-    };
+    const json = await revealFetch(creds, `/cmd/v1/vehicles/${encodeURIComponent(id)}`);
+    const record = asRecord(json) ?? asList(json)[0];
+    if (!record) return [];
+    return parseCmdVehicle(record)?.aliases ?? [];
+  } catch {
+    return [];
   }
 }
 
-async function postVehicleNumbers(creds: RevealCreds, path: string, numbers: string[]) {
-  return revealFetch(creds, path, {
-    method: "POST",
-    body: JSON.stringify(numbers),
-  });
+async function fetchGetLocation(creds: RevealCreds, aliases: string[], canonicalNumber: string) {
+  const queue = uniqueIds(aliases.concat(canonicalNumber));
+  const seen = new Set(queue.map(locationKey));
+  let lastError = "";
+  let notFound = 0;
+  let expanded = false;
+  for (let i = 0; i < queue.length; i += 1) {
+    const id = queue[i];
+    const path = `/rad/v1/vehicles/${encodeURIComponent(id)}/location`;
+    try {
+      const json = await revealFetch(creds, path);
+      const location = locationForVehicle(json, id) ?? locationForVehicle(json, canonicalNumber);
+      if (location) {
+        return { location: { ...location, vehicleNumber: canonicalNumber }, error: null as string | null, notFound: false };
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `${id}: Vehicle Update API v1 location failed`;
+      lastError = message;
+      if (/\(404\)|Unable to locate vehicle/i.test(message)) {
+        notFound += 1;
+        if (!expanded) {
+          expanded = true;
+          for (const extra of await fetchCmdVehicleAliases(creds, id)) {
+            if (seen.has(locationKey(extra))) continue;
+            seen.add(locationKey(extra));
+            queue.push(extra);
+          }
+        }
+      }
+    }
+  }
+  return {
+    location: null as RevealLocation | null,
+    error: lastError || null,
+    notFound: notFound > 0 && notFound >= queue.length,
+  };
 }
 
 export async function fetchRevealLocations(
@@ -450,36 +550,80 @@ export async function fetchRevealLocationReport(
 
   const stored = await storedRevealVehicles(organizationId);
   const catalog = stored.length > 0 ? stored : numbers.map((number) => ({ number, name: number }));
+  let live: { number: string; name: string; aliases: string[] }[] = [];
+  try {
+    live = await listRevealVehicleRecords(organizationId);
+  } catch {
+    live = [];
+  }
+  const wanted = new Set(numbers.map(locationKey));
+  const fromLive = live.filter(
+    (vehicle) =>
+      wanted.size === 0 ||
+      wanted.has(locationKey(vehicle.number)) ||
+      wanted.has(locationKey(vehicle.name)) ||
+      vehicle.aliases.some((alias) => wanted.has(locationKey(alias))),
+  );
+  const jobs =
+    live.length > 0
+      ? fromLive.length > 0
+        ? fromLive
+        : live
+      : numbers.map((number) => {
+          const hit = catalog.find((vehicle) => locationKey(vehicle.number) === locationKey(number));
+          return { number, name: hit?.name || number, aliases: uniqueIds([number, hit?.name || ""]) };
+        });
+
   const parsed: RevealLocation[] = [];
   const errors: string[] = [];
   let gotAny = false;
+  let notFoundCount = 0;
 
-  for (let i = 0; i < numbers.length; i += 5) {
-    const chunk = numbers.slice(i, i + 5);
-    const got = await Promise.all(chunk.map((number) => fetchGetLocation(creds, number)));
+  try {
+    const ids = uniqueIds(jobs.flatMap((job) => [...job.aliases, job.number, job.name])).slice(0, 100);
+    if (ids.length > 0) {
+      for (const path of ["/rad/v1/vehicles/locations", "/rad/v1/vehicles/statuses"] as const) {
+        try {
+          const json = await revealFetch(creds, path, {
+            method: "POST",
+            body: JSON.stringify(ids),
+          });
+          const bulk = locationsFromPayload(json, []);
+          if (bulk.length > 0) {
+            gotAny = true;
+            parsed.push(...bulk);
+          }
+        } catch {
+          continue;
+        }
+      }
+    }
+  } catch {
+    // Per-truck GET /vehicles/{vehicleNumber}/location still runs below.
+  }
+
+  const foundKeys = new Set(parsed.flatMap((location) => [locationKey(location.vehicleNumber), locationKey(location.name || "")]));
+  const remaining = jobs.filter(
+    (job) =>
+      !foundKeys.has(locationKey(job.number)) &&
+      !foundKeys.has(locationKey(job.name)) &&
+      !job.aliases.some((alias) => foundKeys.has(locationKey(alias))),
+  );
+
+  for (let i = 0; i < remaining.length; i += 4) {
+    const chunk = remaining.slice(i, i + 4);
+    const got = await Promise.all(
+      chunk.map((job) => fetchGetLocation(creds, [...job.aliases, job.number, job.name], job.number)),
+    );
     got.forEach((result) => {
       if (result.location) {
         gotAny = true;
         parsed.push(result.location);
-      } else if (result.error && errors.length < 3) {
-        errors.push(result.error.slice(0, 220));
+      } else {
+        if (result.notFound) notFoundCount += 1;
+        else if (result.error && errors.length < 2) errors.push(result.error.slice(0, 220));
       }
     });
-  }
-
-  const missing = numbers.filter(
-    (number) => !parsed.some((location) => locationKey(location.vehicleNumber) === locationKey(number)),
-  );
-  if (missing.length > 0) {
-    try {
-      const json = await postVehicleNumbers(creds, "/rad/v1/vehicles/locations", missing);
-      gotAny = true;
-      parsed.push(...locationsFromPayload(json, missing));
-    } catch (error) {
-      if (errors.length < 3) {
-        errors.push(error instanceof Error ? error.message.slice(0, 220) : "Bulk GPS request failed.");
-      }
-    }
   }
 
   const locations = matchLocationsToCatalog(parsed, catalog);
@@ -487,19 +631,20 @@ export async function fetchRevealLocationReport(
   if (!gotAny && locations.length === 0) {
     errors.length = 0;
     errors.push(
-      "Verizon Vehicle Update API v1 GET /rad/v1/vehicles/{vehicleNumber}/location did not return GPS.",
+      "Vehicle Update API v1 could not locate these Vehicle Numbers. In Reveal open Account Profile → Vehicle List and use the Vehicle # column (not the live map name).",
     );
-  } else if (locations.length < numbers.length) {
-    const detail = errors[0] ? ` ${errors[0]}` : "";
+  } else if (locations.length < jobs.length) {
     errors.length = 0;
     errors.push(
-      `GPS from Vehicle Update API v1 for ${locations.length} of ${numbers.length} trucks.${detail}`,
+      `Vehicle Update API v1 found GPS for ${locations.length} of ${jobs.length} trucks.${
+        notFoundCount ? ` ${notFoundCount} returned 404 Unable to locate vehicle — that ID is not a Vehicle Update Vehicle #.` : ""
+      } GPS uses Reveal Vehicle #, not the truck name on the live map. Check Vehicle List and the integration user’s vehicle group.`,
     );
   } else {
     errors.length = 0;
   }
 
-  return { locations, errors, requested: numbers.length };
+  return { locations, errors, requested: jobs.length };
 }
 
 export function clearRevealTokenCache() {
