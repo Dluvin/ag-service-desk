@@ -68,7 +68,8 @@ export default async function VehiclesPage({
       <h1 className="font-display text-3xl">Verizon vehicles</h1>
       <p className="mt-2 text-stone-600">
         These trucks come from Reveal. Assign one to each technician so Dispatch GPS and on-site
-        time match the right person.{" "}
+        time match the right person. If the Verizon live map shows trucks this page does not, the
+        integration login cannot read their GPS yet.{" "}
         <Link href="/reveal" className="text-emerald-800 hover:underline">
           Reveal GPS login
         </Link>

@@ -23,8 +23,9 @@ export default async function RevealSettingsPage() {
       <h1 className="font-display text-3xl">Verizon Connect Reveal</h1>
       <p className="mt-2 text-stone-600">
         Use the Reveal REST integration username and password (not the everyday portal login), plus
-        the App ID from Integration Manager. Live truck GPS shows on Dispatch. When a mapped
-        vehicle sits at a ticket pivot, on-site time is recorded for billing.
+        the App ID from Integration Manager. Truck GPS comes from Vehicle Update API - v1 (Live),{" "}
+        {`GET /rad/v1/vehicles/{vehicleNumber}/location`}. The Verizon live map uses your personal
+        login; this app uses the integration user. Every truck needs a Vehicle Number in Reveal.
       </p>
 
       <ActionForm action={saveRevealSettingsAction} className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
