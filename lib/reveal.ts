@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { REVEAL_PLACE_CATEGORIES } from "./reveal-place-categories";
 
 export const REVEAL_US = "https://fim.api.us.fleetmatics.com";
 export const REVEAL_EU = "https://fim.api.eu.fleetmatics.com";
@@ -340,6 +341,19 @@ function uniqueIds(values: string[]) {
     ids.push(trimmed);
   }
   return ids;
+}
+
+async function mapPool<T>(items: T[], limit: number, worker: (item: T) => Promise<void>) {
+  let index = 0;
+  const run = async () => {
+    while (index < items.length) {
+      const current = items[index];
+      index += 1;
+      await worker(current);
+    }
+  };
+  const size = Math.min(Math.max(limit, 1), Math.max(items.length, 1));
+  await Promise.all(Array.from({ length: size }, run));
 }
 
 function parseCmdVehicle(item: Record<string, unknown>): CmdVehicle | null {
@@ -859,45 +873,33 @@ export async function listRevealPlaces(
   };
 
   const geoRoots = ["/geo/v1", "/gsm/v1", "/GSM/v1"] as const;
+  let geoRoot: string = geoRoots[0];
   const tryGeo = async (query: string) => {
-    for (const root of geoRoots) {
-      if (await tryPath(`${root}/geofences?${query}`)) return;
+    const roots = [geoRoot, ...geoRoots.filter((root) => root !== geoRoot)];
+    for (const root of roots) {
+      if (await tryPath(`${root}/geofences?${query}`)) {
+        geoRoot = root;
+        return;
+      }
     }
   };
 
   const queriedCategories = new Set<string>();
   const queryCategories = async (names: string[]) => {
-    for (const category of uniqueIds(names)) {
+    const pending = uniqueIds(names).filter((category) => {
       const key = locationKey(category);
-      if (!key || queriedCategories.has(key)) continue;
+      if (!key || queriedCategories.has(key)) return false;
       queriedCategories.add(key);
+      return true;
+    });
+    await mapPool(pending, 8, async (category) => {
       await tryGeo(`categoryName=${encodeURIComponent(category)}`);
-    }
+    });
   };
 
   await queryCategories(extraCategories);
-
-  const groupIds: string[] = [];
-  const groupNames: string[] = [];
   if (wantsAll) {
-    for (const path of ["/cmd/v1/groups", "/cmd/v1/vehiclegroups", "/gpm/v1/groups"] as const) {
-      try {
-        for (const group of asList(await revealFetch(creds, path))) {
-          const row = flattenRevealItem(group);
-          const groupId = pickString(row, ["GroupId", "groupId", "Id", "id", "GroupNumber", "groupNumber"]);
-          const groupName = pickString(row, ["GroupName", "groupName", "Name", "name"]);
-          if (groupId) groupIds.push(groupId);
-          if (groupName) groupNames.push(groupName);
-        }
-      } catch (error) {
-        errors.push(error instanceof Error ? error.message : String(error));
-      }
-    }
-    await queryCategories(groupNames);
-    for (const groupId of uniqueIds(groupIds)) {
-      await tryGeo(`groupId=${encodeURIComponent(groupId)}`);
-    }
-    await queryCategories([...found.values()].map((place) => place.category));
+    await queryCategories([...REVEAL_PLACE_CATEGORIES]);
   }
 
   if (found.size === 0) {
@@ -908,7 +910,7 @@ export async function listRevealPlaces(
       errors[0];
     if (extraCategories.length === 0) {
       throw new Error(
-        "Verizon has no true All-categories API. Type ALL to try every truck group, or paste every Places category (one per line or commas) into one download.",
+        "Verizon returned no Places for ALL categories. Check Geofence API access, then try one known category.",
       );
     }
     throw new Error(

@@ -111,8 +111,8 @@ export default async function RevealSettingsPage() {
             />
           </label>
           <p className="text-xs text-stone-500">
-            Verizon has no single All-categories API. Type ALL to try every truck group in one
-            sheet, or paste every Places category (commas or one per line) to combine them.
+            Type ALL (or leave blank) to download all 326 Places categories in one sheet. Or paste
+            extra category names to include with that list.
           </p>
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
             Download Places (Excel)
