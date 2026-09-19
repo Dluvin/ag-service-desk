@@ -70,7 +70,7 @@ export default function AllTicketsMapCanvas({
           pathOptions={
             vehicle
               ? { color: "#7f1d1d", fillColor: onSite ? "#ef4444" : "#dc2626", fillOpacity: 0.95, weight: onSite || selected ? 3 : 2 }
-              : { color: onSite ? "#7f1d1d" : "#064e3b", fillColor: onSite ? "#dc2626" : "#059669", fillOpacity: 0.95, weight: selected || onSite ? 3 : 2 }
+              : { color: "#064e3b", fillColor: "#059669", fillOpacity: 0.95, weight: selected || onSite ? 3 : 2 }
           }
         >
           {onSite ? (

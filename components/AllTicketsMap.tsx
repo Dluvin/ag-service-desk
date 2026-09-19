@@ -24,7 +24,7 @@ export function AllTicketsMap({
   revealSetupHref?: string;
 }) {
   const fetched = useRevealVehiclePins(vehiclePins === undefined);
-  const trucks = vehiclePins ?? fetched.vehicles;
+  const trucks = [...new Map((vehiclePins ?? fetched.vehicles).map((truck) => [truck.id, truck])).values()];
   const onSiteTickets = new Set(
     trucks.map((truck) => truck.onSiteTicketId).filter((id): id is string => Boolean(id)),
   );
@@ -70,7 +70,7 @@ export function AllTicketsMap({
         <p className="text-sm font-semibold text-stone-900">
           {ticketPins.length} open ticket{ticketPins.length === 1 ? "" : "s"}
           {trucks.length > 0
-            ? ` · ${trucks.length} assigned truck${trucks.length === 1 ? "" : "s"}`
+            ? ` · ${trucks.length} Verizon truck${trucks.length === 1 ? "" : "s"}`
             : ""}
           {onSiteCount > 0 ? ` · ${onSiteCount} on site` : ""}{" "}
           on the map

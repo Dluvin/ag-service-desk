@@ -139,7 +139,7 @@ export default async function VehiclesPage({
                       Map
                     </a>
                   </p>
-                ) : configured && !locationError ? (
+                ) : configured ? (
                   <p className="mt-1 text-xs text-stone-500">No current location from Verizon.</p>
                 ) : null}
               </li>

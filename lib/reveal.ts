@@ -133,11 +133,14 @@ function locationFromRecord(record: Record<string, unknown>, fallbackNumber = ""
   const lat = deepPickNumber(item, ["Latitude", "latitude", "Lat", "lat"]);
   const lng = deepPickNumber(item, ["Longitude", "longitude", "Lng", "lng", "Lon", "lon"]);
   if (lat == null || lng == null) return null;
-  const vehicleNumber =
-    fallbackNumber ||
+  const parsedNumber =
     pickString(item, ["VehicleNumber", "vehicleNumber"]) ||
-    pickString(item, ["Number", "number"]);
+    pickString(item, ["Number", "number", "VehicleId", "vehicleId"]);
+  const vehicleNumber = parsedNumber || fallbackNumber;
   if (!vehicleNumber) return null;
+  if (parsedNumber && fallbackNumber && locationKey(parsedNumber) !== locationKey(fallbackNumber)) {
+    return null;
+  }
   return {
     vehicleNumber,
     name: pickString(item, ["Name", "name", "VehicleName", "vehicleName"]) || undefined,
@@ -149,13 +152,27 @@ function locationFromRecord(record: Record<string, unknown>, fallbackNumber = ""
   };
 }
 
-function locationsFromPayload(json: unknown, fallbackNumbers: string[] = []): RevealLocation[] {
-  const rows = asList(json);
+function locationsFromPayload(json: unknown, allowedNumbers: string[] = []): RevealLocation[] {
+  const allowed = new Set(allowedNumbers.map(locationKey).filter(Boolean));
   const found: RevealLocation[] = [];
-  rows.forEach((row, index) => {
-    const location = locationFromRecord(row, fallbackNumbers[index] || "");
-    if (location) found.push(location);
-  });
+  const seen = new Set<string>();
+  for (const row of asList(json)) {
+    const parsedId =
+      pickString(flattenRevealItem(row), ["VehicleNumber", "vehicleNumber"]) ||
+      pickString(flattenRevealItem(row), ["Number", "number", "VehicleId", "vehicleId"]);
+    const fallback = parsedId
+      ? parsedId
+      : allowedNumbers.length === 1
+        ? allowedNumbers[0]
+        : "";
+    const location = locationFromRecord(row, parsedId ? "" : fallback);
+    if (!location) continue;
+    if (allowed.size > 0 && !allowed.has(locationKey(location.vehicleNumber))) continue;
+    const key = locationKey(location.vehicleNumber);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    found.push(location);
+  }
   return found;
 }
 
@@ -322,28 +339,11 @@ function locationKey(value: string) {
   return value.trim().toLowerCase();
 }
 
-async function fetchOneLocation(
-  creds: RevealCreds,
-  number: string,
-): Promise<{ location: RevealLocation | null; error: string | null }> {
-  const paths: { path: string; init?: RequestInit }[] = [
-    { path: "/rad/v1/vehicles/locations", init: { method: "POST", body: JSON.stringify([number]) } },
-    { path: `/rad/v1/vehicles/${encodeURIComponent(number)}/location` },
-    { path: `/rad/v1/vehicles/${encodeURIComponent(number)}/status` },
-  ];
-  let lastError = `${number}: no GPS in Verizon response`;
-  for (const attempt of paths) {
-    try {
-      const json = await revealFetch(creds, attempt.path, attempt.init);
-      const parsed = locationsFromPayload(json, [number])[0];
-      if (parsed) {
-        return { location: { ...parsed, vehicleNumber: number }, error: null };
-      }
-    } catch (error) {
-      lastError = error instanceof Error ? error.message : lastError;
-    }
-  }
-  return { location: null, error: lastError };
+async function postVehicleNumbers(creds: RevealCreds, path: string, numbers: string[]) {
+  return revealFetch(creds, path, {
+    method: "POST",
+    body: JSON.stringify(numbers),
+  });
 }
 
 export async function fetchRevealLocations(
@@ -382,18 +382,31 @@ export async function fetchRevealLocationReport(
 
   const byNumber = new Map<string, RevealLocation>();
   const errors: string[] = [];
+  let bulkOk = false;
 
-  for (let i = 0; i < numbers.length; i += 4) {
-    const chunk = numbers.slice(i, i + 4);
-    const got = await Promise.all(chunk.map((number) => fetchOneLocation(creds, number)));
-    got.forEach((result, index) => {
-      const number = chunk[index];
-      if (result.location) {
-        byNumber.set(locationKey(number), result.location);
-      } else if (result.error && errors.length < 4) {
-        errors.push(result.error.slice(0, 220));
+  for (const path of ["/rad/v1/vehicles/locations", "/rad/v1/vehicles/statuses"] as const) {
+    try {
+      const json = await postVehicleNumbers(creds, path, numbers);
+      bulkOk = true;
+      for (const location of locationsFromPayload(json, numbers)) {
+        const key = locationKey(location.vehicleNumber);
+        if (!byNumber.has(key)) byNumber.set(key, location);
       }
-    });
+    } catch (error) {
+      if (errors.length < 4) {
+        errors.push(error instanceof Error ? error.message.slice(0, 220) : "Bulk GPS request failed.");
+      }
+    }
+  }
+
+  if (!bulkOk) {
+    errors.length = 0;
+    errors.push("Verizon did not return a GPS list. Check the Reveal GPS login and that this user can read Vehicle Update locations.");
+  } else if (byNumber.size < numbers.length) {
+    errors.length = 0;
+    errors.push(
+      `Verizon only sent GPS for ${byNumber.size} of ${numbers.length} trucks. The rest are in the vehicle list but have no location in Reveal (GPS hardware, vehicle group, or Vehicle Update access).`,
+    );
   }
 
   return {
