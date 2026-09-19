@@ -30,6 +30,19 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
     );
 
     const locations = await fetchRevealLocations(organizationId);
+    const mapSettings = await prisma.revealVehicle.findMany({
+      where: { organizationId, active: true },
+      select: { number: true, name: true, showOnMap: true },
+    });
+    const hidden = new Set(
+      mapSettings
+        .filter((vehicle) => !vehicle.showOnMap)
+        .flatMap((vehicle) => [vehicle.number, vehicle.name].map((value) => value.trim().toLowerCase())),
+    );
+    const visibleLocations = locations.filter((location) => {
+      const keys = [location.vehicleNumber, location.name].filter(Boolean).map((value) => value!.trim().toLowerCase());
+      return !keys.some((key) => hidden.has(key));
+    });
     await syncOnsiteVisits({
       organizationId,
       radiusMeters: org?.revealOnsiteMeters ?? 400,
@@ -53,7 +66,7 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
 
     return {
       configured: true,
-      pins: locations.map((location) => {
+      pins: visibleLocations.map((location) => {
         const tech = byVehicle.get(location.vehicleNumber);
         const visit = visitByVehicle.get(location.vehicleNumber);
         const onSiteMinutes = visit

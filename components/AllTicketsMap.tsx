@@ -54,9 +54,9 @@ export function AllTicketsMap({
     <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
       {fetched.configured === false && revealSetupHref ? (
         <p className="border-b border-stone-200 px-4 py-3 text-sm text-stone-600">
-          Verizon Connect Reveal is not connected yet.{" "}
+          GPS is not connected yet.{" "}
           <Link href={revealSetupHref} className="font-medium text-emerald-800 hover:underline">
-            Add your developer login
+            Open Connectors
           </Link>
           .
         </p>

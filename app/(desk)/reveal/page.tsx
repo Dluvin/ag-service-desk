@@ -20,14 +20,20 @@ export default async function RevealSettingsPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className="font-display text-3xl">Verizon Connect Reveal</h1>
+      <h1 className="font-display text-3xl">Connectors</h1>
       <p className="mt-2 text-stone-600">
-        Use the Reveal REST integration username and password (not the everyday portal login), plus
-        the App ID from Integration Manager. GPS uses Vehicle Update API v1 (Live) only:{" "}
-        {`POST /vehicles/locations`}, {`POST /vehicles/statuses`}, and{" "}
-        {`GET /vehicles/{vehicleNumber}/location`}. The identifier is Vehicle Number, not the name
-        on the live map. DTC and ECM calls are not used for pins.
+        Connect GPS and other fleet systems so truck locations show on Dispatch and ticket maps.
       </p>
+
+      <section className="mt-6 rounded-xl border border-stone-200 bg-white p-4">
+        <h2 className="font-display text-xl">Verizon Connect Reveal</h2>
+        <p className="mt-2 text-sm text-stone-600">
+          Use the Reveal REST integration username and password (not the everyday portal login), plus
+          the App ID from Integration Manager. GPS uses Vehicle Update API v1 (Live) only:{" "}
+          {`POST /vehicles/locations`}, {`POST /vehicles/statuses`}, and{" "}
+          {`GET /vehicles/{vehicleNumber}/location`}. The identifier is Vehicle Number, not the name
+          on the live map. DTC and ECM calls are not used for pins.
+        </p>
 
       <ActionForm action={saveRevealSettingsAction} className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
         <label className="block text-sm font-medium">
@@ -96,8 +102,8 @@ export default async function RevealSettingsPage() {
       {configured ? <RevealTestForm /> : null}
 
       {vehicles.length > 0 ? (
-        <section className="mt-8">
-          <h2 className="font-display text-xl">Saved Verizon vehicles</h2>
+        <div className="mt-8">
+          <h3 className="font-display text-lg">Saved Verizon vehicles</h3>
           <p className="mt-1 text-sm text-stone-600">
             Full list is under{" "}
             <Link href="/vehicles" className="text-emerald-800 hover:underline">
@@ -110,7 +116,7 @@ export default async function RevealSettingsPage() {
             .
           </p>
           <p className="mt-3 text-sm text-stone-700">{vehicles.length} vehicle(s) saved.</p>
-        </section>
+        </div>
       ) : configured ? (
         <p className="mt-6 text-sm text-stone-600">
           Test the connection or{" "}
@@ -120,6 +126,21 @@ export default async function RevealSettingsPage() {
           to save the Verizon truck list.
         </p>
       ) : null}
+      </section>
+
+      <section className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <h2 className="font-display text-xl text-stone-900">Other GPS connectors</h2>
+        <p className="mt-2 text-sm text-stone-700">
+          Need Samsara, Motive, Geotab, or another GPS system? We can add connectors. Development
+          fees may apply depending on the provider and how their API works.
+        </p>
+        <Link
+          href="/contact"
+          className="mt-3 inline-block text-sm font-semibold text-emerald-800 hover:underline"
+        >
+          Request feature
+        </Link>
+      </section>
     </div>
   );
 }

@@ -40,7 +40,7 @@ import { sendBirdSms, toE164 } from "./bird";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./ticket-photos";
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
 import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelcomeLoginEmail, userFromPasswordToken, welcomeQuery } from "./welcome-mail";
-import { parseDateTimeLocal } from "./schedule";
+import { getPlatformSession } from "./platform";
 import { parseMoneyInput } from "./money";
 
 function formString(formData: FormData, key: string) {
@@ -98,12 +98,19 @@ export async function loginAction(formData: FormData) {
   const password = formString(formData, "password");
   const user = await verifyLogin(email, password);
   if (!user) return { error: "Invalid email or password." };
+  if ("paused" in user) {
+    return { error: "This company is paused. Contact AG Service Desk if you need access restored." };
+  }
   await createSession(user);
   redirect("/dashboard");
 }
 
 export async function logoutAction() {
+  const session = await getSession();
   await destroySession();
+  if (session?.impersonatorId && (await getPlatformSession())) {
+    redirect("/platform");
+  }
   redirect("/login");
 }
 
@@ -2069,6 +2076,22 @@ export async function syncRevealVehiclesAction() {
     return { error: error instanceof Error ? error.message : "Could not refresh Verizon vehicles." };
   }
   redirect(`/vehicles?synced=${vehicles.length}`);
+}
+
+export async function toggleRevealVehicleMapAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canAddTechnicians(session.role)) return { error: "You cannot change map visibility." };
+  const id = formString(formData, "vehicleId");
+  const showOnMap = formString(formData, "showOnMap") === "1";
+  if (!id) return { error: "Missing vehicle." };
+  const vehicle = await prisma.revealVehicle.findFirst({
+    where: { id, organizationId: session.organizationId },
+  });
+  if (!vehicle) return { error: "Vehicle not found." };
+  await prisma.revealVehicle.update({
+    where: { id: vehicle.id },
+    data: { showOnMap },
+  });
 }
 
 export async function currentUser() {

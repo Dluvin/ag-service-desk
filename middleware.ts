@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const PUBLIC = new Set(["/", "/login", "/signup", "/welcome", "/forgot"]);
+const PUBLIC = new Set(["/", "/login", "/signup", "/welcome", "/forgot", "/contact", "/platform/login"]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -13,26 +13,48 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get("ag_session")?.value;
   const secret = process.env.AUTH_SECRET;
-  let authed = false;
-  if (token && secret) {
-    try {
-      await jwtVerify(token, new TextEncoder().encode(secret));
-      authed = true;
-    } catch {
-      authed = false;
+  const tenantToken = request.cookies.get("ag_session")?.value;
+  const platformToken = request.cookies.get("ag_platform")?.value;
+  let tenantAuthed = false;
+  let platformAuthed = false;
+  if (secret) {
+    const key = new TextEncoder().encode(secret);
+    if (tenantToken) {
+      try {
+        await jwtVerify(tenantToken, key);
+        tenantAuthed = true;
+      } catch {
+        tenantAuthed = false;
+      }
+    }
+    if (platformToken) {
+      try {
+        await jwtVerify(platformToken, key);
+        platformAuthed = true;
+      } catch {
+        platformAuthed = false;
+      }
     }
   }
 
+  if (pathname.startsWith("/platform")) {
+    if (pathname === "/platform/login") {
+      if (platformAuthed) return NextResponse.redirect(new URL("/platform", request.url));
+      return NextResponse.next();
+    }
+    if (!platformAuthed) return NextResponse.redirect(new URL("/platform/login", request.url));
+    return NextResponse.next();
+  }
+
   if (PUBLIC.has(pathname)) {
-    if (authed && (pathname === "/login" || pathname === "/signup")) {
+    if (tenantAuthed && (pathname === "/login" || pathname === "/signup")) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     return NextResponse.next();
   }
 
-  if (!authed) {
+  if (!tenantAuthed) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   return NextResponse.next();

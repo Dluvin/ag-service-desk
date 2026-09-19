@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ROLES, canAddTechnicians, isAdmin } from "@/lib/roles";
 import { syncRevealVehiclesAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { VehicleMapToggle } from "@/components/VehicleMapToggle";
 import { fetchRevealLocationReport, loadRevealCreds, type RevealLocation } from "@/lib/reveal";
 
 function formatLocationTime(value?: string) {
@@ -70,10 +71,11 @@ export default async function VehiclesPage({
       <h1 className="font-display text-3xl">Verizon vehicles</h1>
       <p className="mt-2 text-stone-600">
         These trucks come from Reveal. Vehicle Update GPS needs a Vehicle # in Verizon. If that
-        field is blank, fill it in Reveal, then Refresh from Verizon. Assign a numbered truck to
-        each technician so Dispatch pins match.{" "}
+        field is blank, fill it in Reveal, then Refresh from Verizon. Uncheck Show on maps to hide
+        a truck from Dispatch and ticket maps. Assign a numbered truck to each technician so
+        Dispatch pins match.{" "}
         <Link href="/reveal" className="text-emerald-800 hover:underline">
-          Reveal GPS login
+          Connectors
         </Link>
       </p>
 
@@ -103,7 +105,7 @@ export default async function VehiclesPage({
             Refresh from Verizon
           </button>
           {!configured ? (
-            <p className="mt-2 text-sm text-stone-600">Save Reveal GPS credentials first.</p>
+            <p className="mt-2 text-sm text-stone-600">Save connector credentials first.</p>
           ) : null}
         </ActionForm>
       ) : null}
@@ -119,6 +121,8 @@ export default async function VehiclesPage({
             const when = formatLocationTime(location?.updatedAt);
             return (
               <li key={vehicle.id} className={`px-4 py-3 text-sm ${vehicle.active ? "" : "text-stone-400"}`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
                 <p className="font-medium text-stone-900">
                   {vehicle.name}
                   {!vehicle.active ? <span className="ml-2 text-xs font-normal text-stone-500">Inactive</span> : null}
@@ -151,6 +155,9 @@ export default async function VehiclesPage({
                 ) : configured ? (
                   <p className="mt-1 text-xs text-stone-500">No current location from Verizon.</p>
                 ) : null}
+                  </div>
+                  <VehicleMapToggle vehicleId={vehicle.id} showOnMap={vehicle.showOnMap} />
+                </div>
               </li>
             );
           })

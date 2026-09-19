@@ -444,7 +444,13 @@ export async function syncRevealVehicles(organizationId: string): Promise<Reveal
           await tx.revealVehicle.delete({ where: { id: row.id } });
           await tx.revealVehicle.update({
             where: { id: clash.id },
-            data: { number: vehicle.number, name: vehicle.name, active: true, syncedAt },
+            data: {
+              number: vehicle.number,
+              name: vehicle.name,
+              active: true,
+              syncedAt,
+              showOnMap: row.showOnMap,
+            },
           });
         } else {
           await tx.revealVehicle.update({

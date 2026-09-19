@@ -26,7 +26,7 @@ export default async function StaffPage({
   const roleOptions = staffRolesAssignableBy(session.role);
   const canImport = canImportStaff(session.role);
 
-  const [staff, stores, vehicles] = await Promise.all([
+  const [staff, stores, vehicles, seatCount] = await Promise.all([
     prisma.user.findMany({
       where: {
         organizationId: session.organizationId,
@@ -41,7 +41,15 @@ export default async function StaffPage({
       select: { id: true, name: true },
     }),
     storedRevealVehicles(session.organizationId),
+    prisma.user.count({
+      where: {
+        organizationId: session.organizationId,
+        role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN] },
+      },
+    }),
   ]);
+  const includedSeats = 10;
+  const extraSeats = Math.max(0, seatCount - includedSeats);
 
   const groups = [
     { role: ROLES.ADMIN, title: "Admins" },
@@ -152,6 +160,26 @@ export default async function StaffPage({
           <VehicleSelect vehicles={vehicles} />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save staff</button>
         </ActionForm>
+
+        <section className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <h2 className="font-display text-lg text-stone-900">Increase staff seats</h2>
+          <p className="mt-2 text-sm text-stone-700">
+            This company plan includes <span className="font-semibold">10 staff logins</span> for{" "}
+            <span className="font-semibold">$499/month</span> (admins, managers, and technicians).
+            Farm logins are separate. Extra staff seats are <span className="font-semibold">$19/month</span>{" "}
+            each.
+          </p>
+          <p className="mt-2 text-sm text-stone-700">
+            {seatCount} of {includedSeats} included seats in use
+            {extraSeats > 0 ? ` · ${extraSeats} extra seat${extraSeats === 1 ? "" : "s"} at $19/month` : ""}.
+          </p>
+          <Link
+            href="/contact"
+            className="mt-3 inline-block text-sm font-semibold text-emerald-800 hover:underline"
+          >
+            Request more seats
+          </Link>
+        </section>
 
         {canImport ? (
           <div className="mt-8">

@@ -24,6 +24,7 @@ model Organization {
   birdSmsEnabled      Boolean  @default(false)
   logoMimeType        String?
   logoFileName        String?
+  paused              Boolean  @default(false)
   users               User[]
   farmers             Farmer[]
   pivots              Pivot[]
@@ -44,9 +45,18 @@ model RevealVehicle {
   number         String
   name           String
   active         Boolean      @default(true)
+  showOnMap      Boolean      @default(true)
   syncedAt       DateTime     @default(now())
 
   @@unique([organizationId, number])
+}
+
+model PlatformAdmin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
 }
 
 model Store {

@@ -5,7 +5,11 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ paused?: string }>;
+}) {
   let userCount = 0;
   try {
     userCount = await prisma.user.count();
@@ -13,12 +17,18 @@ export default async function LoginPage() {
     userCount = 0;
   }
   const showDemo = process.env.NODE_ENV !== "production";
+  const query = await searchParams;
 
   return (
     <div className="flex min-h-full items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
         <h1 className="font-display text-3xl">Log in</h1>
         <p className="mt-1 text-sm text-stone-600">Farmers, technicians, managers, and company admins use the same door.</p>
+        {query.paused ? (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            This company is paused. Contact AG Service Desk if you need access restored.
+          </p>
+        ) : null}
         {userCount === 0 ? (
           <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
             This host has no users yet. Demo emails from your PC will not work here.{" "}
