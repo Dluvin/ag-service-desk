@@ -39,7 +39,7 @@ function asList(value: unknown): Record<string, unknown>[] {
   }
   const record = asRecord(value);
   if (!record) return [];
-  for (const key of ["Vehicles", "vehicles", "Items", "items", "Results", "results", "Data", "data"]) {
+  for (const key of ["Vehicles", "vehicles", "Items", "items", "Results", "results", "Data", "data", "Locations", "locations"]) {
     const nested = record[key];
     if (Array.isArray(nested)) return asList(nested);
   }
@@ -52,6 +52,32 @@ function pickString(record: Record<string, unknown>, keys: string[]) {
     if (value != null && String(value).trim()) return String(value).trim();
   }
   return "";
+}
+
+function unwrapRevealItem(record: Record<string, unknown>): Record<string, unknown> {
+  const content = asRecord(record.ContentResource) ?? asRecord(record.contentResource);
+  const value = content ? asRecord(content.Value) ?? asRecord(content.value) : null;
+  const nested = value ?? content;
+  if (!nested) return record;
+  return { ...record, ...nested };
+}
+
+function formatRevealAddress(record: Record<string, unknown>) {
+  const formatted = pickString(record, ["FormattedAddress", "formattedAddress"]);
+  if (formatted) return formatted;
+  const address = asRecord(record.Address) ?? asRecord(record.address);
+  if (!address) {
+    const asText = record.Address ?? record.address;
+    return typeof asText === "string" ? asText.trim() : "";
+  }
+  return [
+    pickString(address, ["AddressLine1", "addressLine1"]),
+    pickString(address, ["Locality", "locality", "City", "city"]),
+    pickString(address, ["AdministrativeArea", "administrativeArea", "Region", "region"]),
+    pickString(address, ["PostalCode", "postalCode"]),
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 function pickNumber(record: Record<string, unknown>, keys: string[]) {
@@ -246,7 +272,7 @@ export async function fetchRevealLocations(
       method: "POST",
       body: JSON.stringify(chunk),
     });
-    for (const item of asList(json)) {
+    for (const item of asList(json).map(unwrapRevealItem)) {
       const vehicleNumber = pickString(item, ["VehicleNumber", "vehicleNumber", "Number", "number"]);
       const lat = pickNumber(item, ["Latitude", "latitude", "Lat", "lat"]);
       const lng = pickNumber(item, ["Longitude", "longitude", "Lng", "lng", "Lon", "lon"]);
@@ -258,7 +284,7 @@ export async function fetchRevealLocations(
         lng,
         updatedAt: pickString(item, ["UpdateUTC", "updateUTC", "UpdatedAt", "updatedAt"]) || undefined,
         displayState: pickString(item, ["DisplayState", "displayState"]) || undefined,
-        address: pickString(item, ["Address", "address", "FormattedAddress"]) || undefined,
+        address: formatRevealAddress(item) || undefined,
       });
     }
   }

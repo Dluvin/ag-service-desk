@@ -29,12 +29,7 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
         .map((tech) => [tech.revealVehicleNumber as string, tech]),
     );
 
-    const assignedNumbers = [...byVehicle.keys()];
-    if (assignedNumbers.length === 0) {
-      return { configured: true, pins: [], error: null };
-    }
-
-    const locations = await fetchRevealLocations(organizationId, assignedNumbers);
+    const locations = await fetchRevealLocations(organizationId);
     await syncOnsiteVisits({
       organizationId,
       radiusMeters: org?.revealOnsiteMeters ?? 400,
@@ -58,33 +53,33 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
 
     return {
       configured: true,
-      pins: locations
-        .filter((location) => byVehicle.has(location.vehicleNumber))
-        .map((location) => {
-          const tech = byVehicle.get(location.vehicleNumber);
-          const visit = visitByVehicle.get(location.vehicleNumber);
-          const onSiteMinutes = visit
-            ? Math.max(0, Math.round((now - visit.startedAt.getTime()) / 60_000))
-            : 0;
-          const bits = [
-            tech?.name,
-            location.vehicleNumber,
-            visit ? `On-site${onSiteMinutes ? ` ${onSiteMinutes} min` : ""} · ticket #${visit.ticket.number}` : location.displayState,
-            location.address,
-          ].filter(Boolean);
-          return {
-            id: `vehicle-${location.vehicleNumber}`,
-            kind: "vehicle" as const,
-            name: tech?.name ?? location.name ?? location.vehicleNumber,
-            lat: location.lat,
-            lng: location.lng,
-            subtitle: bits.join(" · "),
-            href: visit ? `/tickets/${visit.ticket.id}` : undefined,
-            onSite: Boolean(visit),
-            onSiteTicketId: visit?.ticket.id,
-            onSitePivotId: visit?.ticket.pivotId,
-          };
-        }),
+      pins: locations.map((location) => {
+        const tech = byVehicle.get(location.vehicleNumber);
+        const visit = visitByVehicle.get(location.vehicleNumber);
+        const onSiteMinutes = visit
+          ? Math.max(0, Math.round((now - visit.startedAt.getTime()) / 60_000))
+          : 0;
+        const bits = [
+          tech?.name,
+          location.vehicleNumber,
+          visit
+            ? `On-site${onSiteMinutes ? ` ${onSiteMinutes} min` : ""} · ticket #${visit.ticket.number}`
+            : location.displayState,
+          location.address,
+        ].filter(Boolean);
+        return {
+          id: `vehicle-${location.vehicleNumber}`,
+          kind: "vehicle" as const,
+          name: tech?.name ?? location.name ?? location.vehicleNumber,
+          lat: location.lat,
+          lng: location.lng,
+          subtitle: bits.join(" · "),
+          href: visit ? `/tickets/${visit.ticket.id}` : undefined,
+          onSite: Boolean(visit),
+          onSiteTicketId: visit?.ticket.id,
+          onSitePivotId: visit?.ticket.pivotId,
+        };
+      }),
       error: null,
     };
   } catch (error) {
