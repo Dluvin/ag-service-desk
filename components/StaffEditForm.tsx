@@ -1,5 +1,6 @@
 import { ActionForm } from "@/components/ActionForm";
 import { StoreSelect } from "@/components/StoreSelect";
+import { VehicleSelect } from "@/components/VehicleSelect";
 import { updateStaffAction } from "@/lib/actions";
 import { ROLES } from "@/lib/roles";
 import { roleLabel } from "@/lib/scope";
@@ -9,7 +10,7 @@ export function StaffEditForm({
   stores,
   next,
   roleOptions,
-  vehicles,
+  vehicles = [],
 }: {
   person: {
     id: string;
@@ -89,30 +90,7 @@ export function StaffEditForm({
         <input type="hidden" name="storeId" value="" />
       )}
       {showVehicle ? (
-        <label className="block text-xs font-medium sm:col-span-2">
-          Reveal vehicle
-          {vehicles && vehicles.length > 0 ? (
-            <select
-              name="revealVehicleNumber"
-              defaultValue={person.revealVehicleNumber ?? ""}
-              className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1 text-sm"
-            >
-              <option value="">Not mapped</option>
-              {vehicles.map((vehicle) => (
-                <option key={vehicle.number} value={vehicle.number}>
-                  {vehicle.name} ({vehicle.number})
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              name="revealVehicleNumber"
-              defaultValue={person.revealVehicleNumber ?? ""}
-              placeholder="Technicians only"
-              className="mt-1 w-full rounded-md border border-stone-300 px-2 py-1 text-sm"
-            />
-          )}
-        </label>
+        <VehicleSelect vehicles={vehicles} defaultValue={person.revealVehicleNumber} compact />
       ) : null}
       <div className="sm:col-span-2">
         <button className="rounded-md bg-emerald-800 px-3 py-1.5 text-xs font-semibold text-white">Save</button>

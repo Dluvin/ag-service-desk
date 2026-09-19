@@ -34,7 +34,7 @@ import { importCatalogLaborBatch } from "./labor-import";
 import { importCatalogEquipmentBatch } from "./equipment-import";
 import { parseStaffImport, isShopStaffRole } from "./staff-import";
 import { closeOpenSiteVisits } from "./onsite";
-import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, listRevealVehicles } from "./reveal";
+import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, normalizeRevealAppId, syncRevealVehicles } from "./reveal";
 import { notifyTicketSms } from "./ticket-sms";
 import { sendBirdSms, toE164 } from "./bird";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./ticket-photos";
@@ -1968,13 +1968,19 @@ export async function saveRevealSettingsAction(formData: FormData) {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can save Reveal settings." };
 
-  const appId = formString(formData, "revealAppId");
+  const appId = normalizeRevealAppId(formString(formData, "revealAppId"));
   const username = formString(formData, "revealUsername");
   const password = formString(formData, "revealPassword");
   const region = formString(formData, "revealRegion") === "EU" ? REVEAL_EU : REVEAL_US;
   const meters = Number(formString(formData, "revealOnsiteMeters") || "400");
   if (!appId || !username) {
     return { error: "App ID and Reveal integration username are required." };
+  }
+  if (/[=,]/.test(appId) || /atmosphere_app_id/i.test(appId) || /\sBearer\s/i.test(appId)) {
+    return {
+      error:
+        "Paste only the App ID (starts with fleetmatics-p-us-). Do not paste Atmosphere, Bearer, or the whole Authorization header.",
+    };
   }
   if (!Number.isFinite(meters) || meters < 50 || meters > 2000) {
     return { error: "On-site radius should be between 50 and 2000 meters." };
@@ -1997,6 +2003,11 @@ export async function saveRevealSettingsAction(formData: FormData) {
     },
   });
   clearRevealTokenCache();
+  try {
+    await syncRevealVehicles(session.organizationId);
+  } catch {
+    // Credentials are saved even if the first vehicle pull fails.
+  }
   redirect("/reveal");
 }
 
@@ -2004,11 +2015,23 @@ export async function testRevealConnectionAction() {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can test Reveal." };
   try {
-    const vehicles = await listRevealVehicles(session.organizationId);
-    return { ok: `Connected. ${vehicles.length} vehicle(s) found.` };
+    const vehicles = await syncRevealVehicles(session.organizationId);
+    return { ok: `Connected. ${vehicles.length} vehicle(s) saved to Settings → Vehicles.` };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Reveal connection failed." };
   }
+}
+
+export async function syncRevealVehiclesAction() {
+  const session = await requireSession();
+  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can refresh Verizon vehicles." };
+  let vehicles;
+  try {
+    vehicles = await syncRevealVehicles(session.organizationId);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not refresh Verizon vehicles." };
+  }
+  redirect(`/vehicles?synced=${vehicles.length}`);
 }
 
 export async function currentUser() {

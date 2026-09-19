@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
-import { REVEAL_EU, listRevealVehicles, loadRevealCreds } from "@/lib/reveal";
+import { REVEAL_EU, loadRevealCreds, storedRevealVehicles } from "@/lib/reveal";
 import { saveRevealSettingsAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { RevealTestForm } from "@/components/RevealTestForm";
@@ -16,16 +16,7 @@ export default async function RevealSettingsPage() {
   const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
   if (!org) redirect("/dashboard");
   const configured = Boolean(await loadRevealCreds(session.organizationId));
-
-  let vehicles: { number: string; name: string }[] = [];
-  let listError: string | null = null;
-  if (configured) {
-    try {
-      vehicles = await listRevealVehicles(session.organizationId);
-    } catch (error) {
-      listError = error instanceof Error ? error.message : "Could not list vehicles.";
-    }
-  }
+  const vehicles = configured ? await storedRevealVehicles(session.organizationId) : [];
 
   return (
     <div className="max-w-3xl">
@@ -46,6 +37,10 @@ export default async function RevealSettingsPage() {
             placeholder="fleetmatics-p-us-…"
             className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
           />
+          <span className="mt-1 block text-xs font-normal text-stone-500">
+            Only the App ID, like fleetmatics-p-us-…. Do not paste Atmosphere, Bearer, or the whole
+            Authorization header from Integration Manager.
+          </span>
         </label>
         <label className="block text-sm font-medium">
           Integration username
@@ -98,31 +93,30 @@ export default async function RevealSettingsPage() {
 
       {configured ? <RevealTestForm /> : null}
 
-      {listError ? (
-        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-          {listError}
-        </p>
-      ) : null}
-
       {vehicles.length > 0 ? (
         <section className="mt-8">
-          <h2 className="font-display text-xl">Vehicles from Reveal</h2>
+          <h2 className="font-display text-xl">Saved Verizon vehicles</h2>
           <p className="mt-1 text-sm text-stone-600">
-            Assign a vehicle number to each technician on the{" "}
+            Full list is under{" "}
+            <Link href="/vehicles" className="text-emerald-800 hover:underline">
+              Settings → Vehicles
+            </Link>
+            . Assign a truck to each technician on{" "}
             <Link href="/technicians" className="text-emerald-800 hover:underline">
               technicians
-            </Link>{" "}
-            page so on-site time attaches to their tickets.
+            </Link>
+            .
           </p>
-          <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
-            {vehicles.map((vehicle) => (
-              <li key={vehicle.number} className="px-4 py-2 text-sm">
-                <span className="font-medium">{vehicle.name}</span>
-                <span className="text-stone-500"> · {vehicle.number}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="mt-3 text-sm text-stone-700">{vehicles.length} vehicle(s) saved.</p>
         </section>
+      ) : configured ? (
+        <p className="mt-6 text-sm text-stone-600">
+          Test the connection or{" "}
+          <Link href="/vehicles" className="text-emerald-800 hover:underline">
+            refresh vehicles
+          </Link>{" "}
+          to save the Verizon truck list.
+        </p>
       ) : null}
     </div>
   );

@@ -34,6 +34,19 @@ model Organization {
   catalogLabor        CatalogLabor[]
   catalogEquipment    CatalogEquipment[]
   stores              Store[]
+  revealVehicles      RevealVehicle[]
+}
+
+model RevealVehicle {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  number         String
+  name           String
+  active         Boolean      @default(true)
+  syncedAt       DateTime     @default(now())
+
+  @@unique([organizationId, number])
 }
 
 model Store {

@@ -11,6 +11,8 @@ import { StaffImportForm } from "@/components/StaffImportForm";
 import { StoreSelect } from "@/components/StoreSelect";
 import { StaffEditForm } from "@/components/StaffEditForm";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
+import { VehicleSelect } from "@/components/VehicleSelect";
+import { storedRevealVehicles } from "@/lib/reveal";
 
 export default async function StaffPage({
   searchParams,
@@ -24,7 +26,7 @@ export default async function StaffPage({
   const roleOptions = staffRolesAssignableBy(session.role);
   const canImport = canImportStaff(session.role);
 
-  const [staff, stores] = await Promise.all([
+  const [staff, stores, vehicles] = await Promise.all([
     prisma.user.findMany({
       where: {
         organizationId: session.organizationId,
@@ -38,6 +40,7 @@ export default async function StaffPage({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
+    storedRevealVehicles(session.organizationId),
   ]);
 
   const groups = [
@@ -94,7 +97,7 @@ export default async function StaffPage({
                           />
                         ) : null}
                       </div>
-                      <StaffEditForm person={person} stores={stores} next="/staff" roleOptions={roleOptions} />
+                      <StaffEditForm person={person} stores={stores} next="/staff" roleOptions={roleOptions} vehicles={vehicles} />
                     </li>
                   ))
                 )}
@@ -146,10 +149,7 @@ export default async function StaffPage({
             <input name="phone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Optional" />
           </label>
           <StoreSelect stores={stores} label="Default store" />
-          <label className="block text-sm font-medium">
-            Reveal vehicle number
-            <input name="revealVehicleNumber" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Technicians only" />
-          </label>
+          <VehicleSelect vehicles={vehicles} />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save staff</button>
         </ActionForm>
 

@@ -9,7 +9,8 @@ import { StaffImportForm } from "@/components/StaffImportForm";
 import { StoreSelect } from "@/components/StoreSelect";
 import { StaffEditForm } from "@/components/StaffEditForm";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
-import { listRevealVehicles, loadRevealCreds } from "@/lib/reveal";
+import { VehicleSelect } from "@/components/VehicleSelect";
+import { storedRevealVehicles } from "@/lib/reveal";
 
 export default async function TechniciansPage({
   searchParams,
@@ -35,14 +36,7 @@ export default async function TechniciansPage({
     select: { id: true, name: true },
   });
 
-  let vehicles: { number: string; name: string }[] = [];
-  if (await loadRevealCreds(session.organizationId)) {
-    try {
-      vehicles = await listRevealVehicles(session.organizationId);
-    } catch {
-      vehicles = [];
-    }
-  }
+  const vehicles = await storedRevealVehicles(session.organizationId);
 
   return (
     <div className="grid gap-8 lg:grid-cols-5">
@@ -109,10 +103,7 @@ export default async function TechniciansPage({
             Mobile for SMS
             <input name="phone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Optional" />
           </label>
-          <label className="block text-sm font-medium">
-            Reveal vehicle number
-            <input name="revealVehicleNumber" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Optional" />
-          </label>
+          <VehicleSelect vehicles={vehicles} />
           <StoreSelect stores={stores} label="Default store" />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save technician</button>
         </ActionForm>

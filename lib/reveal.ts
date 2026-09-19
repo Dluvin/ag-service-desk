@@ -3,7 +3,7 @@ import { prisma } from "./prisma";
 export const REVEAL_US = "https://fim.api.us.fleetmatics.com";
 export const REVEAL_EU = "https://fim.api.eu.fleetmatics.com";
 
-export type RevealVehicle = {
+export type RevealVehicleInfo = {
   number: string;
   name: string;
 };
@@ -71,11 +71,19 @@ export function orgHasRevealCreds(org: {
   return Boolean(org.revealAppId && org.revealUsername && org.revealPassword);
 }
 
+export function normalizeRevealAppId(raw: string) {
+  let value = raw.trim().replace(/^["']+|["']+$/g, "");
+  const fromHeader = value.match(/atmosphere_app_id\s*=\s*([^,]+)/i);
+  if (fromHeader) value = fromHeader[1].trim();
+  value = value.replace(/,?\s*Bearer\s+\S[\s\S]*$/i, "").trim();
+  return value;
+}
+
 export async function loadRevealCreds(organizationId: string): Promise<RevealCreds | null> {
   const org = await prisma.organization.findUnique({ where: { id: organizationId } });
   if (!org) return null;
-  const appId = org.revealAppId || process.env.REVEAL_APP_ID || "";
-  const username = org.revealUsername || process.env.REVEAL_USERNAME || "";
+  const appId = normalizeRevealAppId(org.revealAppId || process.env.REVEAL_APP_ID || "");
+  const username = (org.revealUsername || process.env.REVEAL_USERNAME || "").trim();
   const password = org.revealPassword || process.env.REVEAL_PASSWORD || "";
   const baseUrl = (org.revealBaseUrl || process.env.REVEAL_BASE_URL || REVEAL_US).replace(/\/$/, "");
   if (!appId || !username || !password) return null;
@@ -83,7 +91,7 @@ export async function loadRevealCreds(organizationId: string): Promise<RevealCre
 }
 
 function atmosphere(appId: string, token: string) {
-  return `Atmosphere atmosphere_app_id=${appId}, Bearer ${token}`;
+  return `Atmosphere atmosphere_app_id=${normalizeRevealAppId(appId)}, Bearer ${token}`;
 }
 
 async function readBody(res: Response) {
@@ -155,7 +163,7 @@ async function revealFetch(creds: RevealCreds, path: string, init?: RequestInit)
   return json;
 }
 
-export async function listRevealVehicles(organizationId: string): Promise<RevealVehicle[]> {
+export async function listRevealVehicles(organizationId: string): Promise<RevealVehicleInfo[]> {
   const creds = await loadRevealCreds(organizationId);
   if (!creds) throw new Error("Verizon Connect Reveal is not configured.");
   const json = await revealFetch(creds, "/cmd/v1/vehicles");
@@ -168,6 +176,42 @@ export async function listRevealVehicles(organizationId: string): Promise<Reveal
     .filter((item) => item.number);
 }
 
+export async function storedRevealVehicles(organizationId: string): Promise<RevealVehicleInfo[]> {
+  return prisma.revealVehicle.findMany({
+    where: { organizationId, active: true },
+    orderBy: { name: "asc" },
+    select: { number: true, name: true },
+  });
+}
+
+export async function syncRevealVehicles(organizationId: string): Promise<RevealVehicleInfo[]> {
+  const live = await listRevealVehicles(organizationId);
+  const byNumber = new Map(live.map((vehicle) => [vehicle.number, vehicle]));
+  const unique = [...byNumber.values()];
+  const numbers = unique.map((vehicle) => vehicle.number);
+  const syncedAt = new Date();
+  await prisma.$transaction(async (tx) => {
+    for (const vehicle of unique) {
+      await tx.revealVehicle.upsert({
+        where: { organizationId_number: { organizationId, number: vehicle.number } },
+        create: {
+          organizationId,
+          number: vehicle.number,
+          name: vehicle.name,
+          active: true,
+          syncedAt,
+        },
+        update: { name: vehicle.name, active: true, syncedAt },
+      });
+    }
+    await tx.revealVehicle.updateMany({
+      where: { organizationId, ...(numbers.length > 0 ? { number: { notIn: numbers } } : {}) },
+      data: { active: false },
+    });
+  });
+  return storedRevealVehicles(organizationId);
+}
+
 export async function fetchRevealLocations(
   organizationId: string,
   vehicleNumbers?: string[],
@@ -177,15 +221,20 @@ export async function fetchRevealLocations(
 
   let numbers = (vehicleNumbers ?? []).filter(Boolean);
   if (numbers.length === 0) {
-    try {
-      numbers = (await listRevealVehicles(organizationId)).map((vehicle) => vehicle.number);
-    } catch (error) {
-      const mapped = await prisma.user.findMany({
-        where: { organizationId, revealVehicleNumber: { not: null } },
-        select: { revealVehicleNumber: true },
-      });
-      numbers = mapped.map((user) => user.revealVehicleNumber).filter((value): value is string => Boolean(value));
-      if (numbers.length === 0) throw error;
+    const stored = await storedRevealVehicles(organizationId);
+    if (stored.length > 0) {
+      numbers = stored.map((vehicle) => vehicle.number);
+    } else {
+      try {
+        numbers = (await listRevealVehicles(organizationId)).map((vehicle) => vehicle.number);
+      } catch (error) {
+        const mapped = await prisma.user.findMany({
+          where: { organizationId, revealVehicleNumber: { not: null } },
+          select: { revealVehicleNumber: true },
+        });
+        numbers = mapped.map((user) => user.revealVehicleNumber).filter((value): value is string => Boolean(value));
+        if (numbers.length === 0) throw error;
+      }
     }
   }
   if (numbers.length === 0) return [];

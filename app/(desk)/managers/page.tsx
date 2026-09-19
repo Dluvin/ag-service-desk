@@ -9,6 +9,7 @@ import { StaffImportForm } from "@/components/StaffImportForm";
 import { StoreSelect } from "@/components/StoreSelect";
 import { StaffEditForm } from "@/components/StaffEditForm";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
+import { storedRevealVehicles } from "@/lib/reveal";
 
 export default async function ManagersPage({
   searchParams,
@@ -20,7 +21,7 @@ export default async function ManagersPage({
   if (!canEditStaffMember(session.role, ROLES.MANAGER)) redirect("/dashboard");
   const query = await searchParams;
 
-  const [managers, stores] = await Promise.all([
+  const [managers, stores, vehicles] = await Promise.all([
     prisma.user.findMany({
       where: { organizationId: session.organizationId, role: ROLES.MANAGER },
       include: { store: true },
@@ -31,6 +32,7 @@ export default async function ManagersPage({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
+    storedRevealVehicles(session.organizationId),
   ]);
   const roleOptions = staffRolesAssignableBy(session.role);
   const canImport = canImportStaff(session.role);
@@ -70,7 +72,7 @@ export default async function ManagersPage({
                     />
                   ) : null}
                 </div>
-                <StaffEditForm person={manager} stores={stores} next="/managers" roleOptions={roleOptions} />
+                <StaffEditForm person={manager} stores={stores} next="/managers" roleOptions={roleOptions} vehicles={vehicles} />
               </li>
             ))
           )}

@@ -54,9 +54,10 @@ export function Nav({
           { href: "/startup/checklist", label: "Maintenance checklist" },
           { href: "/sms", label: "SMS" },
           { href: "/reveal", label: "Reveal GPS" },
+          { href: "/vehicles", label: "Vehicles" },
         ]
       : session.role === ROLES.MANAGER
-        ? [staffMenu]
+        ? [staffMenu, { href: "/vehicles", label: "Vehicles" }]
         : [];
 
   return (
