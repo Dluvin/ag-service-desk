@@ -23,7 +23,7 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
   return (
     <div className="min-h-full">
       {session.impersonatorId ? <ImpersonationBanner companyName={org.name} /> : null}
-      <Nav session={session} companyName={org?.name} hasLogo={Boolean(org?.logoMimeType)} />
+      <Nav session={session} hasLogo={Boolean(org?.logoMimeType)} />
       <main className="mx-auto max-w-7xl px-4 py-8 print:max-w-none print:px-0 print:py-0">{children}</main>
     </div>
   );

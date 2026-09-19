@@ -7,11 +7,9 @@ import { NavDropdown } from "@/components/NavDropdown";
 
 export function Nav({
   session,
-  companyName,
   hasLogo,
 }: {
   session: SessionUser;
-  companyName?: string;
   hasLogo?: boolean;
 }) {
   const farmer = session.role === ROLES.FARMER;
@@ -68,7 +66,7 @@ export function Nav({
             // eslint-disable-next-line @next/next/no-img-element
             <img src="/api/company-logo" alt="" className="h-8 max-w-40 object-contain" />
           ) : null}
-          <span>{companyName || "AG Service Desk"}</span>
+          <span>AG Service Desk</span>
         </Link>
         <nav className="flex max-w-3xl flex-wrap items-center gap-4 text-sm">
           {beforeTickets.map((link) => (
@@ -87,9 +85,7 @@ export function Nav({
         <div className="flex items-center gap-3 text-sm">
           <div className="text-right">
             <p className="font-medium">{session.name}</p>
-            <p className="text-xs text-emerald-200">
-              {session.organizationName} · {roleLabel(session.role)}
-            </p>
+            <p className="text-xs text-emerald-200">{roleLabel(session.role)}</p>
           </div>
           <form action={logoutAction}>
             <button className="rounded-md border border-emerald-700 px-3 py-1.5 text-xs hover:bg-emerald-900">
