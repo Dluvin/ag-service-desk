@@ -847,13 +847,12 @@ export async function listRevealPlaces(
     }
   };
 
-  await tryPath("/geo/v1/geofences");
-  await tryPath("/geo/v1/geofences/");
-  await tryPath("/geo/v1/geofences?categoryName=");
-  await tryPath("/geo/v1/geofences?groupId=");
-  for (const category of uniqueIds(extraCategories)) {
-    await tryPath(`/geo/v1/geofences?categoryName=${encodeURIComponent(category)}`);
-  }
+  const geoRoots = ["/geo/v1", "/gsm/v1", "/GSM/v1"] as const;
+  const tryGeo = async (query: string) => {
+    for (const root of geoRoots) {
+      if (await tryPath(`${root}/geofences?${query}`)) return;
+    }
+  };
 
   const groupIds: string[] = [];
   const groupNames: string[] = [];
@@ -870,51 +869,30 @@ export async function listRevealPlaces(
       errors.push(error instanceof Error ? error.message : String(error));
     }
   }
-  for (const groupId of uniqueIds(groupIds)) {
-    await tryPath(`/geo/v1/geofences?groupId=${encodeURIComponent(groupId)}`);
-  }
 
-  const categories = new Set(
-    [
-      ...[...found.values()].map((place) => place.category),
-      ...groupNames,
-      "Customer",
-      "Customers",
-      "Home",
-      "Office",
-      "Yard",
-      "Shop",
-      "Job Site",
-      "Jobsite",
-      "Unauthorized",
-      "Authorized",
-    ].filter(Boolean),
-  );
-  for (const path of [
-    "/geo/v1/categories",
-    "/geo/v1/geofences/categories",
-    "/cmd/v1/geofencecategories",
-    "/cmd/v1/placecategories",
-  ] as const) {
-    try {
-      for (const row of asList(await revealFetch(creds, path))) {
-        const name = pickString(flattenRevealItem(row), ["CategoryName", "categoryName", "Name", "name"]);
-        if (name) categories.add(name);
-      }
-    } catch {
-      // Category catalog endpoints are not on every account.
-    }
-  }
+  const categories = uniqueIds([...extraCategories, ...groupNames]);
   for (const category of categories) {
-    await tryPath(`/geo/v1/geofences?categoryName=${encodeURIComponent(category)}`);
+    await tryGeo(`categoryName=${encodeURIComponent(category)}`);
+  }
+  for (const groupId of uniqueIds(groupIds)) {
+    await tryGeo(`groupId=${encodeURIComponent(groupId)}`);
   }
 
   if (found.size === 0) {
-    const verizon = errors.find((line) => /\/geo\/v1\/geofences/.test(line)) || errors[0];
+    const verizon =
+      errors.find((line) => /categoryName=/.test(line) && !/\(404\)/.test(line)) ||
+      errors.find((line) => /categoryName=/.test(line)) ||
+      errors.find((line) => /groupId=/.test(line) && !/\(404\)/.test(line)) ||
+      errors[0];
+    if (extraCategories.length === 0) {
+      throw new Error(
+        "Verizon has no list-all Places call (plain GET /geofences is a 404). In Reveal open Places, copy a category name exactly, paste it in Place category, and download again.",
+      );
+    }
     throw new Error(
       verizon
-        ? `Verizon returned no Places. Geofence GET needs a category (Places tab in Reveal) or group. Last error: ${verizon}`
-        : "Verizon returned no Places. In Reveal, open Places and note a category name, then in Integration Manager Test Client run Geofence API GET /geofences with that categoryName.",
+        ? `No Places in category "${extraCategories[0]}". Spelling must match Reveal → Places. Verizon: ${verizon}`
+        : `No Places in category "${extraCategories[0]}". Spelling must match Reveal → Places.`,
     );
   }
 

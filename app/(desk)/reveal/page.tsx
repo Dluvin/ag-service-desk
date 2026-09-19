@@ -100,20 +100,23 @@ export default async function RevealSettingsPage() {
       </ActionForm>
 
       {configured ? (
-        <p className="mt-4 text-sm">
-          <a
-            href="/api/reveal/places.csv"
-            className="font-semibold text-emerald-800 hover:underline"
-          >
+        <form method="get" action="/api/reveal/places.csv" className="mt-4 space-y-2">
+          <label className="block text-sm font-medium">
+            Place category
+            <input
+              name="category"
+              className="mt-1 w-full max-w-md rounded-lg border border-stone-300 px-3 py-2"
+              placeholder="Exact name from Reveal → Places"
+            />
+          </label>
+          <p className="text-xs text-stone-500">
+            Verizon does not have a list-all Places API. Copy a category from the Reveal Places
+            tab exactly (spelling and spaces). Leave blank to try every truck group name.
+          </p>
+          <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
             Download Places (Excel)
-          </a>
-          <span className="mt-1 block text-xs font-normal text-stone-500">
-            CSV of Reveal geofences. Verizon only returns them by category or group, so this
-            queries every Reveal group and common Place categories. If Excel is empty, the
-            download will instead show Verizon&apos;s error. App ID must match the Geofence
-            SETUP app.
-          </span>
-        </p>
+          </button>
+        </form>
       ) : null}
 
       {configured ? <RevealTestForm /> : null}
