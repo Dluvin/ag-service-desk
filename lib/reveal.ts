@@ -35,13 +35,40 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 
 function asList(value: unknown): Record<string, unknown>[] {
   if (Array.isArray(value)) {
-    return value.map(asRecord).filter((item): item is Record<string, unknown> => Boolean(item));
+    return value.flatMap((item) => {
+      const record = asRecord(item);
+      return record ? [record] : asList(item);
+    });
   }
   const record = asRecord(value);
   if (!record) return [];
-  for (const key of ["Vehicles", "vehicles", "Items", "items", "Results", "results", "Data", "data", "Locations", "locations"]) {
+  for (const key of [
+    "Vehicles",
+    "vehicles",
+    "Items",
+    "items",
+    "Results",
+    "results",
+    "Data",
+    "data",
+    "Locations",
+    "locations",
+    "VehicleLocations",
+    "vehicleLocations",
+    "_embedded",
+    "d",
+  ]) {
     const nested = record[key];
-    if (Array.isArray(nested)) return asList(nested);
+    if (nested != null) {
+      const list = asList(nested);
+      if (list.length > 0) return list;
+    }
+  }
+  if (
+    pickString(record, ["VehicleNumber", "vehicleNumber", "Name", "name", "VehicleName"]) ||
+    pickNumber(record, ["Latitude", "latitude", "Lat", "lat"]) != null
+  ) {
+    return [record];
   }
   return [];
 }
@@ -54,12 +81,33 @@ function pickString(record: Record<string, unknown>, keys: string[]) {
   return "";
 }
 
-function unwrapRevealItem(record: Record<string, unknown>): Record<string, unknown> {
+function pickNumber(record: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+    const n = typeof value === "number" ? value : Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function deepPickNumber(record: Record<string, unknown>, keys: string[], depth = 0): number | null {
+  const direct = pickNumber(record, keys);
+  if (direct != null) return direct;
+  if (depth > 6) return null;
+  for (const nested of Object.values(record)) {
+    const child = asRecord(nested);
+    if (!child) continue;
+    const found = deepPickNumber(child, keys, depth + 1);
+    if (found != null) return found;
+  }
+  return null;
+}
+
+function flattenRevealItem(record: Record<string, unknown>): Record<string, unknown> {
+  const vehicle = asRecord(record.Vehicle) ?? asRecord(record.vehicle);
   const content = asRecord(record.ContentResource) ?? asRecord(record.contentResource);
   const value = content ? asRecord(content.Value) ?? asRecord(content.value) : null;
-  const nested = value ?? content;
-  if (!nested) return record;
-  return { ...record, ...nested };
+  return { ...record, ...vehicle, ...content, ...value };
 }
 
 function formatRevealAddress(record: Record<string, unknown>) {
@@ -80,13 +128,35 @@ function formatRevealAddress(record: Record<string, unknown>) {
     .join(", ");
 }
 
-function pickNumber(record: Record<string, unknown>, keys: string[]) {
-  for (const key of keys) {
-    const value = record[key];
-    const n = typeof value === "number" ? value : Number(value);
-    if (Number.isFinite(n)) return n;
-  }
-  return null;
+function locationFromRecord(record: Record<string, unknown>, fallbackNumber = ""): RevealLocation | null {
+  const item = flattenRevealItem(record);
+  const lat = deepPickNumber(item, ["Latitude", "latitude", "Lat", "lat"]);
+  const lng = deepPickNumber(item, ["Longitude", "longitude", "Lng", "lng", "Lon", "lon"]);
+  if (lat == null || lng == null) return null;
+  const vehicleNumber =
+    pickString(item, ["VehicleNumber", "vehicleNumber"]) ||
+    pickString(item, ["Number", "number"]) ||
+    fallbackNumber;
+  if (!vehicleNumber) return null;
+  return {
+    vehicleNumber,
+    name: pickString(item, ["Name", "name", "VehicleName", "vehicleName"]) || undefined,
+    lat,
+    lng,
+    updatedAt: pickString(item, ["UpdateUTC", "updateUTC", "UpdatedAt", "updatedAt"]) || undefined,
+    displayState: pickString(item, ["DisplayState", "displayState"]) || undefined,
+    address: formatRevealAddress(item) || undefined,
+  };
+}
+
+function locationsFromPayload(json: unknown, fallbackNumbers: string[] = []): RevealLocation[] {
+  const rows = asList(json);
+  const found: RevealLocation[] = [];
+  rows.forEach((row, index) => {
+    const location = locationFromRecord(row, fallbackNumbers[index] || "");
+    if (location) found.push(location);
+  });
+  return found;
 }
 
 export function orgHasRevealCreds(org: {
@@ -195,8 +265,13 @@ export async function listRevealVehicles(organizationId: string): Promise<Reveal
   const json = await revealFetch(creds, "/cmd/v1/vehicles");
   return asList(json)
     .map((item) => {
-      const number = pickString(item, ["VehicleNumber", "vehicleNumber", "Number", "number", "VehicleId", "vehicleId"]);
-      const name = pickString(item, ["Name", "name", "Description", "description", "DisplayName"]) || number;
+      const row = flattenRevealItem(item);
+      const number =
+        pickString(row, ["VehicleNumber", "vehicleNumber"]) ||
+        pickString(row, ["Number", "number", "VehicleId", "vehicleId"]);
+      const name =
+        pickString(row, ["VehicleName", "vehicleName", "Name", "name", "Description", "description", "DisplayName"]) ||
+        number;
       return { number, name };
     })
     .filter((item) => item.number);
@@ -268,26 +343,34 @@ export async function fetchRevealLocations(
   const locations: RevealLocation[] = [];
   for (let i = 0; i < numbers.length; i += 100) {
     const chunk = numbers.slice(i, i + 100);
-    const json = await revealFetch(creds, "/rad/v1/vehicles/locations", {
-      method: "POST",
-      body: JSON.stringify(chunk),
-    });
-    for (const item of asList(json).map(unwrapRevealItem)) {
-      const vehicleNumber = pickString(item, ["VehicleNumber", "vehicleNumber", "Number", "number"]);
-      const lat = pickNumber(item, ["Latitude", "latitude", "Lat", "lat"]);
-      const lng = pickNumber(item, ["Longitude", "longitude", "Lng", "lng", "Lon", "lon"]);
-      if (!vehicleNumber || lat == null || lng == null) continue;
-      locations.push({
-        vehicleNumber,
-        name: pickString(item, ["Name", "name"]) || undefined,
-        lat,
-        lng,
-        updatedAt: pickString(item, ["UpdateUTC", "updateUTC", "UpdatedAt", "updatedAt"]) || undefined,
-        displayState: pickString(item, ["DisplayState", "displayState"]) || undefined,
-        address: formatRevealAddress(item) || undefined,
+    try {
+      const json = await revealFetch(creds, "/rad/v1/vehicles/locations", {
+        method: "POST",
+        body: JSON.stringify(chunk),
       });
+      locations.push(...locationsFromPayload(json, chunk));
+    } catch {
+      // Fall through to per-vehicle GET below.
     }
   }
+
+  if (locations.length === 0) {
+    for (let i = 0; i < numbers.length; i += 8) {
+      const chunk = numbers.slice(i, i + 8);
+      const got = await Promise.all(
+        chunk.map(async (number) => {
+          try {
+            const json = await revealFetch(creds, `/rad/v1/vehicles/${encodeURIComponent(number)}/location`);
+            return locationsFromPayload(json, [number])[0] ?? null;
+          } catch {
+            return null;
+          }
+        }),
+      );
+      for (const location of got) if (location) locations.push(location);
+    }
+  }
+
   return locations;
 }
 
