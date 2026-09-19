@@ -5,7 +5,14 @@ import { prisma } from "@/lib/prisma";
 import { ROLES, canAddTechnicians, isAdmin } from "@/lib/roles";
 import { syncRevealVehiclesAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
-import { loadRevealCreds } from "@/lib/reveal";
+import { fetchRevealLocations, loadRevealCreds, type RevealLocation } from "@/lib/reveal";
+
+function formatLocationTime(value?: string) {
+  if (!value) return "";
+  const date = new Date(value.endsWith("Z") || value.includes("+") ? value : `${value}Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+}
 
 export default async function VehiclesPage({
   searchParams,
@@ -35,6 +42,20 @@ export default async function VehiclesPage({
       .map((tech) => [tech.revealVehicleNumber as string, tech.name]),
   );
 
+  let locationsByNumber = new Map<string, RevealLocation>();
+  let locationError: string | null = null;
+  if (configured && vehicles.length > 0) {
+    try {
+      const locations = await fetchRevealLocations(
+        session.organizationId,
+        vehicles.map((vehicle) => vehicle.number),
+      );
+      locationsByNumber = new Map(locations.map((location) => [location.vehicleNumber, location]));
+    } catch (error) {
+      locationError = error instanceof Error ? error.message : "Could not load current locations.";
+    }
+  }
+
   return (
     <div className="max-w-3xl">
       <h1 className="font-display text-3xl">Verizon vehicles</h1>
@@ -49,6 +70,11 @@ export default async function VehiclesPage({
       {query.synced ? (
         <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
           Synced {query.synced} vehicle{query.synced === "1" ? "" : "s"} from Verizon.
+        </p>
+      ) : null}
+      {locationError ? (
+        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          {locationError}
         </p>
       ) : null}
 
@@ -72,18 +98,40 @@ export default async function VehiclesPage({
             No vehicles saved yet. {isAdmin(session.role) ? "Refresh from Verizon after Reveal is connected." : "Ask an admin to refresh the Verizon list."}
           </li>
         ) : (
-          vehicles.map((vehicle) => (
-            <li key={vehicle.id} className={`px-4 py-3 text-sm ${vehicle.active ? "" : "text-stone-400"}`}>
-              <p className="font-medium text-stone-900">
-                {vehicle.name}
-                {!vehicle.active ? <span className="ml-2 text-xs font-normal text-stone-500">Inactive</span> : null}
-              </p>
-              <p className="text-stone-600">
-                {vehicle.number}
-                {techByVehicle.get(vehicle.number) ? ` · ${techByVehicle.get(vehicle.number)}` : " · not assigned"}
-              </p>
-            </li>
-          ))
+          vehicles.map((vehicle) => {
+            const location = locationsByNumber.get(vehicle.number);
+            const when = formatLocationTime(location?.updatedAt);
+            return (
+              <li key={vehicle.id} className={`px-4 py-3 text-sm ${vehicle.active ? "" : "text-stone-400"}`}>
+                <p className="font-medium text-stone-900">
+                  {vehicle.name}
+                  {!vehicle.active ? <span className="ml-2 text-xs font-normal text-stone-500">Inactive</span> : null}
+                </p>
+                <p className="text-stone-600">
+                  {vehicle.number}
+                  {techByVehicle.get(vehicle.number) ? ` · ${techByVehicle.get(vehicle.number)}` : " · not assigned"}
+                  {location?.displayState ? ` · ${location.displayState}` : ""}
+                </p>
+                {location ? (
+                  <p className="mt-1 text-stone-600">
+                    {location.address || `${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`}
+                    {when ? ` · ${when}` : ""}
+                    {" · "}
+                    <a
+                      href={`https://www.google.com/maps?q=${location.lat},${location.lng}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-emerald-800 hover:underline"
+                    >
+                      Map
+                    </a>
+                  </p>
+                ) : configured && !locationError ? (
+                  <p className="mt-1 text-xs text-stone-500">No current location from Verizon.</p>
+                ) : null}
+              </li>
+            );
+          })
         )}
       </ul>
     </div>
