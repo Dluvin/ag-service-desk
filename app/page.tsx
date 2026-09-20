@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ActionForm } from "@/components/ActionForm";
-import { LandingThemeToggle } from "@/components/LandingThemeToggle";
+import { LandingFooter, LandingHeader } from "@/components/LandingChrome";
 import { landingDemoAction } from "@/lib/landing-actions";
 import { PLAN } from "@/lib/plan";
 import "./landing.css";
@@ -22,30 +22,7 @@ export default async function HomePage({
       <a className="landing-skip" href="#content">
         Skip to content
       </a>
-      <header className="landing-header">
-        <div className="container landing-nav">
-          <Link className="landing-brand" href="/">
-            AG Desk Pro
-            <small>Service tickets for irrigation dealers</small>
-          </Link>
-          <nav className="landing-links" aria-label="Primary">
-            <a href="#features">Features</a>
-            <a href="#product">Product</a>
-            <a href="#field">Field</a>
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
-          </nav>
-          <div className="landing-actions">
-            <LandingThemeToggle />
-            <Link className="landing-btn-secondary" href="/login">
-              Log in
-            </Link>
-            <a className="landing-btn" href="#contact">
-              Request demo
-            </a>
-          </div>
-        </div>
-      </header>
+      <LandingHeader />
 
       <main id="content">
         <section className="landing-hero" id="top">
@@ -395,16 +372,7 @@ export default async function HomePage({
         </section>
       </main>
 
-      <footer className="landing-footer">
-        <div className="container landing-footer-inner">
-          <div>AG Desk Pro — irrigation service software for dealers.</div>
-          <div>
-            <a href="mailto:info@agdeskpro.com">info@agdeskpro.com</a>
-            {" · "}
-            <a href="tel:+12299389000">229-938-9000</a>
-          </div>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }

@@ -110,7 +110,7 @@ html:has(.landing) {
 
 .landing-links {
   display: flex;
-  gap: 1.75rem;
+  gap: 1.1rem;
   color: var(--ld-muted);
   font-size: var(--ld-text-sm);
 }
@@ -392,6 +392,41 @@ html:has(.landing) {
 .landing-field textarea {
   min-height: 140px;
   resize: vertical;
+}
+
+.landing-legal h1 {
+  max-width: none;
+}
+
+.landing-legal-body {
+  margin-top: 1.25rem;
+  padding: 1.5rem 1.35rem;
+}
+
+.landing-legal-body h2 {
+  font-size: 1.35rem;
+  margin: 1.5rem 0 0.6rem;
+}
+
+.landing-legal-body p,
+.landing-legal-body li {
+  color: var(--ld-muted);
+}
+
+.landing-legal-body ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.landing-legal-body a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.landing-legal-body code {
+  font-size: 0.9em;
 }
 
 .landing-footer {
