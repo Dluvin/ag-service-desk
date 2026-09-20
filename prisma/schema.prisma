@@ -25,6 +25,19 @@ model Organization {
   logoMimeType        String?
   logoFileName        String?
   paused              Boolean  @default(false)
+  signupStatus        String   @default("ACTIVE")
+  signupPhone         String?
+  signupTitle         String?
+  signupAddress       String?
+  signupCity          String?
+  signupRegion        String?
+  signupPostalCode    String?
+  signupStaffCount    String?
+  signupNotes         String?
+  trialEndsAt         DateTime?
+  stripeCustomerId    String?
+  stripeSubscriptionId String?
+  stripeCheckoutUrl   String?
   users               User[]
   farmers             Farmer[]
   pivots              Pivot[]

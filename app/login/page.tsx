@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ paused?: string }>;
+  searchParams: Promise<{ paused?: string; billing?: string }>;
 }) {
   let userCount = 0;
   try {
@@ -24,6 +24,17 @@ export default async function LoginPage({
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
         <h1 className="font-display text-3xl">Log in</h1>
         <p className="mt-1 text-sm text-stone-600">Farmers, technicians, managers, and company admins use the same door.</p>
+        {query.billing === "ok" ? (
+          <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
+            Billing is set. Sign in to your company. The 15-day trial is on the Stripe subscription.
+          </p>
+        ) : null}
+        {query.billing === "pending" ? (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+            Card setup was canceled. You can still sign in during the trial. Open the billing email
+            again when you are ready.
+          </p>
+        ) : null}
         {query.paused ? (
           <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
             This company is paused. Contact AG Service Desk if you need access restored.

@@ -12,6 +12,10 @@ import {
   verifyPlatformLogin,
 } from "./platform";
 import { removeCompanyLogoFile } from "./company-logo";
+import { PLAN } from "./plan";
+import { seedApprovedDemo } from "./demo-tenant";
+import { startTenantBilling, stripeIsConfigured } from "./stripe";
+import { emailTenantApproved } from "./signup-notify";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -89,5 +93,59 @@ export async function deleteTenantAction(formData: FormData) {
   }
   await removeCompanyLogoFile(org.id);
   await prisma.organization.delete({ where: { id: org.id } });
+  redirect("/platform");
+}
+
+export async function approveTenantAction(formData: FormData) {
+  await requirePlatformAdmin();
+  const organizationId = formString(formData, "organizationId");
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    include: { users: { where: { role: ROLES.ADMIN }, orderBy: { createdAt: "asc" }, take: 1 } },
+  });
+  if (!org) return { error: "Company not found." };
+  const admin = org.users[0];
+  const trialEndsAt = new Date(Date.now() + PLAN.trialDays * 24 * 60 * 60 * 1000);
+  await prisma.organization.update({
+    where: { id: org.id },
+    data: { paused: false, signupStatus: "ACTIVE", trialEndsAt },
+  });
+  if (admin) {
+    try {
+      await seedApprovedDemo(org.id, admin.id);
+    } catch (error) {
+      console.error("Demo seed failed", error);
+    }
+  }
+
+  let checkoutUrl = "";
+  if (stripeIsConfigured()) {
+    try {
+      const billing = await startTenantBilling(org.id);
+      checkoutUrl = billing.checkoutUrl;
+    } catch (error) {
+      console.error("Stripe billing setup failed", error);
+    }
+  }
+  if (admin) {
+    await emailTenantApproved({
+      to: admin.email,
+      name: admin.name,
+      company: org.name,
+      checkoutUrl,
+    });
+  }
+  redirect("/platform");
+}
+
+export async function rejectTenantAction(formData: FormData) {
+  await requirePlatformAdmin();
+  const organizationId = formString(formData, "organizationId");
+  const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+  if (!org) return { error: "Company not found." };
+  await prisma.organization.update({
+    where: { id: org.id },
+    data: { paused: true, signupStatus: "REJECTED" },
+  });
   redirect("/platform");
 }

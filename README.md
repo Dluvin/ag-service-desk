@@ -57,7 +57,9 @@ Open http://localhost:3000 and create a company at `/signup`. Ticket data is sto
 
 **On the internet:** connect the GitHub repo https://github.com/Dluvin/ag-service-desk to [Render](https://render.com) or [Railway](https://railway.app). Use the Dockerfile. Set `AUTH_SECRET` to a long random string. Add a persistent disk at `/data` so the SQLite database is not wiped on redeploy.
 
-To open the super-admin tenant portal, set `PLATFORM_ADMIN_EMAIL` and `PLATFORM_ADMIN_PASSWORD`, then visit `/platform/login`. The first successful sign-in creates that platform user. From there you can open a company as their admin, pause logins, or delete a tenant.
+To open the super-admin tenant portal, set `PLATFORM_ADMIN_EMAIL` and `PLATFORM_ADMIN_PASSWORD`, then visit `/platform/login`. The first successful sign-in creates that platform user. From there you can approve new signups (15-day trial, then $499/month), open a company as their admin, pause logins, or delete a tenant.
+
+Set `APP_URL` to the public site (for example `https://agdeskpro.com`). Signups email `SIGNUP_NOTIFY_EMAIL` (default `david@agdeskpro.com`). Stripe billing on approve needs `STRIPE_SECRET_KEY`, `STRIPE_PRICE_BASE`, and `STRIPE_WEBHOOK_SECRET`.
 
 Local `npm run dev` is unchanged (`DATABASE_URL=file:./dev.db`).
 

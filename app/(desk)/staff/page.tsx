@@ -13,6 +13,7 @@ import { StaffEditForm } from "@/components/StaffEditForm";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 import { VehicleSelect } from "@/components/VehicleSelect";
 import { storedRevealVehicles } from "@/lib/reveal";
+import { PLAN, extraStaffSeats } from "@/lib/plan";
 
 export default async function StaffPage({
   searchParams,
@@ -48,8 +49,8 @@ export default async function StaffPage({
       },
     }),
   ]);
-  const includedSeats = 10;
-  const extraSeats = Math.max(0, seatCount - includedSeats);
+  const includedSeats = PLAN.includedSeats;
+  const extraSeats = extraStaffSeats(seatCount);
 
   const groups = [
     { role: ROLES.ADMIN, title: "Admins" },
@@ -164,14 +165,14 @@ export default async function StaffPage({
         <section className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
           <h2 className="font-display text-lg text-stone-900">Increase staff seats</h2>
           <p className="mt-2 text-sm text-stone-700">
-            This company plan includes <span className="font-semibold">10 staff logins</span> for{" "}
-            <span className="font-semibold">$499/month</span> (admins, managers, and technicians).
-            Farm logins are separate. Extra staff seats are <span className="font-semibold">$19/month</span>{" "}
-            each.
+            This company plan includes <span className="font-semibold">{PLAN.includedSeats} staff logins</span> for{" "}
+            <span className="font-semibold">${PLAN.monthlyDollars}/month</span> (admins, managers, and technicians).
+            Farm logins are separate. Extra staff seats are <span className="font-semibold">${PLAN.extraSeatDollars}/month</span>{" "}
+            each. New companies get a {PLAN.trialDays}-day trial after approval.
           </p>
           <p className="mt-2 text-sm text-stone-700">
             {seatCount} of {includedSeats} included seats in use
-            {extraSeats > 0 ? ` · ${extraSeats} extra seat${extraSeats === 1 ? "" : "s"} at $19/month` : ""}.
+            {extraSeats > 0 ? ` · ${extraSeats} extra seat${extraSeats === 1 ? "" : "s"} at $${PLAN.extraSeatDollars}/month` : ""}.
           </p>
           <Link
             href="/contact"

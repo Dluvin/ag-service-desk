@@ -63,7 +63,10 @@ export async function requireSession() {
   return session;
 }
 
-export async function verifyLogin(email: string, password: string): Promise<SessionUser | { paused: true } | null> {
+export async function verifyLogin(
+  email: string,
+  password: string,
+): Promise<SessionUser | { paused: true } | { pending: true } | { rejected: true } | null> {
   const normalized = email.trim().toLowerCase();
   const matches = await prisma.user.findMany({
     where: { email: normalized },
@@ -73,6 +76,12 @@ export async function verifyLogin(email: string, password: string): Promise<Sess
   for (const user of matches) {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (ok) {
+      if (user.organization.signupStatus === "PENDING") {
+        return { pending: true as const };
+      }
+      if (user.organization.signupStatus === "REJECTED") {
+        return { rejected: true as const };
+      }
       if (user.organization.paused) {
         return { paused: true as const };
       }

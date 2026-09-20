@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PLAN } from "@/lib/plan";
 
 export default function HomePage() {
   return (
@@ -9,6 +10,10 @@ export default function HomePage() {
         <p className="mt-4 max-w-xl text-lg text-emerald-100">
           Multi-tenant dispatch for irrigation companies. Map every pivot, assign tickets to
           technicians, and let farmers watch status from their own login.
+        </p>
+        <p className="mt-4 max-w-xl text-sm text-emerald-200">
+          {PLAN.trialDays}-day trial after we approve your company. Then ${PLAN.monthlyDollars}/month
+          for {PLAN.includedSeats} staff seats. Extra seats ${PLAN.extraSeatDollars}/month.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link

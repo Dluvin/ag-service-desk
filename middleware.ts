@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const PUBLIC = new Set(["/", "/login", "/signup", "/welcome", "/forgot", "/contact", "/platform/login"]);
+const PUBLIC = new Set(["/", "/login", "/signup", "/signup/thanks", "/welcome", "/forgot", "/contact", "/platform/login"]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/api/stripe/webhook")) {
+    return NextResponse.next();
+  }
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||

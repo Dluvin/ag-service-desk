@@ -5,10 +5,13 @@ import { ROLES } from "@/lib/roles";
 import { PlatformHeader } from "@/components/PlatformHeader";
 import { ActionForm } from "@/components/ActionForm";
 import {
+  approveTenantAction,
   deleteTenantAction,
   impersonateTenantAction,
   pauseTenantAction,
+  rejectTenantAction,
 } from "@/lib/platform-actions";
+import { PLAN } from "@/lib/plan";
 
 export const dynamic = "force-dynamic";
 
@@ -33,8 +36,9 @@ export default async function PlatformHomePage() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="font-display text-3xl text-stone-900">Companies</h1>
         <p className="mt-2 text-sm text-stone-600">
-          Open a company as their admin to help with setup, training, or troubleshooting. Pause
-          blocks their staff and farm logins. Delete removes the company and all of its data.
+          New companies stay pending until you approve. Approve opens their tenant, loads a demo
+          farm/ticket, starts a {PLAN.trialDays}-day trial, and creates a Stripe checkout for $
+          {PLAN.monthlyDollars}/month.
         </p>
         <ul className="mt-6 space-y-4">
           {tenants.length === 0 ? (
@@ -51,7 +55,17 @@ export default async function PlatformHomePage() {
                     <div>
                       <p className="font-semibold text-stone-900">
                         {org.name}
-                        {org.paused ? (
+                        {org.signupStatus === "PENDING" ? (
+                          <span className="ml-2 rounded bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-900">
+                            Pending approval
+                          </span>
+                        ) : null}
+                        {org.signupStatus === "REJECTED" ? (
+                          <span className="ml-2 rounded bg-stone-200 px-2 py-0.5 text-xs font-semibold text-stone-700">
+                            Rejected
+                          </span>
+                        ) : null}
+                        {org.paused && org.signupStatus === "ACTIVE" ? (
                           <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
                             Paused
                           </span>
@@ -62,8 +76,33 @@ export default async function PlatformHomePage() {
                         tickets
                         {adminEmail ? ` · ${adminEmail}` : ""}
                       </p>
+                      {org.signupPhone || org.signupCity ? (
+                        <p className="mt-1 text-xs text-stone-500">
+                          {[org.signupTitle, org.signupPhone, org.signupAddress, org.signupCity, org.signupRegion, org.signupPostalCode]
+                            .filter(Boolean)
+                            .join(" · ")}
+                          {org.signupStaffCount ? ` · Staff ~ ${org.signupStaffCount}` : ""}
+                        </p>
+                      ) : null}
+                      {org.signupNotes ? <p className="mt-1 text-xs text-stone-500">{org.signupNotes}</p> : null}
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      {org.signupStatus === "PENDING" ? (
+                        <>
+                          <ActionForm action={approveTenantAction}>
+                            <input type="hidden" name="organizationId" value={org.id} />
+                            <button className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700">
+                              Approve + billing
+                            </button>
+                          </ActionForm>
+                          <ActionForm action={rejectTenantAction}>
+                            <input type="hidden" name="organizationId" value={org.id} />
+                            <button className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-semibold hover:bg-stone-50">
+                              Reject
+                            </button>
+                          </ActionForm>
+                        </>
+                      ) : null}
                       <ActionForm action={impersonateTenantAction}>
                         <input type="hidden" name="organizationId" value={org.id} />
                         <button className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700">
@@ -79,6 +118,13 @@ export default async function PlatformHomePage() {
                       </ActionForm>
                     </div>
                   </div>
+                  {org.stripeCheckoutUrl ? (
+                    <p className="mt-2 text-xs">
+                      <a href={org.stripeCheckoutUrl} className="font-semibold text-emerald-800 hover:underline" target="_blank" rel="noreferrer">
+                        Stripe checkout link
+                      </a>
+                    </p>
+                  ) : null}
                   <ActionForm action={deleteTenantAction} className="mt-4 border-t border-stone-100 pt-3">
                     <input type="hidden" name="organizationId" value={org.id} />
                     <label className="block text-xs font-medium text-stone-600">

@@ -43,6 +43,7 @@ import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelc
 import { getPlatformSession } from "./platform";
 import { parseDateTimeLocal } from "./schedule";
 import { parseMoneyInput } from "./money";
+import { emailSignupToOwner } from "./signup-notify";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -99,6 +100,12 @@ export async function loginAction(formData: FormData) {
   const password = formString(formData, "password");
   const user = await verifyLogin(email, password);
   if (!user) return { error: "Invalid email or password." };
+  if ("pending" in user) {
+    return { error: "This company is waiting for AG Desk Pro approval. We emailed you when it is ready." };
+  }
+  if ("rejected" in user) {
+    return { error: "This signup was not approved. Contact david@agdeskpro.com if you have questions." };
+  }
   if ("paused" in user) {
     return { error: "This company is paused. Contact AG Service Desk if you need access restored." };
   }
@@ -172,26 +179,45 @@ export async function requestPasswordResetAction(formData: FormData) {
 export async function signupAction(formData: FormData) {
   const company = formString(formData, "company");
   const name = formString(formData, "name");
+  const title = formString(formData, "title");
   const email = formString(formData, "email").toLowerCase();
+  const phone = formString(formData, "phone");
+  const address = formString(formData, "address");
+  const city = formString(formData, "city");
+  const region = formString(formData, "region");
+  const postalCode = formString(formData, "postalCode");
+  const staffCount = formString(formData, "staffCount");
+  const notes = formString(formData, "notes");
   const password = formString(formData, "password");
-  if (!company || !name || !email || password.length < 8) {
-    return { error: "Company, name, email, and an 8+ character password are required." };
+  if (!company || !name || !email || !phone || password.length < 8) {
+    return { error: "Company, your name, email, phone, and an 8+ character password are required." };
   }
 
   let slug = slugify(company) || "company";
   const existing = await prisma.organization.findUnique({ where: { slug } });
   if (existing) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
 
-  const organization = await prisma.organization.create({
+  await prisma.organization.create({
     data: {
       name: company,
       slug,
+      paused: true,
+      signupStatus: "PENDING",
+      signupPhone: phone,
+      signupTitle: title || null,
+      signupAddress: address || null,
+      signupCity: city || null,
+      signupRegion: region || null,
+      signupPostalCode: postalCode || null,
+      signupStaffCount: staffCount || null,
+      signupNotes: notes || null,
       users: {
         create: {
           name,
           email,
           role: ROLES.ADMIN,
           passwordHash: await bcrypt.hash(password, 10),
+          phone: phone || null,
         },
       },
       startupChecks: {
@@ -203,20 +229,22 @@ export async function signupAction(formData: FormData) {
         })),
       },
     },
-    include: { users: true },
   });
 
-  const admin = organization.users[0];
-  await createSession({
-    userId: admin.id,
-    organizationId: organization.id,
-    organizationName: organization.name,
-    role: ROLES.ADMIN,
-    farmerId: null,
-    name: admin.name,
-    email: admin.email,
+  await emailSignupToOwner({
+    company,
+    name,
+    title,
+    email,
+    phone,
+    address,
+    city,
+    region,
+    postalCode,
+    staffCount,
+    notes,
   });
-  redirect("/dashboard");
+  redirect("/signup/thanks");
 }
 
 export async function createFarmerAction(formData: FormData) {
