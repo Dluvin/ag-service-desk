@@ -149,3 +149,23 @@ export async function rejectTenantAction(formData: FormData) {
   });
   redirect("/platform");
 }
+
+export async function createBillingCheckoutAction(formData: FormData) {
+  await requirePlatformAdmin();
+  const organizationId = formString(formData, "organizationId");
+  if (!stripeIsConfigured()) {
+    return {
+      error:
+        "Stripe is not configured on Render. Set STRIPE_SECRET_KEY and STRIPE_PRICE_BASE, then try again.",
+    };
+  }
+  try {
+    const billing = await startTenantBilling(organizationId);
+    if (billing.error || !billing.checkoutUrl) {
+      return { error: billing.error || "Stripe did not return a checkout URL." };
+    }
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Stripe checkout failed." };
+  }
+  redirect("/platform");
+}

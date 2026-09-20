@@ -6,6 +6,7 @@ import { PlatformHeader } from "@/components/PlatformHeader";
 import { ActionForm } from "@/components/ActionForm";
 import {
   approveTenantAction,
+  createBillingCheckoutAction,
   deleteTenantAction,
   impersonateTenantAction,
   pauseTenantAction,
@@ -118,13 +119,39 @@ export default async function PlatformHomePage() {
                       </ActionForm>
                     </div>
                   </div>
-                  {org.stripeCheckoutUrl ? (
-                    <p className="mt-2 text-xs">
-                      <a href={org.stripeCheckoutUrl} className="font-semibold text-emerald-800 hover:underline" target="_blank" rel="noreferrer">
-                        Stripe checkout link
-                      </a>
-                    </p>
-                  ) : null}
+                  {org.stripeSubscriptionId ? (
+                    <p className="mt-2 text-sm font-medium text-emerald-800">Stripe subscription is on file.</p>
+                  ) : (
+                    <div className="mt-3 rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
+                      {org.stripeCheckoutUrl ? (
+                        <p className="text-sm">
+                          <a
+                            href={org.stripeCheckoutUrl}
+                            className="font-semibold text-emerald-800 hover:underline"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open Stripe checkout
+                          </a>
+                          <span className="mt-1 block text-xs text-stone-500">
+                            This is the card form for the 15-day trial then $499/month. Links expire
+                            in 24 hours — create a new one if it is dead.
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-stone-600">
+                          No Stripe checkout link yet. Usually STRIPE_SECRET_KEY or STRIPE_PRICE_BASE
+                          is missing on Render, or checkout failed when you approved.
+                        </p>
+                      )}
+                      <ActionForm action={createBillingCheckoutAction} className="mt-2">
+                        <input type="hidden" name="organizationId" value={org.id} />
+                        <button className="rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-stone-800">
+                          {org.stripeCheckoutUrl ? "Create a new checkout link" : "Create Stripe checkout"}
+                        </button>
+                      </ActionForm>
+                    </div>
+                  )}
                   <ActionForm action={deleteTenantAction} className="mt-4 border-t border-stone-100 pt-3">
                     <input type="hidden" name="organizationId" value={org.id} />
                     <label className="block text-xs font-medium text-stone-600">
