@@ -1,4 +1,4 @@
-import { appBaseUrl } from "./app-url";
+import { appBaseUrl, brandLogoEmailHtml } from "./app-url";
 import { sendEmail, mailIsConfigured } from "./mail";
 import { PLAN } from "./plan";
 
@@ -69,7 +69,7 @@ export async function emailTenantApproved(input: {
     to: input.to,
     subject: `${input.company} is approved on AG Desk Pro`,
     text,
-    html: `<p>${escapeHtml(text).replaceAll("\n", "<br/>")}</p>`,
+    html: `${brandLogoEmailHtml()}<p>${escapeHtml(text).replaceAll("\n", "<br/>")}</p>`,
   });
   return result.ok ? ("sent" as const) : ("failed" as const);
 }

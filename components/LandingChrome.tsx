@@ -1,14 +1,12 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/BrandLogo";
 import { LandingThemeToggle } from "@/components/LandingThemeToggle";
 
 export function LandingHeader() {
   return (
     <header className="landing-header">
       <div className="container landing-nav">
-        <Link className="landing-brand" href="/">
-          AG Desk Pro
-          <small>Service tickets for irrigation dealers</small>
-        </Link>
+        <BrandLogo imageClassName="landing-logo" />
         <nav className="landing-links" aria-label="Primary">
           <Link href="/#features">Features</Link>
           <Link href="/#product">Product</Link>

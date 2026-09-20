@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requestPasswordResetAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function ForgotPasswordPage({
   return (
     <div className="flex min-h-full items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
+        <BrandLogo className="mb-6 block" />
         <h1 className="font-display text-3xl">Reset password</h1>
         {sent ? (
           <p className="mt-3 text-sm text-stone-600">

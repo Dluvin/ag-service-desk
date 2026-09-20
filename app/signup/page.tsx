@@ -1,12 +1,14 @@
 import { PLAN } from "@/lib/plan";
 import { signupAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { BrandLogo } from "@/components/BrandLogo";
 import Link from "next/link";
 
 export default function SignupPage() {
   return (
     <div className="flex min-h-full items-center justify-center bg-stone-100 px-4 py-16">
       <div className="w-full max-w-xl rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
+        <BrandLogo className="mb-6 block" />
         <h1 className="font-display text-3xl">Start a company</h1>
         <p className="mt-2 text-sm text-stone-600">
           Request an AG Desk Pro tenant. We review each signup, then you get a live company with a

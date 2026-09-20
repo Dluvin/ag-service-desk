@@ -15,6 +15,7 @@ const serif = Source_Serif_4({
 export const metadata: Metadata = {
   title: "AG Desk Pro",
   description: "Irrigation-specific service tickets for dealers, technicians, and farmers",
+  icons: { icon: "/logo-agdeskpro.png", apple: "/logo-agdeskpro.png" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

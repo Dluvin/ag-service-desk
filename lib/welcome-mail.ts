@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
-import { appBaseUrl } from "./app-url";
+import { appBaseUrl, brandLogoEmailHtml } from "./app-url";
 import { mailIsConfigured, sendEmail } from "./mail";
 
 export { mailIsConfigured };
@@ -110,6 +110,7 @@ async function sendPasswordLinkEmail(input: {
     .join("\n");
 
   const html = `
+    ${brandLogoEmailHtml()}
     <p>Hi ${escapeHtml(first)},</p>
     <p>${escapeHtml(input.intro)}</p>
     <p>${escapeHtml(input.passwordLine)}</p>

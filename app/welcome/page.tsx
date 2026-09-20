@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { setPasswordFromWelcomeAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { BrandLogo } from "@/components/BrandLogo";
 import { userFromPasswordToken } from "@/lib/welcome-mail";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function WelcomePage({
   return (
     <div className="flex min-h-full items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
+        <BrandLogo className="mb-6 block" />
         <h1 className="font-display text-3xl">Set your password</h1>
         {!row ? (
           <>

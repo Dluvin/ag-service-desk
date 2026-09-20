@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { loginAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { BrandLogo } from "@/components/BrandLogo";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ export default async function LoginPage({
   return (
     <div className="flex min-h-full items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
+        <BrandLogo className="mb-6 block" />
         <h1 className="font-display text-3xl">Log in</h1>
         <p className="mt-1 text-sm text-stone-600">Farmers, technicians, managers, and company admins use the same door.</p>
         {query.billing === "ok" ? (

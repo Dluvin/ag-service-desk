@@ -62,11 +62,12 @@ export function Nav({
     <header className="no-print relative z-50 border-b border-emerald-950/20 bg-emerald-950 text-emerald-50">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <Link href="/dashboard" className="flex items-center gap-2 font-display text-lg tracking-tight">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-agdeskpro.png" alt="AG Desk Pro" className="h-9 max-w-52 object-contain object-left" />
           {hasLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/api/company-logo" alt="" className="h-8 max-w-40 object-contain" />
+            <img src="/api/company-logo" alt="" className="h-8 max-w-32 object-contain" />
           ) : null}
-          <span>AG Service Desk</span>
         </Link>
         <nav className="flex max-w-3xl flex-wrap items-center gap-4 text-sm">
           {beforeTickets.map((link) => (

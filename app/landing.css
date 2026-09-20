@@ -96,16 +96,13 @@ html:has(.landing) {
   flex-wrap: nowrap;
 }
 
-.landing-brand {
-  font-weight: 800;
-  letter-spacing: -0.03em;
-}
-
-.landing-brand small {
+.landing-logo {
   display: block;
-  font-weight: 500;
-  color: var(--ld-muted);
-  font-size: var(--ld-text-xs);
+  height: 44px;
+  width: auto;
+  max-width: 240px;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .landing-links {
