@@ -63,7 +63,7 @@ export function Nav({
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <Link href="/dashboard" className="flex items-center gap-2 font-display text-lg tracking-tight">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-agdeskpro-dark.png" alt="AG Desk Pro" className="h-9 max-w-52 object-contain object-left" />
+          <img src="/brand-logo-on-dark.png" alt="AG Desk Pro" className="h-9 max-w-52 bg-transparent object-contain object-left" />
           {hasLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src="/api/company-logo" alt="" className="h-8 max-w-32 object-contain" />

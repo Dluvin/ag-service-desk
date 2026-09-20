@@ -15,9 +15,9 @@ export function BrandLogo({
     <Link href={href} className={className} aria-label="AG Desk Pro home">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={onDark ? "/logo-agdeskpro-dark.png" : "/logo-agdeskpro.png"}
+        src={onDark ? "/brand-logo-on-dark.png" : "/brand-logo.png"}
         alt="AG Desk Pro"
-        className={imageClassName}
+        className={`bg-transparent ${imageClassName}`}
       />
     </Link>
   );

@@ -7,7 +7,7 @@ export function appBaseUrl() {
 
 export function brandLogoUrl() {
   const base = appBaseUrl();
-  return base ? `${base}/logo-agdeskpro.png` : "";
+  return base ? `${base}/brand-logo.png` : "";
 }
 
 export function brandLogoEmailHtml() {
