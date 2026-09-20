@@ -6,12 +6,11 @@ export function LandingThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setTheme(dark ? "dark" : "light");
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-landing-theme", theme);
+    if (theme === "dark") {
+      document.documentElement.setAttribute("data-landing-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-landing-theme");
+    }
   }, [theme]);
 
   return (

@@ -6,29 +6,31 @@ html:not([data-landing-theme]) {
   --ld-text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
   --ld-text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
   --ld-text-2xl: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
-  --ld-bg: #f4f7f2;
-  --ld-surface: #fbfdf9;
-  --ld-surface-2: #edf3eb;
-  --ld-text: #17301d;
-  --ld-muted: #566b5a;
-  --ld-border: rgba(20, 50, 26, 0.12);
-  --ld-primary: #1f8a2d;
-  --ld-primary-2: #2a5f39;
-  --ld-shadow: 0 6px 18px rgba(16, 42, 22, 0.08);
-  --ld-shadow-lg: 0 26px 60px rgba(16, 42, 22, 0.14);
+  --ld-bg: #f3efe6;
+  --ld-surface: #ffffff;
+  --ld-surface-2: #faf8f3;
+  --ld-text: #1c1917;
+  --ld-muted: #57534e;
+  --ld-border: #e7e5e4;
+  --ld-primary: #065f46;
+  --ld-primary-2: #022c22;
+  --ld-accent: #fbbf24;
+  --ld-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+  --ld-shadow-lg: 0 10px 24px rgba(28, 25, 23, 0.08);
 }
 
 html[data-landing-theme="dark"] {
-  --ld-bg: #0f1711;
-  --ld-surface: #172019;
-  --ld-surface-2: #1d2820;
-  --ld-text: #edf6ee;
-  --ld-muted: #bdccbe;
-  --ld-border: rgba(235, 245, 236, 0.12);
-  --ld-primary: #59bf67;
-  --ld-primary-2: #8cc895;
-  --ld-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-  --ld-shadow-lg: 0 26px 60px rgba(0, 0, 0, 0.4);
+  --ld-bg: #022c22;
+  --ld-surface: #064e3b;
+  --ld-surface-2: #065f46;
+  --ld-text: #ecfdf5;
+  --ld-muted: #a7f3d0;
+  --ld-border: rgba(236, 253, 245, 0.16);
+  --ld-primary: #fbbf24;
+  --ld-primary-2: #f59e0b;
+  --ld-accent: #fbbf24;
+  --ld-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --ld-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.35);
 }
 
 html:has(.landing) {
@@ -38,9 +40,7 @@ html:has(.landing) {
 .landing {
   min-height: 100%;
   color: var(--ld-text);
-  background:
-    radial-gradient(circle at top right, rgba(31, 138, 45, 0.08), transparent 28%),
-    linear-gradient(180deg, var(--ld-bg), var(--ld-surface-2));
+  background: var(--ld-bg);
   font-size: var(--ld-text-base);
   line-height: 1.6;
 }
@@ -59,9 +59,32 @@ html:has(.landing) {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: color-mix(in srgb, var(--ld-bg) 82%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--ld-border);
+  background: #022c22;
+  color: #ecfdf5;
+  border-bottom: 1px solid rgba(2, 44, 34, 0.4);
+}
+
+.landing-header a,
+.landing-header .landing-toggle {
+  color: #ecfdf5;
+}
+
+.landing-brand small,
+.landing-links {
+  color: rgba(236, 253, 245, 0.78);
+}
+
+.landing-header .landing-btn-secondary,
+.landing-header .landing-toggle {
+  background: transparent;
+  border-color: rgba(236, 253, 245, 0.28);
+  color: #ecfdf5;
+}
+
+.landing-header .landing-btn {
+  background: #fbbf24;
+  color: #022c22;
+  border-color: transparent;
 }
 
 .landing-nav {
@@ -102,25 +125,24 @@ html:has(.landing) {
 .landing-btn,
 .landing-btn-secondary,
 .landing-toggle {
-  min-height: 44px;
-  padding: 0.7rem 1.1rem;
-  border-radius: 9999px;
+  min-height: 40px;
+  padding: 0.55rem 1rem;
+  border-radius: 0.5rem;
   border: 1px solid var(--ld-border);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--ld-surface);
   color: var(--ld-text);
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .landing-btn {
-  background: linear-gradient(135deg, var(--ld-primary), var(--ld-primary-2));
+  background: var(--ld-primary);
   color: #fff;
   border-color: transparent;
-  box-shadow: var(--ld-shadow);
 }
 
 .landing-hero {
@@ -157,7 +179,7 @@ html:has(.landing) {
   display: inline-flex;
   padding: 0.45rem 0.9rem;
   border-radius: 9999px;
-  background: rgba(31, 138, 45, 0.1);
+  background: rgba(6, 95, 70, 0.1);
   color: var(--ld-primary);
   font-size: var(--ld-text-sm);
   font-weight: 700;
@@ -335,7 +357,7 @@ html:has(.landing) {
   display: inline-flex;
   padding: 0.2rem 0.55rem;
   border-radius: 9999px;
-  background: rgba(31, 138, 45, 0.12);
+  background: rgba(6, 95, 70, 0.12);
   color: var(--ld-primary);
   font-size: 0.75rem;
   font-weight: 700;
@@ -423,14 +445,14 @@ html:has(.landing) {
 }
 
 .landing-box-on {
-  background: rgba(31, 138, 45, 0.08);
+  background: rgba(6, 95, 70, 0.08);
 }
 
 .landing-quote {
   margin-top: 1rem;
   padding: 1rem 1.1rem;
   border-left: 4px solid var(--ld-primary);
-  background: rgba(31, 138, 45, 0.06);
+  background: rgba(6, 95, 70, 0.06);
   border-radius: 0 1rem 1rem 0;
 }
 
@@ -464,8 +486,8 @@ html:has(.landing) {
   margin-bottom: 1rem;
   padding: 0.85rem 1rem;
   border-radius: 1rem;
-  border: 1px solid rgba(31, 138, 45, 0.3);
-  background: rgba(31, 138, 45, 0.08);
+  border: 1px solid rgba(6, 95, 70, 0.28);
+  background: rgba(6, 95, 70, 0.08);
 }
 
 .landing-err {
