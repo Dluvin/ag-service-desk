@@ -57,7 +57,17 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   return (
     <div className="grid gap-6 lg:grid-cols-5">
       <div className="lg:col-span-3">
-        <p className="text-sm text-stone-500">Ticket #{ticket.number}</p>
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-500">
+          <span>Ticket #{ticket.number}</span>
+          <a
+            href={`https://www.google.com/maps?q=${ticket.pivot.latitude},${ticket.pivot.longitude}`}
+            target="_blank"
+            rel="noreferrer"
+            className="min-h-11 inline-flex items-center font-medium text-emerald-800 hover:underline"
+          >
+            Open in Google Maps
+          </a>
+        </p>
         <h1 className="font-display text-3xl">{ticket.title}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <StatusBadge status={ticket.status} />
