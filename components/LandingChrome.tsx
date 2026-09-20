@@ -6,7 +6,7 @@ export function LandingHeader() {
   return (
     <header className="landing-header">
       <div className="container landing-nav">
-        <BrandLogo imageClassName="landing-logo" />
+        <BrandLogo onDark imageClassName="landing-logo" />
         <nav className="landing-links" aria-label="Primary">
           <Link href="/#features">Features</Link>
           <Link href="/#product">Product</Link>
