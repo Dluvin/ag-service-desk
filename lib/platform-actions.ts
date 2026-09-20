@@ -159,13 +159,29 @@ export async function createBillingCheckoutAction(formData: FormData) {
         "Stripe is not configured on Render. Set STRIPE_SECRET_KEY and STRIPE_PRICE_BASE, then try again.",
     };
   }
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    include: { users: { where: { role: ROLES.ADMIN }, orderBy: { createdAt: "asc" }, take: 1 } },
+  });
+  if (!org) return { error: "Company not found." };
+  const admin = org.users[0];
+  let checkoutUrl = "";
   try {
     const billing = await startTenantBilling(organizationId);
-    if (billing.error || !billing.checkoutUrl) {
+    checkoutUrl = billing.checkoutUrl;
+    if (billing.error || !checkoutUrl) {
       return { error: billing.error || "Stripe did not return a checkout URL." };
     }
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Stripe checkout failed." };
+  }
+  if (admin) {
+    await emailTenantApproved({
+      to: admin.email,
+      name: admin.name,
+      company: org.name,
+      checkoutUrl,
+    });
   }
   redirect("/platform");
 }

@@ -134,8 +134,8 @@ export default async function PlatformHomePage() {
                             Open Stripe checkout
                           </a>
                           <span className="mt-1 block text-xs text-stone-500">
-                            This is the card form for the 15-day trial then $499/month. Links expire
-                            in 24 hours — create a new one if it is dead.
+                            This is the card form for the 15-day trial then $499/month. Creating a
+                            link also emails it to the company admin. Links expire in 24 hours.
                           </span>
                         </p>
                       ) : (
