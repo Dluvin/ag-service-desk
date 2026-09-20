@@ -13,8 +13,8 @@ const serif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "AG Service Desk",
-  description: "Multi-tenant service tickets for irrigation pivots",
+  title: "AG Desk Pro",
+  description: "Irrigation-specific service tickets for dealers, technicians, and farmers",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
