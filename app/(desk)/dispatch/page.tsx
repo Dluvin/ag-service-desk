@@ -6,13 +6,13 @@ import { loadTechnicians, ticketWhere } from "@/lib/scope";
 import { DISPATCH_STATUSES, ROLES, TICKET_STATUSES, STATUS_LABELS, canAssignTickets, isFinishedStatus, type TicketStatus } from "@/lib/roles";
 import { assignTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
-import { PriorityBadge } from "@/components/Badges";
 import { DispatchFleetMap } from "@/components/DispatchFleetMap";
 import { ticketPins } from "@/lib/map-pins";
 import { parseStoreParam, storeTicketWhere, ticketStoreName } from "@/lib/stores";
 import { StoreFilter } from "@/components/StoreFilter";
 import { DispatchCalendarToggle } from "@/components/DispatchCalendarToggle";
 import { DispatchColumnList } from "@/components/DispatchColumnList";
+import { DispatchWorkOrderCard } from "@/components/DispatchWorkOrderCard";
 import { formatSchedule } from "@/lib/schedule";
 
 const COLUMNS: TicketStatus[] = [...DISPATCH_STATUSES];
@@ -71,20 +71,20 @@ export default async function DispatchPage({
               </div>
               <DispatchColumnList count={items.length}>
                 {items.map((ticket) => (
-                  <li key={ticket.id} className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
-                    <Link href={`/tickets/${ticket.id}`} className="font-medium text-emerald-950 hover:underline">
-                      #{ticket.number} {ticket.title}
-                    </Link>
+                  <DispatchWorkOrderCard
+                    key={ticket.id}
+                    href={`/tickets/${ticket.id}`}
+                    title={`#${ticket.number} ${ticket.title}`}
+                    priority={ticket.priority}
+                  >
                     <p className="mt-1 text-xs text-stone-600">
                       {ticket.farmer.name}
-                      {ticketStoreName(ticket) ? ` · ${ticketStoreName(ticket)}` : ""} · {ticket.pivot.name}
+                      {ticketStoreName(ticket) ? ` · ${ticketStoreName(ticket)}` : ""}
+                      {ticket.pivot?.name ? ` · ${ticket.pivot.name}` : ""}
                     </p>
                     {ticket.scheduledAt ? (
                       <p className="mt-1 text-xs font-medium text-emerald-900">{formatSchedule(ticket.scheduledAt)}</p>
                     ) : null}
-                    <div className="mt-1">
-                      <PriorityBadge priority={ticket.priority} />
-                    </div>
                     <ActionForm action={assignTicketAction} className="mt-2 space-y-2">
                       <input type="hidden" name="ticketId" value={ticket.id} />
                       {canAssignTickets(session.role) ? (
@@ -118,7 +118,7 @@ export default async function DispatchPage({
                         Update
                       </button>
                     </ActionForm>
-                  </li>
+                  </DispatchWorkOrderCard>
                 ))}
               </DispatchColumnList>
             </section>

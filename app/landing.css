@@ -5,6 +5,7 @@ html:not([data-landing-theme]) {
   --ld-text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
   --ld-text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
   --ld-text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+  --ld-text-hero: clamp(1.75rem, 1.2rem + 1.85vw, 2.75rem);
   --ld-text-2xl: clamp(2rem, 1.2rem + 2.5vw, 3.5rem);
   --ld-bg: #f3efe6;
   --ld-surface: #ffffff;
@@ -165,6 +166,11 @@ html:has(.landing) {
   font-size: var(--ld-text-2xl);
   max-width: 16ch;
   margin: 0 0 1.25rem;
+}
+
+.landing-hero h1,
+.landing-headline {
+  font-size: var(--ld-text-hero);
 }
 
 .landing h2 {

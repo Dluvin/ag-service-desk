@@ -29,7 +29,9 @@ export default async function HomePage({
           <div className="container landing-hero-grid">
             <div className="landing-hero-copy">
               <span className="landing-eyebrow">Irrigation-specific service software</span>
-              <h1>Keep irrigation work orders, assets, and technician updates in one place.</h1>
+              <h1 className="landing-headline">
+                Keep irrigation work orders, assets, and technician updates in one place.
+              </h1>
               <p className="landing-lead">
                 AG Desk Pro is built for irrigation dealers and service teams that need a simple way
                 to manage repair work orders, track pivots, organize departments, and keep customers
