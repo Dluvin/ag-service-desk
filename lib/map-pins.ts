@@ -1,4 +1,4 @@
-import { OPEN_TICKET_STATUSES } from "./roles";
+import { OPEN_TICKET_STATUSES, STATUS_LABELS, type TicketStatus } from "./roles";
 
 export type MapPin = {
   id: string;
@@ -31,7 +31,7 @@ export function ticketPins(
     name: `#${ticket.number} ${ticket.pivot.name}`,
     lat: ticket.pivot.latitude,
     lng: ticket.pivot.longitude,
-    subtitle: `${ticket.farmer.name} · ${ticket.status.replaceAll("_", " ").toLowerCase()} · ${ticket.technician?.name ?? "Unassigned"}`,
+    subtitle: `${ticket.farmer.name} · ${STATUS_LABELS[ticket.status as TicketStatus] ?? ticket.status.replaceAll("_", " ").toLowerCase()} · ${ticket.technician?.name ?? "Unassigned"}`,
     href: `/tickets/${ticket.id}`,
   }));
 }

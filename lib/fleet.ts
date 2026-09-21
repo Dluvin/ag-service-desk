@@ -76,7 +76,7 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
           tech?.name,
           location.vehicleNumber,
           visit
-            ? `On-site${onSiteMinutes ? ` ${onSiteMinutes} min` : ""} · ticket #${visit.ticket.number}`
+            ? `On-site${onSiteMinutes ? ` ${onSiteMinutes} min` : ""} · work order #${visit.ticket.number}`
             : location.displayState,
           location.address,
         ].filter(Boolean);

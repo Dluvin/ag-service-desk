@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { googleMapsEmbedUrl } from "@/lib/maps";
 
 export type PivotChoice = {
   id: string;
@@ -59,7 +60,7 @@ export function PivotTypeahead({
         required={required && !disabled}
         disabled={disabled}
         autoComplete="off"
-        placeholder={disabled ? "Select a farm first" : "Start typing a pivot name"}
+        placeholder={disabled ? "Select a customer first" : "Start typing a pivot name"}
         className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 disabled:bg-stone-100"
         onFocus={() => {
           if (!disabled) setOpen(true);
@@ -113,7 +114,7 @@ export function PivotTypeahead({
             <div className="absolute top-0 left-full z-30 ml-2 hidden w-64 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-lg lg:block">
               <iframe
                 title={`Map for ${hovered.name}`}
-                src={`https://maps.google.com/maps?q=${hovered.latitude},${hovered.longitude}&z=15&output=embed`}
+                src={googleMapsEmbedUrl(hovered.latitude, hovered.longitude)}
                 className="h-44 w-full border-0"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

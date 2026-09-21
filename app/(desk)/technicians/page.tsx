@@ -60,7 +60,7 @@ export default async function TechniciansPage({
                     name="userId"
                     value={tech.id}
                     label="Delete"
-                    confirmText={`Delete technician ${tech.name}? Assigned tickets will become unassigned.`}
+                    confirmText={`Delete technician ${tech.name}? Assigned work orders will become unassigned.`}
                   />
                 ) : null}
               </div>
@@ -68,7 +68,7 @@ export default async function TechniciansPage({
                 {tech.email}
                 {tech.phone ? ` · ${tech.phone}` : " · no SMS phone"}
                 {tech.store ? ` · ${tech.store.name}` : ""}
-                {` · ${tech.tickets.length} active ticket(s)`}
+                {` · ${tech.tickets.length} active work order(s)`}
               </p>
               <StaffEditForm
                 person={tech}

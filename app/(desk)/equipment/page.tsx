@@ -45,7 +45,7 @@ export default async function EquipmentPage({
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Equipment list</h1>
         <p className="mt-1 text-stone-600">
-          Shop equipment used on service tickets. Import a CSV of names and hourly rates, then log hours on a ticket.
+          Shop equipment used on work orders. Import a CSV of names and hourly rates, then log hours on a work order.
         </p>
         {query.imported || query.updated ? (
           <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
@@ -141,12 +141,12 @@ export default async function EquipmentPage({
           </>
         ) : (
           <p className="rounded-xl border border-stone-200 bg-white p-4 text-sm text-stone-600">
-            Ask an admin or manager to import equipment. You can pick from the list when logging equipment used on a ticket.
+            Ask an admin or manager to import equipment. You can pick from the list when logging equipment used on a work order.
           </p>
         )}
         <p className="text-sm text-stone-500">
           <Link href="/tickets" className="text-emerald-800 hover:underline">
-            Back to tickets
+            Back to work orders
           </Link>
         </p>
       </div>

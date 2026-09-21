@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import type { MapPin } from "@/lib/map-pins";
+import { googleMapsPlaceUrl } from "@/lib/maps";
 import { useRevealVehiclePins } from "./useRevealVehiclePins";
 
 const Canvas = dynamic(() => import("./AllTicketsMapCanvas"), {
@@ -51,7 +52,7 @@ export function GoogleMapPanel({
   }
 
   const focus = active ?? vehicles[0];
-  const open = `https://www.google.com/maps?q=${focus.lat},${focus.lng}`;
+  const open = googleMapsPlaceUrl(focus.lat, focus.lng);
 
   return (
     <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">

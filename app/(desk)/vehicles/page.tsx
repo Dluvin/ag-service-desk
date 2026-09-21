@@ -6,6 +6,7 @@ import { ROLES, canAddTechnicians, isAdmin } from "@/lib/roles";
 import { syncRevealVehiclesAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { VehicleMapToggle } from "@/components/VehicleMapToggle";
+import { googleMapsPlaceUrl } from "@/lib/maps";
 import { fetchRevealLocationReport, loadRevealCreds, type RevealLocation } from "@/lib/reveal";
 
 function formatLocationTime(value?: string) {
@@ -72,7 +73,7 @@ export default async function VehiclesPage({
       <p className="mt-2 text-stone-600">
         These trucks come from Reveal. Vehicle Update GPS needs a Vehicle # in Verizon. If that
         field is blank, fill it in Reveal, then Refresh from Verizon. Uncheck Show on maps to hide
-        a truck from Dispatch and ticket maps. Assign a numbered truck to each technician so
+        a truck from Dispatch and work order maps. Assign a numbered truck to each technician so
         Dispatch pins match.{" "}
         <Link href="/reveal" className="text-emerald-800 hover:underline">
           Connectors
@@ -138,7 +139,7 @@ export default async function VehiclesPage({
                     {when ? ` · ${when}` : ""}
                     {" · "}
                     <a
-                      href={`https://www.google.com/maps?q=${location.lat},${location.lng}`}
+                      href={googleMapsPlaceUrl(location.lat, location.lng)}
                       target="_blank"
                       rel="noreferrer"
                       className="text-emerald-800 hover:underline"

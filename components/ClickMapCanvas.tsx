@@ -1,7 +1,8 @@
 "use client";
 
-import { MapContainer, TileLayer, CircleMarker, useMapEvents } from "react-leaflet";
+import { MapContainer, CircleMarker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { SatelliteTiles } from "./SatelliteTiles";
 
 function ClickCatch({ onPick }: { onPick: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -25,10 +26,7 @@ export default function ClickMapCanvas({
 
   return (
     <MapContainer center={center} zoom={lat != null ? 13 : 7} className="h-80 w-full" scrollWheelZoom>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <SatelliteTiles />
       <ClickCatch onPick={onPick} />
       {lat != null && lng != null ? (
         <CircleMarker

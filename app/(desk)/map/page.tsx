@@ -29,9 +29,9 @@ export default async function MapPage() {
   return (
     <div>
       <h1 className="font-display text-3xl">Maps</h1>
-      <p className="mt-1 text-stone-600">Every open ticket at its pivot, then the full pivot fleet.</p>
+      <p className="mt-1 text-stone-600">Every open work order at its pivot, then the full pivot fleet.</p>
 
-      <h2 className="font-display mt-8 text-xl">Open tickets</h2>
+      <h2 className="font-display mt-8 text-xl">Open work orders</h2>
       <p className="mt-1 text-sm text-stone-600">Pins for open, assigned, in-progress, and waiting-on-parts work.</p>
       <div className="mt-4">
         <AllTicketsMap pins={ticketPins(tickets)} />

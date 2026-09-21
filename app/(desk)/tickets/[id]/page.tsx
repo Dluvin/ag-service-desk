@@ -8,6 +8,7 @@ import { updateTicketAction, addTicketPartAction, addTicketLaborAction, addTicke
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
+import { googleMapsPlaceUrl } from "@/lib/maps";
 import { PriorityBadge, StatusBadge } from "@/components/Badges";
 import { TicketStatusFields } from "@/components/TicketStatusFields";
 import { TicketPhotoFields } from "@/components/TicketPhotoFields";
@@ -16,7 +17,8 @@ import { PartsPicker } from "@/components/PartsPicker";
 import { LaborPicker } from "@/components/LaborPicker";
 import { EquipmentPicker } from "@/components/EquipmentPicker";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
-import { formatSchedule, toDateTimeLocalValue } from "@/lib/schedule";
+import { formatSchedule } from "@/lib/schedule";
+import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
 import { StoreSelect } from "@/components/StoreSelect";
 import { ticketStoreName } from "@/lib/stores";
 
@@ -58,9 +60,9 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     <div className="grid gap-6 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-500">
-          <span>Ticket #{ticket.number}</span>
+          <span>Work order #{ticket.number}</span>
           <a
-            href={`https://www.google.com/maps?q=${ticket.pivot.latitude},${ticket.pivot.longitude}`}
+            href={googleMapsPlaceUrl(ticket.pivot.latitude, ticket.pivot.longitude)}
             target="_blank"
             rel="noreferrer"
             className="min-h-11 inline-flex items-center font-medium text-emerald-800 hover:underline"
@@ -83,7 +85,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               href={`/tickets/${ticket.id}/print`}
               className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"
             >
-              Print ticket
+              Print work order
             </Link>
           ) : null}
           {canDeleteRecords(session.role) ? (
@@ -91,8 +93,8 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               action={deleteTicketAction}
               name="ticketId"
               value={ticket.id}
-              label="Delete ticket"
-              confirmText={`Delete ticket #${ticket.number}? This cannot be undone.`}
+              label="Delete work order"
+              confirmText={`Delete work order #${ticket.number}? This cannot be undone.`}
             />
           ) : null}
         </div>
@@ -164,15 +166,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 invoiceNumber={ticket.invoiceNumber}
                 invoiceAmount={ticket.invoiceAmount}
               />
-              <label className="block text-sm font-medium">
-                Scheduled for
-                <input
-                  name="scheduledAt"
-                  type="datetime-local"
-                  defaultValue={toDateTimeLocalValue(ticket.scheduledAt)}
-                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
-                />
-              </label>
+              <ScheduleDateTimeField label="Scheduled for" initialValue={ticket.scheduledAt} />
               <StoreSelect stores={stores} defaultValue={ticket.storeId ?? ticket.farmer.storeId} label="Store" />
               {canAssignTickets(session.role) ? (
                 <label className="block text-sm font-medium">
@@ -208,7 +202,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           </label>
           <TicketPhotoFields />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-            {canDispatch ? "Save update" : "Add to ticket"}
+            {canDispatch ? "Save update" : "Add to work order"}
           </button>
         </ActionForm>
 

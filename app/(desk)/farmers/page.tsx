@@ -41,7 +41,7 @@ export default async function FarmersPage({
   return (
     <div className="grid gap-8 lg:grid-cols-5">
       <div className="lg:col-span-3">
-        <h1 className="font-display text-3xl">Farms</h1>
+        <h1 className="font-display text-3xl">Customers</h1>
         <WelcomeMailNotice status={query.welcome} />
         <FarmDirectory
           farms={farmers.map((farmer) => ({
@@ -56,10 +56,10 @@ export default async function FarmersPage({
         />
       </div>
       <div className="lg:col-span-2">
-        <h2 className="font-display text-xl">Add farm</h2>
+        <h2 className="font-display text-xl">Add customer</h2>
         <ActionForm action={createFarmerAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
           <label className="block text-sm font-medium">
-            Farm name
+            Customer name
             <input name="name" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
           </label>
           <label className="block text-sm font-medium">
@@ -70,7 +70,7 @@ export default async function FarmersPage({
           <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Primary contact</p>
           <label className="block text-sm font-medium">
             Contact name
-            <input name="contactName" placeholder="Optional — defaults to farm name" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <input name="contactName" placeholder="Optional — defaults to customer name" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
           </label>
           <label className="block text-sm font-medium">
             Phone
@@ -93,7 +93,7 @@ export default async function FarmersPage({
               email.
             </span>
           </label>
-          <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save farm</button>
+          <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save customer</button>
         </ActionForm>
       </div>
     </div>

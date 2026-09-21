@@ -8,7 +8,7 @@ import "./landing.css";
 export const metadata = {
   title: "AG Desk Pro",
   description:
-    "Irrigation-specific service ticket software for dealers, field technicians, and office teams.",
+    "Irrigation-specific work-order software for dealers, field technicians, and office teams.",
 };
 
 export default async function HomePage({
@@ -29,10 +29,10 @@ export default async function HomePage({
           <div className="container landing-hero-grid">
             <div className="landing-hero-copy">
               <span className="landing-eyebrow">Irrigation-specific service software</span>
-              <h1>Keep irrigation service tickets, assets, and technician updates in one place.</h1>
+              <h1>Keep irrigation work orders, assets, and technician updates in one place.</h1>
               <p className="landing-lead">
                 AG Desk Pro is built for irrigation dealers and service teams that need a simple way
-                to manage repair tickets, track pivots, organize departments, and keep farmers
+                to manage repair work orders, track pivots, organize departments, and keep customers
                 informed without forcing their workflow into generic help desk software.
               </p>
               <div className="landing-cta">
@@ -88,8 +88,8 @@ export default async function HomePage({
                       <ul className="landing-list">
                         <li>Digital work orders in seconds</li>
                         <li>Real-time job tracking</li>
-                        <li>Dispatch with navigation to the pivot, not just the farm gate</li>
-                        <li>Office, techs, and farmers on the same page</li>
+                        <li>Dispatch with navigation to the pivot, not just the front gate</li>
+                        <li>Office, techs, and customers on the same page</li>
                       </ul>
                     </div>
                   </div>
@@ -100,12 +100,12 @@ export default async function HomePage({
               <figure className="landing-shot">
                 <img
                   src="/landing/dashboard.png"
-                  alt="AG Desk Pro dashboard with open tickets map and Verizon trucks"
+                  alt="AG Desk Pro dashboard with open work orders map and Verizon trucks"
                 />
               </figure>
               <div className="landing-mini">
                 <figure className="landing-shot">
-                  <img src="/landing/reports.png" alt="Ticket reports with status and labor totals" />
+                  <img src="/landing/reports.png" alt="Work order reports with status and labor totals" />
                 </figure>
                 <figure className="landing-shot">
                   <img src="/landing/corner-arm.jpg" alt="Center pivot corner arm in a field" />
@@ -133,9 +133,9 @@ export default async function HomePage({
                   and internal follow-up.
                 </p>
                 <ul className="landing-list">
-                  <li>Track support tickets from first call to resolution.</li>
+                  <li>Track work orders from first call to resolution.</li>
                   <li>Link work to pivots, assets, and client records.</li>
-                  <li>Keep technicians, office staff, and farmers aligned.</li>
+                  <li>Keep technicians, office staff, and customers aligned.</li>
                   <li>Organize users, departments, and reporting in one system.</li>
                 </ul>
               </article>
@@ -156,21 +156,21 @@ export default async function HomePage({
           <div className="container">
             <h2>The live desk</h2>
             <p className="landing-muted" style={{ maxWidth: "62ch", marginTop: "0.5rem" }}>
-              Tickets, reports, pivot maps, and GPS trucks — this is the same software your team
+              Work orders, reports, pivot maps, and GPS trucks — this is the same software your team
               logs into after we approve your company.
             </p>
             <div className="landing-screens" style={{ marginTop: "1.25rem" }}>
               <article className="landing-photo-card">
-                <img src="/landing/dashboard.png" alt="Open tickets map on the dashboard" />
+                <img src="/landing/dashboard.png" alt="Open work orders map on the dashboard" />
                 <div className="landing-photo-copy">
                   <strong>Dispatch map</strong>
-                  <p>Open tickets at the pivot, with assigned trucks on the same view.</p>
+                  <p>Open work orders at the pivot, with assigned trucks on the same view.</p>
                 </div>
               </article>
               <article className="landing-photo-card">
-                <img src="/landing/reports.png" alt="Reports for tickets opened and closed" />
+                <img src="/landing/reports.png" alt="Reports for work orders opened and closed" />
                 <div className="landing-photo-copy">
-                  <strong>Ticket reports</strong>
+                  <strong>Work order reports</strong>
                   <p>Opened, closed, labor, and status by store for any date range.</p>
                 </div>
               </article>
@@ -191,7 +191,7 @@ export default async function HomePage({
               <span className="landing-eyebrow">Built for the field</span>
               <h2>One of the biggest time-wasters in irrigation service? Getting techs to the right pivot.</h2>
               <p className="landing-muted">
-                Directions to a farm address only get you so far. AG Desk Pro lets you import
+                Directions to a customer address only get you so far. AG Desk Pro lets you import
                 customer pivot locations so technicians navigate to the equipment — not just the
                 front gate.
               </p>
@@ -205,7 +205,7 @@ export default async function HomePage({
             <figure className="landing-shot landing-shot-tall">
               <img
                 src="/landing/directions.jpg"
-                alt="Google Maps directions to a pivot coordinate instead of a farm gate"
+                alt="Google Maps directions to a pivot coordinate instead of a front gate"
               />
             </figure>
           </div>
@@ -247,7 +247,7 @@ export default async function HomePage({
                 <img src="/landing/pipe-yard.jpg" alt="Galvanized irrigation pipe in the yard" />
                 <div className="landing-photo-copy">
                   <strong>Parts and pipe</strong>
-                  <p>The same shop that stocks spans can run the ticket desk.</p>
+                  <p>The same shop that stocks spans can run the work order desk.</p>
                 </div>
               </article>
               <article className="landing-photo-card">
@@ -261,7 +261,7 @@ export default async function HomePage({
                 <img src="/landing/pivot-point.jpg" alt="Pivot point and control panel" />
                 <div className="landing-photo-copy">
                   <strong>The pivot point</strong>
-                  <p>Navigate to this, not the farm mailbox.</p>
+                  <p>Navigate to this, not the front mailbox.</p>
                 </div>
               </article>
             </div>
@@ -276,7 +276,7 @@ export default async function HomePage({
               <p className="landing-muted">
                 Blake Reid has been a pivot irrigation dealer for over 25 years, and David Luvin
                 has more than 30 years in information technology. Together they have seen the need
-                for an easy-to-use service ticket system that is specific to irrigation.
+                for an easy-to-use work order system that is specific to irrigation.
               </p>
               <div className="landing-quote">
                 AG Desk Pro is a practical tool built from experience in the field, not another
@@ -330,7 +330,7 @@ export default async function HomePage({
               </ul>
               <div className="landing-pills">
                 <span className="landing-chip">Irrigation-specific</span>
-                <span className="landing-chip">Dealer + field + farmer</span>
+                <span className="landing-chip">Dealer + field + customer</span>
                 <span className="landing-chip">${PLAN.monthlyDollars}/mo after trial</span>
               </div>
             </article>

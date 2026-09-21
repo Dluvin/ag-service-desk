@@ -19,6 +19,10 @@ export function pivotWhere(session: SessionUser) {
   return { organizationId: session.organizationId };
 }
 
+export function assetWhere(session: SessionUser) {
+  return pivotWhere(session);
+}
+
 export async function loadTechnicians(organizationId: string) {
   return prisma.user.findMany({
     where: { organizationId, role: ROLES.TECHNICIAN },
@@ -30,5 +34,5 @@ export function roleLabel(role: Role | string) {
   if (role === ROLES.ADMIN) return "Company admin";
   if (role === ROLES.MANAGER) return "Manager";
   if (role === ROLES.TECHNICIAN) return "Technician";
-  return "Farmer";
+  return "Customer";
 }

@@ -51,7 +51,7 @@ export default async function PivotsPage({
         {query.imported || query.updated || query.skipped || query.farmers ? (
           <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
             AgSense import finished: {query.imported ?? "0"} added, {query.updated ?? "0"} updated
-            {query.farmers && query.farmers !== "0" ? `, ${query.farmers} farmer(s) created` : ""}
+            {query.farmers && query.farmers !== "0" ? `, ${query.farmers} customer(s) created` : ""}
             {query.skipped && query.skipped !== "0" ? `, ${query.skipped} skipped` : ""}.
           </p>
         ) : null}
@@ -72,9 +72,9 @@ export default async function PivotsPage({
         <div id="import" className="lg:col-span-2">
           <h2 className="font-display text-xl">Import pivots</h2>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-stone-600">
-            <li>CSV with farm/grower, pivot name, and GPS (or a Google Maps link).</li>
+            <li>CSV with customer/grower, pivot name, and GPS (or a Google Maps link).</li>
             <li>AgSense device export also works if it has name, grower, and coordinates.</li>
-            <li>Matching serial numbers or the same farm + pivot name update; new rows are added.</li>
+            <li>Matching serial numbers or the same customer + pivot name update; new rows are added.</li>
           </ol>
           <p className="mt-2 text-sm">
             <a href="/agsense-pivots-template.csv" className="text-emerald-800 hover:underline">
@@ -87,7 +87,7 @@ export default async function PivotsPage({
               <input name="file" type="file" accept=".csv,.txt" required className="mt-1 w-full text-sm" />
             </label>
             <label className="block text-sm font-medium">
-              Default farmer if Grower is blank
+              Default customer if Grower is blank
               <select name="defaultFarmerId" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
                 <option value="">None — skip rows without a grower</option>
                 {farmers.map((farmer) => (
@@ -99,7 +99,7 @@ export default async function PivotsPage({
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" name="createFarmers" defaultChecked className="rounded border-stone-300" />
-              Create farmers from new Grower names
+              Create customers from new Grower names
             </label>
             <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
               Import pivots

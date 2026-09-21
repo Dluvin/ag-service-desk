@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { MapPin } from "@/lib/map-pins";
+import { googleMapsDirectionsUrl, googleMapsPlaceUrl } from "@/lib/maps";
 import { useRevealVehiclePins } from "./useRevealVehiclePins";
 
 const Canvas = dynamic(() => import("./AllTicketsMapCanvas"), {
@@ -39,7 +40,7 @@ export function AllTicketsMap({
   if (all.length === 0) {
     return (
       <div className="rounded-xl border border-stone-200 bg-white p-6 text-stone-600">
-        No open tickets or assigned trucks to map.
+        No open work orders or assigned trucks to map.
       </div>
     );
   }
@@ -47,8 +48,8 @@ export function AllTicketsMap({
   const googlePins = ticketPins.length > 0 ? ticketPins : trucks;
   const googleDir =
     googlePins.length === 1
-      ? `https://www.google.com/maps?q=${googlePins[0].lat},${googlePins[0].lng}`
-      : `https://www.google.com/maps/dir/${googlePins.map((pin) => `${pin.lat},${pin.lng}`).join("/")}`;
+      ? googleMapsPlaceUrl(googlePins[0].lat, googlePins[0].lng)
+      : googleMapsDirectionsUrl(googlePins);
 
   return (
     <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
@@ -68,7 +69,7 @@ export function AllTicketsMap({
       ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-4 py-3">
         <p className="text-sm font-semibold text-stone-900">
-          {ticketPins.length} open ticket{ticketPins.length === 1 ? "" : "s"}
+          {ticketPins.length} open work order{ticketPins.length === 1 ? "" : "s"}
           {trucks.length > 0
             ? ` · ${trucks.length} Verizon truck${trucks.length === 1 ? "" : "s"}`
             : ""}
@@ -81,11 +82,11 @@ export function AllTicketsMap({
           rel="noreferrer"
           className="text-sm font-medium text-emerald-800 hover:underline"
         >
-          Open tickets in Google Maps
+          Open work orders in Google Maps
         </a>
       </div>
       <p className="border-b border-stone-200 px-4 py-2 text-xs text-stone-500">
-        Green = ticket at the pivot. Red = assigned Verizon truck. Flashing On-site means GPS is
+        Green = work order at the pivot. Red = assigned Verizon truck. Flashing On-site means GPS is
         inside the pivot radius and time is being recorded. Truck pins refresh every 45 seconds.
       </p>
       <Canvas pins={all} />

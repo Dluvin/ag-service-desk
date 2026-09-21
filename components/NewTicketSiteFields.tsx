@@ -83,7 +83,7 @@ export function NewTicketSiteFields({
         <div className="space-y-4">
           {lockedFarmerId ? (
             <p className="text-sm text-stone-600">
-              Farm: <span className="font-medium text-stone-800">{lockedFarm?.name ?? "Your farm"}</span>
+              Customer: <span className="font-medium text-stone-800">{lockedFarm?.name ?? "Your customer"}</span>
             </p>
           ) : (
             <FarmTypeahead farms={farmers} farmerId={farmerId} onSelect={selectFarm} required />
@@ -114,7 +114,7 @@ export function NewTicketSiteFields({
                     onChange={() => setFarmerMode("existing")}
                     disabled={farmers.length === 0}
                   />
-                  Existing farm
+                  Existing customer
                 </label>
                 <label className="flex items-center gap-2">
                   <input
@@ -124,7 +124,7 @@ export function NewTicketSiteFields({
                     checked={farmerMode === "new"}
                     onChange={() => setFarmerMode("new")}
                   />
-                  New farm
+                  New customer
                 </label>
               </fieldset>
               {farmerMode === "existing" ? (
@@ -132,7 +132,7 @@ export function NewTicketSiteFields({
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block text-sm font-medium sm:col-span-2">
-                    Farm name
+                    Customer name
                     <input name="farmerName" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
                   </label>
                   <label className="block text-sm font-medium sm:col-span-2">
@@ -141,7 +141,7 @@ export function NewTicketSiteFields({
                   </label>
                   <label className="block text-sm font-medium sm:col-span-2">
                     Contact name
-                    <input name="farmerContactName" placeholder="Person at the farm" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                    <input name="farmerContactName" placeholder="Person at the customer" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
                   </label>
                   <label className="block text-sm font-medium">
                     Phone

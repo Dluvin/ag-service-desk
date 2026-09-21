@@ -8,7 +8,7 @@ export function FarmTypeahead({
   onSelect,
   required,
   allowEmpty,
-  emptyLabel = "All farms",
+  emptyLabel = "All customers",
 }: {
   farms: { id: string; name: string }[];
   farmerId: string;
@@ -44,13 +44,13 @@ export function FarmTypeahead({
 
   return (
     <label className="relative block text-sm font-medium">
-      Farm
+      Customer
       <input type="hidden" name="farmerId" value={farmerId} />
       <input
         value={text}
         required={required}
         autoComplete="off"
-        placeholder="Start typing a farm name"
+        placeholder="Start typing a customer name"
         className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
         onFocus={() => setOpen(true)}
         onChange={(event) => {
@@ -82,7 +82,7 @@ export function FarmTypeahead({
             </li>
           ) : null}
           {matches.length === 0 ? (
-            <li className="px-3 py-2 text-stone-500">No matching farms</li>
+            <li className="px-3 py-2 text-stone-500">No matching customers</li>
           ) : (
             matches.map((farm) => (
               <li key={farm.id}>

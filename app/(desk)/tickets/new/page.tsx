@@ -8,6 +8,7 @@ import { ActionForm } from "@/components/ActionForm";
 import { NewTicketSiteFields } from "@/components/NewTicketSiteFields";
 import { TicketPhotoFields } from "@/components/TicketPhotoFields";
 import { StoreSelect } from "@/components/StoreSelect";
+import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
 
 export default async function NewTicketPage({
   searchParams,
@@ -46,12 +47,12 @@ export default async function NewTicketPage({
   return (
     <div className="max-w-3xl">
       <h1 className="font-display text-3xl">
-        {session.role === ROLES.FARMER ? "Request service" : "New service ticket"}
+        {session.role === ROLES.FARMER ? "Request service" : "New work order"}
       </h1>
       <p className="mt-1 text-sm text-stone-600">
         {session.role === ROLES.FARMER
-          ? "Start typing a pivot name, or add a new location, then describe the problem. The shop will get the ticket."
-          : "Pick a farm (start typing the name), then start typing the pivot name. You can still add a new pivot if needed."}
+          ? "Start typing a pivot name, or add a new location, then describe the problem. The shop will get the work order."
+          : "Pick a customer (start typing the name), then start typing the pivot name. You can still add a new pivot if needed."}
       </p>
       <ActionForm action={createTicketAction} encType="multipart/form-data" className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
         <NewTicketSiteFields
@@ -104,13 +105,10 @@ export default async function NewTicketPage({
             </select>
           </label>
         ) : null}
-        <label className="block text-sm font-medium">
-          {session.role === ROLES.FARMER ? "Preferred time" : "Schedule"}
-          <input name="scheduledAt" type="datetime-local" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-        </label>
+        <ScheduleDateTimeField label={session.role === ROLES.FARMER ? "Preferred time" : "Schedule"} />
         <TicketPhotoFields />
         <button className="rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white">
-          {session.role === ROLES.FARMER ? "Send to the shop" : "Create ticket"}
+          {session.role === ROLES.FARMER ? "Send to the shop" : "Create work order"}
         </button>
       </ActionForm>
     </div>

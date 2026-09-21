@@ -25,14 +25,14 @@ export default function PrivacyPage() {
               AG Desk Pro (“we,” “us”) is irrigation service software operated by David Luvin. This
               policy explains what we collect when you use{" "}
               <a href="https://agdeskpro.com">agdeskpro.com</a>, request a demo, start a company, or
-              log in as a dealer, technician, manager, or farmer.
+              log in as a dealer, technician, manager, or customer.
             </p>
 
             <h2>Who this covers</h2>
             <p>
               If you work for an irrigation company that uses AG Desk Pro, that company is
-              responsible for the farm, ticket, and customer records it puts in the desk. We host
-              that data so their staff and farmers can use the product. If you are visiting the
+              responsible for the customer, work order, and other records it puts in the desk. We host
+              that data so their staff and customers can use the product. If you are visiting the
               public website or requesting a demo, we handle that information ourselves.
             </p>
 
@@ -47,8 +47,8 @@ export default function PrivacyPage() {
                 phone, address, staff count, notes, and the password you set for the first admin.
               </li>
               <li>
-                <strong>Account and tickets:</strong> logins, roles, stores, farms, pivots, work
-                orders, notes, parts, labor, photos you upload, and farmer-facing status.
+                <strong>Account and work orders:</strong> logins, roles, stores, customers, pivots, work
+                orders, notes, parts, labor, photos you upload, and customer-facing status.
               </li>
               <li>
                 <strong>Billing:</strong> if we approve your company, Stripe processes card and
@@ -62,8 +62,9 @@ export default function PrivacyPage() {
               <li>
                 <strong>GPS and maps:</strong> only if a dealer connects Verizon Connect Reveal or
                 similar. Then we may show truck locations and geofence/place data the dealer
-                already has in that system. Map tiles may come from OpenStreetMap. “Open in Google
-                Maps” sends the pivot coordinates to Google when you choose that link.
+                already has in that system. In-app maps use satellite imagery (Esri) with place and
+                road labels. “Open in Google Maps” sends the pivot coordinates to Google when you
+                choose that link.
               </li>
               <li>
                 <strong>Cookies:</strong> signed session cookies (<code>ag_session</code> for company
@@ -84,7 +85,7 @@ export default function PrivacyPage() {
             <h2>Who we share it with</h2>
             <ul>
               <li>
-                <strong>Inside a company:</strong> staff and farmers see what that company’s
+                <strong>Inside a company:</strong> staff and customers see what that company’s
                 settings allow.
               </li>
               <li>
@@ -112,7 +113,7 @@ export default function PrivacyPage() {
             <h2>Your choices</h2>
             <p>
               You can request a copy, correction, or deletion of personal information we hold by
-              emailing us. Farmers and technicians should also ask their irrigation dealer, who
+              emailing us. Customers and technicians should also ask their irrigation dealer, who
               controls most records in the desk. You can log out to end a session cookie.
             </p>
 

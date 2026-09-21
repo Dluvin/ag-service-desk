@@ -12,9 +12,9 @@ export default function SignupPage() {
         <h1 className="font-display text-3xl">Start a company</h1>
         <p className="mt-2 text-sm text-stone-600">
           Request an AG Desk Pro tenant. We review each signup, then you get a live company with a
-          sample farm and ticket for a <span className="font-semibold">{PLAN.trialDays}-day trial</span>.
+          sample customer and work order for a <span className="font-semibold">{PLAN.trialDays}-day trial</span>.
           After that it is <span className="font-semibold">${PLAN.monthlyDollars}/month</span> for{" "}
-          {PLAN.includedSeats} staff seats. Extra seats are ${PLAN.extraSeatDollars}/month. Farm logins
+          {PLAN.includedSeats} staff seats. Extra seats are ${PLAN.extraSeatDollars}/month. Customer logins
           are not counted as staff seats.
         </p>
         <ActionForm action={signupAction} className="mt-6 grid gap-4 sm:grid-cols-2">

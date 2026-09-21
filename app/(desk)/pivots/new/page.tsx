@@ -21,7 +21,7 @@ export default async function NewPivotPage() {
     <div className="max-w-3xl">
       <h1 className="font-display text-3xl">Add pivot</h1>
       <p className="mt-1 text-sm text-stone-600">
-        Pick an existing farm or add a new one, then click the map to set the location.
+        Pick an existing customer or add a new one, then click the map to set the location.
       </p>
       <ActionForm action={createPivotAction} className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
         <NewPivotFields

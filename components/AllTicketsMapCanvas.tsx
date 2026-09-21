@@ -2,9 +2,11 @@
 
 import { useEffect } from "react";
 import L from "leaflet";
-import { CircleMarker, MapContainer, Popup, TileLayer, Tooltip, useMap } from "react-leaflet";
+import { CircleMarker, MapContainer, Popup, Tooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { MapPin } from "@/lib/map-pins";
+import { googleMapsPlaceUrl } from "@/lib/maps";
+import { SatelliteTiles } from "./SatelliteTiles";
 
 function spreadPins(pins: MapPin[]) {
   const counts = new Map<string, number>();
@@ -53,10 +55,7 @@ export default function AllTicketsMapCanvas({
 
   return (
     <MapContainer center={center} zoom={7} className={`${heightClass} w-full`} scrollWheelZoom>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <SatelliteTiles />
       <FitPins pins={spread} />
       {spread.map((pin) => {
         const vehicle = pin.kind === "vehicle";
@@ -89,11 +88,11 @@ export default function AllTicketsMapCanvas({
               <div className="mt-2 flex flex-wrap gap-2">
                 {pin.href ? (
                   <a href={pin.href} className="font-medium text-emerald-800">
-                    Open ticket
+                    Open work order
                   </a>
                 ) : null}
                 <a
-                  href={`https://www.google.com/maps?q=${pin.lat},${pin.lng}`}
+                  href={googleMapsPlaceUrl(pin.lat, pin.lng)}
                   target="_blank"
                   rel="noreferrer"
                   className="font-medium text-emerald-800"

@@ -50,7 +50,7 @@ export default async function DispatchPage({
     <div>
       <h1 className="font-display text-3xl">Dispatch board</h1>
       <p className="mt-1 text-stone-600">
-        Open work by status, assign a technician, and see every open ticket on the map. Filter by store to work one shop at a time.
+        Open work by status, assign a technician, and see every open work order on the map. Filter by store to work one shop at a time.
       </p>
       <StoreFilter stores={stores} selected={selectedStore} pathname="/dispatch" />
 
@@ -122,10 +122,10 @@ export default async function DispatchPage({
 
       <DispatchCalendarToggle tickets={tickets} month={query.month} store={selectedStore} />
 
-      <h2 className="font-display mt-10 text-xl">Open tickets map</h2>
+      <h2 className="font-display mt-10 text-xl">Open work orders map</h2>
       <p className="mt-1 text-sm text-stone-600">
-        Green pins are tickets at the pivot. Amber pins are Verizon Connect Reveal trucks. Click a
-        pin for the ticket or Google Maps.
+        Green pins are work orders at the pivot. Amber pins are Verizon Connect Reveal trucks. Click a
+        pin for the work order or Google Maps.
       </p>
       <div className="mt-4">
         <DispatchFleetMap ticketPins={ticketPins(tickets)} canConfigure={session.role === ROLES.ADMIN} />

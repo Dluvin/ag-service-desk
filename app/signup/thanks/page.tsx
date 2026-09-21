@@ -10,7 +10,7 @@ export default function SignupThanksPage() {
         <h1 className="font-display text-3xl">Request received</h1>
         <p className="mt-3 text-sm text-stone-600">
           We sent your company details to AG Desk Pro. After approval you can sign in, walk through
-          a sample farm and ticket, and use a {PLAN.trialDays}-day trial. Then it is $
+          a sample customer and work order, and use a {PLAN.trialDays}-day trial. Then it is $
           {PLAN.monthlyDollars}/month for {PLAN.includedSeats} staff seats.
         </p>
         <p className="mt-3 text-sm text-stone-600">

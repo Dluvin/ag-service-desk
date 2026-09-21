@@ -48,7 +48,7 @@ export default async function DispatchCalendarPage({
         </Link>
       </p>
       <h1 className="font-display mt-2 text-3xl">Dispatch calendar</h1>
-      <p className="mt-1 text-stone-600">Scheduled tickets for the selected store. Open this page in its own window while you work the board and map.</p>
+      <p className="mt-1 text-stone-600">Scheduled work orders for the selected store. Open this page in its own window while you work the board and map.</p>
       <StoreFilter stores={stores} selected={selectedStore} pathname="/dispatch/calendar" />
       <DispatchCalendar
         tickets={tickets}

@@ -22,7 +22,7 @@ export const INSPECTION_STATUS = {
 
 export function inspectionLabel(status: string) {
   if (status === INSPECTION_STATUS.PASSED) return "Passed";
-  if (status === INSPECTION_STATUS.FAILED) return "Failed — ticket opened";
+  if (status === INSPECTION_STATUS.FAILED) return "Failed — work order opened";
   if (status === INSPECTION_STATUS.IN_PROGRESS) return "In progress";
   return "Not started";
 }

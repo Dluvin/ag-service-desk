@@ -79,6 +79,7 @@ export function MapLocationPicker({
         const map = new window.google.maps.Map(mapRef.current, {
           center: start,
           zoom: 8,
+          mapTypeId: "hybrid",
           mapTypeControl: true,
           streetViewControl: false,
         });

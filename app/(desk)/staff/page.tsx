@@ -64,9 +64,9 @@ export default async function StaffPage({
         <h1 className="font-display text-3xl">Staff</h1>
         <p className="mt-1 text-sm text-stone-600">
           {session.role === ROLES.ADMIN
-            ? "Add and edit company admins, managers, and technicians. Assign a default store so new tickets they open start at that shop."
-            : "Add and edit managers and technicians. Assign a default store so new tickets they open start at that shop."}{" "}
-          Farm logins stay on the Farms page.
+            ? "Add and edit company admins, managers, and technicians. Assign a default store so new work orders they open start at that shop."
+            : "Add and edit managers and technicians. Assign a default store so new work orders they open start at that shop."}{" "}
+          Customer logins stay on the Customers page.
         </p>
         <WelcomeMailNotice status={query.welcome} />
         {query.imported || query.updated || query.skipped ? (
@@ -167,7 +167,7 @@ export default async function StaffPage({
           <p className="mt-2 text-sm text-stone-700">
             This company plan includes <span className="font-semibold">{PLAN.includedSeats} staff logins</span> for{" "}
             <span className="font-semibold">${PLAN.monthlyDollars}/month</span> (admins, managers, and technicians).
-            Farm logins are separate. Extra staff seats are <span className="font-semibold">${PLAN.extraSeatDollars}/month</span>{" "}
+            Customer logins are separate. Extra staff seats are <span className="font-semibold">${PLAN.extraSeatDollars}/month</span>{" "}
             each. New companies get a {PLAN.trialDays}-day trial after approval.
           </p>
           <p className="mt-2 text-sm text-stone-700">

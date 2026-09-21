@@ -31,7 +31,7 @@ export function PivotDirectory({ pivots }: { pivots: PivotRow[] }) {
 
   return (
     <>
-      <ListSearch value={query} onChange={setQuery} label="Search pivots" placeholder="Pivot, farm, serial, or coordinates" />
+      <ListSearch value={query} onChange={setQuery} label="Search pivots" placeholder="Pivot, customer, serial, or coordinates" />
       {matches.length === 0 ? (
         <p className="mt-4 text-sm text-stone-600">No pivots match that search.</p>
       ) : (
@@ -47,7 +47,7 @@ export function PivotDirectory({ pivots }: { pivots: PivotRow[] }) {
                 {pivot.serialNumber ? ` · ${pivot.serialNumber}` : ""}
               </p>
               <p className="mt-2 text-sm">
-                {pivot.openTickets} open ticket(s)
+                {pivot.openTickets} open work order(s)
                 {pivot.notes > 0 ? ` · ${pivot.notes} note(s)` : ""}
               </p>
             </li>

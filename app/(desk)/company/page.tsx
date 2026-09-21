@@ -17,7 +17,7 @@ export default async function CompanyLogoPage() {
     <div className="max-w-xl">
       <h1 className="font-display text-3xl">Company logo</h1>
       <p className="mt-2 text-stone-600">
-        This logo shows in the top bar for everyone in {org.name}, and on printed tickets.
+        This logo shows in the top bar for everyone in {org.name}, and on printed work orders.
       </p>
       {org.logoMimeType ? (
         <div className="mt-6 rounded-xl border border-stone-200 bg-white p-4">

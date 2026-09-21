@@ -71,21 +71,21 @@ export function MaintenanceBoard({
           farms={farms}
           farmerId={farmId}
           allowEmpty
-          emptyLabel="All farms"
+          emptyLabel="All customers"
           onSelect={(farm) => setFarmId(farm?.id ?? "")}
         />
         <ListSearch
           value={query}
           onChange={setQuery}
           label="Search"
-          placeholder="Pivot, farm, or serial"
+          placeholder="Pivot, customer, or serial"
           className="block text-sm font-medium"
         />
       </div>
       <p className="mt-2 text-sm text-stone-500">
         {matches.length === 0
-          ? "No pivots match that farm or search."
-          : `Showing ${matches.length.toLocaleString()} pivot${matches.length === 1 ? "" : "s"} in ${groups.length.toLocaleString()} farm${groups.length === 1 ? "" : "s"}.`}
+          ? "No pivots match that customer or search."
+          : `Showing ${matches.length.toLocaleString()} pivot${matches.length === 1 ? "" : "s"} in ${groups.length.toLocaleString()} customer${groups.length === 1 ? "" : "s"}.`}
       </p>
       <div className="mt-4 space-y-6">
         {groups.map((farm) => (
@@ -124,7 +124,7 @@ export function MaintenanceBoard({
                       {pivot.ticketId ? (
                         <span className="inline-flex flex-wrap justify-end gap-3">
                           <Link href={`/tickets/${pivot.ticketId}`} className="text-emerald-800 hover:underline">
-                            Open ticket
+                            Open work order
                           </Link>
                           {pivot.inspectionId ? (
                             <Link href={`/startup/${pivot.inspectionId}`} className="text-stone-600 hover:underline">

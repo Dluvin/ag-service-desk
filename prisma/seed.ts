@@ -150,6 +150,24 @@ async function main() {
     },
   });
 
+  const builtinAssetTypes = [
+    { slug: "pivots", name: "Pivots", kind: "PIVOT", sortOrder: 0 },
+    { slug: "wells", name: "Wells", kind: "GENERIC", sortOrder: 1 },
+    { slug: "pumps", name: "Pumps", kind: "GENERIC", sortOrder: 2 },
+    { slug: "generators", name: "Generators", kind: "GENERIC", sortOrder: 3 },
+  ];
+  await prisma.assetType.createMany({
+    data: [heartland.id, prairie.id].flatMap((organizationId) =>
+      builtinAssetTypes.map((type) => ({ organizationId, ...type, builtIn: true })),
+    ),
+  });
+  const heartlandWells = await prisma.assetType.findFirstOrThrow({
+    where: { organizationId: heartland.id, slug: "wells" },
+  });
+  const heartlandPumps = await prisma.assetType.findFirstOrThrow({
+    where: { organizationId: heartland.id, slug: "pumps" },
+  });
+
   const p1 = await prisma.pivot.create({
     data: {
       organizationId: heartland.id,
@@ -193,6 +211,31 @@ async function main() {
       longitude: -100.5757,
       locationNote: "Headquarters quarter",
     },
+  });
+
+  await prisma.asset.createMany({
+    data: [
+      {
+        organizationId: heartland.id,
+        assetTypeId: heartlandWells.id,
+        farmerId: greenAcres.id,
+        name: "North well",
+        latitude: 40.8691,
+        longitude: -97.5932,
+        locationNote: "East of the north pivot",
+        notes: "Irrigation well for North Quarter",
+      },
+      {
+        organizationId: heartland.id,
+        assetTypeId: heartlandPumps.id,
+        farmerId: riverside.id,
+        name: "River lift pump",
+        latitude: 40.9244,
+        longitude: -98.3402,
+        serialNumber: "PU-188",
+        locationNote: "River intake",
+      },
+    ],
   });
 
   await prisma.catalogPart.createMany({
@@ -245,7 +288,7 @@ async function main() {
         create: [
           {
             userId: admin.id,
-            message: "Ticket opened from morning dispatch.",
+            message: "Work order opened from morning dispatch.",
             status: "OPEN",
           },
           {
@@ -277,7 +320,7 @@ async function main() {
       updates: {
         create: {
           userId: admin.id,
-          message: "Logged from farmer call.",
+          message: "Logged from customer call.",
           status: "OPEN",
         },
       },

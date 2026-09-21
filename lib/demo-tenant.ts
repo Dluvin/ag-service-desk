@@ -1,7 +1,9 @@
 import { prisma } from "./prisma";
 import { openServiceTicket } from "./tickets";
+import { ensureAssetTypes } from "./assets";
 
 export async function seedApprovedDemo(organizationId: string, adminUserId: string) {
+  await ensureAssetTypes(organizationId);
   const existing = await prisma.farmer.count({ where: { organizationId } });
   if (existing > 0) return;
 
@@ -16,8 +18,8 @@ export async function seedApprovedDemo(organizationId: string, adminUserId: stri
     data: {
       organizationId,
       storeId: store.id,
-      name: "Demo farm",
-      address: "Sample pivot location — delete when you add real farms",
+      name: "Demo customer",
+      address: "Sample pivot location — delete when you add real customers",
       contacts: { create: { name: "Demo contact", phone: "555-0100" } },
     },
   });
@@ -40,7 +42,7 @@ export async function seedApprovedDemo(organizationId: string, adminUserId: stri
     userId: adminUserId,
     title: "Demo service call",
     description:
-      "This is sample work so you can click through tickets, dispatch, and maps during your trial. Delete it when you add a real farm.",
+      "This is sample work so you can click through work orders, dispatch, and maps during your trial. Delete it when you add a real customer.",
     priority: "NORMAL",
   });
 }

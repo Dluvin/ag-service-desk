@@ -26,7 +26,7 @@ export default async function ClosedTicketPrintPage({ params }: { params: Promis
     <div>
       <div className="no-print mb-6 flex flex-wrap items-center justify-between gap-3">
         <Link href={`/tickets/${ticket.id}`} className="text-sm text-emerald-800 hover:underline">
-          Back to ticket
+          Back to work order
         </Link>
         <div className="text-right">
           <PrintButton />

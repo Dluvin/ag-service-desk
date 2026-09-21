@@ -22,8 +22,8 @@ export default async function StoresPage() {
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Stores</h1>
         <p className="mt-1 text-sm text-stone-600">
-          Use stores to split dashboard and dispatch by shop. Farms pick a default store so their
-          tickets show with that location.
+          Use stores to split dashboard and dispatch by shop. Customers pick a default store so their
+          work orders show with that location.
         </p>
         <ul className="mt-6 space-y-3">
           {stores.length === 0 ? (
@@ -48,7 +48,7 @@ export default async function StoresPage() {
                     <input name="phone" defaultValue={store.phone ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
                   </label>
                   <p className="text-xs text-stone-500">
-                    {store._count.farmers} {store._count.farmers === 1 ? "farm uses" : "farms use"} this as their default store.
+                    {store._count.farmers} {store._count.farmers === 1 ? "customer uses" : "customers use"} this as their default store.
                   </p>
                   <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save store</button>
                 </ActionForm>
@@ -59,7 +59,7 @@ export default async function StoresPage() {
                       name="storeId"
                       value={store.id}
                       label="Delete"
-                      confirmText={`Delete store ${store.name}? Farms using it will have no default store.`}
+                      confirmText={`Delete store ${store.name}? Customers using it will have no default store.`}
                     />
                   </div>
                 ) : null}

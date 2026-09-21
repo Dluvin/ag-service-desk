@@ -22,7 +22,7 @@ export default async function RevealSettingsPage() {
     <div className="max-w-3xl">
       <h1 className="font-display text-3xl">Connectors</h1>
       <p className="mt-2 text-stone-600">
-        Connect GPS and other fleet systems so truck locations show on Dispatch and ticket maps.
+        Connect GPS and other fleet systems so truck locations show on Dispatch and work order maps.
       </p>
 
       <section className="mt-6 rounded-xl border border-stone-200 bg-white p-4">

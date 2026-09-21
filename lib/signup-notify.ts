@@ -58,7 +58,7 @@ export async function emailTenantApproved(input: {
   const text = [
     `Hi ${input.name.split(" ")[0] || "there"},`,
     "",
-    `${input.company} is approved on AG Desk Pro. Sign in and use the demo farm/ticket we loaded for your ${trial}.`,
+    `${input.company} is approved on AG Desk Pro. Sign in and use the demo customer/work order we loaded for your ${trial}.`,
     `After ${PLAN.trialDays} days the plan is $${PLAN.monthlyDollars}/month for ${PLAN.includedSeats} staff seats. Extra seats are $${PLAN.extraSeatDollars}/month.`,
     `Sign in: ${login}`,
     input.checkoutUrl ? `Set up billing (card, ${trial} before the first charge): ${input.checkoutUrl}` : "",

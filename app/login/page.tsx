@@ -25,7 +25,7 @@ export default async function LoginPage({
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
         <BrandLogo className="mb-6 block" />
         <h1 className="font-display text-3xl">Log in</h1>
-        <p className="mt-1 text-sm text-stone-600">Farmers, technicians, managers, and company admins use the same door.</p>
+        <p className="mt-1 text-sm text-stone-600">Customers, technicians, managers, and company admins use the same door.</p>
         {query.billing === "ok" ? (
           <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
             Billing is set. Sign in to your company. The 15-day trial is on the Stripe subscription.
@@ -84,7 +84,7 @@ export default async function LoginPage({
             <p>Admin: admin@heartland.ag</p>
             <p>Manager: manager@heartland.ag</p>
             <p>Technician: mike@heartland.ag</p>
-            <p>Farmer: tom@greenacres.farm</p>
+            <p>Customer: tom@greenacres.farm</p>
             <p>Second tenant admin: admin@prairie.ag</p>
           </div>
         ) : null}

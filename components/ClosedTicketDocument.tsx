@@ -40,6 +40,18 @@ function money(value: number) {
   return `$${value.toFixed(2)}`;
 }
 
+function documentKindLabel(status: string) {
+  if (status === "COMPLETED") return "Closed work order";
+  if (status === "REPAIR_DONE") return "Work order · Repair done";
+  return "Work order";
+}
+
+function documentDateLabel(status: string) {
+  if (status === "COMPLETED") return "Closed";
+  if (status === "REPAIR_DONE") return "Repair done";
+  return "Updated";
+}
+
 export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
   const labor = ticket.labor ?? [];
   const equipment = ticket.equipment ?? [];
@@ -69,17 +81,17 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
           ) : null}
           <div>
             <p className="font-display text-2xl">{ticket.organization.name}</p>
-            <p className="text-sm text-stone-600">Closed service ticket</p>
+            <p className="text-sm text-stone-600">{documentKindLabel(ticket.status)}</p>
           </div>
         </div>
         <div className="text-right text-sm">
-          <p className="font-semibold">Ticket #{ticket.number}</p>
+          <p className="font-semibold">Work order #{ticket.number}</p>
           <p>
             {ticket.invoiceNumber ? `Invoice ${ticket.invoiceNumber}` : "No invoice number"}
             {ticket.invoiceAmount != null ? ` · ${money(ticket.invoiceAmount)}` : ""}
           </p>
           <p>
-            Closed{" "}
+            {documentDateLabel(ticket.status)}{" "}
             {(ticket.closedAt ?? ticket.updatedAt).toLocaleDateString()}
           </p>
         </div>
@@ -93,7 +105,7 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2 text-sm">
         <section>
-          <h2 className="font-display text-lg">Farm</h2>
+          <h2 className="font-display text-lg">Customer</h2>
           <p className="font-medium">{ticket.farmer.name}</p>
           {ticket.farmer.address ? <p>{ticket.farmer.address}</p> : null}
           {(ticket.farmer.contacts?.length

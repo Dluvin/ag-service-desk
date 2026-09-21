@@ -25,7 +25,7 @@ export default async function ForgotPasswordPage({
         ) : (
           <>
             <p className="mt-1 text-sm text-stone-600">
-              Staff and farm logins can request a new password. We will email a link if that address
+              Staff and customer logins can request a new password. We will email a link if that address
               is in the system.
             </p>
             <ActionForm action={requestPasswordResetAction} className="mt-6 space-y-4">

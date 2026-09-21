@@ -24,7 +24,7 @@ export function NewPivotFields({
             onChange={() => setFarmerMode("existing")}
             disabled={farmers.length === 0}
           />
-          Existing farm
+          Existing customer
         </label>
         <label className="flex items-center gap-2">
           <input
@@ -34,15 +34,15 @@ export function NewPivotFields({
             checked={farmerMode === "new"}
             onChange={() => setFarmerMode("new")}
           />
-          New farm
+          New customer
         </label>
       </fieldset>
 
       {farmerMode === "existing" ? (
         <label className="block text-sm font-medium">
-          Farm
+          Customer
           <select name="farmerId" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
-            <option value="">Select farm</option>
+            <option value="">Select customer</option>
             {farmers.map((farmer) => (
               <option key={farmer.id} value={farmer.id}>
                 {farmer.name}
@@ -53,7 +53,7 @@ export function NewPivotFields({
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm font-medium sm:col-span-2">
-            Farm name
+            Customer name
             <input name="farmerName" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
           </label>
           <label className="block text-sm font-medium sm:col-span-2">
@@ -62,7 +62,7 @@ export function NewPivotFields({
           </label>
           <label className="block text-sm font-medium sm:col-span-2">
             Contact name
-            <input name="farmerContactName" placeholder="Person at the farm" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <input name="farmerContactName" placeholder="Person at the customer" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
           </label>
           <label className="block text-sm font-medium">
             Phone

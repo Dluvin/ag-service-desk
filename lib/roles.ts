@@ -20,7 +20,7 @@ export const TICKET_STATUSES = [
 export type TicketStatus = (typeof TICKET_STATUSES)[number];
 
 export const STATUS_LABELS: Record<TicketStatus, string> = {
-  OPEN: "Open",
+  OPEN: "Unassigned",
   ASSIGNED: "Assigned",
   IN_PROGRESS: "In progress",
   WAITING_PARTS: "Waiting on parts",
@@ -50,8 +50,10 @@ export function requiresInvoice(status: string) {
   return status === "COMPLETED";
 }
 
+export const PRINTABLE_STATUSES: TicketStatus[] = ["REPAIR_DONE", "COMPLETED"];
+
 export function isPrintableStatus(status: string) {
-  return status === "COMPLETED";
+  return PRINTABLE_STATUSES.includes(status as TicketStatus);
 }
 
 export function isFinishedStatus(status: string) {

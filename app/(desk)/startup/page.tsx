@@ -24,8 +24,8 @@ export default async function StartupBoardPage() {
     <div>
       <h1 className="font-display text-3xl">{STARTUP_SEASON_YEAR} maintenance</h1>
       <p className="mt-1 text-stone-600">
-        Pick a farm or search, then select a pivot to open a maintenance ticket. The checklist stays on
-        that visit; failed items mark the ticket high priority.
+        Pick a customer or search, then select a pivot to open a maintenance work order. The checklist stays on
+        that visit; failed items mark the work order high priority.
       </p>
       {canEditStartupChecklist(session.role) ? (
         <p className="mt-2 text-sm">

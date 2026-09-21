@@ -13,6 +13,7 @@ import { StoreFilter } from "@/components/StoreFilter";
 import { ActionForm } from "@/components/ActionForm";
 import { StoreSelect } from "@/components/StoreSelect";
 import { updateFarmerStoreAction } from "@/lib/actions";
+import { printSelectHref } from "@/lib/ticket-print";
 
 export default async function DashboardPage({
   searchParams,
@@ -41,7 +42,7 @@ export default async function DashboardPage({
         })
       : null;
 
-  const [openTickets, pivots, farmers, techs] = await Promise.all([
+  const [openTickets, pivots, farmers, techs, repairDoneCount] = await Promise.all([
     prisma.ticket.findMany({
       where: {
         ...ticketWhere(session),
@@ -58,6 +59,13 @@ export default async function DashboardPage({
     session.role === ROLES.ADMIN || session.role === ROLES.MANAGER
       ? prisma.user.count({ where: { organizationId: session.organizationId, role: ROLES.TECHNICIAN } })
       : Promise.resolve(null),
+    prisma.ticket.count({
+      where: {
+        ...ticketWhere(session),
+        ...storeTickets,
+        status: "REPAIR_DONE",
+      },
+    }),
   ]);
 
   return (
@@ -65,9 +73,9 @@ export default async function DashboardPage({
       <h1 className="font-display text-3xl">Dashboard</h1>
       <p className="mt-1 text-stone-600">
         {session.role === ROLES.FARMER
-          ? "Open a service ticket or add information on an existing call."
+          ? "Open a work order or add information on an existing call."
           : session.role === ROLES.TECHNICIAN
-            ? "Tickets assigned to you."
+            ? "Work orders assigned to you."
             : "Dispatch across your company. Filter by store to see one shop at a time."}
       </p>
       {session.role !== ROLES.FARMER ? (
@@ -84,16 +92,16 @@ export default async function DashboardPage({
       ) : null}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <Stat label="Active tickets" value={String(openTickets.length)} />
+        <Stat label="Active work orders" value={String(openTickets.length)} />
         <Stat label="Pivots" value={String(pivots)} />
         <Stat
-          label={session.role === ROLES.ADMIN || session.role === ROLES.MANAGER ? "Farms / techs" : "Your role"}
+          label={session.role === ROLES.ADMIN || session.role === ROLES.MANAGER ? "Customers / techs" : "Your role"}
           value={
             session.role === ROLES.ADMIN || session.role === ROLES.MANAGER
               ? `${farmers} / ${techs}`
               : session.role === ROLES.TECHNICIAN
                 ? "Technician"
-                : "Farmer portal"
+                : "Customer portal"
           }
         />
       </div>
@@ -112,13 +120,22 @@ export default async function DashboardPage({
               : "rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold"
           }
         >
-          {session.role === ROLES.FARMER ? "Request service" : "New service ticket"}
+          {session.role === ROLES.FARMER ? "Request service" : "New work order"}
         </Link>
         <Link href="/startup" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
           {STARTUP_SEASON_YEAR} maintenance
         </Link>
         <Link href="/map" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-          Open tickets map
+          Open work orders map
+        </Link>
+        <Link
+          href={printSelectHref({
+            status: "REPAIR_DONE",
+            store: session.role === ROLES.FARMER ? undefined : selectedStore,
+          })}
+          className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold"
+        >
+          Print repair done{repairDoneCount > 0 ? ` (${repairDoneCount})` : ""}
         </Link>
         {session.role !== ROLES.FARMER ? (
           <Link href="/pivots/new" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
@@ -127,16 +144,16 @@ export default async function DashboardPage({
         ) : null}
       </div>
 
-      <h2 className="font-display mt-10 text-xl">Open tickets map</h2>
+      <h2 className="font-display mt-10 text-xl">Open work orders map</h2>
       <p className="mt-1 text-sm text-stone-600">Every active call at the pivot location.</p>
       <div className="mt-4">
         <AllTicketsMap pins={ticketPins(openTickets)} />
       </div>
 
-      <h2 className="font-display mt-10 text-xl">Recent tickets</h2>
+      <h2 className="font-display mt-10 text-xl">Recent work orders</h2>
       <div className="mt-3 overflow-hidden rounded-xl border border-stone-200 bg-white">
         {openTickets.length === 0 ? (
-          <p className="p-4 text-sm text-stone-600">No active tickets.</p>
+          <p className="p-4 text-sm text-stone-600">No active work orders.</p>
         ) : (
           <ul className="divide-y divide-stone-100">
             {openTickets.slice(0, 8).map((ticket) => (

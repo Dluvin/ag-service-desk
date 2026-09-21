@@ -2,15 +2,19 @@ import Link from "next/link";
 import { logoutAction } from "@/lib/actions";
 import { roleLabel } from "@/lib/scope";
 import type { SessionUser } from "@/lib/auth";
-import { ROLES } from "@/lib/roles";
+import { isShopStaff, ROLES } from "@/lib/roles";
 import { NavDropdown } from "@/components/NavDropdown";
+import { NavLinkMenu } from "@/components/NavLinkMenu";
+import { assetTypeHref } from "@/lib/assets";
 
 export function Nav({
   session,
   hasLogo,
+  assetTypes = [],
 }: {
   session: SessionUser;
   hasLogo?: boolean;
+  assetTypes?: { name: string; slug: string }[];
 }) {
   const farmer = session.role === ROLES.FARMER;
   const beforeTickets = [
@@ -18,8 +22,8 @@ export function Nav({
     ...(!farmer ? [{ href: "/dispatch", label: "Dispatch" }] : []),
   ];
   const ticketLinks = [
-    { href: "/tickets", label: "All tickets" },
-    { href: "/map", label: "Ticket map" },
+    { href: "/tickets", label: "All work orders" },
+    { href: "/map", label: "Work order map" },
     { href: "/startup", label: "Maintenance" },
     ...(!farmer
       ? [
@@ -31,8 +35,12 @@ export function Nav({
   ];
   const afterTickets = [
     { href: "/reports", label: "Reports" },
-    { href: "/pivots", label: "Pivots" },
-    ...(!farmer ? [{ href: "/farmers", label: "Farms" }] : []),
+    ...(!farmer ? [{ href: "/farmers", label: "Customers" }] : []),
+  ];
+  const assetLinks = [
+    { href: "/assets", label: "All" },
+    ...assetTypes.map((type) => ({ href: assetTypeHref(type), label: type.name })),
+    ...(isShopStaff(session.role) ? [{ href: "/assets/types", label: "Manage types" }] : []),
   ];
 
   const staffMenu = {
@@ -75,7 +83,8 @@ export function Nav({
               {link.label}
             </Link>
           ))}
-          <NavDropdown label="Tickets" links={ticketLinks} />
+          <NavDropdown label="Work orders" links={ticketLinks} />
+          <NavLinkMenu href="/assets" label="Assets" links={assetLinks} />
           {afterTickets.map((link) => (
             <Link key={link.href} href={link.href} className="hover:text-white">
               {link.label}

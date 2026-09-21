@@ -10,6 +10,7 @@ import { addPivotNoteAction, deletePivotAction, updatePivotAction } from "@/lib/
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { MapLocationPicker } from "@/components/MapLocationPicker";
+import { PivotDocuments } from "@/components/PivotDocuments";
 
 export default async function PivotDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -18,7 +19,12 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
 
   const pivot = await prisma.pivot.findFirst({
     where: { id, ...pivotWhere(session) },
-    include: { farmer: true, tickets: { orderBy: { updatedAt: "desc" } }, notes: { include: { user: true }, orderBy: { createdAt: "desc" } } },
+    include: {
+      farmer: true,
+      tickets: { orderBy: { updatedAt: "desc" } },
+      notes: { include: { user: true }, orderBy: { createdAt: "desc" } },
+      documents: { include: { user: true }, orderBy: { createdAt: "desc" } },
+    },
   });
   if (!pivot) notFound();
 
@@ -47,7 +53,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
             <input type="hidden" name="pivotId" value={pivot.id} />
             <h2 className="font-display text-xl">Edit pivot</h2>
             <label className="block text-sm font-medium">
-              Farm
+              Customer
               <select name="farmerId" defaultValue={pivot.farmerId} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
                 {farms.map((farm) => (
                   <option key={farm.id} value={farm.id}>
@@ -83,7 +89,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
               name="pivotId"
               value={pivot.id}
               label="Delete pivot"
-              confirmText={`Delete ${pivot.name} and its tickets? This cannot be undone.`}
+              confirmText={`Delete ${pivot.name} and its work orders? This cannot be undone.`}
             />
           </div>
         ) : null}
@@ -92,6 +98,20 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
             Pre-season startup checklist
           </Link>
         </p>
+
+        <h2 className="font-display mt-8 text-xl">Documents</h2>
+        <PivotDocuments
+          pivotId={pivot.id}
+          canManage={canEdit}
+          returnTo={`/pivots/${pivot.id}`}
+          documents={pivot.documents.map((document) => ({
+            id: document.id,
+            fileName: document.fileName,
+            mimeType: document.mimeType,
+            createdAt: document.createdAt.toISOString(),
+            uploadedBy: document.user.name,
+          }))}
+        />
 
         <h2 className="font-display mt-8 text-xl">Notes</h2>
         <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
@@ -116,17 +136,17 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
               name="message"
               rows={3}
               required
-              placeholder="Access, span issues, last service, farmer requests…"
+              placeholder="Access, span issues, last service, customer requests…"
               className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
             />
           </label>
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save note</button>
         </ActionForm>
 
-        <h2 className="font-display mt-8 text-xl">Tickets</h2>
+        <h2 className="font-display mt-8 text-xl">Work orders</h2>
         <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
           {pivot.tickets.length === 0 ? (
-            <li className="p-4 text-sm text-stone-600">No tickets yet.</li>
+            <li className="p-4 text-sm text-stone-600">No work orders yet.</li>
           ) : (
             pivot.tickets.map((ticket) => (
               <li key={ticket.id} className="flex items-center justify-between px-4 py-3">
@@ -142,7 +162,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
           href={session.role === ROLES.FARMER ? `/tickets/new?pivotId=${pivot.id}` : "/tickets/new"}
           className="mt-4 inline-block text-sm font-semibold text-emerald-800"
         >
-          Open a ticket for this pivot
+          Open a work order for this pivot
         </Link>
       </div>
       <div className="lg:col-span-2">

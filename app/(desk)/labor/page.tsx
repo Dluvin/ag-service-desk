@@ -45,7 +45,7 @@ export default async function LaborPage({
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Labor list</h1>
         <p className="mt-1 text-stone-600">
-          Company labor items for service tickets. Import Service items from QuickBooks, or a CSV of labor names and rates.
+          Company labor items for work orders. Import Service items from QuickBooks, or a CSV of labor names and rates.
         </p>
         {query.imported || query.updated ? (
           <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
@@ -142,12 +142,12 @@ export default async function LaborPage({
           </>
         ) : (
           <p className="rounded-xl border border-stone-200 bg-white p-4 text-sm text-stone-600">
-            Ask a company admin to import labor items. You can pick from the list when logging hours on a ticket.
+            Ask a company admin to import labor items. You can pick from the list when logging hours on a work order.
           </p>
         )}
         <p className="text-sm text-stone-500">
           <Link href="/tickets" className="text-emerald-800 hover:underline">
-            Back to tickets
+            Back to work orders
           </Link>
         </p>
       </div>

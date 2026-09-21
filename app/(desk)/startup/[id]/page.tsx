@@ -51,7 +51,7 @@ export default async function StartupInspectionPage({ params }: { params: Promis
           <p className="mt-2 text-sm">
             Maintenance{" "}
             <Link href={`/tickets/${inspection.ticket.id}`} className="text-emerald-800 hover:underline">
-              ticket #{inspection.ticket.number}
+              work order #{inspection.ticket.number}
             </Link>
           </p>
         ) : null}
@@ -90,7 +90,7 @@ export default async function StartupInspectionPage({ params }: { params: Promis
               Save checklist
             </button>
           ) : (
-            <p className="text-sm text-stone-500">Your shop team fills this checklist. Failed items become tickets you can follow.</p>
+            <p className="text-sm text-stone-500">Your shop team fills this checklist. Failed items become work orders you can follow.</p>
           )}
         </ActionForm>
       </div>

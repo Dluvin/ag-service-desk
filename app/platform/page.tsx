@@ -44,7 +44,7 @@ export default async function PlatformHomePage() {
           </Link>
           {" "}
           (<span className="font-mono text-xs">/signup</span>). New companies stay pending until you
-          approve. Approve opens their tenant, loads a demo farm/ticket, starts a {PLAN.trialDays}-day
+          approve. Approve opens their tenant, loads a demo customer/work order, starts a {PLAN.trialDays}-day
           trial, and creates a Stripe checkout for ${PLAN.monthlyDollars}/month.
         </p>
         <ul className="mt-6 space-y-4">
@@ -83,8 +83,8 @@ export default async function PlatformHomePage() {
                         ) : null}
                       </p>
                       <p className="mt-1 text-sm text-stone-600">
-                        {org.slug} · {staff} staff · {org._count.farmers} farms · {org._count.tickets}{" "}
-                        tickets
+                        {org.slug} · {staff} staff · {org._count.farmers} customers · {org._count.tickets}{" "}
+                        work orders
                         {adminEmail ? ` · ${adminEmail}` : ""}
                       </p>
                       {org.signupPhone || org.signupCity ? (

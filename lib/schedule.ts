@@ -13,6 +13,10 @@ export function toDateTimeLocalValue(value: Date | string | null | undefined) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+export function scheduleInputDefault(value?: Date | string | null) {
+  return toDateTimeLocalValue(value) || toDateTimeLocalValue(new Date());
+}
+
 export function formatSchedule(value: Date | string | null | undefined) {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);

@@ -26,9 +26,9 @@ export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
 
   return (
     <>
-      <ListSearch value={query} onChange={setQuery} label="Search farms" placeholder="Farm, contact, or address" />
+      <ListSearch value={query} onChange={setQuery} label="Search customers" placeholder="Customer, contact, or address" />
       {matches.length === 0 ? (
-        <p className="mt-4 text-sm text-stone-600">No farms match that search.</p>
+        <p className="mt-4 text-sm text-stone-600">No customers match that search.</p>
       ) : (
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {matches.map((farmer) => (
@@ -38,7 +38,7 @@ export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
               </Link>
               <p className="text-sm text-stone-600">
                 {farmer.store ? `${farmer.store} · ` : ""}
-                {farmer.pivotCount} pivots · {farmer.ticketCount} tickets
+                {farmer.pivotCount} pivots · {farmer.ticketCount} work orders
                 {farmer.contacts ? ` · ${farmer.contacts}` : ""}
               </p>
             </li>

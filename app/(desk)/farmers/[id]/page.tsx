@@ -10,6 +10,7 @@ import { SelectableMap } from "@/components/SelectableMap";
 import { StatusBadge } from "@/components/Badges";
 import { StoreSelect } from "@/components/StoreSelect";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
+import { FarmerPivotList } from "@/components/FarmerPivotList";
 
 export default async function FarmerDetailPage({
   params,
@@ -30,7 +31,8 @@ export default async function FarmerDetailPage({
     include: {
       store: true,
       contacts: { orderBy: { name: "asc" } },
-      pivots: { orderBy: { name: "asc" } },
+      pivots: { orderBy: { name: "asc" }, include: { documents: { orderBy: { createdAt: "desc" } } } },
+      assets: { orderBy: { name: "asc" }, include: { assetType: true } },
       tickets: { include: { pivot: true }, orderBy: { updatedAt: "desc" }, take: 12 },
     },
   });
@@ -55,28 +57,37 @@ export default async function FarmerDetailPage({
             action={deleteFarmerAction}
             name="farmerId"
             value={farmer.id}
-            label="Delete farm"
-            confirmText={`Delete ${farmer.name} and its pivots and tickets? This cannot be undone.`}
+            label="Delete customer"
+            confirmText={`Delete ${farmer.name} and its pivots and work orders? This cannot be undone.`}
           />
         </div>
       ) : null}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <SelectableMap
-          markers={farmer.pivots.map((pivot) => ({
-            id: pivot.id,
-            name: pivot.name,
-            lat: pivot.latitude,
-            lng: pivot.longitude,
-            subtitle: pivot.serialNumber ?? undefined,
-          }))}
+          markers={[
+            ...farmer.pivots.map((pivot) => ({
+              id: pivot.id,
+              name: pivot.name,
+              lat: pivot.latitude,
+              lng: pivot.longitude,
+              subtitle: pivot.serialNumber ?? undefined,
+            })),
+            ...farmer.assets.map((asset) => ({
+              id: asset.id,
+              name: asset.name,
+              lat: asset.latitude,
+              lng: asset.longitude,
+              subtitle: asset.assetType.name,
+            })),
+          ]}
         />
         <div>
           {canEdit ? (
             <ActionForm action={updateFarmerAction} className="mb-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
               <input type="hidden" name="farmerId" value={farmer.id} />
-              <h2 className="font-display text-xl">Edit farm</h2>
+              <h2 className="font-display text-xl">Edit customer</h2>
               <label className="block text-sm font-medium">
-                Farm name
+                Customer name
                 <input name="name" required defaultValue={farmer.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
               </label>
               <label className="block text-sm font-medium">
@@ -84,7 +95,7 @@ export default async function FarmerDetailPage({
                 <input name="address" defaultValue={farmer.address ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
               </label>
               <StoreSelect stores={stores} defaultValue={farmer.storeId} />
-              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save farm</button>
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save customer</button>
             </ActionForm>
           ) : session.role === ROLES.FARMER ? (
             <ActionForm action={updateFarmerStoreAction} className="mb-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
@@ -168,29 +179,49 @@ export default async function FarmerDetailPage({
           ) : null}
         </div>
       </div>
-      <h2 className="font-display mt-8 text-xl">Pivots ({farmer.pivots.length})</h2>
       {farmer.pivots.length ? (
-        <ul
-          className={
-            farmer.pivots.length > 8
-              ? "mt-3 columns-2 gap-x-8 sm:columns-3 lg:columns-4"
-              : farmer.pivots.length > 4
-                ? "mt-3 columns-2 gap-x-8"
-                : "mt-3"
-          }
-        >
-          {farmer.pivots.map((pivot) => (
-            <li key={pivot.id} className="break-inside-avoid py-1">
-              <Link href={`/pivots/${pivot.id}`} className="text-emerald-800 hover:underline">
-                {pivot.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <FarmerPivotList
+          canManage={canEdit}
+          farmerId={farmer.id}
+          pivots={farmer.pivots.map((pivot) => ({
+            id: pivot.id,
+            name: pivot.name,
+            latitude: pivot.latitude,
+            longitude: pivot.longitude,
+            locationNote: pivot.locationNote,
+            serialNumber: pivot.serialNumber,
+            documents: pivot.documents.map((document) => ({
+              id: document.id,
+              fileName: document.fileName,
+              mimeType: document.mimeType,
+              createdAt: document.createdAt.toISOString(),
+            })),
+          }))}
+        />
       ) : (
-        <p className="mt-2 text-sm text-stone-600">No pivots on this farm yet.</p>
+        <>
+          <h2 className="font-display mt-8 text-xl">Pivots (0)</h2>
+          <p className="mt-2 text-sm text-stone-600">No pivots on this customer yet.</p>
+        </>
       )}
-      <h2 className="font-display mt-8 text-xl">Tickets</h2>
+      {farmer.assets.length ? (
+        <>
+          <h2 className="font-display mt-8 text-xl">Other assets ({farmer.assets.length})</h2>
+          <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
+            {farmer.assets.map((asset) => (
+              <li key={asset.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div>
+                  <Link href={`/assets/${asset.id}`} className="font-medium text-emerald-800 hover:underline">
+                    {asset.name}
+                  </Link>
+                  <p className="text-sm text-stone-600">{asset.assetType.name}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      <h2 className="font-display mt-8 text-xl">Work orders</h2>
       <Link href="/tickets/new" className="mt-1 inline-block text-sm font-semibold text-emerald-800">
         Request service
       </Link>

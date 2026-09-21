@@ -1,3 +1,17 @@
+/** Hybrid satellite so field and road labels stay visible in Google Maps. */
+export function googleMapsPlaceUrl(lat: number, lng: number) {
+  return `https://www.google.com/maps?q=${lat},${lng}&t=h`;
+}
+
+export function googleMapsDirectionsUrl(points: Array<{ lat: number; lng: number }>) {
+  if (points.length === 1) return googleMapsPlaceUrl(points[0].lat, points[0].lng);
+  return `https://www.google.com/maps/dir/${points.map((point) => `${point.lat},${point.lng}`).join("/")}?t=h`;
+}
+
+export function googleMapsEmbedUrl(lat: number, lng: number, zoom = 15) {
+  return `https://maps.google.com/maps?q=${lat},${lng}&z=${zoom}&t=h&output=embed`;
+}
+
 export function parseMapsLocation(raw: string) {
   const text = raw.trim();
   const at = text.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);

@@ -49,6 +49,8 @@ model Organization {
   catalogEquipment    CatalogEquipment[]
   stores              Store[]
   revealVehicles      RevealVehicle[]
+  assetTypes          AssetType[]
+  assets              Asset[]
 }
 
 model RevealVehicle {
@@ -110,6 +112,7 @@ model User {
   revealVehicleNumber   String?
   siteVisits            SiteVisit[]
   pivotNotes            PivotNote[]
+  pivotDocuments        PivotDocument[]
   passwordResets        PasswordResetToken[]
   createdAt             DateTime              @default(now())
 
@@ -139,6 +142,7 @@ model Farmer {
   createdAt      DateTime     @default(now())
   users          User[]
   pivots         Pivot[]
+  assets         Asset[]
   tickets        Ticket[]
   contacts       FarmerContact[]
 }
@@ -168,6 +172,20 @@ model Pivot {
   tickets        Ticket[]
   inspections    StartupInspection[]
   notes          PivotNote[]
+  documents      PivotDocument[]
+}
+
+model PivotDocument {
+  id        String   @id @default(cuid())
+  pivotId   String
+  pivot     Pivot    @relation(fields: [pivotId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName  String
+  mimeType  String
+  createdAt DateTime @default(now())
+
+  @@index([pivotId])
 }
 
 model PivotNote {
@@ -178,6 +196,42 @@ model PivotNote {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   message   String
   createdAt DateTime @default(now())
+}
+
+model AssetType {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String
+  kind           String       @default("GENERIC")
+  builtIn        Boolean      @default(false)
+  sortOrder      Int          @default(100)
+  createdAt      DateTime     @default(now())
+  assets         Asset[]
+
+  @@unique([organizationId, slug])
+  @@unique([organizationId, name])
+}
+
+model Asset {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assetTypeId    String
+  assetType      AssetType    @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
+  farmerId       String
+  farmer         Farmer       @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  name           String
+  latitude       Float
+  longitude      Float
+  locationNote   String?
+  serialNumber   String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, assetTypeId])
+  @@index([farmerId])
 }
 
 model Ticket {

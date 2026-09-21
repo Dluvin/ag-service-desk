@@ -51,7 +51,7 @@ export function DispatchCalendar({
         {compact ? null : (
           <div>
             <h2 className="font-display text-xl">Schedule</h2>
-            <p className="mt-1 text-sm text-stone-600">Tickets with a scheduled time land on this calendar.</p>
+            <p className="mt-1 text-sm text-stone-600">Work orders with a scheduled time land on this calendar.</p>
           </div>
         )}
         <div className="flex items-center gap-2">

@@ -18,10 +18,12 @@ export default async function SmsSettingsPage() {
     <div className="max-w-3xl">
       <h1 className="font-display text-3xl">Bird SMS</h1>
       <p className="mt-2 text-stone-600">
-        When a ticket is opened, assigned, or changed, Bird texts the assigned technician and every
-        farm contact that has a phone number. Each message includes a link to that ticket. A
-        farm-opened ticket with no technician yet texts all technicians. Numbers come from farm
-        contacts and each technician&apos;s phone field.
+        When a work order is opened, assigned, or changed, Bird texts the assigned technician. A
+        customer-opened work order with no technician yet texts all technicians. Customers are texted
+        and emailed only when a work order is moved to Repair done — not on Assigned, In progress,
+        Waiting on parts, Completed, or Cancelled. Staff messages include a link to that work order.
+        Technician numbers come from each technician&apos;s phone field; customer texts use customer
+        contact phones, and the customer email uses the farmer email.
       </p>
       <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-stone-600">
         <li>In Bird, enable the US (and any other countries you serve) under SMS Destinations.</li>
@@ -37,7 +39,7 @@ export default async function SmsSettingsPage() {
       <ActionForm action={saveBirdSettingsAction} className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
         <label className="flex items-center gap-2 text-sm font-medium">
           <input type="checkbox" name="birdSmsEnabled" defaultChecked={org.birdSmsEnabled} className="rounded border-stone-300" />
-          Send SMS on assign and ticket updates
+          Send SMS on assign and work order updates
         </label>
         <label className="block text-sm font-medium">
           API key
