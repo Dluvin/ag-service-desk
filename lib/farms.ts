@@ -49,6 +49,7 @@ export async function moveFarmToCustomer(input: {
   });
   if (!customer) return { error: "Customer not found." };
 
+  // Assets with this farmId travel with the farm. Unassigned pivots/assets (farmId null) stay on the old customer.
   await prisma.$transaction(async (tx) => {
     await tx.farm.update({
       where: { id: farm.id },
@@ -62,16 +63,13 @@ export async function moveFarmToCustomer(input: {
       where: { farmId: farm.id, organizationId: input.organizationId },
       data: { farmerId: customer.id },
     });
-    const pivots = await tx.pivot.findMany({
-      where: { farmId: farm.id, organizationId: input.organizationId },
-      select: { id: true },
+    await tx.ticket.updateMany({
+      where: {
+        organizationId: input.organizationId,
+        pivot: { farmId: farm.id },
+      },
+      data: { farmerId: customer.id },
     });
-    if (pivots.length) {
-      await tx.ticket.updateMany({
-        where: { pivotId: { in: pivots.map((pivot) => pivot.id) }, organizationId: input.organizationId },
-        data: { farmerId: customer.id },
-      });
-    }
     await tx.farmAssignment.updateMany({
       where: { farmId: farm.id, endYear: null },
       data: { endYear: year },

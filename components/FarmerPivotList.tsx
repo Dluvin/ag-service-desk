@@ -139,6 +139,11 @@ export function FarmerPivotList({
   const showDocuments = canManage || pivots.some((pivot) => pivot.documents.length > 0);
   const returnTo = `/farmers/${farmerId}`;
 
+  function selectAllListed() {
+    setSelectedPivots((current) => setIds(current, matches.pivots.map((pivot) => pivot.id), true));
+    setSelectedAssets((current) => setIds(current, matches.assets.map((asset) => asset.id), true));
+  }
+
   function selectUnassigned() {
     setSelectedPivots((current) => setIds(current, unassignedPivots.map((pivot) => pivot.id), true));
     setSelectedAssets((current) => setIds(current, unassignedAssets.map((asset) => asset.id), true));
@@ -187,6 +192,15 @@ export function FarmerPivotList({
             <span className="font-medium text-stone-800">
               {selectedCount} selected
             </span>
+            {matchedAssets > 0 ? (
+              <button
+                type="button"
+                onClick={selectAllListed}
+                className="font-semibold text-emerald-800 hover:underline"
+              >
+                Select all
+              </button>
+            ) : null}
             {unassignedPivots.length + unassignedAssets.length > 0 ? (
               <button
                 type="button"
