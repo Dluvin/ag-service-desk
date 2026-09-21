@@ -92,3 +92,116 @@ export function farmAssignmentLabel(assignment: { startYear: number; endYear: nu
   const span = assignment.endYear ? `${assignment.startYear}–${assignment.endYear}` : `${assignment.startYear}–present`;
   return `${span} ${assignment.farmerName}`;
 }
+
+export async function createFarmForCustomer(input: {
+  organizationId: string;
+  farmerId: string;
+  name: string;
+  location?: string | null;
+}) {
+  return prisma.farm.create({
+    data: {
+      organizationId: input.organizationId,
+      farmerId: input.farmerId,
+      name: input.name,
+      location: input.location || null,
+      assignments: {
+        create: {
+          farmerId: input.farmerId,
+          startYear: currentAssignmentYear(),
+        },
+      },
+    },
+  });
+}
+
+export async function assignCustomerAssetsToFarm(input: {
+  organizationId: string;
+  farmerId: string;
+  farmId?: string | null;
+  newFarm?: { name: string; location?: string | null } | null;
+  pivotIds: string[];
+  assetIds: string[];
+}): Promise<{ farmId: string; error?: string }> {
+  const pivotIds = [...new Set(input.pivotIds.filter(Boolean))];
+  const assetIds = [...new Set(input.assetIds.filter(Boolean))];
+  if (!pivotIds.length && !assetIds.length) {
+    return { farmId: input.farmId ?? "", error: "Select at least one asset." };
+  }
+
+  const [pivots, assets] = await Promise.all([
+    pivotIds.length
+      ? prisma.pivot.findMany({
+          where: { id: { in: pivotIds }, farmerId: input.farmerId, organizationId: input.organizationId },
+          select: { id: true },
+        })
+      : Promise.resolve([]),
+    assetIds.length
+      ? prisma.asset.findMany({
+          where: { id: { in: assetIds }, farmerId: input.farmerId, organizationId: input.organizationId },
+          select: { id: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  if (pivots.length !== pivotIds.length || assets.length !== assetIds.length) {
+    return { farmId: input.farmId ?? "", error: "Some selected assets were not found for this customer." };
+  }
+
+  if (input.newFarm) {
+    const name = input.newFarm.name.trim();
+    if (!name) return { farmId: "", error: "Farm name is required." };
+    const farm = await prisma.$transaction(async (tx) => {
+      const created = await tx.farm.create({
+        data: {
+          organizationId: input.organizationId,
+          farmerId: input.farmerId,
+          name,
+          location: input.newFarm?.location || null,
+          assignments: {
+            create: {
+              farmerId: input.farmerId,
+              startYear: currentAssignmentYear(),
+            },
+          },
+        },
+      });
+      if (pivots.length) {
+        await tx.pivot.updateMany({
+          where: { id: { in: pivots.map((pivot) => pivot.id) }, organizationId: input.organizationId, farmerId: input.farmerId },
+          data: { farmId: created.id },
+        });
+      }
+      if (assets.length) {
+        await tx.asset.updateMany({
+          where: { id: { in: assets.map((asset) => asset.id) }, organizationId: input.organizationId, farmerId: input.farmerId },
+          data: { farmId: created.id },
+        });
+      }
+      return created;
+    });
+    return { farmId: farm.id };
+  }
+
+  const farm = await resolveFarmIdForCustomer(input.organizationId, input.farmerId, input.farmId ?? null);
+  if (farm.error || !farm.farmId) {
+    return { farmId: input.farmId ?? "", error: farm.error ?? "Select a farm or create a new one." };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (pivots.length) {
+      await tx.pivot.updateMany({
+        where: { id: { in: pivots.map((pivot) => pivot.id) }, organizationId: input.organizationId, farmerId: input.farmerId },
+        data: { farmId: farm.farmId },
+      });
+    }
+    if (assets.length) {
+      await tx.asset.updateMany({
+        where: { id: { in: assets.map((asset) => asset.id) }, organizationId: input.organizationId, farmerId: input.farmerId },
+        data: { farmId: farm.farmId },
+      });
+    }
+  });
+
+  return { farmId: farm.farmId };
+}

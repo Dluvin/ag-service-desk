@@ -45,6 +45,10 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
     <div className="grid gap-6 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <p className="text-sm text-stone-500">
+          <Link href="/assets" className="text-emerald-800 hover:underline">
+            Assets
+          </Link>
+          {" / "}
           <Link href={assetTypeHref(asset.assetType)} className="text-emerald-800 hover:underline">
             {asset.assetType.name}
           </Link>

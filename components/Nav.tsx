@@ -38,7 +38,7 @@ export function Nav({
     ...(!farmer ? [{ href: "/farmers", label: "Customers" }] : []),
   ];
   const assetLinks = [
-    { href: "/assets", label: "All" },
+    { href: "/assets", label: "All Assets" },
     ...assetTypes.map((type) => ({ href: assetTypeHref(type), label: type.name })),
     ...(isShopStaff(session.role) ? [{ href: "/assets/types", label: "Manage types" }] : []),
   ];

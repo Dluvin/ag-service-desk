@@ -53,7 +53,13 @@ import {
   isPivotAssetType,
   uniqueAssetTypeSlug,
 } from "./assets";
-import { currentAssignmentYear, moveFarmToCustomer, parseFarmId, resolveFarmIdForCustomer } from "./farms";
+import {
+  assignCustomerAssetsToFarm,
+  createFarmForCustomer,
+  moveFarmToCustomer,
+  parseFarmId,
+  resolveFarmIdForCustomer,
+} from "./farms";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -355,20 +361,44 @@ export async function createFarmAction(formData: FormData) {
   });
   if (!farmer) return { error: "Customer not found." };
 
-  await prisma.farm.create({
-    data: {
-      organizationId: session.organizationId,
-      farmerId,
-      name,
-      location: location || null,
-      assignments: {
-        create: {
-          farmerId,
-          startYear: currentAssignmentYear(),
-        },
-      },
-    },
+  await createFarmForCustomer({
+    organizationId: session.organizationId,
+    farmerId,
+    name,
+    location,
   });
+  redirect(`/farmers/${farmerId}`);
+}
+
+export async function assignCustomerAssetsToFarmAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isShopStaff(session.role)) return { error: "Customers cannot assign assets to farms." };
+
+  const farmerId = formString(formData, "farmerId");
+  const farmMode = formString(formData, "farmMode") || "existing";
+  const pivotIds = formData.getAll("pivotId").map((value) => String(value).trim()).filter(Boolean);
+  const assetIds = formData.getAll("assetId").map((value) => String(value).trim()).filter(Boolean);
+  if (!pivotIds.length && !assetIds.length) return { error: "Select at least one asset." };
+
+  const farmer = await prisma.farmer.findFirst({
+    where: { id: farmerId, organizationId: session.organizationId },
+    select: { id: true },
+  });
+  if (!farmer) return { error: "Customer not found." };
+
+  const assigned = await assignCustomerAssetsToFarm({
+    organizationId: session.organizationId,
+    farmerId,
+    farmId: farmMode === "new" ? null : parseFarmId(formString(formData, "farmId")),
+    newFarm:
+      farmMode === "new"
+        ? { name: formString(formData, "name"), location: formString(formData, "location") }
+        : null,
+    pivotIds,
+    assetIds,
+  });
+  if (assigned.error) return { error: assigned.error };
+
   redirect(`/farmers/${farmerId}`);
 }
 

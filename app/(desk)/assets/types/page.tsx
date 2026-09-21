@@ -64,7 +64,7 @@ export default async function AssetTypesPage() {
         </ul>
         <p className="mt-4 text-sm">
           <Link href="/assets" className="font-semibold text-emerald-800 hover:underline">
-            Back to all assets
+            Back to All Assets
           </Link>
         </p>
       </div>

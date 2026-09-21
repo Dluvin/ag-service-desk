@@ -37,7 +37,7 @@ export default async function AssetsPage({
     includePivots
       ? prisma.pivot.findMany({
           where: pivotWhere(session),
-          include: { farmer: true },
+          include: { farmer: true, farm: true },
           orderBy: { name: "asc" },
         })
       : Promise.resolve([]),
@@ -47,7 +47,7 @@ export default async function AssetsPage({
             ...assetWhere(session),
             ...(selected && !isPivotAssetType(selected) ? { assetTypeId: selected.id } : {}),
           },
-          include: { farmer: true, assetType: true },
+          include: { farmer: true, farm: true, assetType: true },
           orderBy: { name: "asc" },
         })
       : Promise.resolve([]),
@@ -59,12 +59,19 @@ export default async function AssetsPage({
   ].sort((a, b) => a.name.localeCompare(b.name));
 
   const canAdd = isShopStaff(session.role);
-  const title = selected ? selected.name : "All assets";
+  const title = selected ? selected.name : "All Assets";
 
   return (
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
+          {selected ? (
+            <p className="text-sm text-stone-500">
+              <Link href="/assets" className="text-emerald-800 hover:underline">
+                Assets
+              </Link>
+            </p>
+          ) : null}
           <h1 className="font-display text-3xl">{title}</h1>
           <p className="mt-1 text-sm text-stone-600">
             {selected

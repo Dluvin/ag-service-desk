@@ -20,6 +20,7 @@ export function ListSearch({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        autoComplete="off"
         className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
       />
     </label>

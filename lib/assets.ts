@@ -51,6 +51,7 @@ export type UnifiedAssetRow = {
   typeSlug: string;
   href: string;
   farmerName: string;
+  farmName: string | null;
   latitude: number;
   longitude: number;
   serialNumber: string | null;
@@ -66,6 +67,7 @@ export function pivotToUnifiedRow(
     serialNumber: string | null;
     locationNote: string | null;
     farmer: { name: string };
+    farm?: { name: string } | null;
   },
   type: { name: string; slug: string } = { name: "Pivots", slug: "pivots" },
 ): UnifiedAssetRow {
@@ -76,6 +78,7 @@ export function pivotToUnifiedRow(
     typeSlug: type.slug,
     href: `/pivots/${pivot.id}`,
     farmerName: pivot.farmer.name,
+    farmName: pivot.farm?.name ?? null,
     latitude: pivot.latitude,
     longitude: pivot.longitude,
     serialNumber: pivot.serialNumber,
@@ -91,6 +94,7 @@ export function assetToUnifiedRow(asset: {
   serialNumber: string | null;
   locationNote: string | null;
   farmer: { name: string };
+  farm?: { name: string } | null;
   assetType: { name: string; slug: string };
 }): UnifiedAssetRow {
   return {
@@ -100,6 +104,7 @@ export function assetToUnifiedRow(asset: {
     typeSlug: asset.assetType.slug,
     href: `/assets/${asset.id}`,
     farmerName: asset.farmer.name,
+    farmName: asset.farm?.name ?? null,
     latitude: asset.latitude,
     longitude: asset.longitude,
     serialNumber: asset.serialNumber,
