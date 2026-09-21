@@ -19,13 +19,19 @@ export function DispatchColumnList({
     if (!list) return;
 
     function measure() {
-      const cards = Array.from(list.children) as HTMLElement[];
+      const el = listRef.current;
+      if (!el) return;
+      const cards = Array.from(el.children) as HTMLElement[];
       if (cards.length <= VISIBLE_CARDS) {
         setMaxHeight(undefined);
         return;
       }
       const first = cards[0];
       const lastVisible = cards[VISIBLE_CARDS - 1];
+      if (!first || !lastVisible) {
+        setMaxHeight(undefined);
+        return;
+      }
       setMaxHeight(lastVisible.offsetTop + lastVisible.offsetHeight - first.offsetTop);
     }
 
