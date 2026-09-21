@@ -126,13 +126,13 @@ export function FarmerPivotList({
       <ListSearch
         value={query}
         onChange={setQuery}
-        label="Search assets"
-        placeholder="Farm, pivot, asset, serial, location, or file"
+        label="Search pivots"
+        placeholder="Pivot, serial, location, or asset"
       />
-      {matchedAssets === 0 && farms.length === 0 ? (
-        <p className="mt-4 text-sm text-stone-600">
-          {searching ? "No assets match that search." : "No pivots or other assets on this customer yet."}
-        </p>
+      {searching && matchedAssets === 0 ? (
+        <p className="mt-4 text-sm text-stone-600">No pivots match that search.</p>
+      ) : matchedAssets === 0 && farms.length === 0 ? (
+        <p className="mt-4 text-sm text-stone-600">No pivots or other assets on this customer yet.</p>
       ) : (
         <div className="mt-4 space-y-6">
           {groups.map((group) => {
