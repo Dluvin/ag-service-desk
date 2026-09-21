@@ -40,6 +40,32 @@ export function storePivotWhere(selected: string): Prisma.PivotWhereInput {
   return { farmer: { storeId: selected } };
 }
 
+export function storeAssetWhere(selected: string): Prisma.AssetWhereInput {
+  if (selected === STORE_ALL) return {};
+  if (selected === STORE_NONE) return { farmer: { storeId: null } };
+  return { farmer: { storeId: selected } };
+}
+
+export function vehicleEffectiveStoreId(
+  vehicleStoreId: string | null | undefined,
+  staffStoreId: string | null | undefined,
+) {
+  return vehicleStoreId ?? staffStoreId ?? null;
+}
+
+export function matchesSelectedStore(effectiveStoreId: string | null, selected: string) {
+  if (selected === STORE_ALL) return true;
+  if (selected === STORE_NONE) return effectiveStoreId == null;
+  return effectiveStoreId === selected;
+}
+
+export function resolvedTicketStoreId(ticket: {
+  storeId?: string | null;
+  farmer?: { storeId?: string | null } | null;
+}) {
+  return ticket.storeId ?? ticket.farmer?.storeId ?? null;
+}
+
 export function storeQuery(selected: string) {
   return selected === STORE_ALL ? "" : `?store=${encodeURIComponent(selected)}`;
 }

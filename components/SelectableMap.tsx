@@ -11,13 +11,14 @@ type Marker = {
   subtitle?: string;
 };
 
-export function SelectableMap({ markers }: { markers: Marker[] }) {
+export function SelectableMap({ markers, store }: { markers: Marker[]; store?: string | null }) {
   const [selectedId, setSelectedId] = useState(markers[0]?.id);
   return (
     <GoogleMapPanel
       markers={markers}
       selectedId={selectedId}
       onSelect={setSelectedId}
+      store={store}
     />
   );
 }

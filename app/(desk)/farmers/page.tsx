@@ -27,6 +27,7 @@ export default async function FarmersPage({
       include: {
         store: true,
         contacts: { orderBy: { name: "asc" } },
+        farms: { orderBy: { name: "asc" }, select: { name: true } },
         _count: { select: { pivots: true, tickets: true } },
       },
       orderBy: { name: "asc" },
@@ -52,6 +53,7 @@ export default async function FarmersPage({
             pivotCount: farmer._count.pivots,
             ticketCount: farmer._count.tickets,
             contacts: farmer.contacts.map((contact) => contact.name).join(", "),
+            farms: farmer.farms.map((farm) => farm.name),
           }))}
         />
       </div>

@@ -20,7 +20,7 @@ import { formatDuration, visitMinutes } from "@/lib/onsite";
 import { formatSchedule } from "@/lib/schedule";
 import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
 import { StoreSelect } from "@/components/StoreSelect";
-import { ticketStoreName } from "@/lib/stores";
+import { resolvedTicketStoreId, ticketStoreName } from "@/lib/stores";
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -344,6 +344,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
       </div>
       <div className="lg:col-span-2">
         <GoogleMapPanel
+          store={resolvedTicketStoreId(ticket)}
           markers={[
             {
               id: ticket.pivot.id,

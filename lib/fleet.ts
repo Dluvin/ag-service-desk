@@ -3,8 +3,12 @@ import { fetchRevealLocations, loadRevealCreds } from "./reveal";
 import { syncOnsiteVisits } from "./onsite";
 import type { MapPin } from "./map-pins";
 import { ROLES } from "./roles";
+import { STORE_ALL, matchesSelectedStore, vehicleEffectiveStoreId } from "./stores";
 
-export async function getRevealMapSnapshot(organizationId: string): Promise<{
+export async function getRevealMapSnapshot(
+  organizationId: string,
+  selectedStore = STORE_ALL,
+): Promise<{
   configured: boolean;
   pins: MapPin[];
   error: string | null;
@@ -32,8 +36,14 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
     const locations = await fetchRevealLocations(organizationId);
     const mapSettings = await prisma.revealVehicle.findMany({
       where: { organizationId, active: true },
-      select: { number: true, name: true, showOnMap: true },
+      select: { number: true, name: true, showOnMap: true, storeId: true },
     });
+    const settingsByKey = new Map<string, (typeof mapSettings)[number]>();
+    for (const vehicle of mapSettings) {
+      for (const key of [vehicle.number, vehicle.name].map((value) => value.trim().toLowerCase())) {
+        settingsByKey.set(key, vehicle);
+      }
+    }
     const hidden = new Set(
       mapSettings
         .filter((vehicle) => !vehicle.showOnMap)
@@ -41,7 +51,10 @@ export async function getRevealMapSnapshot(organizationId: string): Promise<{
     );
     const visibleLocations = locations.filter((location) => {
       const keys = [location.vehicleNumber, location.name].filter(Boolean).map((value) => value!.trim().toLowerCase());
-      return !keys.some((key) => hidden.has(key));
+      if (keys.some((key) => hidden.has(key))) return false;
+      const vehicle = keys.map((key) => settingsByKey.get(key)).find(Boolean);
+      const tech = byVehicle.get(location.vehicleNumber);
+      return matchesSelectedStore(vehicleEffectiveStoreId(vehicle?.storeId, tech?.storeId), selectedStore);
     });
     await syncOnsiteVisits({
       organizationId,

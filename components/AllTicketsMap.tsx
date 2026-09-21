@@ -19,12 +19,14 @@ export function AllTicketsMap({
   pins,
   vehiclePins,
   revealSetupHref,
+  store,
 }: {
   pins: MapPin[];
   vehiclePins?: MapPin[];
   revealSetupHref?: string;
+  store?: string | null;
 }) {
-  const fetched = useRevealVehiclePins(vehiclePins === undefined);
+  const fetched = useRevealVehiclePins(vehiclePins === undefined, store);
   const trucks = [...new Map((vehiclePins ?? fetched.vehicles).map((truck) => [truck.id, truck])).values()];
   const onSiteTickets = new Set(
     trucks.map((truck) => truck.onSiteTicketId).filter((id): id is string => Boolean(id)),

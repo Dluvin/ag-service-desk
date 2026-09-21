@@ -3,11 +3,13 @@ export function StoreSelect({
   name = "storeId",
   defaultValue,
   label = "Default store",
+  emptyLabel = "No store",
 }: {
   stores: { id: string; name: string }[];
   name?: string;
   defaultValue?: string | null;
   label?: string;
+  emptyLabel?: string;
 }) {
   if (stores.length === 0) {
     return <p className="text-sm text-stone-600">Add stores under Settings first, then you can assign a default store.</p>;
@@ -21,7 +23,7 @@ export function StoreSelect({
         defaultValue={defaultValue ?? ""}
         className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
       >
-        <option value="">No store</option>
+        <option value="">{emptyLabel}</option>
         {stores.map((store) => (
           <option key={store.id} value={store.id}>
             {store.name}

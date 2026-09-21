@@ -22,11 +22,18 @@ export default async function NewAssetPage({
   if (!selected) redirect("/assets");
   if (isPivotAssetType(selected)) redirect(assetTypeNewHref(selected));
 
-  const farmers = await prisma.farmer.findMany({
-    where: { organizationId: session.organizationId },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
+  const [farmers, farms] = await Promise.all([
+    prisma.farmer.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.farm.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, farmerId: true },
+    }),
+  ]);
 
   const label = assetTypeSingular(selected.name);
 
@@ -40,6 +47,7 @@ export default async function NewAssetPage({
         <input type="hidden" name="assetTypeId" value={selected.id} />
         <NewAssetFields
           farmers={farmers}
+          farms={farms}
           mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}
           nameLabel={`${label} name`}
         />

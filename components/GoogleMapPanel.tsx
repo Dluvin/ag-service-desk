@@ -26,12 +26,14 @@ export function GoogleMapPanel({
   markers,
   selectedId,
   onSelect,
+  store,
 }: {
   markers: Marker[];
   selectedId?: string;
   onSelect?: (id: string) => void;
+  store?: string | null;
 }) {
-  const { vehicles } = useRevealVehiclePins();
+  const { vehicles } = useRevealVehiclePins(true, store);
   const onSitePivots = new Set(
     vehicles.map((truck) => truck.onSitePivotId).filter((id): id is string => Boolean(id)),
   );

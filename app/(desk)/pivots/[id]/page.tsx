@@ -11,6 +11,8 @@ import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { MapLocationPicker } from "@/components/MapLocationPicker";
 import { PivotDocuments } from "@/components/PivotDocuments";
+import { AssetOwnerFields } from "@/components/AssetOwnerFields";
+import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
 
 export default async function PivotDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -21,6 +23,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
     where: { id, ...pivotWhere(session) },
     include: {
       farmer: true,
+      farm: true,
       tickets: { orderBy: { updatedAt: "desc" } },
       notes: { include: { user: true }, orderBy: { createdAt: "desc" } },
       documents: { include: { user: true }, orderBy: { createdAt: "desc" } },
@@ -29,13 +32,20 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
   if (!pivot) notFound();
 
   const canEdit = isShopStaff(session.role);
-  const farms = canEdit
-    ? await prisma.farmer.findMany({
-        where: { organizationId: session.organizationId },
-        orderBy: { name: "asc" },
-        select: { id: true, name: true },
-      })
-    : [];
+  const [customers, farms] = canEdit
+    ? await Promise.all([
+        prisma.farmer.findMany({
+          where: { organizationId: session.organizationId },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true },
+        }),
+        prisma.farm.findMany({
+          where: { organizationId: session.organizationId },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true, farmerId: true },
+        }),
+      ])
+    : [[], []];
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -45,6 +55,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
           <Link href={`/farmers/${pivot.farmerId}`} className="text-emerald-800 hover:underline">
             {pivot.farmer.name}
           </Link>
+          {` · ${pivot.farm?.name ?? UNASSIGNED_FARM_LABEL}`}
           {pivot.serialNumber ? ` · SN ${pivot.serialNumber}` : ""}
         </p>
         {pivot.locationNote ? <p className="mt-2 text-sm">{pivot.locationNote}</p> : null}
@@ -52,16 +63,12 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
           <ActionForm action={updatePivotAction} className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
             <input type="hidden" name="pivotId" value={pivot.id} />
             <h2 className="font-display text-xl">Edit pivot</h2>
-            <label className="block text-sm font-medium">
-              Customer
-              <select name="farmerId" defaultValue={pivot.farmerId} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
-                {farms.map((farm) => (
-                  <option key={farm.id} value={farm.id}>
-                    {farm.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <AssetOwnerFields
+              farmers={customers}
+              farms={farms}
+              defaultFarmerId={pivot.farmerId}
+              defaultFarmId={pivot.farmId}
+            />
             <label className="block text-sm font-medium">
               Pivot name
               <input name="name" required defaultValue={pivot.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
@@ -167,6 +174,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
       </div>
       <div className="lg:col-span-2">
         <GoogleMapPanel
+          store={pivot.farmer.storeId}
           markers={[
             {
               id: pivot.id,

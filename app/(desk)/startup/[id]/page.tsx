@@ -96,6 +96,7 @@ export default async function StartupInspectionPage({ params }: { params: Promis
       </div>
       <div className="lg:col-span-2">
         <GoogleMapPanel
+          store={inspection.pivot.farmer.storeId}
           markers={[
             {
               id: inspection.pivot.id,

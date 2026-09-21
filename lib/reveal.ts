@@ -478,6 +478,7 @@ export async function syncRevealVehicles(organizationId: string): Promise<Reveal
               active: true,
               syncedAt,
               showOnMap: row.showOnMap,
+              storeId: clash.storeId ?? row.storeId,
             },
           });
         } else {

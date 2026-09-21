@@ -125,7 +125,7 @@ export default async function DashboardPage({
         <Link href="/startup" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
           {STARTUP_SEASON_YEAR} maintenance
         </Link>
-        <Link href="/map" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
+        <Link href={`/map${storeQuery(selectedStore)}`} className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
           Open work orders map
         </Link>
         <Link
@@ -147,7 +147,7 @@ export default async function DashboardPage({
       <h2 className="font-display mt-10 text-xl">Open work orders map</h2>
       <p className="mt-1 text-sm text-stone-600">Every active call at the pivot location.</p>
       <div className="mt-4">
-        <AllTicketsMap pins={ticketPins(openTickets)} />
+        <AllTicketsMap pins={ticketPins(openTickets)} store={session.role === ROLES.FARMER ? undefined : selectedStore} />
       </div>
 
       <h2 className="font-display mt-10 text-xl">Recent work orders</h2>

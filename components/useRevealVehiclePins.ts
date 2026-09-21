@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { MapPin } from "@/lib/map-pins";
 
-export function useRevealVehiclePins(enabled = true) {
+export function useRevealVehiclePins(enabled = true, store?: string | null) {
   const [vehicles, setVehicles] = useState<MapPin[]>([]);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -11,9 +11,10 @@ export function useRevealVehiclePins(enabled = true) {
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
+    const params = store && store !== "all" ? `?store=${encodeURIComponent(store)}` : "";
 
     async function load() {
-      const res = await fetch("/api/reveal/locations", { cache: "no-store" });
+      const res = await fetch(`/api/reveal/locations${params}`, { cache: "no-store" });
       const data = (await res.json()) as {
         configured?: boolean;
         pins?: MapPin[];
@@ -31,7 +32,7 @@ export function useRevealVehiclePins(enabled = true) {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [enabled]);
+  }, [enabled, store]);
 
   return { vehicles, configured, error };
 }

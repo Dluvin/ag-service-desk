@@ -6,6 +6,7 @@ import { ROLES, canAddTechnicians, isAdmin } from "@/lib/roles";
 import { syncRevealVehiclesAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { VehicleMapToggle } from "@/components/VehicleMapToggle";
+import { VehicleStoreSelect } from "@/components/VehicleStoreSelect";
 import { googleMapsPlaceUrl } from "@/lib/maps";
 import { fetchRevealLocationReport, loadRevealCreds, type RevealLocation } from "@/lib/reveal";
 
@@ -26,14 +27,19 @@ export default async function VehiclesPage({
   if (!canAddTechnicians(session.role)) redirect("/dashboard");
   const query = await searchParams;
 
-  const [vehicles, technicians, configured] = await Promise.all([
+  const [vehicles, technicians, stores, configured] = await Promise.all([
     prisma.revealVehicle.findMany({
       where: { organizationId: session.organizationId, active: true },
       orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
       where: { organizationId: session.organizationId, role: ROLES.TECHNICIAN, revealVehicleNumber: { not: null } },
-      select: { name: true, revealVehicleNumber: true },
+      select: { name: true, revealVehicleNumber: true, store: { select: { name: true } } },
+    }),
+    prisma.store.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
     }),
     loadRevealCreds(session.organizationId).then(Boolean),
   ]);
@@ -41,7 +47,7 @@ export default async function VehiclesPage({
   const techByVehicle = new Map(
     technicians
       .filter((tech) => tech.revealVehicleNumber)
-      .map((tech) => [tech.revealVehicleNumber as string, tech.name]),
+      .map((tech) => [tech.revealVehicleNumber as string, tech]),
   );
 
   let locationsByNumber = new Map<string, RevealLocation>();
@@ -74,7 +80,8 @@ export default async function VehiclesPage({
         These trucks come from Reveal. Vehicle Update GPS needs a Vehicle # in Verizon. If that
         field is blank, fill it in Reveal, then Refresh from Verizon. Uncheck Show on maps to hide
         a truck from Dispatch and work order maps. Assign a numbered truck to each technician so
-        Dispatch pins match.{" "}
+        Dispatch pins match. Pick a store on the truck, or leave Use staff store so maps follow
+        the assigned technician&apos;s shop.{" "}
         <Link href="/reveal" className="text-emerald-800 hover:underline">
           Connectors
         </Link>
@@ -119,6 +126,7 @@ export default async function VehiclesPage({
         ) : (
           vehicles.map((vehicle) => {
             const location = locationsByNumber.get(vehicle.number.trim().toLowerCase());
+            const tech = techByVehicle.get(vehicle.number);
             const when = formatLocationTime(location?.updatedAt);
             return (
               <li key={vehicle.id} className={`px-4 py-3 text-sm ${vehicle.active ? "" : "text-stone-400"}`}>
@@ -130,7 +138,7 @@ export default async function VehiclesPage({
                 </p>
                 <p className="text-stone-600">
                   {vehicle.number}
-                  {techByVehicle.get(vehicle.number) ? ` · ${techByVehicle.get(vehicle.number)}` : " · not assigned"}
+                  {tech ? ` · ${tech.name}` : " · not assigned"}
                   {location?.displayState ? ` · ${location.displayState}` : ""}
                 </p>
                 {location ? (
@@ -157,7 +165,15 @@ export default async function VehiclesPage({
                   <p className="mt-1 text-xs text-stone-500">No current location from Verizon.</p>
                 ) : null}
                   </div>
-                  <VehicleMapToggle vehicleId={vehicle.id} showOnMap={vehicle.showOnMap} />
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <VehicleMapToggle vehicleId={vehicle.id} showOnMap={vehicle.showOnMap} />
+                    <VehicleStoreSelect
+                      vehicleId={vehicle.id}
+                      storeId={vehicle.storeId}
+                      stores={stores}
+                      staffStoreName={tech?.store?.name}
+                    />
+                  </div>
                 </div>
               </li>
             );

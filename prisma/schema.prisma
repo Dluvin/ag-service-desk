@@ -51,6 +51,7 @@ model Organization {
   revealVehicles      RevealVehicle[]
   assetTypes          AssetType[]
   assets              Asset[]
+  farms               Farm[]
 }
 
 model RevealVehicle {
@@ -61,6 +62,8 @@ model RevealVehicle {
   name           String
   active         Boolean      @default(true)
   showOnMap      Boolean      @default(true)
+  storeId        String?
+  store          Store?       @relation(fields: [storeId], references: [id], onDelete: SetNull)
   syncedAt       DateTime     @default(now())
 
   @@unique([organizationId, number])
@@ -85,6 +88,7 @@ model Store {
   farmers        Farmer[]
   users          User[]
   tickets        Ticket[]
+  vehicles       RevealVehicle[]
 
   @@unique([organizationId, name])
 }
@@ -139,12 +143,46 @@ model Farmer {
   email          String?
   address        String?
   notes          String?
-  createdAt      DateTime     @default(now())
-  users          User[]
+  createdAt       DateTime         @default(now())
+  users           User[]
+  pivots          Pivot[]
+  assets          Asset[]
+  tickets         Ticket[]
+  contacts        FarmerContact[]
+  farms           Farm[]
+  farmAssignments FarmAssignment[]
+}
+
+model Farm {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  farmerId       String
+  farmer         Farmer           @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  name           String
+  location       String?
+  latitude       Float?
+  longitude      Float?
+  createdAt      DateTime         @default(now())
   pivots         Pivot[]
   assets         Asset[]
-  tickets        Ticket[]
-  contacts       FarmerContact[]
+  assignments    FarmAssignment[]
+
+  @@index([organizationId, farmerId])
+}
+
+model FarmAssignment {
+  id        String   @id @default(cuid())
+  farmId    String
+  farm      Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  farmerId  String
+  farmer    Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  startYear Int
+  endYear   Int?
+  createdAt DateTime @default(now())
+
+  @@index([farmId])
+  @@index([farmerId])
 }
 
 model FarmerContact {
@@ -163,6 +201,8 @@ model Pivot {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   farmerId       String
   farmer         Farmer       @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  farmId         String?
+  farm           Farm?        @relation(fields: [farmId], references: [id], onDelete: SetNull)
   name           String
   latitude       Float
   longitude      Float
@@ -173,6 +213,8 @@ model Pivot {
   inspections    StartupInspection[]
   notes          PivotNote[]
   documents      PivotDocument[]
+
+  @@index([farmId])
 }
 
 model PivotDocument {
@@ -222,6 +264,8 @@ model Asset {
   assetType      AssetType    @relation(fields: [assetTypeId], references: [id], onDelete: Cascade)
   farmerId       String
   farmer         Farmer       @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  farmId         String?
+  farm           Farm?        @relation(fields: [farmId], references: [id], onDelete: SetNull)
   name           String
   latitude       Float
   longitude      Float
@@ -232,6 +276,7 @@ model Asset {
 
   @@index([organizationId, assetTypeId])
   @@index([farmerId])
+  @@index([farmId])
 }
 
 model Ticket {

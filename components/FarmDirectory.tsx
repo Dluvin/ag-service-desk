@@ -12,6 +12,7 @@ type FarmRow = {
   pivotCount: number;
   ticketCount: number;
   contacts: string;
+  farms: string[];
 };
 
 export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
@@ -20,7 +21,11 @@ export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
     const q = query.trim().toLowerCase();
     if (!q) return farms;
     return farms.filter((farm) =>
-      [farm.name, farm.address, farm.store, farm.contacts].filter(Boolean).join(" ").toLowerCase().includes(q),
+      [farm.name, farm.address, farm.store, farm.contacts, ...farm.farms]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
     );
   }, [farms, query]);
 
@@ -40,6 +45,10 @@ export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
                 {farmer.store ? `${farmer.store} · ` : ""}
                 {farmer.pivotCount} pivots · {farmer.ticketCount} work orders
                 {farmer.contacts ? ` · ${farmer.contacts}` : ""}
+              </p>
+              <p className="mt-1 text-sm text-stone-600">
+                <span className="font-medium text-stone-700">Farms: </span>
+                {farmer.farms.length ? farmer.farms.join(", ") : "None yet"}
               </p>
             </li>
           ))}

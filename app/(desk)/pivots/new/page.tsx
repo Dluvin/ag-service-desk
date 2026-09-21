@@ -11,11 +11,18 @@ export default async function NewPivotPage() {
   if (!session) redirect("/login");
   if (session.role === ROLES.FARMER) redirect("/pivots");
 
-  const farmers = await prisma.farmer.findMany({
-    where: { organizationId: session.organizationId },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
+  const [farmers, farms] = await Promise.all([
+    prisma.farmer.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.farm.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, farmerId: true },
+    }),
+  ]);
 
   return (
     <div className="max-w-3xl">
@@ -26,6 +33,7 @@ export default async function NewPivotPage() {
       <ActionForm action={createPivotAction} className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
         <NewPivotFields
           farmers={farmers}
+          farms={farms}
           mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}
         />
         <button className="rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white">Save pivot</button>

@@ -53,6 +53,7 @@ import {
   isPivotAssetType,
   uniqueAssetTypeSlug,
 } from "./assets";
+import { currentAssignmentYear, moveFarmToCustomer, parseFarmId, resolveFarmIdForCustomer } from "./farms";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -338,6 +339,87 @@ export async function addFarmerContactAction(formData: FormData) {
     },
   });
   redirect(`/farmers/${farmerId}`);
+}
+
+export async function createFarmAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isShopStaff(session.role)) return { error: "Customers cannot add farms." };
+
+  const farmerId = formString(formData, "farmerId");
+  const name = formString(formData, "name");
+  const location = formString(formData, "location");
+  if (!name) return { error: "Farm name is required." };
+
+  const farmer = await prisma.farmer.findFirst({
+    where: { id: farmerId, organizationId: session.organizationId },
+  });
+  if (!farmer) return { error: "Customer not found." };
+
+  await prisma.farm.create({
+    data: {
+      organizationId: session.organizationId,
+      farmerId,
+      name,
+      location: location || null,
+      assignments: {
+        create: {
+          farmerId,
+          startYear: currentAssignmentYear(),
+        },
+      },
+    },
+  });
+  redirect(`/farmers/${farmerId}`);
+}
+
+export async function updateFarmAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isShopStaff(session.role)) return { error: "Customers cannot edit farms." };
+
+  const farmId = formString(formData, "farmId");
+  const name = formString(formData, "name");
+  const location = formString(formData, "location");
+  const farmerId = formString(formData, "farmerId");
+  if (!name) return { error: "Farm name is required." };
+
+  const farm = await prisma.farm.findFirst({
+    where: { id: farmId, organizationId: session.organizationId },
+  });
+  if (!farm) return { error: "Farm not found." };
+
+  await prisma.farm.update({
+    where: { id: farmId },
+    data: {
+      name,
+      location: location || null,
+    },
+  });
+
+  if (farmerId && farmerId !== farm.farmerId) {
+    const moved = await moveFarmToCustomer({
+      organizationId: session.organizationId,
+      farmId,
+      toFarmerId: farmerId,
+    });
+    if (moved.error) return { error: moved.error };
+    redirect(`/farmers/${farmerId}`);
+  }
+
+  redirect(`/farmers/${farm.farmerId}`);
+}
+
+export async function deleteFarmAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canDeleteRecords(session.role)) return { error: "Only company admins can delete." };
+
+  const farmId = formString(formData, "farmId");
+  const farm = await prisma.farm.findFirst({
+    where: { id: farmId, organizationId: session.organizationId },
+  });
+  if (!farm) return { error: "Farm not found." };
+
+  await prisma.farm.delete({ where: { id: farmId } });
+  redirect(`/farmers/${farm.farmerId}`);
 }
 
 export async function updateFarmerAction(formData: FormData) {
@@ -899,10 +981,14 @@ export async function createPivotAction(formData: FormData) {
   });
   if (!farmer) return { error: "Customer not found." };
 
+  const farm = await resolveFarmIdForCustomer(session.organizationId, farmerId, parseFarmId(formString(formData, "farmId")));
+  if (farm.error) return { error: farm.error };
+
   const pivot = await prisma.pivot.create({
     data: {
       organizationId: session.organizationId,
       farmerId,
+      farmId: farm.farmId,
       name,
       latitude: lat,
       longitude: lng,
@@ -943,10 +1029,14 @@ export async function updatePivotAction(formData: FormData) {
   });
   if (!farmer) return { error: "Customer not found." };
 
+  const farm = await resolveFarmIdForCustomer(session.organizationId, farmerId, parseFarmId(formString(formData, "farmId")));
+  if (farm.error) return { error: farm.error };
+
   await prisma.pivot.update({
     where: { id: pivotId },
     data: {
       farmerId,
+      farmId: farm.farmId,
       name,
       latitude: lat,
       longitude: lng,
@@ -2203,6 +2293,21 @@ export async function toggleRevealVehicleMapAction(formData: FormData) {
   });
 }
 
+export async function updateRevealVehicleStoreAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canAddTechnicians(session.role)) return { error: "You cannot assign vehicle stores." };
+  const id = formString(formData, "vehicleId");
+  if (!id) return { error: "Missing vehicle." };
+  const vehicle = await prisma.revealVehicle.findFirst({
+    where: { id, organizationId: session.organizationId },
+  });
+  if (!vehicle) return { error: "Vehicle not found." };
+  await prisma.revealVehicle.update({
+    where: { id: vehicle.id },
+    data: { storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")) },
+  });
+}
+
 export async function currentUser() {
   return getSession();
 }
@@ -2382,11 +2487,15 @@ export async function createAssetAction(formData: FormData) {
   });
   if (!farmer) return { error: "Customer not found." };
 
+  const farm = await resolveFarmIdForCustomer(session.organizationId, farmerId, parseFarmId(formString(formData, "farmId")));
+  if (farm.error) return { error: farm.error };
+
   const asset = await prisma.asset.create({
     data: {
       organizationId: session.organizationId,
       assetTypeId: type.id,
       farmerId,
+      farmId: farm.farmId,
       name,
       latitude: lat,
       longitude: lng,
@@ -2429,10 +2538,14 @@ export async function updateAssetAction(formData: FormData) {
   });
   if (!farmer) return { error: "Customer not found." };
 
+  const farm = await resolveFarmIdForCustomer(session.organizationId, farmerId, parseFarmId(formString(formData, "farmId")));
+  if (farm.error) return { error: farm.error };
+
   await prisma.asset.update({
     where: { id: assetId },
     data: {
       farmerId,
+      farmId: farm.farmId,
       name,
       latitude: lat,
       longitude: lng,

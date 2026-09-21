@@ -10,7 +10,9 @@ import { SelectableMap } from "@/components/SelectableMap";
 import { StatusBadge } from "@/components/Badges";
 import { StoreSelect } from "@/components/StoreSelect";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
+import { CustomerFarms } from "@/components/CustomerFarms";
 import { FarmerPivotList } from "@/components/FarmerPivotList";
+import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
 
 export default async function FarmerDetailPage({
   params,
@@ -31,18 +33,34 @@ export default async function FarmerDetailPage({
     include: {
       store: true,
       contacts: { orderBy: { name: "asc" } },
-      pivots: { orderBy: { name: "asc" }, include: { documents: { orderBy: { createdAt: "desc" } } } },
-      assets: { orderBy: { name: "asc" }, include: { assetType: true } },
+      farms: {
+        orderBy: { name: "asc" },
+        include: {
+          assignments: {
+            orderBy: { startYear: "desc" },
+            include: { farmer: { select: { name: true } } },
+          },
+        },
+      },
+      pivots: { orderBy: { name: "asc" }, include: { farm: true, documents: { orderBy: { createdAt: "desc" } } } },
+      assets: { orderBy: { name: "asc" }, include: { farm: true, assetType: true } },
       tickets: { include: { pivot: true }, orderBy: { updatedAt: "desc" }, take: 12 },
     },
   });
   if (!farmer) notFound();
 
-  const stores = await prisma.store.findMany({
-    where: { organizationId: session.organizationId },
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
+  const [stores, customers] = await Promise.all([
+    prisma.store.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.farmer.findMany({
+      where: { organizationId: session.organizationId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
   const canEdit = isShopStaff(session.role);
 
   return (
@@ -58,12 +76,13 @@ export default async function FarmerDetailPage({
             name="farmerId"
             value={farmer.id}
             label="Delete customer"
-            confirmText={`Delete ${farmer.name} and its pivots and work orders? This cannot be undone.`}
+            confirmText={`Delete ${farmer.name} and its farms, pivots, and work orders? This cannot be undone.`}
           />
         </div>
       ) : null}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <SelectableMap
+          store={farmer.storeId}
           markers={[
             ...farmer.pivots.map((pivot) => ({
               id: pivot.id,
@@ -179,48 +198,52 @@ export default async function FarmerDetailPage({
           ) : null}
         </div>
       </div>
-      {farmer.pivots.length ? (
-        <FarmerPivotList
-          canManage={canEdit}
-          farmerId={farmer.id}
-          pivots={farmer.pivots.map((pivot) => ({
-            id: pivot.id,
-            name: pivot.name,
-            latitude: pivot.latitude,
-            longitude: pivot.longitude,
-            locationNote: pivot.locationNote,
-            serialNumber: pivot.serialNumber,
-            documents: pivot.documents.map((document) => ({
-              id: document.id,
-              fileName: document.fileName,
-              mimeType: document.mimeType,
-              createdAt: document.createdAt.toISOString(),
-            })),
-          }))}
-        />
-      ) : (
-        <>
-          <h2 className="font-display mt-8 text-xl">Pivots (0)</h2>
-          <p className="mt-2 text-sm text-stone-600">No pivots on this customer yet.</p>
-        </>
-      )}
-      {farmer.assets.length ? (
-        <>
-          <h2 className="font-display mt-8 text-xl">Other assets ({farmer.assets.length})</h2>
-          <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
-            {farmer.assets.map((asset) => (
-              <li key={asset.id} className="flex items-center justify-between gap-3 px-4 py-3">
-                <div>
-                  <Link href={`/assets/${asset.id}`} className="font-medium text-emerald-800 hover:underline">
-                    {asset.name}
-                  </Link>
-                  <p className="text-sm text-stone-600">{asset.assetType.name}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
+      <CustomerFarms
+        farmerId={farmer.id}
+        canEdit={canEdit}
+        canDelete={canDeleteRecords(session.role)}
+        customers={customers}
+        farms={farmer.farms.map((farm) => ({
+          id: farm.id,
+          name: farm.name,
+          location: farm.location,
+          farmerId: farm.farmerId,
+          assignments: farm.assignments.map((assignment) => ({
+            startYear: assignment.startYear,
+            endYear: assignment.endYear,
+            farmerName: assignment.farmer.name,
+          })),
+        }))}
+      />
+      <FarmerPivotList
+        canManage={canEdit}
+        farmerId={farmer.id}
+        farms={farmer.farms.map((farm) => ({ farmId: farm.id, farmName: farm.name }))}
+        pivots={farmer.pivots.map((pivot) => ({
+          id: pivot.id,
+          name: pivot.name,
+          latitude: pivot.latitude,
+          longitude: pivot.longitude,
+          locationNote: pivot.locationNote,
+          serialNumber: pivot.serialNumber,
+          farmId: pivot.farmId,
+          farmName: pivot.farm?.name ?? UNASSIGNED_FARM_LABEL,
+          documents: pivot.documents.map((document) => ({
+            id: document.id,
+            fileName: document.fileName,
+            mimeType: document.mimeType,
+            createdAt: document.createdAt.toISOString(),
+          })),
+        }))}
+        assets={farmer.assets.map((asset) => ({
+          id: asset.id,
+          name: asset.name,
+          typeName: asset.assetType.name,
+          href: `/assets/${asset.id}`,
+          farmId: asset.farmId,
+          farmName: asset.farm?.name ?? UNASSIGNED_FARM_LABEL,
+        }))}
+      />
       <h2 className="font-display mt-8 text-xl">Work orders</h2>
       <Link href="/tickets/new" className="mt-1 inline-block text-sm font-semibold text-emerald-800">
         Request service

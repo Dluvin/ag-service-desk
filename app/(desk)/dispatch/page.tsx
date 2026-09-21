@@ -133,7 +133,7 @@ export default async function DispatchPage({
         pin for the work order or Google Maps.
       </p>
       <div className="mt-4">
-        <DispatchFleetMap ticketPins={ticketPins(tickets)} canConfigure={session.role === ROLES.ADMIN} />
+        <DispatchFleetMap ticketPins={ticketPins(tickets)} canConfigure={session.role === ROLES.ADMIN} store={selectedStore} />
       </div>
     </div>
   );
