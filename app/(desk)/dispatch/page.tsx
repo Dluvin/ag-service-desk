@@ -48,7 +48,12 @@ export default async function DispatchPage({
 
   return (
     <div>
-      <h1 className="font-display text-3xl">Dispatch board</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-3xl">Dispatch board</h1>
+        <Link href="/tickets/new" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
+          Create work order
+        </Link>
+      </div>
       <p className="mt-1 text-stone-600">
         Open work by status, assign a technician, and see every open work order on the map. Filter by store to work one shop at a time.
       </p>
