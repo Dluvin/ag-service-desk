@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getPlatformSession } from "@/lib/platform";
 import { ROLES } from "@/lib/roles";
@@ -37,14 +38,23 @@ export default async function PlatformHomePage() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         <h1 className="font-display text-3xl text-stone-900">Companies</h1>
         <p className="mt-2 text-sm text-stone-600">
-          New companies stay pending until you approve. Approve opens their tenant, loads a demo
-          farm/ticket, starts a {PLAN.trialDays}-day trial, and creates a Stripe checkout for $
-          {PLAN.monthlyDollars}/month.
+          Dealers sign up at{" "}
+          <Link href="/signup" className="font-semibold text-emerald-800 hover:underline">
+            Start a company
+          </Link>
+          {" "}
+          (<span className="font-mono text-xs">/signup</span>). New companies stay pending until you
+          approve. Approve opens their tenant, loads a demo farm/ticket, starts a {PLAN.trialDays}-day
+          trial, and creates a Stripe checkout for ${PLAN.monthlyDollars}/month.
         </p>
         <ul className="mt-6 space-y-4">
           {tenants.length === 0 ? (
             <li className="rounded-xl border border-stone-200 bg-white px-4 py-6 text-sm text-stone-600">
-              No companies yet.
+              No companies yet. Send a dealer to{" "}
+              <Link href="/signup" className="font-semibold text-emerald-800 hover:underline">
+                Start a company
+              </Link>
+              , then refresh this page. Homepage demo requests do not create a company.
             </li>
           ) : (
             tenants.map((org) => {
