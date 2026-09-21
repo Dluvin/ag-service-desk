@@ -91,6 +91,33 @@ export function farmAssignmentLabel(assignment: { startYear: number; endYear: nu
   return `${span} ${assignment.farmerName}`;
 }
 
+export async function deleteFarmForCustomer(input: {
+  organizationId: string;
+  farmId: string;
+}) {
+  const farm = await prisma.farm.findFirst({
+    where: { id: input.farmId, organizationId: input.organizationId },
+    select: { id: true, farmerId: true },
+  });
+  if (!farm) return { error: "Farm not found." };
+
+  // Schema already uses onDelete: SetNull for Pivot/Asset.farmId, but unassign
+  // explicitly so assets stay with the same customer even if the FK is missing.
+  await prisma.$transaction(async (tx) => {
+    await tx.pivot.updateMany({
+      where: { farmId: farm.id, organizationId: input.organizationId },
+      data: { farmId: null },
+    });
+    await tx.asset.updateMany({
+      where: { farmId: farm.id, organizationId: input.organizationId },
+      data: { farmId: null },
+    });
+    await tx.farm.delete({ where: { id: farm.id } });
+  });
+
+  return { farm };
+}
+
 export async function createFarmForCustomer(input: {
   organizationId: string;
   farmerId: string;

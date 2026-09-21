@@ -56,6 +56,7 @@ import {
 import {
   assignCustomerAssetsToFarm,
   createFarmForCustomer,
+  deleteFarmForCustomer,
   moveFarmToCustomer,
   parseFarmId,
   resolveFarmIdForCustomer,
@@ -443,13 +444,13 @@ export async function deleteFarmAction(formData: FormData) {
   if (!canDeleteRecords(session.role)) return { error: "Only company admins can delete." };
 
   const farmId = formString(formData, "farmId");
-  const farm = await prisma.farm.findFirst({
-    where: { id: farmId, organizationId: session.organizationId },
+  const deleted = await deleteFarmForCustomer({
+    organizationId: session.organizationId,
+    farmId,
   });
-  if (!farm) return { error: "Farm not found." };
+  if (deleted.error || !deleted.farm) return { error: deleted.error ?? "Farm not found." };
 
-  await prisma.farm.delete({ where: { id: farmId } });
-  redirect(`/farmers/${farm.farmerId}`);
+  redirect(`/farmers/${deleted.farm.farmerId}`);
 }
 
 export async function updateFarmerAction(formData: FormData) {
