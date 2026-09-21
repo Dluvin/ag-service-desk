@@ -12,6 +12,7 @@ import { ticketPins } from "@/lib/map-pins";
 import { parseStoreParam, storeTicketWhere, ticketStoreName } from "@/lib/stores";
 import { StoreFilter } from "@/components/StoreFilter";
 import { DispatchCalendarToggle } from "@/components/DispatchCalendarToggle";
+import { DispatchColumnList } from "@/components/DispatchColumnList";
 import { formatSchedule } from "@/lib/schedule";
 
 const COLUMNS: TicketStatus[] = [...DISPATCH_STATUSES];
@@ -63,12 +64,12 @@ export default async function DispatchPage({
         {COLUMNS.map((column) => {
           const items = tickets.filter((ticket) => ticket.status === column);
           return (
-            <section key={column} className="min-h-48 rounded-xl border border-stone-200 bg-stone-50/80 p-2">
-              <div className="flex items-center justify-between px-2 py-1">
+            <section key={column} className="flex min-h-48 flex-col rounded-xl border border-stone-200 bg-stone-50/80 p-2">
+              <div className="flex shrink-0 items-center justify-between px-2 py-1">
                 <h2 className="text-sm font-semibold">{STATUS_LABELS[column]}</h2>
                 <span className="text-xs text-stone-500">{items.length}</span>
               </div>
-              <ul className="space-y-2">
+              <DispatchColumnList count={items.length}>
                 {items.map((ticket) => (
                   <li key={ticket.id} className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
                     <Link href={`/tickets/${ticket.id}`} className="font-medium text-emerald-950 hover:underline">
@@ -119,7 +120,7 @@ export default async function DispatchPage({
                     </ActionForm>
                   </li>
                 ))}
-              </ul>
+              </DispatchColumnList>
             </section>
           );
         })}
