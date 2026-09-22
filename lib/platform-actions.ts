@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "./prisma";
 import { ROLES, type Role } from "./roles";
@@ -188,36 +189,42 @@ export async function createBillingCheckoutAction(formData: FormData) {
 }
 
 export async function updateTenantPlanAction(formData: FormData) {
-  await requirePlatformAdmin();
-  const organizationId = formString(formData, "organizationId");
-  const plan = formString(formData, "plan");
-  if (!isPlanId(plan)) return { error: "Choose Starter, Shop, or Enterprise." };
+  try {
+    await requirePlatformAdmin();
+    const organizationId = formString(formData, "organizationId");
+    const plan = formString(formData, "plan");
+    if (!isPlanId(plan)) return { error: "Choose Starter, Shop, or Enterprise." };
 
-  const gpsProviderRaw = formString(formData, "gpsProvider");
-  const gpsProvider = isGpsProvider(gpsProviderRaw) ? gpsProviderRaw : undefined;
-  const maxStoresRaw = formString(formData, "maxStores");
-  const includedUsersRaw = formString(formData, "includedUsers");
-  const maxStoresOverride = maxStoresRaw === "" ? null : Number(maxStoresRaw);
-  const includedUsersOverride = includedUsersRaw === "" ? null : Number(includedUsersRaw);
-  if (maxStoresRaw !== "" && (!Number.isInteger(maxStoresOverride) || (maxStoresOverride ?? 0) < 0)) {
-    return { error: "Store cap must be a whole number, or leave blank for the plan default." };
+    const gpsProviderRaw = formString(formData, "gpsProvider");
+    const gpsProvider = isGpsProvider(gpsProviderRaw) ? gpsProviderRaw : undefined;
+    const maxStoresRaw = formString(formData, "maxStores");
+    const includedUsersRaw = formString(formData, "includedUsers");
+    const maxStoresOverride = maxStoresRaw === "" ? null : Number(maxStoresRaw);
+    const includedUsersOverride = includedUsersRaw === "" ? null : Number(includedUsersRaw);
+    if (maxStoresRaw !== "" && (!Number.isInteger(maxStoresOverride) || (maxStoresOverride ?? 0) < 0)) {
+      return { error: "Store cap must be a whole number, or leave blank for the plan default." };
+    }
+    if (includedUsersRaw !== "" && (!Number.isInteger(includedUsersOverride) || (includedUsersOverride ?? 0) < 1)) {
+      return { error: "Included seats must be a whole number, or leave blank for the plan default." };
+    }
+
+    const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+    if (!org) return { error: "Company not found." };
+
+    await prisma.organization.update({
+      where: { id: org.id },
+      data: orgFieldsForPlan({
+        plan,
+        revealGps: formString(formData, "revealGps") === "1",
+        gpsProvider,
+        maxStoresOverride,
+        includedUsersOverride,
+      }),
+    });
+    revalidatePath("/platform");
+    return { success: "Plan saved." };
+  } catch (error) {
+    console.error("updateTenantPlanAction failed", error);
+    return { error: error instanceof Error ? error.message : "Could not save the plan." };
   }
-  if (includedUsersRaw !== "" && (!Number.isInteger(includedUsersOverride) || (includedUsersOverride ?? 0) < 1)) {
-    return { error: "Included seats must be a whole number, or leave blank for the plan default." };
-  }
-
-  const org = await prisma.organization.findUnique({ where: { id: organizationId } });
-  if (!org) return { error: "Company not found." };
-
-  await prisma.organization.update({
-    where: { id: org.id },
-    data: orgFieldsForPlan({
-      plan,
-      revealGps: formString(formData, "revealGps") === "1",
-      gpsProvider,
-      maxStoresOverride,
-      includedUsersOverride,
-    }),
-  });
-  redirect("/platform");
 }

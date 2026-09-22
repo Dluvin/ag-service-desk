@@ -74,7 +74,7 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
           Reveal GPS add-on ({formatPlanCents(PLANS.SHOP.revealAddOnCents)}/month on Shop)
         </label>
       </div>
-      <button className="mt-3 rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-stone-800">
+      <button type="submit" className="mt-3 rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-stone-800">
         Save plan
       </button>
     </ActionForm>
