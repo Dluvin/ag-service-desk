@@ -452,14 +452,72 @@ html:has(.landing) {
   font-weight: 600;
 }
 
-.landing-field input,
-.landing-field textarea {
+.landing-field input:not([type="radio"]):not([type="checkbox"]),
+.landing-field textarea,
+.landing-field select {
   width: 100%;
   padding: 0.95rem 1rem;
   border-radius: 1rem;
   border: 1px solid var(--ld-border);
   background: var(--ld-surface-2);
   color: var(--ld-text);
+}
+
+.landing-field legend {
+  font-size: var(--ld-text-sm);
+  font-weight: 600;
+  padding: 0;
+}
+
+fieldset.landing-field {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.landing-plan-picks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.landing-plan-pick {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.55rem 0.65rem;
+  border-radius: 1rem;
+  border: 1px solid var(--ld-border);
+  background: var(--ld-surface-2);
+  font-size: var(--ld-text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.landing-plan-pick input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.landing-plan-pick-on {
+  border-color: var(--ld-primary);
+  background: rgba(6, 95, 70, 0.1);
+  color: var(--ld-primary);
+}
+
+html[data-landing-theme="dark"] .landing-plan-pick-on {
+  background: rgba(251, 191, 36, 0.16);
+}
+
+.landing-plan-pick:focus-within {
+  outline: 2px solid var(--ld-primary);
+  outline-offset: 2px;
 }
 
 .landing-field textarea {

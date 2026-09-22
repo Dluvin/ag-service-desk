@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { mailIsConfigured, sendEmail } from "./mail";
+import { isPlanId, PLANS } from "./plans";
 import { signupNotifyEmail } from "./signup-notify";
 
 function formString(formData: FormData, key: string) {
@@ -17,18 +18,24 @@ export async function landingDemoAction(formData: FormData) {
   const company = formString(formData, "company");
   const email = formString(formData, "email");
   const phone = formString(formData, "phone");
+  const plan = formString(formData, "plan").toUpperCase();
   const message = formString(formData, "message");
   if (!name || !email) {
     return { error: "Name and email are required." };
   }
+  if (!isPlanId(plan)) {
+    return { error: "Choose which version you want: Starter, Shop, or Enterprise." };
+  }
   if (!mailIsConfigured()) {
     return { error: "Demo requests are not configured yet. Call 229-938-9000 or email info@agdeskpro.com." };
   }
+  const version = PLANS[plan].label;
   const text = [
     `Name: ${name}`,
     company ? `Company: ${company}` : "",
     `Email: ${email}`,
     phone ? `Phone: ${phone}` : "",
+    `Version: ${version} (${plan})`,
     message ? `Message:\n${message}` : "",
   ]
     .filter(Boolean)

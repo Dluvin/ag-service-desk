@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ActionForm } from "@/components/ActionForm";
+import { LandingDemoPlanField } from "@/components/LandingDemoPlanField";
 import { LandingFooter, LandingHeader } from "@/components/LandingChrome";
 import { landingDemoAction } from "@/lib/landing-actions";
 import { LandingPricing } from "@/components/LandingPricing";
 import { PLAN } from "@/lib/plan";
-import { PLANS, formatPlanCents } from "@/lib/plans";
+import { isPlanId, PLANS, formatPlanCents } from "@/lib/plans";
 import "./landing.css";
 
 export const metadata = {
@@ -16,9 +17,11 @@ export const metadata = {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ demo?: string }>;
+  searchParams: Promise<{ demo?: string; plan?: string }>;
 }) {
-  const { demo } = await searchParams;
+  const { demo, plan } = await searchParams;
+  const requestedPlan = plan?.toUpperCase();
+  const selectedPlan = isPlanId(requestedPlan) ? requestedPlan : "";
   return (
     <div className="landing">
       <a className="landing-skip" href="#content">
@@ -370,6 +373,7 @@ export default async function HomePage({
                   <label htmlFor="phone">Phone</label>
                   <input id="phone" name="phone" type="tel" placeholder="229-938-9000" />
                 </div>
+                <LandingDemoPlanField initialPlan={selectedPlan} />
                 <div className="landing-field">
                   <label htmlFor="message">How can we help?</label>
                   <textarea

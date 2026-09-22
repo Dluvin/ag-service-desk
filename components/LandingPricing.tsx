@@ -48,11 +48,8 @@ export function LandingPricing() {
                 ))}
               </ul>
               <div className="landing-price-cta">
-                <a className="landing-btn" href="#contact">
-                  Request demo
-                </a>
-                <Link className="landing-btn-secondary" href="/signup">
-                  Start a company
+                <Link className="landing-btn" href={`/?plan=${tile.id}#contact`}>
+                  Request a demo
                 </Link>
               </div>
             </article>
