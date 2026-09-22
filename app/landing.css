@@ -772,6 +772,10 @@ html[data-landing-theme="dark"] .landing-price-badge {
   margin-top: 1.25rem;
 }
 
+.landing-price-cta .landing-btn {
+  color: #fff;
+}
+
 .landing-ok {
   margin-bottom: 1rem;
   padding: 0.85rem 1rem;
