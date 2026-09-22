@@ -33,10 +33,13 @@ export function Nav({
         ]
       : []),
   ];
-  const afterTickets = [
-    { href: "/reports", label: "Reports" },
-    ...(!farmer ? [{ href: "/farmers", label: "Customers" }] : []),
-  ];
+  const afterTickets = [{ href: "/reports", label: "Reports" }];
+  const customerLinks = !farmer
+    ? [
+        { href: "/farmers", label: "Customers (all)" },
+        { href: "/farms", label: "Farms" },
+      ]
+    : [];
   const assetLinks = [
     { href: "/assets", label: "All Assets" },
     ...assetTypes.map((type) => ({ href: assetTypeHref(type), label: type.name })),
@@ -90,6 +93,9 @@ export function Nav({
               {link.label}
             </Link>
           ))}
+          {customerLinks.length ? (
+            <NavLinkMenu href="/farmers" label="Customers" links={customerLinks} />
+          ) : null}
           {settingsLinks.length ? <NavDropdown label="Settings" links={settingsLinks} /> : null}
         </nav>
         <div className="flex items-center gap-3 text-sm">
