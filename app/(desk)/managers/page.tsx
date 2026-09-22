@@ -10,6 +10,9 @@ import { StoreSelect } from "@/components/StoreSelect";
 import { StaffEditForm } from "@/components/StaffEditForm";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 import { storedRevealVehicles } from "@/lib/reveal";
+import { loadOrgPlan, shopStaffCount } from "@/lib/org-plan";
+import { canAddUser, contactSalesUserMessage } from "@/lib/plans";
+import { ContactSalesNote } from "@/components/ContactSalesNote";
 
 export default async function ManagersPage({
   searchParams,
@@ -21,7 +24,7 @@ export default async function ManagersPage({
   if (!canEditStaffMember(session.role, ROLES.MANAGER)) redirect("/dashboard");
   const query = await searchParams;
 
-  const [managers, stores, vehicles] = await Promise.all([
+  const [managers, stores, vehicles, plan, seatCount] = await Promise.all([
     prisma.user.findMany({
       where: { organizationId: session.organizationId, role: ROLES.MANAGER },
       include: { store: true },
@@ -33,7 +36,11 @@ export default async function ManagersPage({
       select: { id: true, name: true },
     }),
     storedRevealVehicles(session.organizationId),
+    loadOrgPlan(session.organizationId),
+    shopStaffCount(session.organizationId),
   ]);
+  const allowUser = plan ? canAddUser(plan.org, seatCount) : true;
+  const showGps = plan?.entitlements.gpsEnabled ?? true;
   const roleOptions = staffRolesAssignableBy(session.role);
   const canImport = canImportStaff(session.role);
   const canDelete = canDeleteRecords(session.role);
@@ -72,7 +79,7 @@ export default async function ManagersPage({
                     />
                   ) : null}
                 </div>
-                <StaffEditForm person={manager} stores={stores} next="/managers" roleOptions={roleOptions} vehicles={vehicles} />
+                <StaffEditForm person={manager} stores={stores} next="/managers" roleOptions={roleOptions} vehicles={showGps ? vehicles : []} showGps={showGps} />
               </li>
             ))
           )}
@@ -80,6 +87,7 @@ export default async function ManagersPage({
       </div>
       <div className="lg:col-span-2">
         <h2 className="font-display text-xl">Add manager</h2>
+        {allowUser ? (
         <ActionForm action={createManagerAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
           <label className="block text-sm font-medium">
             Name
@@ -103,7 +111,12 @@ export default async function ManagersPage({
           <StoreSelect stores={stores} label="Default store" />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save manager</button>
         </ActionForm>
-        {canImport ? (
+        ) : (
+          <div className="mt-3">
+            <ContactSalesNote>{contactSalesUserMessage(plan?.org)}</ContactSalesNote>
+          </div>
+        )}
+        {canImport && allowUser ? (
           <div className="mt-8">
             <StaffImportForm />
           </div>

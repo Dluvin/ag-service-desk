@@ -10,11 +10,17 @@ export function LandingHeader() {
         <nav className="landing-links" aria-label="Primary">
           <Link href="/#features">Features</Link>
           <Link href="/#product">Product</Link>
+          <Link href="/#pricing">Price</Link>
           <Link href="/#field">Field</Link>
           <Link href="/#about">About</Link>
           <Link href="/#contact">Contact</Link>
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/support">Support</Link>
+          <details className="landing-nav-group">
+            <summary className="landing-nav-trigger">Support</summary>
+            <div className="landing-submenu">
+              <Link href="/support">Support</Link>
+              <Link href="/privacy">Privacy Policy</Link>
+            </div>
+          </details>
         </nav>
         <div className="landing-actions">
           <LandingThemeToggle />

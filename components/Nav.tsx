@@ -11,10 +11,14 @@ export function Nav({
   session,
   hasLogo,
   assetTypes = [],
+  showMaps = true,
+  showGps = true,
 }: {
   session: SessionUser;
   hasLogo?: boolean;
   assetTypes?: { name: string; slug: string }[];
+  showMaps?: boolean;
+  showGps?: boolean;
 }) {
   const farmer = session.role === ROLES.FARMER;
   const beforeTickets = [
@@ -23,7 +27,7 @@ export function Nav({
   ];
   const ticketLinks = [
     { href: "/tickets", label: "All work orders" },
-    { href: "/map", label: "Work order map" },
+    ...(showMaps ? [{ href: "/map", label: "Work order map" }] : []),
     { href: "/startup", label: "Maintenance" },
     ...(!farmer
       ? [
@@ -33,7 +37,12 @@ export function Nav({
         ]
       : []),
   ];
-  const afterTickets = [{ href: "/reports", label: "Reports" }];
+  const reportLinks = [
+    { href: "/reports", label: "Work order reports" },
+    { href: "/reports/customers", label: "Customer reports" },
+    { href: "/reports/farms", label: "Farm reports" },
+    { href: "/reports/assets", label: "Asset reports" },
+  ];
   const customerLinks = !farmer
     ? [
         { href: "/farmers", label: "Customers (all)" },
@@ -62,11 +71,15 @@ export function Nav({
           { href: "/company", label: "Logo" },
           { href: "/startup/checklist", label: "Maintenance checklist" },
           { href: "/sms", label: "SMS" },
-          { href: "/reveal", label: "Connectors" },
-          { href: "/vehicles", label: "Vehicles" },
+          ...(showGps
+            ? [
+                { href: "/reveal", label: "Connectors" },
+                { href: "/vehicles", label: "Vehicles" },
+              ]
+            : []),
         ]
       : session.role === ROLES.MANAGER
-        ? [staffMenu, { href: "/vehicles", label: "Vehicles" }]
+        ? [staffMenu, ...(showGps ? [{ href: "/vehicles", label: "Vehicles" }] : [])]
         : [];
 
   return (
@@ -88,11 +101,7 @@ export function Nav({
           ))}
           <NavDropdown label="Work orders" links={ticketLinks} />
           <NavLinkMenu href="/assets" label="Assets" links={assetLinks} />
-          {afterTickets.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-white">
-              {link.label}
-            </Link>
-          ))}
+          <NavLinkMenu href="/reports" label="Reports" links={reportLinks} />
           {customerLinks.length ? (
             <NavLinkMenu href="/farmers" label="Customers" links={customerLinks} />
           ) : null}

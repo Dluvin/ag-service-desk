@@ -46,6 +46,8 @@ import { getPlatformSession } from "./platform";
 import { parseDateTimeLocal } from "./schedule";
 import { parseMoneyInput } from "./money";
 import { emailSignupToOwner } from "./signup-notify";
+import { assertCanAddStaff, assertCanAddStore, loadOrgPlan } from "./org-plan";
+import { contactSalesGpsMessage, remainingUserSlots, showVehicleGps } from "./plans";
 import {
   ASSET_KIND,
   BUILTIN_ASSET_TYPES,
@@ -534,6 +536,9 @@ export async function createTechnicianAction(formData: FormData) {
   if (!name || !email) return { error: "Name and email are required." };
   if (password && password.length < 8) return { error: "Password must be at least 8 characters, or leave it blank." };
 
+  const seat = await assertCanAddStaff(session.organizationId);
+  if ("error" in seat && seat.error) return { error: seat.error };
+
   const { hash, hadPassword } = await hashNewUserPassword(password);
   let user;
   try {
@@ -582,6 +587,9 @@ export async function createStaffAction(formData: FormData) {
   if (!canEditStaffMember(session.role, role)) {
     return { error: "You cannot add staff with that role." };
   }
+
+  const seat = await assertCanAddStaff(session.organizationId);
+  if ("error" in seat && seat.error) return { error: seat.error };
 
   const { hash, hadPassword } = await hashNewUserPassword(password);
   let user;
@@ -639,6 +647,14 @@ export async function importStaffAction(formData: FormData) {
     where: { organizationId: session.organizationId, role: ROLES.ADMIN },
   });
   let remainingAdmins = adminCount;
+  const planLoaded = await loadOrgPlan(session.organizationId);
+  let staffCount = await prisma.user.count({
+    where: {
+      organizationId: session.organizationId,
+      role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN] },
+    },
+  });
+  const userSlotsLeft = planLoaded ? remainingUserSlots(planLoaded.org, staffCount) : null;
 
   for (const row of rows.slice(0, 500)) {
     const existing = await prisma.user.findFirst({
@@ -675,6 +691,10 @@ export async function importStaffAction(formData: FormData) {
         },
       });
       updated += 1;
+      continue;
+    }
+    if (userSlotsLeft != null && created >= userSlotsLeft) {
+      skipped += 1;
       continue;
     }
     const password = row.password && row.password.length >= 8 ? row.password : defaultPassword;
@@ -716,6 +736,9 @@ export async function createManagerAction(formData: FormData) {
   const phone = formString(formData, "phone");
   if (!name || !email) return { error: "Name and email are required." };
   if (password && password.length < 8) return { error: "Password must be at least 8 characters, or leave it blank." };
+
+  const seat = await assertCanAddStaff(session.organizationId);
+  if ("error" in seat && seat.error) return { error: seat.error };
 
   const { hash, hadPassword } = await hashNewUserPassword(password);
   let user;
@@ -914,6 +937,9 @@ export async function createStoreAction(formData: FormData) {
   const address = formString(formData, "address");
   const phone = formString(formData, "phone");
   if (!name) return { error: "Store name is required." };
+
+  const cap = await assertCanAddStore(session.organizationId);
+  if ("error" in cap && cap.error) return { error: cap.error };
 
   const existing = await prisma.store.findFirst({
     where: { organizationId: session.organizationId, name },
@@ -2241,6 +2267,10 @@ export async function updateTechnicianVehicleAction(formData: FormData) {
 export async function saveRevealSettingsAction(formData: FormData) {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can save Reveal settings." };
+  const plan = await loadOrgPlan(session.organizationId);
+  if (!plan || !showVehicleGps(plan.org)) {
+    return { error: plan ? contactSalesGpsMessage(plan.org) : "Company not found." };
+  }
 
   const appId = normalizeRevealAppId(formString(formData, "revealAppId"));
   const username = formString(formData, "revealUsername");
@@ -2288,6 +2318,10 @@ export async function saveRevealSettingsAction(formData: FormData) {
 export async function testRevealConnectionAction() {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can test Reveal." };
+  const plan = await loadOrgPlan(session.organizationId);
+  if (!plan || !showVehicleGps(plan.org)) {
+    return { error: plan ? contactSalesGpsMessage(plan.org) : "Company not found." };
+  }
   try {
     const vehicles = await syncRevealVehicles(session.organizationId);
     return { ok: `Connected. ${vehicles.length} vehicle(s) saved to Settings → Vehicles.` };
@@ -2299,6 +2333,10 @@ export async function testRevealConnectionAction() {
 export async function syncRevealVehiclesAction() {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can refresh Verizon vehicles." };
+  const plan = await loadOrgPlan(session.organizationId);
+  if (!plan || !showVehicleGps(plan.org)) {
+    return { error: plan ? contactSalesGpsMessage(plan.org) : "Company not found." };
+  }
   let vehicles;
   try {
     vehicles = await syncRevealVehicles(session.organizationId);

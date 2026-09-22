@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 import { getRevealMapSnapshot } from "@/lib/fleet";
 import { parseStoreParam } from "@/lib/stores";
+import { loadOrgPlan } from "@/lib/org-plan";
+import { showVehicleGps } from "@/lib/plans";
 
 export async function GET(request: Request) {
   const session = await getSession();
@@ -11,6 +13,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
   if (session.role === ROLES.FARMER) {
+    return NextResponse.json({ configured: false, pins: [], error: null });
+  }
+  const plan = await loadOrgPlan(session.organizationId);
+  if (!plan || !showVehicleGps(plan.org)) {
     return NextResponse.json({ configured: false, pins: [], error: null });
   }
 

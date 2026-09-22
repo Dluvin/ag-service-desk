@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import type { MapPin } from "@/lib/map-pins";
 import { googleMapsPlaceUrl } from "@/lib/maps";
 import { useRevealVehiclePins } from "./useRevealVehiclePins";
+import { usePlan } from "./PlanProvider";
 
 const Canvas = dynamic(() => import("./AllTicketsMapCanvas"), {
   ssr: false,
@@ -33,16 +34,18 @@ export function GoogleMapPanel({
   onSelect?: (id: string) => void;
   store?: string | null;
 }) {
-  const { vehicles } = useRevealVehiclePins(true, store);
+  const plan = usePlan();
+  const { vehicles } = useRevealVehiclePins(plan.gpsEnabled, store);
+  const trucks = plan.gpsEnabled ? vehicles : [];
   const onSitePivots = new Set(
-    vehicles.map((truck) => truck.onSitePivotId).filter((id): id is string => Boolean(id)),
+    trucks.map((truck) => truck.onSitePivotId).filter((id): id is string => Boolean(id)),
   );
   const placePins: MapPin[] = markers.map((marker) => ({
     ...marker,
     kind: "place",
     onSite: onSitePivots.has(marker.id),
   }));
-  const all = [...placePins, ...vehicles];
+  const all = [...placePins, ...trucks];
   const active = markers.find((m) => m.id === selectedId) ?? markers[0];
 
   if (all.length === 0) {
@@ -53,7 +56,7 @@ export function GoogleMapPanel({
     );
   }
 
-  const focus = active ?? vehicles[0];
+  const focus = active ?? trucks[0];
   const open = googleMapsPlaceUrl(focus.lat, focus.lng);
 
   return (
@@ -75,10 +78,18 @@ export function GoogleMapPanel({
           Open in Google Maps
         </a>
       </div>
-      <p className="border-b border-stone-200 px-4 py-2 text-xs text-stone-500">
-        Green = pivot. Red = assigned Verizon truck. Flashing On-site means GPS time is being recorded.
-      </p>
-      <Canvas pins={all} selectedId={active?.id} heightClass="h-80" />
+      {plan.mapsEnabled ? (
+        <>
+          <p className="border-b border-stone-200 px-4 py-2 text-xs text-stone-500">
+            Green = pivot. Red = assigned Verizon truck. Flashing On-site means GPS time is being recorded.
+          </p>
+          <Canvas pins={all} selectedId={active?.id} heightClass="h-80" />
+        </>
+      ) : (
+        <p className="px-4 py-3 text-sm text-stone-600">
+          In-app maps are not on this plan. Use Open in Google Maps for directions.
+        </p>
+      )}
       {markers.length > 1 ? (
         <ul className="max-h-48 divide-y divide-stone-100 overflow-auto">
           {markers.map((marker) => (

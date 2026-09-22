@@ -11,6 +11,7 @@ export function StaffEditForm({
   next,
   roleOptions,
   vehicles = [],
+  showGps = true,
 }: {
   person: {
     id: string;
@@ -25,6 +26,7 @@ export function StaffEditForm({
   next: "/staff" | "/technicians" | "/managers";
   roleOptions: string[];
   vehicles?: { number: string; name: string }[];
+  showGps?: boolean;
 }) {
   const showVehicle = person.role === ROLES.TECHNICIAN || roleOptions.includes(ROLES.TECHNICIAN);
 
@@ -89,7 +91,7 @@ export function StaffEditForm({
       ) : (
         <input type="hidden" name="storeId" value="" />
       )}
-      {showVehicle ? (
+      {showGps && showVehicle ? (
         <VehicleSelect vehicles={vehicles} defaultValue={person.revealVehicleNumber} compact />
       ) : null}
       <div className="sm:col-span-2">

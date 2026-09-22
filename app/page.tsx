@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ActionForm } from "@/components/ActionForm";
 import { LandingFooter, LandingHeader } from "@/components/LandingChrome";
 import { landingDemoAction } from "@/lib/landing-actions";
+import { LandingPricing } from "@/components/LandingPricing";
 import { PLAN } from "@/lib/plan";
+import { PLANS, formatPlanCents } from "@/lib/plans";
 import "./landing.css";
 
 export const metadata = {
@@ -44,6 +46,9 @@ export default async function HomePage({
                 <Link className="landing-btn-secondary" href="/signup">
                   Start a company
                 </Link>
+                <a className="landing-btn-secondary" href="#pricing">
+                  See pricing
+                </a>
               </div>
               <div className="landing-hero-inner">
                 <div>
@@ -116,7 +121,13 @@ export default async function HomePage({
               <div className="landing-card" style={{ marginTop: "1rem" }}>
                 <strong>{PLAN.trialDays}-day trial</strong>
                 <p className="landing-muted" style={{ margin: "0.45rem 0 0" }}>
-                  {`After we approve your company, you get ${PLAN.trialDays} days on us. Then $${PLAN.monthlyDollars}/month for ${PLAN.includedSeats} staff seats. Extra seats $${PLAN.extraSeatDollars}/month.`}
+                  After we approve your company, you get {PLAN.trialDays} days on us. Then Starter at{" "}
+                  {formatPlanCents(PLANS.STARTER.monthlyCents)}/user, Shop at {PLAN.monthlyLabel}/month, or
+                  Enterprise.{" "}
+                  <a href="#pricing">
+                    <strong>See pricing</strong>
+                  </a>
+                  .
                 </p>
               </div>
             </aside>
@@ -270,6 +281,8 @@ export default async function HomePage({
           </div>
         </section>
 
+        <LandingPricing />
+
         <section className="landing-section" id="about">
           <div className="container landing-contact">
             <article className="landing-card">
@@ -333,7 +346,7 @@ export default async function HomePage({
               <div className="landing-pills">
                 <span className="landing-chip">Irrigation-specific</span>
                 <span className="landing-chip">Dealer + field + customer</span>
-                <span className="landing-chip">${PLAN.monthlyDollars}/mo after trial</span>
+                <span className="landing-chip">From {formatPlanCents(PLANS.STARTER.monthlyCents)}/user</span>
               </div>
             </article>
             <article className="landing-card">

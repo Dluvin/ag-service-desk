@@ -14,6 +14,7 @@ import { ActionForm } from "@/components/ActionForm";
 import { StoreSelect } from "@/components/StoreSelect";
 import { updateFarmerStoreAction } from "@/lib/actions";
 import { printSelectHref } from "@/lib/ticket-print";
+import { loadOrgPlan } from "@/lib/org-plan";
 
 export default async function DashboardPage({
   searchParams,
@@ -24,6 +25,8 @@ export default async function DashboardPage({
   if (!session) redirect("/login");
 
   const query = await searchParams;
+  const plan = await loadOrgPlan(session.organizationId);
+  const showMaps = plan?.entitlements.mapsEnabled ?? true;
   const stores = await prisma.store.findMany({
     where: { organizationId: session.organizationId },
     orderBy: { name: "asc" },
@@ -125,9 +128,11 @@ export default async function DashboardPage({
         <Link href="/startup" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
           {STARTUP_SEASON_YEAR} maintenance
         </Link>
-        <Link href={`/map${storeQuery(selectedStore)}`} className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-          Open work orders map
-        </Link>
+        {showMaps ? (
+          <Link href={`/map${storeQuery(selectedStore)}`} className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
+            Open work orders map
+          </Link>
+        ) : null}
         <Link
           href={printSelectHref({
             status: "REPAIR_DONE",

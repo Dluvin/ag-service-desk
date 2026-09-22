@@ -19,6 +19,17 @@ export function pivotWhere(session: SessionUser) {
   return { organizationId: session.organizationId };
 }
 
+export function farmerWhere(session: SessionUser) {
+  if (session.role === ROLES.FARMER) {
+    return { organizationId: session.organizationId, id: session.farmerId ?? "__none__" };
+  }
+  return { organizationId: session.organizationId };
+}
+
+export function farmWhere(session: SessionUser) {
+  return pivotWhere(session);
+}
+
 export function assetWhere(session: SessionUser) {
   return pivotWhere(session);
 }

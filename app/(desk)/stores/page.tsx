@@ -5,17 +5,24 @@ import { canDeleteRecords, isAdmin } from "@/lib/roles";
 import { createStoreAction, deleteStoreAction, updateStoreAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
+import { ContactSalesNote } from "@/components/ContactSalesNote";
+import { loadOrgPlan } from "@/lib/org-plan";
+import { canAddStore, contactSalesStoreMessage } from "@/lib/plans";
 
 export default async function StoresPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (!isAdmin(session.role)) redirect("/dashboard");
 
-  const stores = await prisma.store.findMany({
-    where: { organizationId: session.organizationId },
-    include: { _count: { select: { farmers: true } } },
-    orderBy: { name: "asc" },
-  });
+  const [stores, plan] = await Promise.all([
+    prisma.store.findMany({
+      where: { organizationId: session.organizationId },
+      include: { _count: { select: { farmers: true } } },
+      orderBy: { name: "asc" },
+    }),
+    loadOrgPlan(session.organizationId),
+  ]);
+  const allowStore = plan ? canAddStore(plan.org, stores.length) : true;
 
   return (
     <div className="grid gap-8 lg:grid-cols-5">
@@ -70,21 +77,27 @@ export default async function StoresPage() {
       </div>
       <div className="lg:col-span-2">
         <h2 className="font-display text-xl">Add store</h2>
-        <ActionForm action={createStoreAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-          <label className="block text-sm font-medium">
-            Name
-            <input name="name" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="York shop" />
-          </label>
-          <label className="block text-sm font-medium">
-            Address
-            <input name="address" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-          </label>
-          <label className="block text-sm font-medium">
-            Phone
-            <input name="phone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-          </label>
-          <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save store</button>
-        </ActionForm>
+        {allowStore ? (
+          <ActionForm action={createStoreAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+            <label className="block text-sm font-medium">
+              Name
+              <input name="name" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="York shop" />
+            </label>
+            <label className="block text-sm font-medium">
+              Address
+              <input name="address" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            </label>
+            <label className="block text-sm font-medium">
+              Phone
+              <input name="phone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            </label>
+            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save store</button>
+          </ActionForm>
+        ) : (
+          <div className="mt-3">
+            <ContactSalesNote>{contactSalesStoreMessage(plan?.org)}</ContactSalesNote>
+          </div>
+        )}
       </div>
     </div>
   );

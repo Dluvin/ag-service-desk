@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { googleMapsEmbedUrl } from "@/lib/maps";
+import { usePlan } from "./PlanProvider";
 
 export type PivotChoice = {
   id: string;
@@ -24,6 +25,7 @@ export function PivotTypeahead({
   required?: boolean;
   disabled?: boolean;
 }) {
+  const plan = usePlan();
   const selected = pivots.find((pivot) => pivot.id === pivotId) ?? null;
   const [text, setText] = useState(selected?.name ?? "");
   const [open, setOpen] = useState(false);
@@ -110,7 +112,7 @@ export function PivotTypeahead({
               ))
             )}
           </ul>
-          {hovered && hovered.latitude != null && hovered.longitude != null ? (
+          {plan.mapsEnabled && hovered && hovered.latitude != null && hovered.longitude != null ? (
             <div className="absolute top-0 left-full z-30 ml-2 hidden w-64 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-lg lg:block">
               <iframe
                 title={`Map for ${hovered.name}`}

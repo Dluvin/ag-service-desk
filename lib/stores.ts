@@ -17,6 +17,10 @@ export function storeFarmerWhere(selected: string): Prisma.FarmerWhereInput {
   return { storeId: selected };
 }
 
+export function storeFarmWhere(selected: string): Prisma.FarmWhereInput {
+  return { farmer: storeFarmerWhere(selected) };
+}
+
 export function storeTicketWhere(selected: string): Prisma.TicketWhereInput {
   if (selected === STORE_ALL) return {};
   if (selected === STORE_NONE) {

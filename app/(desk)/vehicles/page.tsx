@@ -9,6 +9,9 @@ import { VehicleMapToggle } from "@/components/VehicleMapToggle";
 import { VehicleStoreSelect } from "@/components/VehicleStoreSelect";
 import { googleMapsPlaceUrl } from "@/lib/maps";
 import { fetchRevealLocationReport, loadRevealCreds, type RevealLocation } from "@/lib/reveal";
+import { loadOrgPlan } from "@/lib/org-plan";
+import { contactSalesGpsMessage, showVehicleGps } from "@/lib/plans";
+import { ContactSalesNote } from "@/components/ContactSalesNote";
 
 function formatLocationTime(value?: string) {
   if (!value) return "";
@@ -25,6 +28,18 @@ export default async function VehiclesPage({
   const session = await getSession();
   if (!session) redirect("/login");
   if (!canAddTechnicians(session.role)) redirect("/dashboard");
+  const plan = await loadOrgPlan(session.organizationId);
+  if (!plan || !showVehicleGps(plan.org)) {
+    return (
+      <div className="max-w-3xl">
+        <h1 className="font-display text-3xl">Verizon vehicles</h1>
+        <p className="mt-2 text-stone-600">Live vehicle GPS is not on this plan.</p>
+        <div className="mt-6">
+          <ContactSalesNote>{contactSalesGpsMessage(plan?.org)}</ContactSalesNote>
+        </div>
+      </div>
+    );
+  }
   const query = await searchParams;
 
   const [vehicles, technicians, stores, configured] = await Promise.all([

@@ -13,6 +13,7 @@ import {
 } from "./platform";
 import { removeCompanyLogoFile } from "./company-logo";
 import { PLAN } from "./plan";
+import { isGpsProvider, isPlanId, orgFieldsForPlan } from "./plans";
 import { seedApprovedDemo } from "./demo-tenant";
 import { startTenantBilling, stripeIsConfigured } from "./stripe";
 import { emailTenantApproved } from "./signup-notify";
@@ -183,5 +184,40 @@ export async function createBillingCheckoutAction(formData: FormData) {
       checkoutUrl,
     });
   }
+  redirect("/platform");
+}
+
+export async function updateTenantPlanAction(formData: FormData) {
+  await requirePlatformAdmin();
+  const organizationId = formString(formData, "organizationId");
+  const plan = formString(formData, "plan");
+  if (!isPlanId(plan)) return { error: "Choose Starter, Shop, or Enterprise." };
+
+  const gpsProviderRaw = formString(formData, "gpsProvider");
+  const gpsProvider = isGpsProvider(gpsProviderRaw) ? gpsProviderRaw : undefined;
+  const maxStoresRaw = formString(formData, "maxStores");
+  const includedUsersRaw = formString(formData, "includedUsers");
+  const maxStoresOverride = maxStoresRaw === "" ? null : Number(maxStoresRaw);
+  const includedUsersOverride = includedUsersRaw === "" ? null : Number(includedUsersRaw);
+  if (maxStoresRaw !== "" && (!Number.isInteger(maxStoresOverride) || (maxStoresOverride ?? 0) < 0)) {
+    return { error: "Store cap must be a whole number, or leave blank for the plan default." };
+  }
+  if (includedUsersRaw !== "" && (!Number.isInteger(includedUsersOverride) || (includedUsersOverride ?? 0) < 1)) {
+    return { error: "Included seats must be a whole number, or leave blank for the plan default." };
+  }
+
+  const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+  if (!org) return { error: "Company not found." };
+
+  await prisma.organization.update({
+    where: { id: org.id },
+    data: orgFieldsForPlan({
+      plan,
+      revealGps: formString(formData, "revealGps") === "1",
+      gpsProvider,
+      maxStoresOverride,
+      includedUsersOverride,
+    }),
+  });
   redirect("/platform");
 }

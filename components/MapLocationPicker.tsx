@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { parseMapsLocation } from "@/lib/maps";
+import { usePlan } from "./PlanProvider";
 
 const ClickMap = dynamic(() => import("./ClickMapCanvas"), {
   ssr: false,
@@ -52,12 +53,16 @@ export function MapLocationPicker({
   defaultLat?: number;
   defaultLng?: number;
 }) {
+  const plan = usePlan();
+  const showMap = plan.mapsEnabled;
   const mapRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<{ setPosition: (p: { lat: number; lng: number }) => void } | null>(null);
   const [lat, setLat] = useState(defaultLat != null ? String(defaultLat) : "");
   const [lng, setLng] = useState(defaultLng != null ? String(defaultLng) : "");
   const [mapsLink, setMapsLink] = useState("");
-  const [status, setStatus] = useState("Click the map to drop a pin.");
+  const [status, setStatus] = useState(
+    showMap ? "Click the map to drop a pin." : "Paste a Google Maps link or enter coordinates.",
+  );
 
   function apply(nextLat: number, nextLng: number) {
     setLat(nextLat.toFixed(6));
@@ -67,7 +72,7 @@ export function MapLocationPicker({
   }
 
   useEffect(() => {
-    if (!apiKey || !mapRef.current) return;
+    if (!showMap || !apiKey || !mapRef.current) return;
     let cancelled = false;
     loadGoogle(apiKey)
       .then(() => {
@@ -96,7 +101,7 @@ export function MapLocationPicker({
     return () => {
       cancelled = true;
     };
-  }, [apiKey, defaultLat, defaultLng]);
+  }, [apiKey, defaultLat, defaultLng, showMap]);
 
   return (
     <div className="space-y-3">
@@ -117,13 +122,13 @@ export function MapLocationPicker({
           className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
         />
       </label>
-      {apiKey ? (
+      {showMap && apiKey ? (
         <div>
           <p className="mb-1 text-sm font-medium">Click the Google Map to drop a pin</p>
           <div ref={mapRef} className="h-80 w-full overflow-hidden rounded-lg border border-stone-300" />
           <p className="mt-1 text-xs text-stone-500">{status}</p>
         </div>
-      ) : (
+      ) : showMap ? (
         <div>
           <p className="mb-1 text-sm font-medium">Click the map to drop a pin</p>
           <div className="overflow-hidden rounded-lg border border-stone-300">
@@ -135,6 +140,8 @@ export function MapLocationPicker({
           </div>
           <p className="mt-1 text-xs text-stone-500">{status}</p>
         </div>
+      ) : (
+        <p className="text-xs text-stone-500">{status}</p>
       )}
       <div className="grid grid-cols-2 gap-3">
         <label className="block text-sm font-medium">

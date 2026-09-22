@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { MapPin } from "@/lib/map-pins";
 import { googleMapsDirectionsUrl, googleMapsPlaceUrl } from "@/lib/maps";
 import { useRevealVehiclePins } from "./useRevealVehiclePins";
+import { usePlan } from "./PlanProvider";
 
 const Canvas = dynamic(() => import("./AllTicketsMapCanvas"), {
   ssr: false,
@@ -26,8 +27,13 @@ export function AllTicketsMap({
   revealSetupHref?: string;
   store?: string | null;
 }) {
-  const fetched = useRevealVehiclePins(vehiclePins === undefined, store);
-  const trucks = [...new Map((vehiclePins ?? fetched.vehicles).map((truck) => [truck.id, truck])).values()];
+  const plan = usePlan();
+  const showMap = plan.mapsEnabled;
+  const showGps = plan.gpsEnabled;
+  const fetched = useRevealVehiclePins(showGps && vehiclePins === undefined, store);
+  const trucks = showGps
+    ? [...new Map((vehiclePins ?? fetched.vehicles).map((truck) => [truck.id, truck])).values()]
+    : [];
   const onSiteTickets = new Set(
     trucks.map((truck) => truck.onSiteTicketId).filter((id): id is string => Boolean(id)),
   );
@@ -55,7 +61,7 @@ export function AllTicketsMap({
 
   return (
     <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-      {fetched.configured === false && revealSetupHref ? (
+      {showGps && fetched.configured === false && revealSetupHref ? (
         <p className="border-b border-stone-200 px-4 py-3 text-sm text-stone-600">
           GPS is not connected yet.{" "}
           <Link href={revealSetupHref} className="font-medium text-emerald-800 hover:underline">
@@ -64,7 +70,7 @@ export function AllTicketsMap({
           .
         </p>
       ) : null}
-      {fetched.error ? (
+      {showGps && fetched.error ? (
         <p className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
           Reveal: {fetched.error}
         </p>
@@ -87,11 +93,19 @@ export function AllTicketsMap({
           Open work orders in Google Maps
         </a>
       </div>
-      <p className="border-b border-stone-200 px-4 py-2 text-xs text-stone-500">
-        Green = work order at the pivot. Red = assigned Verizon truck. Flashing On-site means GPS is
-        inside the pivot radius and time is being recorded. Truck pins refresh every 45 seconds.
-      </p>
-      <Canvas pins={all} />
+      {showMap ? (
+        <>
+          <p className="border-b border-stone-200 px-4 py-2 text-xs text-stone-500">
+            Green = work order at the pivot. Red = assigned Verizon truck. Flashing On-site means GPS is
+            inside the pivot radius and time is being recorded. Truck pins refresh every 45 seconds.
+          </p>
+          <Canvas pins={all} />
+        </>
+      ) : (
+        <p className="px-4 py-3 text-sm text-stone-600">
+          In-app maps are not on this plan. Use Open work orders in Google Maps for directions.
+        </p>
+      )}
     </div>
   );
 }

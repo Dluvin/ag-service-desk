@@ -108,9 +108,79 @@ html:has(.landing) {
 
 .landing-links {
   display: flex;
+  align-items: center;
   gap: 1.1rem;
   color: var(--ld-muted);
   font-size: var(--ld-text-sm);
+}
+
+.landing-nav-group {
+  position: relative;
+}
+
+.landing-nav-group::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 0.55rem;
+}
+
+.landing-nav-group > summary {
+  list-style: none;
+  cursor: pointer;
+  color: #ecfdf5;
+}
+
+.landing-nav-group > summary::-webkit-details-marker,
+.landing-nav-group > summary::marker {
+  display: none;
+  content: "";
+}
+
+.landing-nav-trigger::after {
+  content: "";
+  display: inline-block;
+  margin-left: 0.35rem;
+  border: 0.28rem solid transparent;
+  border-top-color: currentColor;
+  border-bottom-width: 0;
+  transform: translateY(0.12rem);
+}
+
+.landing-submenu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  min-width: 12.5rem;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.4rem;
+  background: #064e3b;
+  border: 1px solid rgba(236, 253, 245, 0.18);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  z-index: 40;
+}
+
+.landing-nav-group:hover .landing-submenu,
+.landing-nav-group:focus-within .landing-submenu,
+.landing-nav-group[open] .landing-submenu {
+  display: flex;
+}
+
+.landing-submenu a {
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.5rem;
+  color: #ecfdf5;
+  white-space: nowrap;
+}
+
+.landing-submenu a:hover,
+.landing-submenu a:focus-visible {
+  background: rgba(236, 253, 245, 0.12);
 }
 
 .landing-actions {
@@ -411,6 +481,18 @@ html:has(.landing) {
   margin: 1.5rem 0 0.6rem;
 }
 
+.landing-legal-body h2:first-child {
+  margin-top: 0;
+}
+
+.landing-legal-body .landing-ok {
+  color: var(--ld-text);
+}
+
+.landing-legal-body .landing-form {
+  margin-top: 1rem;
+}
+
 .landing-legal-body p,
 .landing-legal-body li {
   color: var(--ld-muted);
@@ -514,10 +596,122 @@ html:has(.landing) {
   gap: 1rem;
 }
 
-.landing-three {
+.landing-three,
+.landing-pricing {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+}
+
+.landing-price-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.35rem 1.15rem 1.2rem;
+  background: var(--ld-surface);
+  border: 1px solid var(--ld-border);
+  border-radius: 1.25rem;
+  box-shadow: var(--ld-shadow);
+}
+
+.landing-price-tile-featured {
+  border-color: var(--ld-primary);
+  box-shadow: var(--ld-shadow-lg);
+  background: var(--ld-surface-2);
+}
+
+.landing-price-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  margin-bottom: 0.65rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  background: var(--ld-primary);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+html[data-landing-theme="dark"] .landing-price-badge {
+  color: #022c22;
+}
+
+.landing-price-amount {
+  margin: 0.35rem 0 0.75rem;
+  font-family: var(--font-serif), ui-serif, Georgia, serif;
+  font-size: clamp(2rem, 1.4rem + 1.6vw, 2.75rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.landing-price-amount span {
+  display: block;
+  margin-top: 0.4rem;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--ld-text-sm);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ld-muted);
+}
+
+.landing-price-list {
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  flex: 1;
+}
+
+.landing-price-list li {
+  display: grid;
+  grid-template-columns: 1.15rem minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: start;
+  font-size: var(--ld-text-sm);
+}
+
+.landing-price-yes {
+  color: var(--ld-text);
+}
+
+.landing-price-yes span:first-child {
+  color: var(--ld-primary);
+  font-weight: 800;
+}
+
+.landing-price-no {
+  color: var(--ld-muted);
+}
+
+.landing-price-no span:first-child {
+  color: #b45309;
+  font-weight: 800;
+}
+
+.landing-price-optional {
+  color: var(--ld-text);
+}
+
+.landing-price-optional span:first-child {
+  color: var(--ld-primary);
+  font-weight: 800;
+}
+
+.landing-price-list em {
+  display: block;
+  font-style: normal;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ld-muted);
+}
+
+.landing-price-cta {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
 }
 
 .landing-ok {
@@ -555,6 +749,7 @@ html:has(.landing) {
   .landing-contact,
   .landing-hero-inner,
   .landing-three,
+  .landing-pricing,
   .landing-screens,
   .landing-photos,
   .landing-dispatch,

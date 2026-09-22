@@ -11,6 +11,9 @@ import { StaffEditForm } from "@/components/StaffEditForm";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 import { VehicleSelect } from "@/components/VehicleSelect";
 import { storedRevealVehicles } from "@/lib/reveal";
+import { loadOrgPlan, shopStaffCount } from "@/lib/org-plan";
+import { canAddUser, contactSalesUserMessage } from "@/lib/plans";
+import { ContactSalesNote } from "@/components/ContactSalesNote";
 
 export default async function TechniciansPage({
   searchParams,
@@ -36,7 +39,13 @@ export default async function TechniciansPage({
     select: { id: true, name: true },
   });
 
-  const vehicles = await storedRevealVehicles(session.organizationId);
+  const [vehicles, plan, seatCount] = await Promise.all([
+    storedRevealVehicles(session.organizationId),
+    loadOrgPlan(session.organizationId),
+    shopStaffCount(session.organizationId),
+  ]);
+  const allowUser = plan ? canAddUser(plan.org, seatCount) : true;
+  const showGps = plan?.entitlements.gpsEnabled ?? true;
 
   return (
     <div className="grid gap-8 lg:grid-cols-5">
@@ -75,7 +84,8 @@ export default async function TechniciansPage({
                 stores={stores}
                 next="/technicians"
                 roleOptions={roleOptions}
-                vehicles={vehicles}
+                vehicles={showGps ? vehicles : []}
+                showGps={showGps}
               />
             </li>
           ))}
@@ -83,6 +93,7 @@ export default async function TechniciansPage({
       </div>
       <div className="lg:col-span-2">
         <h2 className="font-display text-xl">Add technician</h2>
+        {allowUser ? (
         <ActionForm action={createTechnicianAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
           <label className="block text-sm font-medium">
             Name
@@ -103,12 +114,17 @@ export default async function TechniciansPage({
             Mobile for SMS
             <input name="phone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Optional" />
           </label>
-          <VehicleSelect vehicles={vehicles} />
+          {showGps ? <VehicleSelect vehicles={vehicles} /> : null}
           <StoreSelect stores={stores} label="Default store" />
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save technician</button>
         </ActionForm>
+        ) : (
+          <div className="mt-3">
+            <ContactSalesNote>{contactSalesUserMessage(plan?.org)}</ContactSalesNote>
+          </div>
+        )}
 
-        {canImport ? (
+        {canImport && allowUser ? (
           <div className="mt-8">
             <StaffImportForm />
           </div>

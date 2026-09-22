@@ -14,6 +14,14 @@ import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 import { VehicleSelect } from "@/components/VehicleSelect";
 import { storedRevealVehicles } from "@/lib/reveal";
 import { PLAN, extraStaffSeats } from "@/lib/plan";
+import { loadOrgPlan } from "@/lib/org-plan";
+import {
+  canAddUser,
+  contactSalesUserMessage,
+  extraStaffSeatsFor,
+  formatPlanCents,
+} from "@/lib/plans";
+import { ContactSalesNote } from "@/components/ContactSalesNote";
 
 export default async function StaffPage({
   searchParams,
@@ -27,7 +35,7 @@ export default async function StaffPage({
   const roleOptions = staffRolesAssignableBy(session.role);
   const canImport = canImportStaff(session.role);
 
-  const [staff, stores, vehicles, seatCount] = await Promise.all([
+  const [staff, stores, vehicles, seatCount, plan] = await Promise.all([
     prisma.user.findMany({
       where: {
         organizationId: session.organizationId,
@@ -48,9 +56,13 @@ export default async function StaffPage({
         role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN] },
       },
     }),
+    loadOrgPlan(session.organizationId),
   ]);
-  const includedSeats = PLAN.includedSeats;
-  const extraSeats = extraStaffSeats(seatCount);
+  const entitlements = plan?.entitlements;
+  const includedSeats = entitlements?.includedUsers ?? PLAN.includedSeats;
+  const extraSeats = plan ? extraStaffSeatsFor(plan.org, seatCount) : extraStaffSeats(seatCount);
+  const allowUser = plan ? canAddUser(plan.org, seatCount) : true;
+  const showGps = entitlements?.gpsEnabled ?? true;
 
   const groups = [
     { role: ROLES.ADMIN, title: "Admins" },
@@ -106,7 +118,7 @@ export default async function StaffPage({
                           />
                         ) : null}
                       </div>
-                      <StaffEditForm person={person} stores={stores} next="/staff" roleOptions={roleOptions} vehicles={vehicles} />
+                      <StaffEditForm person={person} stores={stores} next="/staff" roleOptions={roleOptions} vehicles={showGps ? vehicles : []} showGps={showGps} />
                     </li>
                   ))
                 )}
@@ -126,6 +138,7 @@ export default async function StaffPage({
       </div>
       <div className="lg:col-span-2">
         <h2 className="font-display text-xl">Add staff</h2>
+        {allowUser ? (
         <ActionForm action={createStaffAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
           <label className="block text-sm font-medium">
             Name
@@ -158,21 +171,44 @@ export default async function StaffPage({
             <input name="phone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Optional" />
           </label>
           <StoreSelect stores={stores} label="Default store" />
-          <VehicleSelect vehicles={vehicles} />
+          {showGps ? <VehicleSelect vehicles={vehicles} /> : null}
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save staff</button>
         </ActionForm>
+        ) : (
+          <div className="mt-3">
+            <ContactSalesNote>{contactSalesUserMessage(plan?.org)}</ContactSalesNote>
+          </div>
+        )}
 
         <section className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
           <h2 className="font-display text-lg text-stone-900">Increase staff seats</h2>
           <p className="mt-2 text-sm text-stone-700">
-            This company plan includes <span className="font-semibold">{PLAN.includedSeats} staff logins</span> for{" "}
-            <span className="font-semibold">${PLAN.monthlyDollars}/month</span> (admins, managers, and technicians).
-            Customer logins are separate. Extra staff seats are <span className="font-semibold">${PLAN.extraSeatDollars}/month</span>{" "}
-            each. New companies get a {PLAN.trialDays}-day trial after approval.
+            This {entitlements?.label ?? "Shop"} plan
+            {includedSeats != null ? (
+              <>
+                {" "}
+                includes <span className="font-semibold">{includedSeats} staff logins</span>
+              </>
+            ) : (
+              " has unlimited staff logins"
+            )}{" "}
+            {entitlements?.perUser
+              ? `at ${formatPlanCents(entitlements.extraSeatCents)}/user/month`
+              : `for ${formatPlanCents(entitlements?.monthlyCents ?? PLAN.monthlyDollars * 100)}/month`}
+            . Customer logins are separate.
+            {entitlements?.extraSeatCents && includedSeats != null
+              ? ` Extra staff seats are ${formatPlanCents(entitlements.extraSeatCents)}/month each.`
+              : ""}{" "}
+            New companies get a {PLAN.trialDays}-day trial after approval.
           </p>
           <p className="mt-2 text-sm text-stone-700">
-            {seatCount} of {includedSeats} included seats in use
-            {extraSeats > 0 ? ` · ${extraSeats} extra seat${extraSeats === 1 ? "" : "s"} at $${PLAN.extraSeatDollars}/month` : ""}.
+            {includedSeats != null
+              ? `${seatCount} of ${includedSeats} included seats in use`
+              : `${seatCount} staff logins in use`}
+            {extraSeats > 0 && entitlements?.extraSeatCents
+              ? ` · ${extraSeats} extra seat${extraSeats === 1 ? "" : "s"} at ${formatPlanCents(entitlements.extraSeatCents)}/month`
+              : ""}
+            .
           </p>
           <Link
             href="/contact"
@@ -182,7 +218,7 @@ export default async function StaffPage({
           </Link>
         </section>
 
-        {canImport ? (
+        {canImport && allowUser ? (
           <div className="mt-8">
             <StaffImportForm />
           </div>

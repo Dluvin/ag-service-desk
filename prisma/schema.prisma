@@ -38,6 +38,16 @@ model Organization {
   stripeCustomerId    String?
   stripeSubscriptionId String?
   stripeCheckoutUrl   String?
+  // STARTER | SHOP | ENTERPRISE — prices and defaults in lib/plans.ts. Existing orgs default to SHOP.
+  plan                String   @default("SHOP")
+  mapsEnabled         Boolean? // null = derive from plan
+  gpsEnabled          Boolean  @default(false)
+  gpsProvider         String   @default("NONE") // NONE | REVEAL | VERIZON | OTHER
+  revealGps           Boolean  @default(false) // Shop Reveal add-on
+  maxStores           Int?     // null = derive from plan
+  includedUsers       Int?     // null = derive from plan
+  extraSeatCents      Int?     // null = derive from plan
+  monthlyCents        Int?     // null = derive from plan
   users               User[]
   farmers             Farmer[]
   pivots              Pivot[]

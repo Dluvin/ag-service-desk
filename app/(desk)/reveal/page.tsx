@@ -7,6 +7,9 @@ import { saveRevealSettingsAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { RevealTestForm } from "@/components/RevealTestForm";
 import Link from "next/link";
+import { loadOrgPlan } from "@/lib/org-plan";
+import { contactSalesGpsMessage, showVehicleGps } from "@/lib/plans";
+import { ContactSalesNote } from "@/components/ContactSalesNote";
 
 export default async function RevealSettingsPage() {
   const session = await getSession();
@@ -15,6 +18,18 @@ export default async function RevealSettingsPage() {
 
   const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
   if (!org) redirect("/dashboard");
+  const plan = await loadOrgPlan(session.organizationId);
+  if (!plan || !showVehicleGps(plan.org)) {
+    return (
+      <div className="max-w-3xl">
+        <h1 className="font-display text-3xl">Connectors</h1>
+        <p className="mt-2 text-stone-600">Live vehicle GPS is not on this plan.</p>
+        <div className="mt-6">
+          <ContactSalesNote>{contactSalesGpsMessage(plan?.org)}</ContactSalesNote>
+        </div>
+      </div>
+    );
+  }
   const configured = Boolean(await loadRevealCreds(session.organizationId));
   const vehicles = configured ? await storedRevealVehicles(session.organizationId) : [];
 
@@ -152,8 +167,8 @@ export default async function RevealSettingsPage() {
       <section className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-4">
         <h2 className="font-display text-xl text-stone-900">Other GPS connectors</h2>
         <p className="mt-2 text-sm text-stone-700">
-          Need Samsara, Motive, Geotab, or another GPS system? We can add connectors. Development
-          fees may apply depending on the provider and how their API works.
+          Need Samsara, Motive, Geotab, or another GPS system? Enterprise can use another provider
+          with no development fee. Contact sales and we will set gpsProvider to Other.
         </p>
         <Link
           href="/contact"

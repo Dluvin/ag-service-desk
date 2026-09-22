@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ActionForm } from "@/components/ActionForm";
 import { LandingFooter, LandingHeader } from "@/components/LandingChrome";
+import { landingSupportAction } from "@/lib/landing-actions";
 import "../landing.css";
 
 export const metadata: Metadata = {
@@ -8,7 +10,12 @@ export const metadata: Metadata = {
   description: "Get help with AG Desk Pro: login, billing, GPS, work orders, and demo requests.",
 };
 
-export default function SupportPage() {
+export default async function SupportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sent?: string }>;
+}) {
+  const { sent } = await searchParams;
   return (
     <div className="landing">
       <a className="landing-skip" href="#content">
@@ -22,6 +29,49 @@ export default function SupportPage() {
           <p className="landing-muted">
             We are here for irrigation dealers using AG Desk Pro, and for people who want a demo.
           </p>
+
+          <div className="landing-card landing-legal-body">
+            <h2>Send a message</h2>
+            <p>
+              Tell us your name, the email we should reply to, and what you need. Company is optional.
+              This does not start a company or a trial.
+            </p>
+            {sent === "1" ? (
+              <p className="landing-ok">Thanks. We received your message and will follow up.</p>
+            ) : null}
+            <ActionForm action={landingSupportAction} className="landing-form">
+              <div className="landing-field">
+                <label htmlFor="support-name">Name</label>
+                <input id="support-name" name="name" type="text" required placeholder="Your name" />
+              </div>
+              <div className="landing-field">
+                <label htmlFor="support-email">Email</label>
+                <input
+                  id="support-email"
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                />
+              </div>
+              <div className="landing-field">
+                <label htmlFor="support-company">Company (optional)</label>
+                <input id="support-company" name="company" type="text" placeholder="Company name" />
+              </div>
+              <div className="landing-field">
+                <label htmlFor="support-message">Message</label>
+                <textarea
+                  id="support-message"
+                  name="message"
+                  required
+                  placeholder="What were you trying to do, and what happened?"
+                />
+              </div>
+              <button className="landing-btn" type="submit">
+                Send message
+              </button>
+            </ActionForm>
+          </div>
 
           <div className="landing-card landing-legal-body">
             <h2>Reach us</h2>

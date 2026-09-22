@@ -1,13 +1,12 @@
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 import { parseStoreParam } from "@/lib/stores";
-import { StoreFilter } from "@/components/StoreFilter";
 import { PrintButton } from "@/components/PrintButton";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
+import { ReportDateForm, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
 import { STARTUP_SEASON_YEAR } from "@/lib/startup";
 import { loadReports, toDayParam } from "@/lib/reports";
 
@@ -48,30 +47,28 @@ export default async function ReportsPage({
           <a href="#pivot-reports" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
             Pivot reports
           </a>
+          <Link href="/reports/customers" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
+            Customer reports
+          </Link>
+          <Link href="/reports/farms" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
+            Farm reports
+          </Link>
+          <Link href="/reports/assets" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
+            Asset reports
+          </Link>
           <PrintButton label="Print reports" />
         </div>
       </div>
 
-      <form className="no-print mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4" method="get">
-        {selectedStore !== "all" ? <input type="hidden" name="store" value={selectedStore} /> : null}
-        <label className="text-sm font-medium">
-          From
-          <input name="from" type="date" defaultValue={report.range.from} className="mt-1 block rounded-lg border border-stone-300 px-3 py-2" />
-        </label>
-        <label className="text-sm font-medium">
-          To
-          <input name="to" type="date" defaultValue={report.range.to} className="mt-1 block rounded-lg border border-stone-300 px-3 py-2" />
-        </label>
-        <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Update dates</button>
-      </form>
-      {session.role !== ROLES.FARMER ? (
-        <StoreFilter
-          stores={stores}
-          selected={selectedStore}
-          pathname="/reports"
-          extra={{ from: report.range.from, to: report.range.to }}
-        />
-      ) : null}
+      <ReportDateForm from={report.range.from} to={report.range.to} store={selectedStore} />
+      <ReportStoreFilter
+        stores={stores}
+        selected={selectedStore}
+        pathname="/reports"
+        from={report.range.from}
+        to={report.range.to}
+        show={session.role !== ROLES.FARMER}
+      />
 
       <section id="ticket-reports" className="mt-10 scroll-mt-6">
         <h2 className="font-display text-2xl">Work order reports</h2>
@@ -331,27 +328,5 @@ export default async function ReportsPage({
         </TableCard>
       </section>
     </div>
-  );
-}
-
-function usd(value: number) {
-  return `$${value.toFixed(2)}`;
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-stone-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function TableCard({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
-  return (
-    <section className={`overflow-hidden rounded-xl border border-stone-200 bg-white ${className}`}>
-      <h3 className="border-b border-stone-100 px-4 py-3 font-display text-lg">{title}</h3>
-      <div className="overflow-x-auto">{children}</div>
-    </section>
   );
 }

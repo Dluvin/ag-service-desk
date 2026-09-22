@@ -14,6 +14,7 @@ import {
   rejectTenantAction,
 } from "@/lib/platform-actions";
 import { PLAN } from "@/lib/plan";
+import { PlatformPlanForm } from "@/components/PlatformPlanForm";
 
 export const dynamic = "force-dynamic";
 
@@ -44,8 +45,9 @@ export default async function PlatformHomePage() {
           </Link>
           {" "}
           (<span className="font-mono text-xs">/signup</span>). New companies stay pending until you
-          approve. Approve opens their tenant, loads a demo customer/work order, starts a {PLAN.trialDays}-day
-          trial, and creates a Stripe checkout for ${PLAN.monthlyDollars}/month.
+          approve. Approve opens their tenant, loads a demo customer/work order, and starts a {PLAN.trialDays}-day
+          trial. Existing companies stay on Shop so live dealers keep in-app maps. Set plan, Reveal add-on, GPS
+          provider, and store cap below — Stripe checkout is not wired to these prices yet.
         </p>
         <ul className="mt-6 space-y-4">
           {tenants.length === 0 ? (
@@ -129,6 +131,7 @@ export default async function PlatformHomePage() {
                       </ActionForm>
                     </div>
                   </div>
+                  <PlatformPlanForm org={org} />
                   {org.stripeSubscriptionId ? (
                     <p className="mt-2 text-sm font-medium text-emerald-800">Stripe subscription is on file.</p>
                   ) : (
