@@ -165,19 +165,21 @@ model Farmer {
 }
 
 model Farm {
-  id             String           @id @default(cuid())
-  organizationId String
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  farmerId       String
-  farmer         Farmer           @relation(fields: [farmerId], references: [id], onDelete: Cascade)
-  name           String
-  location       String?
-  latitude       Float?
-  longitude      Float?
-  createdAt      DateTime         @default(now())
-  pivots         Pivot[]
-  assets         Asset[]
-  assignments    FarmAssignment[]
+  id               String           @id @default(cuid())
+  organizationId   String
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  farmerId         String
+  farmer           Farmer           @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  primaryContactId String?
+  primaryContact   FarmerContact?   @relation(fields: [primaryContactId], references: [id], onDelete: SetNull)
+  name             String
+  location         String?
+  latitude         Float?
+  longitude        Float?
+  createdAt        DateTime         @default(now())
+  pivots           Pivot[]
+  assets           Asset[]
+  assignments      FarmAssignment[]
 
   @@index([organizationId, farmerId])
 }
@@ -197,13 +199,14 @@ model FarmAssignment {
 }
 
 model FarmerContact {
-  id        String   @id @default(cuid())
-  farmerId  String
-  farmer    Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
-  name      String
-  email     String?
-  phone     String?
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  farmerId        String
+  farmer          Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  name            String
+  email           String?
+  phone           String?
+  createdAt       DateTime @default(now())
+  primaryForFarms Farm[]
 }
 
 model Pivot {

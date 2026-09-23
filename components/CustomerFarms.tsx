@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { createFarmAction, deleteFarmAction, updateFarmAction } from "@/lib/actions";
@@ -56,6 +57,11 @@ export function CustomerFarms({
                 <li key={farm.id} className="rounded-xl border border-stone-200 bg-white p-4">
                   {canEdit ? (
                     <>
+                      <p className="mb-3">
+                        <Link href={`/farms/${farm.id}`} className="font-semibold text-emerald-900 hover:underline">
+                          Open {farm.name}
+                        </Link>
+                      </p>
                       <ActionForm action={updateFarmAction} className="space-y-3">
                         <input type="hidden" name="farmId" value={farm.id} />
                         <label className="block text-sm font-medium">
@@ -117,7 +123,11 @@ export function CustomerFarms({
                     </>
                   ) : (
                     <>
-                      <p className="font-medium">{farm.name}</p>
+                      <p className="font-medium">
+                        <Link href={`/farms/${farm.id}`} className="text-emerald-900 hover:underline">
+                          {farm.name}
+                        </Link>
+                      </p>
                       {farm.location ? <p className="text-sm text-stone-600">{farm.location}</p> : null}
                       {farm.assignments.length ? (
                         <p className="mt-1 text-xs text-stone-500">

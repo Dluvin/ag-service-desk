@@ -35,7 +35,7 @@ export function FarmsDirectory({ farms }: { farms: FarmListRow[] }) {
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {matches.map((farm) => (
             <li key={farm.id} className="rounded-xl border border-stone-200 bg-white px-4 py-3">
-              <Link href={`/farmers/${farm.customerId}`} className="font-semibold text-emerald-900 hover:underline">
+              <Link href={`/farms/${farm.id}`} className="font-semibold text-emerald-900 hover:underline">
                 {farm.name}
               </Link>
               <p className="text-sm text-stone-600">

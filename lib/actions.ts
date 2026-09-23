@@ -405,6 +405,8 @@ export async function assignCustomerAssetsToFarmAction(formData: FormData) {
   });
   if (assigned.error) return { error: assigned.error };
 
+  const returnFarmId = formString(formData, "returnFarmId");
+  if (returnFarmId) redirect(`/farms/${returnFarmId}`);
   redirect(`/farmers/${farmerId}`);
 }
 
@@ -416,12 +418,24 @@ export async function updateFarmAction(formData: FormData) {
   const name = formString(formData, "name");
   const location = formString(formData, "location");
   const farmerId = formString(formData, "farmerId");
+  const primaryContactId = formString(formData, "primaryContactId");
   if (!name) return { error: "Farm name is required." };
 
   const farm = await prisma.farm.findFirst({
     where: { id: farmId, organizationId: session.organizationId },
   });
   if (!farm) return { error: "Farm not found." };
+
+  const ownerId = farmerId && farmerId !== farm.farmerId ? farmerId : farm.farmerId;
+  let nextContactId: string | null = null;
+  if (primaryContactId && ownerId === farm.farmerId) {
+    const contact = await prisma.farmerContact.findFirst({
+      where: { id: primaryContactId, farmerId: farm.farmerId },
+      select: { id: true },
+    });
+    if (!contact) return { error: "Contact not found for this customer." };
+    nextContactId = contact.id;
+  }
 
   await prisma.farm.update({
     where: { id: farmId },
@@ -430,6 +444,7 @@ export async function updateFarmAction(formData: FormData) {
       location: location || null,
     },
   });
+  await prisma.$executeRaw`UPDATE Farm SET primaryContactId = ${nextContactId} WHERE id = ${farmId}`;
 
   if (farmerId && farmerId !== farm.farmerId) {
     const moved = await moveFarmToCustomer({
@@ -438,10 +453,9 @@ export async function updateFarmAction(formData: FormData) {
       toFarmerId: farmerId,
     });
     if (moved.error) return { error: moved.error };
-    redirect(`/farmers/${farmerId}`);
   }
 
-  redirect(`/farmers/${farm.farmerId}`);
+  redirect(`/farms/${farmId}`);
 }
 
 export async function deleteFarmAction(formData: FormData) {
@@ -455,7 +469,7 @@ export async function deleteFarmAction(formData: FormData) {
   });
   if (deleted.error || !deleted.farm) return { error: deleted.error ?? "Farm not found." };
 
-  redirect(`/farmers/${deleted.farm.farmerId}`);
+  redirect("/farms");
 }
 
 export async function updateFarmerAction(formData: FormData) {

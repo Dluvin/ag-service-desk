@@ -55,6 +55,7 @@ export async function moveFarmToCustomer(input: {
       where: { id: farm.id },
       data: { farmerId: customer.id },
     });
+    await tx.$executeRaw`UPDATE Farm SET primaryContactId = NULL WHERE id = ${farm.id}`;
     await tx.pivot.updateMany({
       where: { farmId: farm.id, organizationId: input.organizationId },
       data: { farmerId: customer.id },
