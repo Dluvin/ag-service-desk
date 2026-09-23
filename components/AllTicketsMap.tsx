@@ -22,12 +22,14 @@ export function AllTicketsMap({
   revealSetupHref,
   store,
   showOpenMapLink = true,
+  openMapInNewTab = false,
 }: {
   pins: MapPin[];
   vehiclePins?: MapPin[];
   revealSetupHref?: string;
   store?: string | null;
   showOpenMapLink?: boolean;
+  openMapInNewTab?: boolean;
 }) {
   const plan = usePlan();
   const showMap = plan.mapsEnabled;
@@ -83,7 +85,12 @@ export function AllTicketsMap({
           on the map
         </p>
         {showOpenMapLink ? (
-          <Link href={openMapHref} className="text-sm font-medium text-emerald-800 hover:underline">
+          <Link
+            href={openMapHref}
+            className="text-sm font-medium text-emerald-800 hover:underline"
+            target={openMapInNewTab ? "_blank" : undefined}
+            rel={openMapInNewTab ? "noopener noreferrer" : undefined}
+          >
             Open work order map
           </Link>
         ) : null}

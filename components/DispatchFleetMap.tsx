@@ -13,6 +13,11 @@ export function DispatchFleetMap({
   store?: string | null;
 }) {
   return (
-    <AllTicketsMap pins={ticketPins} revealSetupHref={canConfigure ? "/reveal" : undefined} store={store} />
+    <AllTicketsMap
+      pins={ticketPins}
+      revealSetupHref={canConfigure ? "/reveal" : undefined}
+      store={store}
+      openMapInNewTab
+    />
   );
 }
