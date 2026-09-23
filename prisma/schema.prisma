@@ -128,6 +128,7 @@ model User {
   pivotNotes            PivotNote[]
   pivotDocuments        PivotDocument[]
   passwordResets        PasswordResetToken[]
+  dispatchView          String                @default("LIST")
   createdAt             DateTime              @default(now())
 
   @@unique([organizationId, email])

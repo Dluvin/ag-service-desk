@@ -18,6 +18,7 @@ import {
   canImportStaff,
   canManageParts,
   canManageShopStaff,
+  canEditDeskSettings,
   canEditStartupChecklist,
   isFinishedStatus,
   isShopStaff,
@@ -43,6 +44,8 @@ import { documentFilesFromForm, removePivotDocumentFile, safePivotReturnTo, save
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
 import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelcomeLoginEmail, userFromPasswordToken, welcomeQuery } from "./welcome-mail";
 import { getPlatformSession } from "./platform";
+import { parseDispatchView, saveUserDispatchView } from "./dispatch-view";
+import { homePath } from "./home";
 import { parseDateTimeLocal } from "./schedule";
 import { parseMoneyInput } from "./money";
 import { emailSignupToOwner } from "./signup-notify";
@@ -129,7 +132,7 @@ export async function loginAction(formData: FormData) {
     return { error: "This company is paused. Contact AG Service Desk if you need access restored." };
   }
   await createSession(user);
-  redirect("/dashboard");
+  redirect(homePath(user.role));
 }
 
 export async function logoutAction() {
@@ -167,7 +170,7 @@ export async function setPasswordFromWelcomeAction(formData: FormData) {
     name: row.user.name,
     email: row.user.email,
   });
-  redirect("/dashboard");
+  redirect(homePath(row.user.role));
 }
 
 export async function requestPasswordResetAction(formData: FormData) {
@@ -2379,6 +2382,14 @@ export async function updateRevealVehicleStoreAction(formData: FormData) {
 
 export async function currentUser() {
   return getSession();
+}
+
+export async function saveDispatchViewAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canEditDeskSettings(session.role)) return { error: "Only managers and company admins can change dispatch view." };
+  const dispatchView = parseDispatchView(formString(formData, "dispatchView"));
+  await saveUserDispatchView(session.userId, dispatchView);
+  redirect("/settings");
 }
 
 export async function saveCompanyLogoAction(formData: FormData) {

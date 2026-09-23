@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { homePath } from "./home";
 import { prisma } from "./prisma";
 import { ROLES, type Role } from "./roles";
 import { createSession, destroySession } from "./auth";
@@ -61,7 +62,7 @@ export async function impersonateTenantAction(formData: FormData) {
     email: admin.email,
     impersonatorId: platform.adminId,
   });
-  redirect("/dashboard");
+  redirect(homePath(admin.role));
 }
 
 export async function stopImpersonatingAction() {

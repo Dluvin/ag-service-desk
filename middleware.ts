@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
+import { homePath } from "@/lib/home";
 
 const PUBLIC = new Set(["/", "/login", "/signup", "/signup/thanks", "/welcome", "/forgot", "/contact", "/privacy", "/support", "/platform/login"]);
 
@@ -20,13 +21,15 @@ export async function middleware(request: NextRequest) {
   const tenantToken = request.cookies.get("ag_session")?.value;
   const platformToken = request.cookies.get("ag_platform")?.value;
   let tenantAuthed = false;
+  let tenantRole = "";
   let platformAuthed = false;
   if (secret) {
     const key = new TextEncoder().encode(secret);
     if (tenantToken) {
       try {
-        await jwtVerify(tenantToken, key);
+        const { payload } = await jwtVerify(tenantToken, key);
         tenantAuthed = true;
+        tenantRole = typeof payload.role === "string" ? payload.role : "";
       } catch {
         tenantAuthed = false;
       }
@@ -51,8 +54,8 @@ export async function middleware(request: NextRequest) {
   }
 
   if (PUBLIC.has(pathname)) {
-    if (tenantAuthed && (pathname === "/login" || pathname === "/signup")) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    if (tenantAuthed && (pathname === "/" || pathname === "/login" || pathname === "/signup")) {
+      return NextResponse.redirect(new URL(homePath(tenantRole), request.url));
     }
     return NextResponse.next();
   }

@@ -83,6 +83,10 @@ export function canManageShopStaff(role: string) {
   return role === ROLES.ADMIN || role === ROLES.MANAGER;
 }
 
+export function canEditDeskSettings(role: string) {
+  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+}
+
 export function canEditStaffMember(actorRole: string, targetRole: string) {
   if (actorRole === ROLES.ADMIN) {
     return targetRole === ROLES.ADMIN || targetRole === ROLES.MANAGER || targetRole === ROLES.TECHNICIAN;

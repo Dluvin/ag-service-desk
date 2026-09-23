@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pivotWhere, ticketWhere } from "@/lib/scope";
 import { ROLES } from "@/lib/roles";
+import { homePath } from "@/lib/home";
 import { StatusBadge } from "@/components/Badges";
 import { redirect } from "next/navigation";
 import { STARTUP_SEASON_YEAR } from "@/lib/startup";
@@ -23,6 +24,7 @@ export default async function DashboardPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  if (session.role !== ROLES.FARMER) redirect(homePath(session.role));
 
   const query = await searchParams;
   const plan = await loadOrgPlan(session.organizationId);

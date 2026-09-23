@@ -3,6 +3,7 @@ import { logoutAction } from "@/lib/actions";
 import { roleLabel } from "@/lib/scope";
 import type { SessionUser } from "@/lib/auth";
 import { isShopStaff, ROLES } from "@/lib/roles";
+import { homePath } from "@/lib/home";
 import { NavDropdown } from "@/components/NavDropdown";
 import { NavLinkMenu } from "@/components/NavLinkMenu";
 import { assetTypeHref } from "@/lib/assets";
@@ -21,10 +22,9 @@ export function Nav({
   showGps?: boolean;
 }) {
   const farmer = session.role === ROLES.FARMER;
-  const beforeTickets = [
-    { href: "/dashboard", label: "Dashboard" },
-    ...(!farmer ? [{ href: "/dispatch", label: "Dispatch" }] : []),
-  ];
+  const beforeTickets = farmer
+    ? [{ href: "/dashboard", label: "Dashboard" }]
+    : [{ href: "/dispatch", label: "Dispatch" }];
   const ticketLinks = [
     { href: "/tickets", label: "All work orders" },
     ...(showMaps ? [{ href: "/map", label: "Work order map" }] : []),
@@ -63,9 +63,11 @@ export function Nav({
       { href: "/managers", label: "Managers" },
     ],
   };
+  const deskSettings = { href: "/settings", label: "Dispatch view" };
   const settingsLinks =
     session.role === ROLES.ADMIN
       ? [
+          deskSettings,
           staffMenu,
           { href: "/stores", label: "Stores" },
           { href: "/company", label: "Logo" },
@@ -79,13 +81,13 @@ export function Nav({
             : []),
         ]
       : session.role === ROLES.MANAGER
-        ? [staffMenu, ...(showGps ? [{ href: "/vehicles", label: "Vehicles" }] : [])]
+        ? [deskSettings, staffMenu, ...(showGps ? [{ href: "/vehicles", label: "Vehicles" }] : [])]
         : [];
 
   return (
     <header className="no-print relative z-50 border-b border-emerald-950/20 bg-emerald-950 text-emerald-50">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/dashboard" className="flex items-center gap-2 font-display text-lg tracking-tight">
+        <Link href={homePath(session.role)} className="flex items-center gap-2 font-display text-lg tracking-tight">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand-logo-on-dark.png" alt="AG Desk Pro" className="h-9 max-w-52 bg-transparent object-contain object-left" />
           {hasLogo ? (
