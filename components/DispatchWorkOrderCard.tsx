@@ -26,7 +26,7 @@ export function DispatchWorkOrderCard({
   const [expanded, setExpanded] = useState(false);
   const details = (
     <div className={expanded ? "block" : "hidden group-hover:block group-focus-within:block"}>
-      <p className="mt-2 text-sm font-medium text-stone-800">{title}</p>
+      {variant === "tile" ? <p className="mt-2 text-sm font-medium text-stone-800">{title}</p> : null}
       {children}
     </div>
   );
@@ -67,12 +67,11 @@ export function DispatchWorkOrderCard({
         <PriorityBadge priority={priority} />
         <Link
           href={href}
-          className="min-w-0 truncate font-medium text-emerald-950 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
+          className="min-w-0 flex-1 truncate font-medium text-emerald-950 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
         >
-          #{number}
-          <span className="sr-only"> {title}</span>
+          #{number} {title}
         </Link>
-        <p className="min-w-0 flex-1 truncate text-sm text-stone-600">{customer}</p>
+        <p className="min-w-0 max-w-[10rem] truncate text-sm text-stone-600 sm:max-w-[14rem]">{customer}</p>
         <StatusBadge status={status} />
         {detailsButton}
       </div>
