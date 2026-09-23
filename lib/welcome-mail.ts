@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
-import { appBaseUrl } from "./app-url";
+import { appBaseUrl, brandLogoEmailHtml } from "./app-url";
 import { mailIsConfigured, sendEmail } from "./mail";
 import { tenantBrandEmailHtml } from "./org-brand";
 
@@ -112,6 +112,8 @@ async function sendPasswordLinkEmail(input: {
     setUrl ? `Set or change your password (expires in ${input.days === 1 ? "24 hours" : `${input.days} days`}): ${setUrl}` : "",
     "",
     "If you did not expect this, tell your dealer.",
+    "",
+    "Powered by AG Desk Pro",
   ]
     .filter(Boolean)
     .join("\n");
@@ -131,10 +133,13 @@ async function sendPasswordLinkEmail(input: {
         : ""
     }
     <p>If you did not expect this, tell your dealer.</p>
+    <p>Powered by AG Desk Pro</p>
+    ${brandLogoEmailHtml()}
   `;
 
   const result = await sendEmail({
     to: input.email,
+    fromName: organizationName,
     subject: input.subject,
     text,
     html,

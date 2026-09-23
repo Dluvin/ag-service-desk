@@ -4,14 +4,29 @@ export function mailIsConfigured() {
   return Boolean(process.env.EMAIL_FROM && (process.env.RESEND_API_KEY || process.env.SMTP_HOST));
 }
 
+function fromAddressOnly(from: string) {
+  const angled = from.match(/<([^>]+)>/);
+  if (angled) return angled[1].trim();
+  return from.includes("@") ? from : "";
+}
+
+function formatFrom(fromEnv: string, fromName?: string) {
+  const name = fromName?.trim().replaceAll(/[\r\n<>"]/g, "");
+  const address = fromAddressOnly(fromEnv);
+  if (!name || !address) return fromEnv;
+  return `"${name}" <${address}>`;
+}
+
 export async function sendEmail(input: {
   to: string;
   subject: string;
   text: string;
   html: string;
+  fromName?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-  const from = process.env.EMAIL_FROM?.trim();
-  if (!from) return { ok: false, error: "EMAIL_FROM is not set." };
+  const fromEnv = process.env.EMAIL_FROM?.trim();
+  if (!fromEnv) return { ok: false, error: "EMAIL_FROM is not set." };
+  const from = formatFrom(fromEnv, input.fromName);
 
   const resendKey = process.env.RESEND_API_KEY?.trim();
   if (resendKey) {
