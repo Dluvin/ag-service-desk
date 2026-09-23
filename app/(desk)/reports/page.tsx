@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 import { parseStoreParam } from "@/lib/stores";
 import { ReportPrintBrand } from "@/components/PrintCompanyMark";
+import { StatusBadge, PriorityBadge } from "@/components/Badges";
 import { ReportDateForm, ReportNav, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
 import { STARTUP_SEASON_YEAR } from "@/lib/startup";
 import { loadReports, toDayParam } from "@/lib/reports";
