@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { MapPin } from "@/lib/map-pins";
-import { googleMapsDirectionsUrl, googleMapsPlaceUrl } from "@/lib/maps";
+import { STORE_ALL, storeQuery } from "@/lib/stores";
 import { useRevealVehiclePins } from "./useRevealVehiclePins";
 import { usePlan } from "./PlanProvider";
 
@@ -21,11 +21,13 @@ export function AllTicketsMap({
   vehiclePins,
   revealSetupHref,
   store,
+  showOpenMapLink = true,
 }: {
   pins: MapPin[];
   vehiclePins?: MapPin[];
   revealSetupHref?: string;
   store?: string | null;
+  showOpenMapLink?: boolean;
 }) {
   const plan = usePlan();
   const showMap = plan.mapsEnabled;
@@ -53,11 +55,7 @@ export function AllTicketsMap({
     );
   }
 
-  const googlePins = ticketPins.length > 0 ? ticketPins : trucks;
-  const googleDir =
-    googlePins.length === 1
-      ? googleMapsPlaceUrl(googlePins[0].lat, googlePins[0].lng)
-      : googleMapsDirectionsUrl(googlePins);
+  const openMapHref = `/map${store && store !== STORE_ALL ? storeQuery(store) : ""}`;
 
   return (
     <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
@@ -84,14 +82,11 @@ export function AllTicketsMap({
           {onSiteCount > 0 ? ` · ${onSiteCount} on site` : ""}{" "}
           on the map
         </p>
-        <a
-          href={googleDir}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm font-medium text-emerald-800 hover:underline"
-        >
-          Open work orders in Google Maps
-        </a>
+        {showOpenMapLink ? (
+          <Link href={openMapHref} className="text-sm font-medium text-emerald-800 hover:underline">
+            Open work order map
+          </Link>
+        ) : null}
       </div>
       {showMap ? (
         <>
@@ -103,7 +98,7 @@ export function AllTicketsMap({
         </>
       ) : (
         <p className="px-4 py-3 text-sm text-stone-600">
-          In-app maps are not on this plan. Use Open work orders in Google Maps for directions.
+          In-app maps are not on this plan. Use Google Maps on a work order for directions.
         </p>
       )}
     </div>

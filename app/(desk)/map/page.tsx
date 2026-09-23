@@ -57,7 +57,11 @@ export default async function MapPage({
       <h2 className="font-display mt-8 text-xl">Open work orders</h2>
       <p className="mt-1 text-sm text-stone-600">Pins for open, assigned, in-progress, and waiting-on-parts work.</p>
       <div className="mt-4">
-        <AllTicketsMap pins={ticketPins(tickets)} store={session.role === ROLES.FARMER ? undefined : selectedStore} />
+        <AllTicketsMap
+          pins={ticketPins(tickets)}
+          store={session.role === ROLES.FARMER ? undefined : selectedStore}
+          showOpenMapLink={false}
+        />
       </div>
 
       <h2 className="font-display mt-10 text-xl">All pivots</h2>

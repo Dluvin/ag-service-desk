@@ -36,7 +36,7 @@ Prairie Tech is a second tenant so you can confirm data does not leak across com
 
 ## Extra boards
 
-- **Dispatch** — kanban of open work orders plus **Repair done**, assign a technician, map of today's stops
+- **Dispatch** — list of work orders with status filters and hide completed, assign a technician, map of today's stops
 - **Startup** — current-year pre-season checklist per pivot; a fail opens a high-priority work order
 - **Parts** — company catalog you can import from QuickBooks; techs pick those items on work orders
 
