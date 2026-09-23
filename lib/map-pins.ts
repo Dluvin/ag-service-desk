@@ -7,7 +7,8 @@ export type MapPin = {
   lng: number;
   subtitle?: string;
   href?: string;
-  kind?: "ticket" | "vehicle" | "place";
+  kind?: "ticket" | "vehicle" | "place" | "person";
+  hrefLabel?: string;
   onSite?: boolean;
   onSiteTicketId?: string;
   onSitePivotId?: string;

@@ -70,6 +70,7 @@ export function Nav({
       ? [
           deskSettings,
           staffMenu,
+          { href: "/online", label: "Who’s signed in" },
           { href: "/stores", label: "Stores" },
           { href: "/company", label: "Logo" },
           { href: "/startup/checklist", label: "Maintenance checklist" },

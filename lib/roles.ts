@@ -67,6 +67,10 @@ export function isAdmin(role: string) {
   return role === ROLES.ADMIN;
 }
 
+export function canViewStaffPresence(role: string) {
+  return role === ROLES.ADMIN;
+}
+
 export function canAssignTickets(role: string) {
   return role === ROLES.ADMIN || role === ROLES.MANAGER;
 }

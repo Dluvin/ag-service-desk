@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { StoreFilter } from "@/components/StoreFilter";
+import { PrintButton } from "@/components/PrintButton";
 import type { StoreOption } from "@/lib/stores";
 
 export function usd(value: number) {
@@ -66,4 +68,46 @@ export function ReportStoreFilter({
 }) {
   if (!show) return null;
   return <StoreFilter stores={stores} selected={selected} pathname={pathname} extra={{ from, to }} />;
+}
+
+export function ReportNav({
+  current,
+  from,
+  to,
+  store,
+}: {
+  current: "tickets" | "pivots" | "customers" | "farms" | "assets";
+  from?: string;
+  to?: string;
+  store?: string;
+}) {
+  const query = new URLSearchParams();
+  if (from) query.set("from", from);
+  if (to) query.set("to", to);
+  if (store && store !== "all") query.set("store", store);
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  const links = [
+    { id: "tickets" as const, href: `/reports${qs}#ticket-reports`, label: "Work order reports" },
+    { id: "pivots" as const, href: `/reports${qs}#pivot-reports`, label: "Pivot reports" },
+    { id: "customers" as const, href: `/reports/customers${qs}`, label: "Customer reports" },
+    { id: "farms" as const, href: `/reports/farms${qs}`, label: "Farm reports" },
+    { id: "assets" as const, href: `/reports/assets${qs}`, label: "Asset reports" },
+  ];
+
+  return (
+    <div className="no-print flex flex-wrap gap-2">
+      {links.map((link) => (
+        <Link
+          key={link.id}
+          href={link.href}
+          className={`rounded-lg border px-4 py-2 text-sm font-semibold ${
+            current === link.id ? "border-emerald-800 bg-emerald-800 text-white" : "border-stone-300 bg-white"
+          }`}
+        >
+          {link.label}
+        </Link>
+      ))}
+      <PrintButton label="Print reports" />
+    </div>
+  );
 }

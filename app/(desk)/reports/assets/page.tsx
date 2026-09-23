@@ -4,9 +4,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 import { parseStoreParam } from "@/lib/stores";
-import { PrintButton } from "@/components/PrintButton";
 import { ReportPrintBrand } from "@/components/PrintCompanyMark";
-import { ReportDateForm, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
+import { ReportDateForm, ReportNav, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
 import { loadAssetReports, toDayParam } from "@/lib/reports";
 
 export default async function AssetReportsPage({
@@ -46,7 +45,7 @@ export default async function AssetReportsPage({
             {report.range.from} through {report.range.to}.
           </p>
         </div>
-        <PrintButton label="Print reports" />
+        <ReportNav current="assets" from={report.range.from} to={report.range.to} store={selectedStore} />
       </div>
 
       <ReportDateForm from={report.range.from} to={report.range.to} store={selectedStore} />

@@ -74,6 +74,15 @@ export default async function StaffPage({
     <div className="grid gap-8 lg:grid-cols-5">
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Staff</h1>
+        {session.role === ROLES.ADMIN ? (
+          <p className="mt-1 text-sm text-stone-600">
+            See who has the desk open on{" "}
+            <Link href="/online" className="font-medium text-emerald-800 hover:underline">
+              Who’s signed in
+            </Link>
+            .
+          </p>
+        ) : null}
         <p className="mt-1 text-sm text-stone-600">
           {session.role === ROLES.ADMIN
             ? "Add and edit company admins, managers, and technicians. Assign a default store so new work orders they open start at that shop."

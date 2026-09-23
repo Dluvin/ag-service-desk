@@ -171,6 +171,23 @@ const faqs = [
     ),
   },
   {
+    id: "whos-signed-in",
+    question: "Can I see who is signed in and where they are?",
+    answer: (
+      <>
+        <p>
+          Company admins can open{" "}
+          <Link href="/online" className="font-semibold text-emerald-800 hover:underline">
+            Settings → Who’s signed in
+          </Link>
+          . It lists shop staff who have the desk open, the screen they are on, and the last
+          location their browser sent if they allowed location. It is not truck GPS. Customer
+          logins are not shown.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "staff-invite",
     question: "How do staff invite emails work?",
     answer: (

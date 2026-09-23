@@ -4,10 +4,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 import { parseStoreParam } from "@/lib/stores";
-import { PrintButton } from "@/components/PrintButton";
 import { ReportPrintBrand } from "@/components/PrintCompanyMark";
-import { StatusBadge, PriorityBadge } from "@/components/Badges";
-import { ReportDateForm, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
+import { ReportDateForm, ReportNav, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
 import { STARTUP_SEASON_YEAR } from "@/lib/startup";
 import { loadReports, toDayParam } from "@/lib/reports";
 
@@ -42,24 +40,7 @@ export default async function ReportsPage({
             Work order and pivot activity from {report.range.from} through {report.range.to}.
           </p>
         </div>
-        <div className="no-print flex flex-wrap gap-2">
-          <a href="#ticket-reports" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-            Work order reports
-          </a>
-          <a href="#pivot-reports" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-            Pivot reports
-          </a>
-          <Link href="/reports/customers" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-            Customer reports
-          </Link>
-          <Link href="/reports/farms" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-            Farm reports
-          </Link>
-          <Link href="/reports/assets" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-            Asset reports
-          </Link>
-          <PrintButton label="Print reports" />
-        </div>
+        <ReportNav current="tickets" from={report.range.from} to={report.range.to} store={selectedStore} />
       </div>
 
       <ReportDateForm from={report.range.from} to={report.range.to} store={selectedStore} />
