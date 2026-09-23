@@ -48,7 +48,7 @@ export function CustomerFarms({
           <p className="mt-2 text-sm text-stone-600">
             A farm is a physical site. Assets on a farm go with that farm if you move it to another
             customer. Assets labeled Unassigned stay with this customer. To assign existing assets,
-            select them in Assets by farm below and use Add to farm.
+            search for them in Add asset to farm below.
           </p>
           {farms.length ? (
             <ul className="mt-3 space-y-3">

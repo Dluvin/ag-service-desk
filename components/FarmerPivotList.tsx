@@ -2,10 +2,9 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ActionForm } from "@/components/ActionForm";
+import { AddAssetToFarmPanel } from "@/components/AddAssetToFarmPanel";
 import { ListSearch } from "@/components/ListSearch";
 import { PivotDocuments, type PivotDocumentItem } from "@/components/PivotDocuments";
-import { assignCustomerAssetsToFarmAction } from "@/lib/actions";
 import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
 
 type FarmerPivot = {
@@ -38,22 +37,6 @@ function farmKey(farmId: string | null) {
   return farmId ?? "unassigned";
 }
 
-function toggleId(ids: Set<string>, id: string) {
-  const next = new Set(ids);
-  if (next.has(id)) next.delete(id);
-  else next.add(id);
-  return next;
-}
-
-function setIds(ids: Set<string>, nextIds: string[], selected: boolean) {
-  const next = new Set(ids);
-  for (const id of nextIds) {
-    if (selected) next.add(id);
-    else next.delete(id);
-  }
-  return next;
-}
-
 export function FarmerPivotList({
   pivots,
   assets,
@@ -68,10 +51,6 @@ export function FarmerPivotList({
   farmerId: string;
 }) {
   const [query, setQuery] = useState("");
-  const [selectedPivots, setSelectedPivots] = useState<Set<string>>(new Set());
-  const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
-  const existingFarms = farms.filter((farm): farm is FarmGroup & { farmId: string } => Boolean(farm.farmId));
-  const [farmMode, setFarmMode] = useState<"existing" | "new">(existingFarms.length ? "existing" : "new");
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
     const pivotMatches = q
@@ -133,31 +112,29 @@ export function FarmerPivotList({
   const searching = Boolean(query.trim());
   const totalAssets = pivots.length + assets.length;
   const matchedAssets = matches.pivots.length + matches.assets.length;
-  const selectedCount = selectedPivots.size + selectedAssets.size;
-  const unassignedPivots = pivots.filter((pivot) => pivot.farmId == null);
-  const unassignedAssets = assets.filter((asset) => asset.farmId == null);
   const showDocuments = canManage || pivots.some((pivot) => pivot.documents.length > 0);
   const returnTo = `/farmers/${farmerId}`;
-
-  function selectAllListed() {
-    setSelectedPivots((current) => setIds(current, matches.pivots.map((pivot) => pivot.id), true));
-    setSelectedAssets((current) => setIds(current, matches.assets.map((asset) => asset.id), true));
-  }
-
-  function selectUnassigned() {
-    setSelectedPivots((current) => setIds(current, unassignedPivots.map((pivot) => pivot.id), true));
-    setSelectedAssets((current) => setIds(current, unassignedAssets.map((asset) => asset.id), true));
-  }
-
-  function clearSelection() {
-    setSelectedPivots(new Set());
-    setSelectedAssets(new Set());
-  }
-
-  function toggleGroup(groupPivots: FarmerPivot[], groupAssets: FarmerAsset[], selected: boolean) {
-    setSelectedPivots((current) => setIds(current, groupPivots.map((pivot) => pivot.id), selected));
-    setSelectedAssets((current) => setIds(current, groupAssets.map((asset) => asset.id), selected));
-  }
+  const assignable = [
+    ...pivots.map((pivot) => ({
+      kind: "pivot" as const,
+      id: pivot.id,
+      name: pivot.name,
+      typeName: "Pivots",
+      farmName: pivot.farmName,
+      farmerId,
+      farmerName: "",
+      serialNumber: pivot.serialNumber,
+    })),
+    ...assets.map((asset) => ({
+      kind: "asset" as const,
+      id: asset.id,
+      name: asset.name,
+      typeName: asset.typeName,
+      farmName: asset.farmName,
+      farmerId,
+      farmerName: "",
+    })),
+  ];
 
   return (
     <>
@@ -174,111 +151,14 @@ export function FarmerPivotList({
         label="Search pivots"
         placeholder="Pivot, serial, location, or asset"
       />
-      {canManage && totalAssets > 0 ? (
-        <ActionForm action={assignCustomerAssetsToFarmAction} className="mt-4 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-          <input type="hidden" name="farmerId" value={farmerId} />
-          {[...selectedPivots].map((id) => (
-            <input key={`pivot-${id}`} type="hidden" name="pivotId" value={id} />
-          ))}
-          {[...selectedAssets].map((id) => (
-            <input key={`asset-${id}`} type="hidden" name="assetId" value={id} />
-          ))}
-          <p className="text-sm font-semibold text-stone-800">Add to farm</p>
-          <p className="text-sm text-stone-600">
-            Check assets below — Unassigned or already on a farm — then assign them to an existing farm or create a new
-            farm in this step.
-          </p>
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="font-medium text-stone-800">
-              {selectedCount} selected
-            </span>
-            {matchedAssets > 0 ? (
-              <button
-                type="button"
-                onClick={selectAllListed}
-                className="font-semibold text-emerald-800 hover:underline"
-              >
-                Select all
-              </button>
-            ) : null}
-            {unassignedPivots.length + unassignedAssets.length > 0 ? (
-              <button
-                type="button"
-                onClick={selectUnassigned}
-                className="font-semibold text-emerald-800 hover:underline"
-              >
-                Select unassigned
-              </button>
-            ) : null}
-            {selectedCount > 0 ? (
-              <button type="button" onClick={clearSelection} className="font-semibold text-stone-600 hover:underline">
-                Clear
-              </button>
-            ) : null}
-          </div>
-          <fieldset className="flex flex-wrap gap-4 text-sm">
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="farmMode"
-                value="existing"
-                checked={farmMode === "existing"}
-                onChange={() => setFarmMode("existing")}
-                disabled={existingFarms.length === 0}
-              />
-              Existing farm
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="farmMode"
-                value="new"
-                checked={farmMode === "new"}
-                onChange={() => setFarmMode("new")}
-              />
-              New farm
-            </label>
-          </fieldset>
-          {farmMode === "existing" ? (
-            <label className="block text-sm font-medium">
-              Farm
-              <select
-                name="farmId"
-                required
-                disabled={existingFarms.length === 0}
-                className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 disabled:bg-stone-50"
-              >
-                <option value="">{existingFarms.length ? "Select a farm" : "No farms yet — create one"}</option>
-                {existingFarms.map((farm) => (
-                  <option key={farm.farmId} value={farm.farmId}>
-                    {farm.farmName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <>
-              <label className="block text-sm font-medium">
-                Farm name
-                <input name="name" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-              </label>
-              <label className="block text-sm font-medium">
-                Location
-                <input
-                  name="location"
-                  placeholder="Optional address or field note"
-                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
-                />
-              </label>
-            </>
-          )}
-          <button
-            disabled={selectedCount === 0}
-            className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-stone-300"
-          >
-            Assign to farm
-          </button>
-        </ActionForm>
+      {canManage ? (
+        <AddAssetToFarmPanel
+          farmerId={farmerId}
+          assets={assignable}
+          farms={farms
+            .filter((farm): farm is FarmGroup & { farmId: string } => Boolean(farm.farmId))
+            .map((farm) => ({ farmId: farm.farmId, farmName: farm.farmName, farmerId }))}
+        />
       ) : null}
       {searching && matchedAssets === 0 ? (
         <p className="mt-4 text-sm text-stone-600">No pivots match that search.</p>
@@ -290,10 +170,6 @@ export function FarmerPivotList({
             const groupPivots = matches.pivots.filter((pivot) => farmKey(pivot.farmId) === farmKey(group.farmId));
             const groupAssets = matches.assets.filter((asset) => farmKey(asset.farmId) === farmKey(group.farmId));
             const empty = groupPivots.length === 0 && groupAssets.length === 0;
-            const groupSelected =
-              groupPivots.every((pivot) => selectedPivots.has(pivot.id)) &&
-              groupAssets.every((asset) => selectedAssets.has(asset.id)) &&
-              !empty;
             if (empty && searching) return null;
             return (
               <section key={farmKey(group.farmId)} className="rounded-xl border border-stone-200 bg-white p-4">
@@ -304,16 +180,6 @@ export function FarmerPivotList({
                   <p className="mt-1 text-xs text-stone-500">
                     Not assigned to a farm. These stay with this customer if a farm is moved.
                   </p>
-                ) : null}
-                {canManage && !empty ? (
-                  <label className="mt-2 flex items-center gap-2 text-sm text-stone-600">
-                    <input
-                      type="checkbox"
-                      checked={groupSelected}
-                      onChange={() => toggleGroup(groupPivots, groupAssets, !groupSelected)}
-                    />
-                    {group.farmId == null ? "Select unassigned assets" : "Select assets on this farm"}
-                  </label>
                 ) : null}
                 {empty ? (
                   <p className="mt-3 text-sm text-stone-600">No assets on this farm yet.</p>
@@ -333,28 +199,15 @@ export function FarmerPivotList({
                         >
                           {groupPivots.map((pivot) => (
                             <li key={pivot.id} className="break-inside-avoid py-0.5">
-                              <span className="flex items-start gap-2">
-                                {canManage ? (
-                                  <input
-                                    type="checkbox"
-                                    className="mt-1"
-                                    checked={selectedPivots.has(pivot.id)}
-                                    onChange={() => setSelectedPivots((current) => toggleId(current, pivot.id))}
-                                    aria-label={`Select ${pivot.name}`}
-                                  />
-                                ) : null}
-                                <span>
-                                  <Link href={`/pivots/${pivot.id}`} className="text-emerald-800 hover:underline">
-                                    {pivot.name}
-                                  </Link>
-                                  {pivot.documents.length > 0 ? (
-                                    <span className="text-xs text-stone-500">
-                                      {" "}
-                                      · {pivot.documents.length} file{pivot.documents.length === 1 ? "" : "s"}
-                                    </span>
-                                  ) : null}
+                              <Link href={`/pivots/${pivot.id}`} className="text-emerald-800 hover:underline">
+                                {pivot.name}
+                              </Link>
+                              {pivot.documents.length > 0 ? (
+                                <span className="text-xs text-stone-500">
+                                  {" "}
+                                  · {pivot.documents.length} file{pivot.documents.length === 1 ? "" : "s"}
                                 </span>
-                              </span>
+                              ) : null}
                             </li>
                           ))}
                         </ul>
@@ -365,22 +218,11 @@ export function FarmerPivotList({
                         <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Other assets</p>
                         <ul className="mt-1 space-y-1">
                           {groupAssets.map((asset) => (
-                            <li key={asset.id} className="flex items-start gap-2">
-                              {canManage ? (
-                                <input
-                                  type="checkbox"
-                                  className="mt-1"
-                                  checked={selectedAssets.has(asset.id)}
-                                  onChange={() => setSelectedAssets((current) => toggleId(current, asset.id))}
-                                  aria-label={`Select ${asset.name}`}
-                                />
-                              ) : null}
-                              <span>
-                                <Link href={asset.href} className="text-emerald-800 hover:underline">
-                                  {asset.name}
-                                </Link>
-                                <span className="text-sm text-stone-600"> · {asset.typeName}</span>
-                              </span>
+                            <li key={asset.id}>
+                              <Link href={asset.href} className="text-emerald-800 hover:underline">
+                                {asset.name}
+                              </Link>
+                              <span className="text-sm text-stone-600"> · {asset.typeName}</span>
                             </li>
                           ))}
                         </ul>
