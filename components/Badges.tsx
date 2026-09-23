@@ -1,20 +1,20 @@
 import { STATUS_LABELS, type TicketStatus } from "@/lib/roles";
 
 const TONES: Record<TicketStatus, string> = {
-  OPEN: "bg-sky-100 text-sky-900",
-  ASSIGNED: "bg-indigo-100 text-indigo-900",
-  IN_PROGRESS: "bg-amber-100 text-amber-950",
-  WAITING_PARTS: "bg-orange-100 text-orange-950",
-  REPAIR_DONE: "bg-lime-100 text-lime-950",
-  COMPLETED: "bg-emerald-100 text-emerald-900",
-  CANCELLED: "bg-stone-200 text-stone-700",
+  OPEN: "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-100",
+  ASSIGNED: "bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-100",
+  IN_PROGRESS: "bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100",
+  WAITING_PARTS: "bg-orange-100 text-orange-950 dark:bg-orange-950 dark:text-orange-100",
+  REPAIR_DONE: "bg-lime-100 text-lime-950 dark:bg-lime-950 dark:text-lime-100",
+  COMPLETED: "bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100",
+  CANCELLED: "bg-stone-200 text-stone-700 dark:bg-stone-700 dark:text-stone-200",
 };
 
 export function StatusBadge({ status }: { status: string }) {
   const key = status as TicketStatus;
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONES[key] ?? "bg-stone-100 text-stone-700"}`}
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONES[key] ?? "bg-stone-100 text-stone-700 dark:bg-stone-700 dark:text-stone-200"}`}
     >
       {STATUS_LABELS[key] ?? status}
     </span>
@@ -24,9 +24,9 @@ export function StatusBadge({ status }: { status: string }) {
 export function PriorityBadge({ priority }: { priority: string }) {
   const tone =
     priority === "URGENT"
-      ? "text-red-800"
+      ? "text-red-800 dark:text-red-300"
       : priority === "HIGH"
-        ? "text-orange-800"
+        ? "text-orange-800 dark:text-orange-300"
         : "text-stone-600";
   return <span className={`text-xs font-semibold uppercase tracking-wide ${tone}`}>{priority}</span>;
 }

@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useState, type FocusEvent, type ReactNode } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export type DealerBrand = {
   organizationId: string;
@@ -32,18 +33,25 @@ export function AuthBrandProvider({
 export function AuthScreenLogos() {
   const { dealer } = useContext(DealerBrandContext);
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-4">
-      <BrandLogo className="block" imageClassName="h-8 w-auto max-w-36 object-contain object-left" />
-      {dealer?.hasLogo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={companyLogoSrc(dealer.organizationId)}
-          alt={dealer.name}
-          className="h-12 max-w-40 object-contain"
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center gap-4">
+        <BrandLogo
+          themeAware
+          className="block"
+          imageClassName="h-8 w-auto max-w-36 object-contain object-left"
         />
-      ) : dealer ? (
-        <p className="font-display text-xl text-stone-800">{dealer.name}</p>
-      ) : null}
+        {dealer?.hasLogo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={companyLogoSrc(dealer.organizationId)}
+            alt={dealer.name}
+            className="h-12 max-w-40 object-contain"
+          />
+        ) : dealer ? (
+          <p className="font-display text-xl text-stone-800">{dealer.name}</p>
+        ) : null}
+      </div>
+      <ThemeToggle />
     </div>
   );
 }

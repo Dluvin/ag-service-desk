@@ -5,6 +5,7 @@ import { homePath } from "@/lib/home";
 import { loadUserDispatchView } from "@/lib/dispatch-view";
 import { saveDispatchViewAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default async function DeskSettingsPage() {
   const session = await getSession();
@@ -20,6 +21,14 @@ export default async function DeskSettingsPage() {
         Choose how you see the dispatch board. This is your preference — other managers can pick a
         different view.
       </p>
+      <div className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+        <p className="text-sm font-medium">Appearance</p>
+        <p className="text-sm text-stone-600">
+          Dark mode is saved on this device. With no saved choice, the desk follows your system
+          theme.
+        </p>
+        <ThemeToggle />
+      </div>
       <ActionForm action={saveDispatchViewAction} className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-4">
         <p className="text-sm font-medium">Dispatch view</p>
         <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-stone-200 p-3 has-[:checked]:border-emerald-800 has-[:checked]:bg-emerald-50">

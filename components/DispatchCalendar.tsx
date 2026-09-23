@@ -88,7 +88,7 @@ export function DispatchCalendar({
                     <li key={ticket.id}>
                       <Link
                         href={`/tickets/${ticket.id}`}
-                        className="block rounded bg-emerald-50 px-1 py-0.5 text-[11px] leading-snug text-emerald-950 hover:bg-emerald-100"
+                        className="block rounded bg-emerald-50 px-1 py-0.5 text-[11px] leading-snug text-emerald-950 hover:bg-emerald-100 dark:hover:bg-emerald-900"
                       >
                         <span className="font-semibold">#{ticket.number}</span> {formatSchedule(ticket.scheduledAt)?.split("·")[1]?.trim() ?? ""}
                         <span className="block truncate">{ticket.farmer.name}</span>

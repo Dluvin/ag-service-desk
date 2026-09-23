@@ -6,6 +6,7 @@ import { isShopStaff, ROLES } from "@/lib/roles";
 import { homePath } from "@/lib/home";
 import { NavDropdown } from "@/components/NavDropdown";
 import { NavLinkMenu } from "@/components/NavLinkMenu";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { assetTypeHref } from "@/lib/assets";
 
 export function Nav({
@@ -110,6 +111,7 @@ export function Nav({
           {settingsLinks.length ? <NavDropdown label="Settings" links={settingsLinks} /> : null}
         </nav>
         <div className="flex items-center gap-3 text-sm">
+          <ThemeToggle variant="nav" />
           <div className="text-right">
             <p className="font-medium">{session.name}</p>
             <p className="text-xs text-emerald-200">{roleLabel(session.role)}</p>
