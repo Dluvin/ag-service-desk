@@ -15,7 +15,13 @@ const serif = Source_Serif_4({
 export const metadata: Metadata = {
   title: "AG Desk Pro",
   description: "Irrigation-specific work orders for dealers, technicians, and customers",
-  icons: { icon: "/brand-logo.png", apple: "/brand-logo.png" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

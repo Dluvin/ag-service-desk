@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import type { Role } from "./roles";
+import { renameDemoIrrigationCompany } from "./rename-demo-irrigation";
 
 const COOKIE = "ag_session";
 
@@ -68,6 +69,7 @@ export async function verifyLogin(
   password: string,
 ): Promise<SessionUser | { paused: true } | { pending: true } | { rejected: true } | null> {
   const normalized = email.trim().toLowerCase();
+  await renameDemoIrrigationCompany();
   const matches = await prisma.user.findMany({
     where: { email: normalized },
     include: { organization: true },

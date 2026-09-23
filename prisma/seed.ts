@@ -5,6 +5,13 @@ const prisma = new PrismaClient();
 const password = "demo1234";
 
 async function main() {
+  await prisma.organization.updateMany({
+    where: {
+      OR: [{ slug: "demo-irrigation" }, { name: "Demo Irrigation" }],
+    },
+    data: { name: "American Irrigation" },
+  });
+
   const passwordHash = await bcrypt.hash(password, 10);
 
   const heartland = await prisma.organization.create({

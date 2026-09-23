@@ -15,12 +15,15 @@ import {
 } from "@/lib/platform-actions";
 import { PLAN } from "@/lib/plan";
 import { PlatformPlanForm } from "@/components/PlatformPlanForm";
+import { renameDemoIrrigationCompany } from "@/lib/rename-demo-irrigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function PlatformHomePage() {
   const session = await getPlatformSession();
   if (!session) redirect("/platform/login");
+
+  await renameDemoIrrigationCompany();
 
   const tenants = await prisma.organization.findMany({
     orderBy: { createdAt: "desc" },
