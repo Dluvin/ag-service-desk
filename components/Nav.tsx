@@ -109,6 +109,14 @@ export function Nav({
             <NavLinkMenu href="/farmers" label="Customers" links={customerLinks} />
           ) : null}
           {settingsLinks.length ? <NavDropdown label="Settings" links={settingsLinks} /> : null}
+          <NavLinkMenu
+            href="/help"
+            label="Support"
+            links={[
+              { href: "/help", label: "Support" },
+              { href: "/help/faq", label: "FAQ" },
+            ]}
+          />
         </nav>
         <div className="flex items-center gap-3 text-sm">
           <ThemeToggle variant="nav" />
