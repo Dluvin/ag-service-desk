@@ -44,7 +44,7 @@ export default async function DeskSupportPage({
             name="name"
             type="text"
             required
-            defaultValue={session.name}
+            placeholder="Your name"
             autoComplete="name"
             className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
           />
@@ -55,15 +55,11 @@ export default async function DeskSupportPage({
             name="email"
             type="email"
             required
-            defaultValue={session.email}
+            placeholder="Your email"
             autoComplete="email"
             className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
           />
         </label>
-        <p className="text-sm">
-          <span className="font-medium">Company</span>
-          <span className="mt-1 block text-stone-600">{session.organizationName}</span>
-        </p>
         <label className="block text-sm font-medium">
           Feature request or message
           <textarea
