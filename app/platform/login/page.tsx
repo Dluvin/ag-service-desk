@@ -1,6 +1,8 @@
 import { platformLoginAction } from "@/lib/platform-actions";
 import { ActionForm } from "@/components/ActionForm";
 
+export const dynamic = "force-dynamic";
+
 export default function PlatformLoginPage() {
   const configured = Boolean(process.env.PLATFORM_ADMIN_EMAIL && process.env.PLATFORM_ADMIN_PASSWORD);
 

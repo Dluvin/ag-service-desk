@@ -17,6 +17,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Server Actions POST to the page URL. A redirect here makes Next.js
+  // report "Server Action was not found" instead of running the action.
+  if (request.method === "POST" && request.headers.get("next-action")) {
+    return NextResponse.next();
+  }
+
   const secret = process.env.AUTH_SECRET;
   const tenantToken = request.cookies.get("ag_session")?.value;
   const platformToken = request.cookies.get("ag_platform")?.value;

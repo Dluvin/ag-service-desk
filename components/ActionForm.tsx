@@ -15,6 +15,18 @@ function isNextRedirect(error: unknown) {
   );
 }
 
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isStaleServerAction(error: unknown) {
+  const message = errorMessage(error);
+  return (
+    message.includes("was not found on the server") ||
+    message.includes("Failed to find Server Action")
+  );
+}
+
 export function ActionForm({
   action,
   children,
@@ -33,6 +45,9 @@ export function ActionForm({
         return result ?? null;
       } catch (error) {
         if (isNextRedirect(error)) throw error;
+        if (isStaleServerAction(error)) {
+          return { error: "The app was just updated. Refresh the page and submit again." };
+        }
         return { error: error instanceof Error ? error.message : "Something went wrong." };
       }
     },

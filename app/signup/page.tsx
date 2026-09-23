@@ -4,6 +4,8 @@ import { ActionForm } from "@/components/ActionForm";
 import { BrandLogo } from "@/components/BrandLogo";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default function SignupPage() {
   return (
     <div className="flex min-h-full items-center justify-center bg-stone-100 px-4 py-16">

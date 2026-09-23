@@ -9,9 +9,10 @@ COPY . .
 
 # Render may inject DATABASE_URL (Postgres or a path without file:). This app uses SQLite.
 ENV DATABASE_URL="file:/data/prod.db"
+ARG RENDER_GIT_COMMIT
 RUN DATABASE_URL="file:./build.db" npx prisma generate \
   && DATABASE_URL="file:./build.db" npx prisma db push \
-  && DATABASE_URL="file:./build.db" npm run build
+  && DATABASE_URL="file:./build.db" NEXT_DEPLOYMENT_ID="${RENDER_GIT_COMMIT:-$(date -u +%Y%m%d%H%M%S)}" npm run build
 
 RUN mkdir -p /data /data/uploads
 
