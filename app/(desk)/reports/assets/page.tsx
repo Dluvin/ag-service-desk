@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 import { parseStoreParam } from "@/lib/stores";
 import { PrintButton } from "@/components/PrintButton";
+import { ReportPrintBrand } from "@/components/PrintCompanyMark";
 import { ReportDateForm, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
 import { loadAssetReports, toDayParam } from "@/lib/reports";
 
@@ -31,6 +32,7 @@ export default async function AssetReportsPage({
 
   return (
     <div>
+      <ReportPrintBrand />
       <p className="text-sm text-stone-500">
         <Link href="/reports" className="text-emerald-800 hover:underline">
           Reports

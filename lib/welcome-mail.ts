@@ -1,8 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
-import { appBaseUrl, brandLogoEmailHtml } from "./app-url";
+import { appBaseUrl } from "./app-url";
 import { mailIsConfigured, sendEmail } from "./mail";
+import { tenantBrandEmailHtml } from "./org-brand";
 
 export { mailIsConfigured };
 
@@ -90,6 +91,12 @@ async function sendPasswordLinkEmail(input: {
     console.error("Password reset token failed", error);
     return "failed";
   }
+  const user = await prisma.user.findUnique({
+    where: { id: input.userId },
+    select: { organizationId: true, organization: { select: { name: true } } },
+  });
+  const organizationId = user?.organizationId ?? "";
+  const organizationName = user?.organization.name || input.organizationName;
   const base = appBaseUrl();
   const setUrl = base ? `${base}/welcome?token=${token}` : "";
   const loginUrl = base ? `${base}/login` : "";
@@ -110,7 +117,7 @@ async function sendPasswordLinkEmail(input: {
     .join("\n");
 
   const html = `
-    ${brandLogoEmailHtml()}
+    ${await tenantBrandEmailHtml(organizationId, organizationName)}
     <p>Hi ${escapeHtml(first)},</p>
     <p>${escapeHtml(input.intro)}</p>
     <p>${escapeHtml(input.passwordLine)}</p>

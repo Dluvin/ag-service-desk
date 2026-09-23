@@ -1,16 +1,37 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { readCompanyLogoFile } from "@/lib/company-logo";
+import { resolveOrgBrandByEmail, resolveOrgBrandById } from "@/lib/org-brand";
+import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+async function resolveLogoOrg(request: Request) {
+  const url = new URL(request.url);
+  const orgId = url.searchParams.get("org")?.trim();
+  const email = url.searchParams.get("email")?.trim() ?? "";
+
+  if (orgId) {
+    const brand = await resolveOrgBrandById(orgId);
+    if (brand?.hasLogo) return brand.organizationId;
+  }
+
+  if (email) {
+    const brand = await resolveOrgBrandByEmail(email);
+    if (brand?.hasLogo) return brand.organizationId;
+  }
+
   const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+  if (session) return session.organizationId;
+  return null;
+}
+
+export async function GET(request: Request) {
+  const organizationId = await resolveLogoOrg(request);
+  if (!organizationId) {
+    return NextResponse.json({ error: "No logo." }, { status: 404 });
   }
 
   const org = await prisma.organization.findUnique({
-    where: { id: session.organizationId },
+    where: { id: organizationId },
     select: { logoMimeType: true, logoFileName: true },
   });
   if (!org?.logoMimeType) {
@@ -18,7 +39,7 @@ export async function GET() {
   }
 
   try {
-    const bytes = await readCompanyLogoFile(session.organizationId);
+    const bytes = await readCompanyLogoFile(organizationId);
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
         "Content-Type": org.logoMimeType,

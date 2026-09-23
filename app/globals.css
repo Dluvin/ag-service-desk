@@ -87,6 +87,10 @@ h2,
   display: revert;
 }
 
+.print-only {
+  display: none;
+}
+
 @media print {
   body {
     background: white;
@@ -94,6 +98,10 @@ h2,
 
   .no-print {
     display: none !important;
+  }
+
+  .print-only {
+    display: flex;
   }
 
   a {

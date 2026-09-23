@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 import { parseStoreParam } from "@/lib/stores";
 import { PrintButton } from "@/components/PrintButton";
+import { ReportPrintBrand } from "@/components/PrintCompanyMark";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
 import { ReportDateForm, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
 import { STARTUP_SEASON_YEAR } from "@/lib/startup";
@@ -33,6 +34,7 @@ export default async function ReportsPage({
 
   return (
     <div>
+      <ReportPrintBrand />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl">Reports</h1>

@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
+import { rememberLastOrg } from "./org-brand";
 import { prisma } from "./prisma";
 import type { Role } from "./roles";
 import { renameDemoIrrigationCompany } from "./rename-demo-irrigation";
@@ -39,6 +40,7 @@ export async function createSession(user: SessionUser) {
     path: "/",
     maxAge: 60 * 60 * 24 * 14,
   });
+  await rememberLastOrg(user.organizationId);
 }
 
 export async function destroySession() {

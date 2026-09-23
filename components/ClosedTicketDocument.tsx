@@ -77,10 +77,14 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
         <div className="flex items-start gap-3">
           {ticket.organization.logoMimeType ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/api/company-logo" alt="" className="h-12 max-w-36 object-contain" />
+            <img src="/api/company-logo" alt={ticket.organization.name} className="h-12 max-w-36 object-contain" />
           ) : null}
           <div>
-            <p className="font-display text-2xl">{ticket.organization.name}</p>
+            {ticket.organization.logoMimeType ? (
+              <p className="text-sm font-medium text-stone-700">{ticket.organization.name}</p>
+            ) : (
+              <p className="font-display text-2xl">{ticket.organization.name}</p>
+            )}
             <p className="text-sm text-stone-600">{documentKindLabel(ticket.status)}</p>
           </div>
         </div>

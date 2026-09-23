@@ -6,7 +6,11 @@ const PUBLIC = new Set(["/", "/login", "/signup", "/signup/thanks", "/welcome", 
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith("/api/stripe/webhook")) {
+  if (
+    pathname.startsWith("/api/stripe/webhook") ||
+    pathname.startsWith("/api/login-brand") ||
+    pathname.startsWith("/api/company-logo")
+  ) {
     return NextResponse.next();
   }
   if (
