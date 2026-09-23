@@ -9,6 +9,7 @@ import { deleteFarmAction, updateFarmAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { AddAssetToFarmPanel } from "@/components/AddAssetToFarmPanel";
+import { FarmCustomerField } from "@/components/FarmTypeahead";
 
 export default async function FarmDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -101,19 +102,7 @@ export default async function FarmDetailPage({ params }: { params: Promise<{ id:
             Location
             <input name="location" defaultValue={farm.location ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
           </label>
-          <label className="block text-sm font-medium">
-            Customer
-            <select name="farmerId" defaultValue={farm.farmerId} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <span className="mt-1 block text-xs font-normal text-stone-500">
-              Changing the customer moves this farm and assets on it.
-            </span>
-          </label>
+          <FarmCustomerField customers={customers} defaultFarmerId={farm.farmerId} />
           <label className="block text-sm font-medium">
             Primary contact
             <select

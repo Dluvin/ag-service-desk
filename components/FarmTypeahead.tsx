@@ -102,3 +102,26 @@ export function FarmTypeahead({
     </label>
   );
 }
+
+export function FarmCustomerField({
+  customers,
+  defaultFarmerId,
+}: {
+  customers: { id: string; name: string }[];
+  defaultFarmerId: string;
+}) {
+  const [farmerId, setFarmerId] = useState(defaultFarmerId);
+  return (
+    <div>
+      <FarmTypeahead
+        farms={customers}
+        farmerId={farmerId}
+        required
+        onSelect={(customer) => setFarmerId(customer?.id ?? "")}
+      />
+      <span className="mt-1 block text-xs font-normal text-stone-500">
+        Changing the customer moves this farm and assets on it.
+      </span>
+    </div>
+  );
+}
