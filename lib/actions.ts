@@ -7,6 +7,7 @@ import { createSession, destroySession, getSession, requireSession, verifyLogin 
 import {
   PRIORITIES,
   ROLES,
+  SHOP_STAFF_ROLES,
   TICKET_STATUSES,
   STATUS_LABELS,
   isAdmin,
@@ -776,7 +777,7 @@ export async function importStaffAction(formData: FormData) {
 
   const rows = parseStaffImport(await file.text());
   if (rows.length === 0) {
-    return { error: "No staff found. Use columns Name, Email, Role (Admin, Manager, or Technician)." };
+    return { error: "No staff found. Use columns Name, Email, Role (Admin, Manager, Office/Clerical, or Technician)." };
   }
 
   let created = 0;
@@ -790,7 +791,7 @@ export async function importStaffAction(formData: FormData) {
   let staffCount = await prisma.user.count({
     where: {
       organizationId: session.organizationId,
-      role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN] },
+      role: { in: [...SHOP_STAFF_ROLES] },
     },
   });
   const userSlotsLeft = planLoaded ? remainingUserSlots(planLoaded.org, staffCount) : null;
@@ -1570,13 +1571,24 @@ export async function updateTicketAction(formData: FormData) {
     userId: session.userId,
   });
   if (saved.error) return saved;
-  await notifyTicketSms({
-    organizationId: session.organizationId,
-    ticketId,
-    kind: nextTech && nextTech !== previousTech ? "assigned" : "updated",
-    actorUserId: session.userId,
-    note,
-  });
+  if (nextTech && nextTech !== previousTech) {
+    await notifyTicketSms({
+      organizationId: session.organizationId,
+      ticketId,
+      kind: "assigned",
+      actorUserId: session.userId,
+      note,
+    });
+  }
+  if (status !== previousStatus) {
+    await notifyTicketSms({
+      organizationId: session.organizationId,
+      ticketId,
+      kind: "updated",
+      actorUserId: session.userId,
+      note,
+    });
+  }
   if (status === "REPAIR_DONE" && previousStatus !== "REPAIR_DONE") {
     await notifyFarmerRepairDone({
       organizationId: session.organizationId,
@@ -1626,13 +1638,24 @@ export async function assignTicketAction(formData: FormData) {
       status: nextStatus,
     },
   });
-  await notifyTicketSms({
-    organizationId: session.organizationId,
-    ticketId,
-    kind: nextTech && nextTech !== previousTech ? "assigned" : "updated",
-    actorUserId: session.userId,
-    note: "Updated from the dispatch board.",
-  });
+  if (nextTech && nextTech !== previousTech) {
+    await notifyTicketSms({
+      organizationId: session.organizationId,
+      ticketId,
+      kind: "assigned",
+      actorUserId: session.userId,
+      note: "Updated from the dispatch board.",
+    });
+  }
+  if (nextStatus !== previousStatus) {
+    await notifyTicketSms({
+      organizationId: session.organizationId,
+      ticketId,
+      kind: "updated",
+      actorUserId: session.userId,
+      note: "Updated from the dispatch board.",
+    });
+  }
   if (nextStatus === "REPAIR_DONE" && previousStatus !== "REPAIR_DONE") {
     await notifyFarmerRepairDone({
       organizationId: session.organizationId,
@@ -1698,13 +1721,6 @@ export async function addTicketPartAction(formData: FormData) {
       userId: session.userId,
       message: `Parts logged: ${quantity} × ${name}${sku ? ` (${sku})` : ""}.`,
     },
-  });
-  await notifyTicketSms({
-    organizationId: session.organizationId,
-    ticketId,
-    kind: "updated",
-    actorUserId: session.userId,
-    note: `Parts logged: ${quantity} × ${name}.`,
   });
   redirect(`/tickets/${ticketId}`);
 }
@@ -1874,13 +1890,6 @@ export async function addTicketLaborAction(formData: FormData) {
       message: `Labor logged: ${hours} hr × ${name}${sku ? ` (${sku})` : ""}.`,
     },
   });
-  await notifyTicketSms({
-    organizationId: session.organizationId,
-    ticketId,
-    kind: "updated",
-    actorUserId: session.userId,
-    note: `Labor logged: ${hours} hr × ${name}.`,
-  });
   redirect(`/tickets/${ticketId}`);
 }
 
@@ -1940,13 +1949,6 @@ export async function addTicketEquipmentAction(formData: FormData) {
       userId: session.userId,
       message: `Equipment used: ${hours} hr × ${name}${sku ? ` (${sku})` : ""}.`,
     },
-  });
-  await notifyTicketSms({
-    organizationId: session.organizationId,
-    ticketId,
-    kind: "updated",
-    actorUserId: session.userId,
-    note: `Equipment used: ${hours} hr × ${name}.`,
   });
   redirect(`/tickets/${ticketId}`);
 }

@@ -95,6 +95,17 @@ async function main() {
       storeId: york.id,
     },
   });
+  await prisma.user.create({
+    data: {
+      organizationId: heartland.id,
+      name: "Pat Office",
+      email: "office@heartland.ag",
+      role: "CLERICAL",
+      passwordHash,
+      phone: "402-555-0175",
+      storeId: york.id,
+    },
+  });
   const mike = await prisma.user.create({
     data: {
       organizationId: heartland.id,

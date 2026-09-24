@@ -1,10 +1,10 @@
 import { normalizeHeader, parseCsv } from "./csv";
-import { ROLES, type Role } from "./roles";
+import { ROLES, SHOP_STAFF_ROLES, type Role } from "./roles";
 
 export type ImportedStaff = {
   name: string;
   email: string;
-  role: typeof ROLES.ADMIN | typeof ROLES.MANAGER | typeof ROLES.TECHNICIAN;
+  role: (typeof SHOP_STAFF_ROLES)[number];
   phone: string | null;
   password: string | null;
   revealVehicleNumber: string | null;
@@ -54,6 +54,15 @@ export function parseStaffRole(value: string | undefined) {
     return ROLES.TECHNICIAN;
   }
   if (v === "manager" || v === "mgr" || v === "office manager") return ROLES.MANAGER;
+  if (
+    v === "clerical" ||
+    v === "office" ||
+    v === "office/clerical" ||
+    v === "office clerical" ||
+    v === "clerk"
+  ) {
+    return ROLES.CLERICAL;
+  }
   if (v === "admin" || v === "administrator" || v === "company admin" || v === "owner") {
     return ROLES.ADMIN;
   }
@@ -97,5 +106,5 @@ export function parseTechnicianImport(text: string) {
 }
 
 export function isShopStaffRole(role: string): role is Role {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.TECHNICIAN;
+  return SHOP_STAFF_ROLES.includes(role as Role);
 }

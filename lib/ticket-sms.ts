@@ -35,6 +35,34 @@ function farmerPhones(farmer: { phone: string | null; contacts: { phone: string 
   return [...recipients.keys()];
 }
 
+async function managerPhones(
+  organizationId: string,
+  storeId: string | null,
+  actorUserId?: string | null,
+) {
+  const recipients = new Map<string, string>();
+  const select = { id: true, phone: true };
+
+  let managers = storeId
+    ? await prisma.user.findMany({
+        where: { organizationId, role: ROLES.MANAGER, storeId },
+        select,
+      })
+    : [];
+  if (managers.length === 0) {
+    managers = await prisma.user.findMany({
+      where: { organizationId, role: ROLES.MANAGER },
+      select,
+    });
+  }
+
+  for (const manager of managers) {
+    if (actorUserId && manager.id === actorUserId) continue;
+    addRecipient(recipients, manager.phone);
+  }
+  return recipients;
+}
+
 export async function notifyTicketSms(input: {
   organizationId: string;
   ticketId: string;
@@ -48,7 +76,7 @@ export async function notifyTicketSms(input: {
   const ticket = await prisma.ticket.findFirst({
     where: { id: input.ticketId, organizationId: input.organizationId },
     include: {
-      farmer: true,
+      farmer: { select: { name: true, storeId: true } },
       pivot: true,
       technician: true,
     },
@@ -66,15 +94,15 @@ export async function notifyTicketSms(input: {
   );
 
   const recipients = new Map<string, string>();
-  addRecipient(recipients, ticket.technician?.phone);
-
-  if (input.kind === "opened" && !ticket.technicianId) {
-    const techs = await prisma.user.findMany({
-      where: { organizationId: input.organizationId, role: ROLES.TECHNICIAN },
-      select: { phone: true },
-    });
-    for (const tech of techs) addRecipient(recipients, tech.phone);
+  if (input.kind === "assigned") {
+    addRecipient(recipients, ticket.technician?.phone);
+  } else {
+    const storeId = ticket.storeId ?? ticket.farmer.storeId;
+    const managers = await managerPhones(input.organizationId, storeId, input.actorUserId);
+    for (const [phone, value] of managers) recipients.set(phone, value);
   }
+
+  if (recipients.size === 0) return;
 
   const config = {
     apiKey: org.birdApiKey,

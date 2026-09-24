@@ -50,7 +50,7 @@ export default async function ManagersPage({
       <div className="lg:col-span-3">
         <h1 className="font-display text-3xl">Managers</h1>
         <p className="mt-1 text-sm text-stone-600">
-          Managers can assign and edit work orders, add customers, and edit managers and technicians. Only
+          Managers can assign and edit work orders, add customers, and edit managers, office/clerical, and technicians. Only
           admins can edit other admins, delete records, or import pivots and staff.
         </p>
         <WelcomeMailNotice status={query.welcome} />

@@ -43,7 +43,8 @@ const faqs = [
           Status moves from Unassigned to Assigned, In progress, Waiting on parts, Repair done, then
           Completed. Customers who log in can request service and follow their own work orders.
           Customers are texted and emailed when a work order is moved to Repair done — not on every
-          status change.
+          status change. Managers get a text when a customer opens a work order and when status
+          changes. Technicians get a text only when the job is assigned to them.
         </p>
       </>
     ),
@@ -194,7 +195,7 @@ const faqs = [
     answer: (
       <>
         <p>
-          Admins and managers add people on{" "}
+          Admins and managers add company admins, managers, office/clerical, and technicians on{" "}
           <Link href="/staff" className="font-semibold text-emerald-800 hover:underline">
             Settings → Staff
           </Link>

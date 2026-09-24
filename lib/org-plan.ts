@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import { ROLES } from "./roles";
+import { SHOP_STAFF_ROLES } from "./roles";
 import {
   PLAN_ORG_SELECT,
   canAddStore,
@@ -27,7 +27,7 @@ export async function shopStaffCount(organizationId: string) {
   return prisma.user.count({
     where: {
       organizationId,
-      role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN] },
+      role: { in: [...SHOP_STAFF_ROLES] },
     },
   });
 }

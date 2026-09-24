@@ -85,7 +85,9 @@ export function Nav({
         ]
       : session.role === ROLES.MANAGER
         ? [deskSettings, staffMenu, ...(showGps ? [{ href: "/vehicles", label: "Vehicles" }] : [])]
-        : [];
+        : session.role === ROLES.CLERICAL
+          ? [deskSettings]
+          : [];
 
   return (
     <header className="no-print relative z-50 border-b border-emerald-950/20 bg-emerald-950 text-emerald-50">

@@ -49,7 +49,7 @@ export default async function OnlineStaffPage() {
         <div className="rounded-xl border border-stone-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-stone-500">Staff</p>
           <p className="mt-1 text-2xl font-semibold">{people.length}</p>
-          <p className="mt-1 text-sm text-stone-600">Admins, managers, and technicians</p>
+          <p className="mt-1 text-sm text-stone-600">Admins, managers, office/clerical, and technicians</p>
         </div>
       </div>
 

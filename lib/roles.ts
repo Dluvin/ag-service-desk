@@ -1,11 +1,14 @@
 export const ROLES = {
   ADMIN: "ADMIN",
   MANAGER: "MANAGER",
+  CLERICAL: "CLERICAL",
   TECHNICIAN: "TECHNICIAN",
   FARMER: "FARMER",
 } as const;
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
+
+export const SHOP_STAFF_ROLES: Role[] = [ROLES.ADMIN, ROLES.MANAGER, ROLES.CLERICAL, ROLES.TECHNICIAN];
 
 export const TICKET_STATUSES = [
   "OPEN",
@@ -72,7 +75,7 @@ export function canViewStaffPresence(role: string) {
 }
 
 export function canAssignTickets(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+  return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.CLERICAL;
 }
 
 export function canEditStartupChecklist(role: string) {
@@ -88,22 +91,22 @@ export function canManageShopStaff(role: string) {
 }
 
 export function canEditDeskSettings(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+  return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.CLERICAL;
 }
 
 export function canEditStaffMember(actorRole: string, targetRole: string) {
   if (actorRole === ROLES.ADMIN) {
-    return targetRole === ROLES.ADMIN || targetRole === ROLES.MANAGER || targetRole === ROLES.TECHNICIAN;
+    return SHOP_STAFF_ROLES.includes(targetRole as Role);
   }
   if (actorRole === ROLES.MANAGER) {
-    return targetRole === ROLES.MANAGER || targetRole === ROLES.TECHNICIAN;
+    return targetRole === ROLES.MANAGER || targetRole === ROLES.CLERICAL || targetRole === ROLES.TECHNICIAN;
   }
   return false;
 }
 
 export function staffRolesAssignableBy(actorRole: string) {
-  if (actorRole === ROLES.ADMIN) return [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN];
-  if (actorRole === ROLES.MANAGER) return [ROLES.MANAGER, ROLES.TECHNICIAN];
+  if (actorRole === ROLES.ADMIN) return [...SHOP_STAFF_ROLES];
+  if (actorRole === ROLES.MANAGER) return [ROLES.MANAGER, ROLES.CLERICAL, ROLES.TECHNICIAN];
   return [];
 }
 
@@ -116,7 +119,7 @@ export function canImportStaff(role: string) {
 }
 
 export function canManageParts(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+  return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.CLERICAL;
 }
 
 export function canDeleteRecords(role: string) {
@@ -124,7 +127,7 @@ export function canDeleteRecords(role: string) {
 }
 
 export function isShopStaff(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.TECHNICIAN;
+  return SHOP_STAFF_ROLES.includes(role as Role);
 }
 
 export function slugify(value: string) {

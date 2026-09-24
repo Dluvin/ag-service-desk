@@ -18,7 +18,7 @@ export default async function DeskSettingsPage() {
     <div className="max-w-xl">
       <h1 className="font-display text-3xl">Desk settings</h1>
       <p className="mt-2 text-stone-600">
-        Choose how you see the dispatch board. This is your preference — other managers can pick a
+        Choose how you see the dispatch board. This is your preference — other people can pick a
         different view.
       </p>
       <div className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">

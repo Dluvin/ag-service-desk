@@ -62,7 +62,7 @@ export default function SignupPage() {
           </label>
           <label className="block text-sm font-medium">
             Staff who will log in
-            <input name="staffCount" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Admins, managers, techs" />
+            <input name="staffCount" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Admins, managers, office, techs" />
           </label>
           <label className="block text-sm font-medium sm:col-span-2">
             Password for your admin login

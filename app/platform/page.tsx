@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getPlatformSession } from "@/lib/platform";
-import { ROLES } from "@/lib/roles";
+import { ROLES, SHOP_STAFF_ROLES } from "@/lib/roles";
 import { PlatformHeader } from "@/components/PlatformHeader";
 import { ActionForm } from "@/components/ActionForm";
 import {
@@ -30,7 +30,7 @@ export default async function PlatformHomePage() {
     include: {
       _count: { select: { tickets: true, farmers: true } },
       users: {
-        where: { role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN] } },
+        where: { role: { in: [...SHOP_STAFF_ROLES] } },
         select: { id: true, role: true, email: true },
       },
     },

@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLES, canDeleteRecords, canEditStaffMember, canImportStaff, canManageShopStaff, staffRolesAssignableBy } from "@/lib/roles";
+import { ROLES, SHOP_STAFF_ROLES, canDeleteRecords, canEditStaffMember, canImportStaff, canManageShopStaff, staffRolesAssignableBy } from "@/lib/roles";
 import { roleLabel } from "@/lib/scope";
 import { createStaffAction, deleteStaffAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
@@ -53,7 +53,7 @@ export default async function StaffPage({
     prisma.user.count({
       where: {
         organizationId: session.organizationId,
-        role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.TECHNICIAN] },
+        role: { in: [...SHOP_STAFF_ROLES] },
       },
     }),
     loadOrgPlan(session.organizationId),
@@ -67,6 +67,7 @@ export default async function StaffPage({
   const groups = [
     { role: ROLES.ADMIN, title: "Admins" },
     { role: ROLES.MANAGER, title: "Managers" },
+    { role: ROLES.CLERICAL, title: "Office/Clerical" },
     { role: ROLES.TECHNICIAN, title: "Technicians" },
   ].filter((group) => canEditStaffMember(session.role, group.role));
 
@@ -85,8 +86,8 @@ export default async function StaffPage({
         ) : null}
         <p className="mt-1 text-sm text-stone-600">
           {session.role === ROLES.ADMIN
-            ? "Add and edit company admins, managers, and technicians. Assign a default store so new work orders they open start at that shop."
-            : "Add and edit managers and technicians. Assign a default store so new work orders they open start at that shop."}{" "}
+            ? "Add and edit company admins, managers, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."
+            : "Add and edit managers, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."}{" "}
           Customer logins stay on the Customers page.
         </p>
         <WelcomeMailNotice status={query.welcome} />

@@ -44,6 +44,7 @@ export async function loadTechnicians(organizationId: string) {
 export function roleLabel(role: Role | string) {
   if (role === ROLES.ADMIN) return "Company admin";
   if (role === ROLES.MANAGER) return "Manager";
+  if (role === ROLES.CLERICAL) return "Office/Clerical";
   if (role === ROLES.TECHNICIAN) return "Technician";
   return "Customer";
 }
