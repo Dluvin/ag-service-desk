@@ -302,12 +302,12 @@ export const REST_EN = {
   "faq.forms.p1":
     "Shop staff can open Forms in the menu when the plan flag is on (Enterprise includes it; Starter and Shop stay off unless platform turns it on). Fill a ticket, print or download it, then save it to an open work order. You choose which work order when you save. The filled form is added as an update on that job.",
 
-  "ocr.title": "Import handwritten ticket",
+  "ocr.title": "Import handwritten work order",
   "ocr.help":
-    "Photo the filled paper ticket. The desk reads this company’s form (your sample photos if you uploaded them) and shows suggested fields. Check them, then apply.",
+    "Photo the filled paper work order. The desk reads this company’s form (your sample photos if you uploaded them) and shows suggested fields. Check them, then apply.",
   "ocr.notConfigured":
     "Handwritten import needs OPENAI_API_KEY on the server. Add it, restart the app, then scan a photo.",
-  "ocr.photo": "Photo of the paper ticket",
+  "ocr.photo": "Photo of the paper work order",
   "ocr.fromPhoto": "Or scan a photo already on this work order",
   "ocr.newPhoto": "Use a new photo",
   "ocr.scan": "Read handwriting",
@@ -322,7 +322,7 @@ export const REST_EN = {
   "ocr.rawText": "Full transcription",
   "ocr.keepPhoto": "Also keep this photo on the work order",
   "ocr.apply": "Apply to this work order",
-  "ocr.fillNew": "Copy title and description into the new work order form below. Add parts after you create the job, or scan again on that work order.",
+  "ocr.fillNew": "Copy title and description into the new work order form. Add parts after you create the job, or scan again on that work order.",
   "ocr.fillForm": "Fill title and description",
   "ocr.addRow": "Add a line",
   "ocr.sku": "Part #",
@@ -335,7 +335,7 @@ export const REST_EN = {
   "ocr.servicePerformed": "Service performed",
   "faq.ocr.q": "Can I import a handwritten work order from a photo?",
   "faq.ocr.p1":
-    "Yes. On a work order or New work order, use Import handwritten ticket when the plan flag is on (Enterprise includes it; Starter and Shop stay off unless platform turns it on). After a scan, check the fields, then apply. Admins follow Settings → Paper ticket: upload samples, confirm boxes, then tweak the field list if a box is always missed.",
+    "Yes. On a work order or New work order, use Import handwritten work order when the plan flag is on (Enterprise includes it; Starter and Shop stay off unless platform turns it on). After a scan, check the fields, then apply. Admins follow Settings → Paper work order: upload samples, confirm boxes, then tweak the field list if a box is always missed.",
 
   "ticketForm.title": "Paper ticket form",
   "ticketForm.help":
@@ -680,12 +680,12 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "faq.forms.p1":
     "El personal del taller abre Formularios en el menú cuando el flag del plan está activo (Enterprise lo incluye; Starter y Shop quedan apagados hasta que la plataforma lo encienda). Llene un ticket, imprímalo o descárguelo, y guárdelo en una orden abierta. Al guardar elige la orden. El formulario queda como una actualización de ese trabajo.",
 
-  "ocr.title": "Importar ticket a mano",
+  "ocr.title": "Importar orden de trabajo a mano",
   "ocr.help":
-    "Fotografía el ticket de papel lleno. El escritorio lee el formulario de esta empresa (las fotos de muestra si las subió) y muestra campos sugeridos. Revíselos y aplique.",
+    "Fotografía la orden de papel llena. El escritorio lee el formulario de esta empresa (las fotos de muestra si las subió) y muestra campos sugeridos. Revíselos y aplique.",
   "ocr.notConfigured":
     "La importación a mano necesita OPENAI_API_KEY en el servidor. Agréguela, reinicie y luego escanee una foto.",
-  "ocr.photo": "Foto del ticket de papel",
+  "ocr.photo": "Foto de la orden de papel",
   "ocr.fromPhoto": "O lea una foto que ya está en esta orden",
   "ocr.newPhoto": "Usar una foto nueva",
   "ocr.scan": "Leer la letra",
@@ -700,7 +700,7 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "ocr.rawText": "Transcripción completa",
   "ocr.keepPhoto": "También guardar esta foto en la orden",
   "ocr.apply": "Aplicar a esta orden",
-  "ocr.fillNew": "Copie título y descripción al formulario de nueva orden abajo. Agregue piezas después de crear el trabajo, o escanee de nuevo en esa orden.",
+  "ocr.fillNew": "Copie título y descripción al formulario de nueva orden. Agregue piezas después de crear el trabajo, o escanee de nuevo en esa orden.",
   "ocr.fillForm": "Llenar título y descripción",
   "ocr.addRow": "Agregar una línea",
   "ocr.sku": "N.º de pieza",
@@ -713,7 +713,7 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "ocr.servicePerformed": "Servicio realizado",
   "faq.ocr.q": "¿Puedo importar una orden manuscrita desde una foto?",
   "faq.ocr.p1":
-    "Sí. En una orden o en Nueva orden, use Importar ticket a mano cuando el flag del plan esté activo (Enterprise lo incluye; Starter y Shop quedan apagados hasta que la plataforma lo encienda). Tras el escaneo, revise los campos y aplique. Los administradores siguen Ajustes → Ticket de papel: suban muestras, confirmen casillas y ajusten la lista de campos si siempre falta una.",
+    "Sí. En una orden o en Nueva orden, use Importar orden de trabajo a mano cuando el flag del plan esté activo (Enterprise lo incluye; Starter y Shop quedan apagados hasta que la plataforma lo encienda). Tras el escaneo, revise los campos y aplique. Los administradores siguen Ajustes → Orden de papel: suban muestras, confirmen casillas y ajusten la lista de campos si siempre falta una.",
 
   "ticketForm.title": "Formulario de ticket de papel",
   "ticketForm.help":

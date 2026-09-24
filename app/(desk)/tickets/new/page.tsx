@@ -57,20 +57,30 @@ export default async function NewTicketPage({
     }),
   ]);
 
+  const ocrEnabled = isShopStaff(session.role) ? await orgOcrIsOn(session.organizationId) : false;
+  const showOcr = isShopStaff(session.role);
+
   return (
-    <div className="max-w-3xl">
+    <div className={showOcr ? "max-w-6xl" : "max-w-3xl"}>
       <h1 className="font-display text-3xl">
         {session.role === ROLES.FARMER ? t(locale, "ticket.requestTitle") : t(locale, "ticket.newTitle")}
       </h1>
       <p className="mt-1 text-sm text-stone-600">
         {session.role === ROLES.FARMER ? t(locale, "ticket.requestHelp") : t(locale, "ticket.newHelp")}
       </p>
-      {isShopStaff(session.role) ? (
-        <div className="mt-6">
-          <TicketOcrImport configured={visionOcrConfigured()} enabled={await orgOcrIsOn(session.organizationId)} />
-        </div>
-      ) : null}
-      <ActionForm action={createTicketAction} encType="multipart/form-data" className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
+      <div className={showOcr ? "lg:mt-6 lg:grid lg:grid-cols-5 lg:items-start lg:gap-8" : undefined}>
+        {showOcr ? (
+          <div className="order-1 mt-6 lg:order-2 lg:col-span-2 lg:mt-0">
+            <TicketOcrImport configured={visionOcrConfigured()} enabled={ocrEnabled} />
+          </div>
+        ) : null}
+        <ActionForm
+          action={createTicketAction}
+          encType="multipart/form-data"
+          className={`mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6 ${
+            showOcr ? "order-2 lg:order-1 lg:col-span-3 lg:mt-0" : ""
+          }`}
+        >
         <NewTicketSiteFields
           pivots={pivots.map((pivot) => ({
             id: pivot.id,
@@ -143,6 +153,7 @@ export default async function NewTicketPage({
           {session.role === ROLES.FARMER ? t(locale, "tickets.request") : t(locale, "dispatch.create")}
         </button>
       </ActionForm>
+      </div>
     </div>
   );
 }
