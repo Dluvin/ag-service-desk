@@ -128,7 +128,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           {" · "}
           {ticket.technician ? t(locale, "ticket.assignedTo", { name: ticket.technician.name }) : t(locale, "common.unassigned")}
           {shopName ? ` · ${shopName}` : ""}
-          {ticket.scheduledAt ? ` · ${t(locale, "ticket.scheduled", { when: formatSchedule(ticket.scheduledAt) })}` : ""}
+          {ticket.scheduledAt ? ` · ${t(locale, "ticket.scheduled", { when: formatSchedule(ticket.scheduledAt) ?? "" })}` : ""}
         </p>
 
         {ticket.siteVisits.length > 0 ? (
