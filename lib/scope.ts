@@ -1,4 +1,6 @@
-import { ROLES, type Role } from "@/lib/roles";
+import type { Role } from "@/lib/roles";
+import { ROLES } from "@/lib/roles";
+import { t, type Locale } from "@/lib/i18n";
 import { prisma } from "@/lib/prisma";
 import type { SessionUser } from "@/lib/auth";
 
@@ -41,10 +43,10 @@ export async function loadTechnicians(organizationId: string) {
   });
 }
 
-export function roleLabel(role: Role | string) {
-  if (role === ROLES.ADMIN) return "Company admin";
-  if (role === ROLES.MANAGER) return "Manager";
-  if (role === ROLES.CLERICAL) return "Office/Clerical";
-  if (role === ROLES.TECHNICIAN) return "Technician";
-  return "Customer";
+export function roleLabel(role: Role | string, locale: Locale = "en") {
+  if (role === ROLES.ADMIN) return t(locale, "role.ADMIN");
+  if (role === ROLES.MANAGER) return t(locale, "role.MANAGER");
+  if (role === ROLES.CLERICAL) return t(locale, "role.CLERICAL");
+  if (role === ROLES.TECHNICIAN) return t(locale, "role.TECHNICIAN");
+  return t(locale, "role.FARMER");
 }

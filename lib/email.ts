@@ -1,5 +1,6 @@
 import { appBaseUrl, brandLogoEmailHtml } from "./app-url";
 import { mailIsConfigured, sendEmail } from "./mail";
+import { t, type Locale } from "./i18n";
 
 function escapeHtml(value: string) {
   return value
@@ -22,21 +23,30 @@ export async function ticketRepairDoneEmail(input: {
   title: string;
   pivotName: string;
   ticketId: string;
+  locale?: Locale;
 }) {
   if (!mailIsConfigured()) return "skipped" as const;
 
-  const first = input.farmerName.trim().split(/\s+/)[0] || "there";
-  const workOrder = `work order #${input.ticketNumber}`;
+  const locale = input.locale ?? "en";
+  const first = input.farmerName.trim().split(/\s+/)[0] || t(locale, "email.there");
   const url = workOrderUrl(input.ticketId);
-  const subject = `${input.organizationName}: ${workOrder} is repaired and ready`;
+  const vars = {
+    first,
+    org: input.organizationName,
+    number: input.ticketNumber,
+    title: input.title,
+    pivot: input.pivotName,
+    url,
+  };
+  const subject = t(locale, "email.repairSubject", vars);
   const text = [
-    `Hi ${first},`,
+    t(locale, "email.repairHi", vars),
     "",
-    `${input.organizationName} finished the repair on ${workOrder} (${input.title}) for ${input.pivotName}.`,
-    "The work is repaired and ready.",
-    url ? `View the work order: ${url}` : "",
+    t(locale, "email.repairBody", vars),
+    t(locale, "email.repairReady"),
+    url ? t(locale, "email.repairViewLine", vars) : "",
     "",
-    "If you have questions, reply to your dealer.",
+    t(locale, "email.repairQuestions"),
   ]
     .filter(Boolean)
     .join("\n");
@@ -47,11 +57,11 @@ export async function ticketRepairDoneEmail(input: {
     text,
     html: `
       ${brandLogoEmailHtml()}
-      <p>Hi ${escapeHtml(first)},</p>
-      <p>${escapeHtml(input.organizationName)} finished the repair on ${escapeHtml(workOrder)} (${escapeHtml(input.title)}) for ${escapeHtml(input.pivotName)}.</p>
-      <p>The work is repaired and ready.</p>
-      ${url ? `<p><a href="${escapeHtml(url)}">View the work order</a></p>` : ""}
-      <p>If you have questions, reply to your dealer.</p>
+      <p>${escapeHtml(t(locale, "email.repairHi", vars))}</p>
+      <p>${escapeHtml(t(locale, "email.repairBody", vars))}</p>
+      <p>${escapeHtml(t(locale, "email.repairReady"))}</p>
+      ${url ? `<p><a href="${escapeHtml(url)}">${escapeHtml(t(locale, "email.repairView"))}</a></p>` : ""}
+      <p>${escapeHtml(t(locale, "email.repairQuestions"))}</p>
     `,
   });
   return result.ok ? ("sent" as const) : ("failed" as const);

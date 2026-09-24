@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/components/I18nProvider";
 
 type CatalogOption = {
   id: string;
@@ -10,6 +11,7 @@ type CatalogOption = {
 };
 
 export function EquipmentPicker() {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [total, setTotal] = useState<number | null>(null);
   const [matches, setMatches] = useState<CatalogOption[]>([]);
@@ -36,7 +38,7 @@ export function EquipmentPicker() {
   if (total === 0) {
     return (
       <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-        No equipment items yet. Import them on the Equipment page, or type a custom name below.
+        {t("catalog.emptyEquipment")}
       </p>
     );
   }
@@ -45,20 +47,20 @@ export function EquipmentPicker() {
     <div className="space-y-2">
       <input type="hidden" name="catalogEquipmentId" value={selected?.id ?? ""} />
       <label className="block text-sm font-medium">
-        Search equipment list
+        {t("catalog.searchEquipment")}
         <input
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
             setSelected(null);
           }}
-          placeholder="Type a name or code"
+          placeholder={t("catalog.placeholderCode")}
           className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
         />
       </label>
       {selected ? (
         <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
-          Selected: {selected.name}
+          {t("catalog.selected", { name: selected.name })}
           {selected.sku ? ` · ${selected.sku}` : ""}
           {selected.rate != null ? ` · $${selected.rate.toFixed(2)}/hr` : ""}
         </p>
@@ -84,10 +86,12 @@ export function EquipmentPicker() {
         </ul>
       ) : null}
       {query.trim() && matches.length === 0 && total !== null ? (
-        <p className="text-xs text-stone-500">No catalog match. Use a custom name below.</p>
+        <p className="text-xs text-stone-500">{t("catalog.noMatch")}</p>
       ) : null}
       {!query.trim() && total != null && total > 0 ? (
-        <p className="text-xs text-stone-500">{total.toLocaleString()} equipment items in catalog. Type to search.</p>
+        <p className="text-xs text-stone-500">
+          {t("catalog.equipmentCount", { count: total.toLocaleString() })}
+        </p>
       ) : null}
     </div>
   );

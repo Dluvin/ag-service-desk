@@ -47,6 +47,8 @@ import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelc
 import { getPlatformSession } from "./platform";
 import { parseDispatchView, saveUserDispatchView } from "./dispatch-view";
 import { homePath } from "./home";
+import { parseLocale, t } from "./i18n";
+import { loadUserLocale, readLocaleCookie, safeNextPath, saveUserLocale, writeLocaleCookie } from "./user-locale";
 import { parseDateTimeLocal } from "./schedule";
 import { parseMoneyInput } from "./money";
 import { emailSignupToOwner } from "./signup-notify";
@@ -182,17 +184,22 @@ async function resolveStoreId(organizationId: string, storeId: string) {
 export async function loginAction(formData: FormData) {
   const email = formString(formData, "email");
   const password = formString(formData, "password");
+  const locale = await readLocaleCookie();
   const user = await verifyLogin(email, password);
-  if (!user) return { error: "Invalid email or password." };
+  if (!user) return { error: t(locale, "login.invalid") };
   if ("pending" in user) {
-    return { error: "This company is waiting for AG Desk Pro approval. We emailed you when it is ready." };
+    return { error: t(locale, "login.pending") };
   }
   if ("rejected" in user) {
-    return { error: "This signup was not approved. Contact david@agdeskpro.com if you have questions." };
+    return { error: t(locale, "login.rejected") };
   }
   if ("paused" in user) {
-    return { error: "This company is paused. Contact AG Service Desk if you need access restored." };
+    return { error: t(locale, "login.paused") };
   }
+  const saved = await loadUserLocale(user.userId);
+  const nextLocale = saved !== "en" ? saved : locale;
+  await saveUserLocale(user.userId, nextLocale);
+  await writeLocaleCookie(nextLocale);
   await createSession(user);
   redirect(homePath(user.role));
 }
@@ -2818,6 +2825,15 @@ export async function saveDispatchViewAction(formData: FormData) {
   const dispatchView = parseDispatchView(formString(formData, "dispatchView"));
   await saveUserDispatchView(session.userId, dispatchView);
   redirect("/settings");
+}
+
+export async function saveLocaleAction(formData: FormData) {
+  const locale = parseLocale(formString(formData, "locale"));
+  const next = safeNextPath(formString(formData, "next"), "/settings");
+  await writeLocaleCookie(locale);
+  const session = await getSession();
+  if (session) await saveUserLocale(session.userId, locale);
+  redirect(next);
 }
 
 export async function saveCompanyLogoAction(formData: FormData) {

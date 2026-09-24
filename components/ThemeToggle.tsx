@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { applyDeskTheme, DESK_THEME_KEY, resolveDeskTheme, type DeskTheme } from "@/lib/theme";
+import { useT } from "@/components/I18nProvider";
 
 export function ThemeToggle({
   variant = "panel",
@@ -9,6 +10,7 @@ export function ThemeToggle({
   variant?: "nav" | "panel";
 }) {
   const [theme, setTheme] = useState<DeskTheme | null>(null);
+  const t = useT();
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -36,7 +38,7 @@ export function ThemeToggle({
     setTheme(next);
   }
 
-  const label = theme === "dark" ? "Light mode" : "Dark mode";
+  const label = theme === "dark" ? t("theme.light") : t("theme.dark");
   const className =
     variant === "nav"
       ? "rounded-md border border-emerald-700 px-3 py-1.5 text-xs hover:bg-emerald-900"
@@ -44,7 +46,7 @@ export function ThemeToggle({
 
   return (
     <button type="button" className={className} aria-label={label} onClick={toggle}>
-      {theme ? label : "Theme"}
+      {theme ? label : t("theme.theme")}
     </button>
   );
 }

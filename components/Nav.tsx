@@ -7,16 +7,20 @@ import { homePath } from "@/lib/home";
 import { NavDropdown } from "@/components/NavDropdown";
 import { NavLinkMenu } from "@/components/NavLinkMenu";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguagePicker } from "@/components/LanguagePicker";
 import { assetTypeHref } from "@/lib/assets";
+import { t, type Locale } from "@/lib/i18n";
 
 export function Nav({
   session,
+  locale,
   hasLogo,
   assetTypes = [],
   showMaps = true,
   showGps = true,
 }: {
   session: SessionUser;
+  locale: Locale;
   hasLogo?: boolean;
   assetTypes?: { name: string; slug: string }[];
   showMaps?: boolean;
@@ -24,67 +28,67 @@ export function Nav({
 }) {
   const farmer = session.role === ROLES.FARMER;
   const beforeTickets = farmer
-    ? [{ href: "/dashboard", label: "Dashboard" }]
-    : [{ href: "/dispatch", label: "Dispatch" }];
+    ? [{ href: "/dashboard", label: t(locale, "nav.dashboard") }]
+    : [{ href: "/dispatch", label: t(locale, "nav.dispatch") }];
   const ticketLinks = [
-    { href: "/tickets", label: "All work orders" },
-    ...(showMaps ? [{ href: "/map", label: "Work order map" }] : []),
-    { href: "/startup", label: "Maintenance" },
+    { href: "/tickets", label: t(locale, "nav.allWorkOrders") },
+    ...(showMaps ? [{ href: "/map", label: t(locale, "nav.workOrderMap") }] : []),
+    { href: "/startup", label: t(locale, "nav.maintenance") },
     ...(!farmer
       ? [
-          { href: "/parts", label: "Parts" },
-          { href: "/labor", label: "Labor" },
-          { href: "/equipment", label: "Equipment" },
+          { href: "/parts", label: t(locale, "nav.parts") },
+          { href: "/labor", label: t(locale, "nav.labor") },
+          { href: "/equipment", label: t(locale, "nav.equipment") },
         ]
       : []),
   ];
   const reportLinks = [
-    { href: "/reports", label: "Work order reports" },
-    { href: "/reports/pivots", label: "Pivot reports" },
-    { href: "/reports/customers", label: "Customer reports" },
-    { href: "/reports/farms", label: "Farm reports" },
-    { href: "/reports/assets", label: "Asset reports" },
+    { href: "/reports", label: t(locale, "nav.woReports") },
+    { href: "/reports/pivots", label: t(locale, "nav.pivotReports") },
+    { href: "/reports/customers", label: t(locale, "nav.customerReports") },
+    { href: "/reports/farms", label: t(locale, "nav.farmReports") },
+    { href: "/reports/assets", label: t(locale, "nav.assetReports") },
   ];
   const customerLinks = !farmer
     ? [
-        { href: "/farmers", label: "Customers (all)" },
-        { href: "/farms", label: "Farms" },
+        { href: "/farmers", label: t(locale, "nav.customersAll") },
+        { href: "/farms", label: t(locale, "nav.farms") },
       ]
     : [];
   const assetLinks = [
-    { href: "/assets", label: "All Assets" },
+    { href: "/assets", label: t(locale, "nav.allAssets") },
     ...assetTypes.map((type) => ({ href: assetTypeHref(type), label: type.name })),
-    ...(isShopStaff(session.role) ? [{ href: "/assets/types", label: "Manage types" }] : []),
+    ...(isShopStaff(session.role) ? [{ href: "/assets/types", label: t(locale, "nav.manageTypes") }] : []),
   ];
 
   const staffMenu = {
     href: "/staff",
-    label: "Staff",
+    label: t(locale, "nav.staff"),
     children: [
-      { href: "/technicians", label: "Technicians" },
-      { href: "/managers", label: "Managers" },
+      { href: "/technicians", label: t(locale, "nav.technicians") },
+      { href: "/managers", label: t(locale, "nav.managers") },
     ],
   };
-  const deskSettings = { href: "/settings", label: "Dispatch view" };
+  const deskSettings = { href: "/settings", label: t(locale, "nav.dispatchView") };
   const settingsLinks =
     session.role === ROLES.ADMIN
       ? [
           deskSettings,
           staffMenu,
-          { href: "/online", label: "Who’s signed in" },
-          { href: "/stores", label: "Stores" },
-          { href: "/company", label: "Logo" },
-          { href: "/startup/checklist", label: "Maintenance checklist" },
-          { href: "/sms", label: "SMS" },
+          { href: "/online", label: t(locale, "nav.online") },
+          { href: "/stores", label: t(locale, "nav.stores") },
+          { href: "/company", label: t(locale, "nav.logo") },
+          { href: "/startup/checklist", label: t(locale, "nav.checklist") },
+          { href: "/sms", label: t(locale, "nav.sms") },
           ...(showGps
             ? [
-                { href: "/reveal", label: "Connectors" },
-                { href: "/vehicles", label: "Vehicles" },
+                { href: "/reveal", label: t(locale, "nav.connectors") },
+                { href: "/vehicles", label: t(locale, "nav.vehicles") },
               ]
             : []),
         ]
       : session.role === ROLES.MANAGER
-        ? [deskSettings, staffMenu, ...(showGps ? [{ href: "/vehicles", label: "Vehicles" }] : [])]
+        ? [deskSettings, staffMenu, ...(showGps ? [{ href: "/vehicles", label: t(locale, "nav.vehicles") }] : [])]
         : session.role === ROLES.CLERICAL
           ? [deskSettings]
           : [];
@@ -106,31 +110,32 @@ export function Nav({
               {link.label}
             </Link>
           ))}
-          <NavDropdown label="Work orders" links={ticketLinks} />
-          <NavLinkMenu href="/assets" label="Assets" links={assetLinks} />
-          <NavLinkMenu href="/reports" label="Reports" links={reportLinks} />
+          <NavDropdown label={t(locale, "nav.workOrders")} links={ticketLinks} />
+          <NavLinkMenu href="/assets" label={t(locale, "nav.assets")} links={assetLinks} />
+          <NavLinkMenu href="/reports" label={t(locale, "nav.reports")} links={reportLinks} />
           {customerLinks.length ? (
-            <NavLinkMenu href="/farmers" label="Customers" links={customerLinks} />
+            <NavLinkMenu href="/farmers" label={t(locale, "nav.customers")} links={customerLinks} />
           ) : null}
-          {settingsLinks.length ? <NavDropdown label="Settings" links={settingsLinks} /> : null}
+          {settingsLinks.length ? <NavDropdown label={t(locale, "nav.settings")} links={settingsLinks} /> : null}
           <NavLinkMenu
             href="/help"
-            label="Support"
+            label={t(locale, "nav.support")}
             links={[
-              { href: "/help", label: "Support" },
-              { href: "/help/faq", label: "FAQ" },
+              { href: "/help", label: t(locale, "nav.support") },
+              { href: "/help/faq", label: t(locale, "nav.faq") },
             ]}
           />
         </nav>
         <div className="flex items-center gap-3 text-sm">
+          <LanguagePicker locale={locale} variant="nav" />
           <ThemeToggle variant="nav" />
           <div className="text-right">
             <p className="font-medium">{session.name}</p>
-            <p className="text-xs text-emerald-200">{roleLabel(session.role)}</p>
+            <p className="text-xs text-emerald-200">{roleLabel(session.role, locale)}</p>
           </div>
           <form action={logoutAction}>
             <button className="rounded-md border border-emerald-700 px-3 py-1.5 text-xs hover:bg-emerald-900">
-              Log out
+              {t(locale, "nav.logOut")}
             </button>
           </form>
         </div>

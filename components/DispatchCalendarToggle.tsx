@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { STORE_ALL } from "@/lib/stores";
 import { DispatchCalendar } from "@/components/DispatchCalendar";
+import { useT } from "@/components/I18nProvider";
 
 const STORAGE_KEY = "ag-dispatch-show-calendar";
 
@@ -25,6 +26,7 @@ export function DispatchCalendarToggle({
   store: string;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     setOpen(sessionStorage.getItem(STORAGE_KEY) === "1");
@@ -42,10 +44,8 @@ export function DispatchCalendarToggle({
     <div className="mt-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl">Schedule</h2>
-          <p className="mt-1 text-sm text-stone-600">
-            Hide the calendar so the map stays up, or open it in its own tab.
-          </p>
+          <h2 className="font-display text-xl">{t("dispatch.schedule")}</h2>
+          <p className="mt-1 text-sm text-stone-600">{t("dispatch.scheduleHelp")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -57,7 +57,7 @@ export function DispatchCalendarToggle({
             }}
             className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium"
           >
-            {open ? "Hide calendar" : "Show calendar"}
+            {open ? t("dispatch.hideCalendar") : t("dispatch.showCalendar")}
           </button>
           <a
             href={calendarHref()}
@@ -65,7 +65,7 @@ export function DispatchCalendarToggle({
             rel="noreferrer"
             className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-semibold text-white"
           >
-            Open calendar
+            {t("dispatch.openCalendar")}
           </a>
         </div>
       </div>

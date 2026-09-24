@@ -5,6 +5,10 @@ import { AuthBrandProvider, AuthEmailInput, AuthScreenLogos } from "@/components
 import { ActionForm } from "@/components/ActionForm";
 import { resolveKnownLoginBrand } from "@/lib/org-brand";
 import { prisma } from "@/lib/prisma";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
+import { LanguagePicker } from "@/components/LanguagePicker";
+import { I18nProvider } from "@/components/I18nProvider";
 
 export const dynamic = "force-dynamic";
 
@@ -23,49 +27,51 @@ export default async function LoginPage({
   const query = await searchParams;
   const session = await getSession();
   const dealer = await resolveKnownLoginBrand(session?.organizationId);
+  const locale = await getRequestLocale();
 
   return (
+    <I18nProvider locale={locale}>
     <div className="flex min-h-full items-center justify-center px-4 py-16">
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-sm">
         <AuthBrandProvider initial={dealer}>
           <div>
+            <div className="mb-4 flex justify-end">
+              <LanguagePicker locale={locale} variant="panel" />
+            </div>
             <AuthScreenLogos />
-            <h1 className="font-display text-3xl">Log in</h1>
-            <p className="mt-1 text-sm text-stone-600">
-              Customers, technicians, managers, and company admins use the same door.
-            </p>
+            <h1 className="font-display text-3xl">{t(locale, "login.title")}</h1>
+            <p className="mt-1 text-sm text-stone-600">{t(locale, "login.blurb")}</p>
             {query.billing === "ok" ? (
               <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">
-                Billing is set. Sign in to your company. The 15-day trial is on the Stripe subscription.
+                {t(locale, "login.billingOk")}
               </p>
             ) : null}
             {query.billing === "pending" ? (
               <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-                Card setup was canceled. You can still sign in during the trial. Open the billing email
-                again when you are ready.
+                {t(locale, "login.billingPending")}
               </p>
             ) : null}
             {query.paused ? (
               <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-                This company is paused. Contact AG Service Desk if you need access restored.
+                {t(locale, "login.pausedBanner")}
               </p>
             ) : null}
             {userCount === 0 ? (
               <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-                This host has no users yet. Demo emails from your PC will not work here.{" "}
+                {t(locale, "login.noUsers")}{" "}
                 <Link href="/signup" className="font-semibold underline">
-                  Create a company account
+                  {t(locale, "login.createFirst")}
                 </Link>{" "}
-                first, then sign in with that email and password.
+                {t(locale, "login.createFirstAfter")}
               </p>
             ) : null}
             <ActionForm action={loginAction} className="mt-6 space-y-4">
               <label className="block text-sm font-medium">
-                Email
+                {t(locale, "login.email")}
                 <AuthEmailInput />
               </label>
               <label className="block text-sm font-medium">
-                Password
+                {t(locale, "login.password")}
                 <input
                   name="password"
                   type="password"
@@ -74,23 +80,21 @@ export default async function LoginPage({
                 />
               </label>
               <button className="w-full rounded-lg bg-emerald-800 px-4 py-2.5 font-semibold text-white hover:bg-emerald-700">
-                Sign in
+                {t(locale, "login.signIn")}
               </button>
             </ActionForm>
             <p className="mt-3 text-sm">
               <Link href="/forgot" className="font-medium text-emerald-800 hover:underline">
-                Forgot password?
+                {t(locale, "login.forgot")}
               </Link>
             </p>
             <p className="mt-4 text-sm text-stone-600">
-              New company?{" "}
+              {t(locale, "login.newCompany")}{" "}
               <Link href="/signup" className="font-medium text-emerald-800 hover:underline">
-                Create an account
+                {t(locale, "login.createAccount")}
               </Link>
             </p>
-            <p className="mt-2 text-sm text-stone-600">
-              Invited and need a password? Use the link in your welcome email, or reset from this screen.
-            </p>
+            <p className="mt-2 text-sm text-stone-600">{t(locale, "login.inviteHint")}</p>
             {showDemo ? (
               <div className="mt-6 rounded-lg bg-stone-50 p-3 text-xs text-stone-600">
                 <p className="font-semibold text-stone-800">Demo (password: demo1234)</p>
@@ -105,5 +109,6 @@ export default async function LoginPage({
         </AuthBrandProvider>
       </div>
     </div>
+    </I18nProvider>
   );
 }

@@ -1,4 +1,8 @@
+"use client";
+
 import { STATUS_LABELS, type TicketStatus } from "@/lib/roles";
+import { useLocale } from "@/components/I18nProvider";
+import { priorityLabel, statusLabel } from "@/lib/i18n";
 
 const TONES: Record<TicketStatus, string> = {
   OPEN: "bg-sky-200 text-sky-950 dark:bg-sky-400 dark:text-sky-950",
@@ -11,22 +15,24 @@ const TONES: Record<TicketStatus, string> = {
 };
 
 export function StatusBadge({ status }: { status: string }) {
+  const locale = useLocale();
   const key = status as TicketStatus;
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONES[key] ?? "bg-stone-100 text-stone-700 dark:bg-stone-700 dark:text-stone-200"}`}
     >
-      {STATUS_LABELS[key] ?? status}
+      {statusLabel(locale, status) || STATUS_LABELS[key] || status}
     </span>
   );
 }
 
 export function PriorityBadge({ priority }: { priority: string }) {
+  const locale = useLocale();
   const tone =
     priority === "URGENT"
       ? "text-red-800 dark:text-red-300"
       : priority === "HIGH"
         ? "text-orange-800 dark:text-orange-300"
         : "text-stone-600";
-  return <span className={`text-xs font-semibold uppercase tracking-wide ${tone}`}>{priority}</span>;
+  return <span className={`text-xs font-semibold uppercase tracking-wide ${tone}`}>{priorityLabel(locale, priority)}</span>;
 }

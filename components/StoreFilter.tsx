@@ -6,18 +6,22 @@ export function StoreFilter({
   selected,
   pathname,
   extra,
+  allLabel = "All stores",
+  noneLabel = "No store",
 }: {
   stores: StoreOption[];
   selected: string;
   pathname: string;
   extra?: Record<string, string | undefined>;
+  allLabel?: string;
+  noneLabel?: string;
 }) {
   if (stores.length === 0) return null;
 
   const links = [
-    { id: STORE_ALL, name: "All stores" },
+    { id: STORE_ALL, name: allLabel },
     ...stores,
-    { id: STORE_NONE, name: "No store" },
+    { id: STORE_NONE, name: noneLabel },
   ];
 
   function hrefFor(storeId: string) {

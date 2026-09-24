@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { TICKET_STATUSES, STATUS_LABELS, requiresInvoice, type TicketStatus } from "@/lib/roles";
+import { TICKET_STATUSES, requiresInvoice, type TicketStatus } from "@/lib/roles";
+import { useLocale, useT } from "@/components/I18nProvider";
+import { statusLabel } from "@/lib/i18n";
 
 export function TicketStatusFields({
   status,
@@ -14,11 +16,13 @@ export function TicketStatusFields({
 }) {
   const [current, setCurrent] = useState(status);
   const needsInvoice = requiresInvoice(current);
+  const t = useT();
+  const locale = useLocale();
 
   return (
     <>
       <label className="block text-sm font-medium">
-        Status
+        {t("ticket.status")}
         <select
           name="status"
           value={current}
@@ -27,24 +31,24 @@ export function TicketStatusFields({
         >
           {TICKET_STATUSES.map((value) => (
             <option key={value} value={value}>
-              {STATUS_LABELS[value as TicketStatus]}
+              {statusLabel(locale, value)}
             </option>
           ))}
         </select>
       </label>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block text-sm font-medium">
-          Invoice number {needsInvoice ? <span className="text-red-700">(required to close)</span> : null}
+          {t("ticket.invoiceNumber")} {needsInvoice ? <span className="text-red-700">{t("ticket.requiredToClose")}</span> : null}
           <input
             name="invoiceNumber"
             defaultValue={invoiceNumber ?? ""}
             required={needsInvoice}
-            placeholder="QB or shop invoice #"
+            placeholder={t("ticket.invoicePlaceholder")}
             className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
           />
         </label>
         <label className="block text-sm font-medium">
-          Amount {needsInvoice ? <span className="text-red-700">(required to close)</span> : null}
+          {t("ticket.invoiceAmount")} {needsInvoice ? <span className="text-red-700">{t("ticket.requiredToClose")}</span> : null}
           <input
             name="invoiceAmount"
             type="number"

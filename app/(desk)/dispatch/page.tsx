@@ -6,7 +6,6 @@ import { loadTechnicians, ticketWhere } from "@/lib/scope";
 import {
   DISPATCH_STATUSES,
   ROLES,
-  STATUS_LABELS,
   TICKET_STATUSES,
   canAssignTickets,
   type TicketStatus,
@@ -23,6 +22,9 @@ import { DispatchTilesBoard } from "@/components/DispatchTilesBoard";
 import { dispatchFilterExtra, filterDispatchTickets, parseDispatchListQuery } from "@/lib/dispatch-list";
 import { loadUserDispatchView } from "@/lib/dispatch-view";
 import { formatSchedule } from "@/lib/schedule";
+import { getRequestLocale } from "@/lib/user-locale";
+import { statusLabel, t } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 
 export default async function DispatchPage({
   searchParams,
@@ -34,13 +36,14 @@ export default async function DispatchPage({
   if (session.role === ROLES.FARMER) redirect("/dashboard");
 
   const query = await searchParams;
-  const [stores, dispatchView] = await Promise.all([
+  const [stores, dispatchView, locale] = await Promise.all([
     prisma.store.findMany({
       where: { organizationId: session.organizationId },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
     loadUserDispatchView(session.userId),
+    getRequestLocale(),
   ]);
   const selectedStore = parseStoreParam(query.store, stores);
   const filters = parseDispatchListQuery(query);
@@ -68,24 +71,24 @@ export default async function DispatchPage({
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl">Dispatch board</h1>
+        <h1 className="font-display text-3xl">{t(locale, "dispatch.title")}</h1>
         <Link href="/tickets/new" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-          Create work order
+          {t(locale, "dispatch.create")}
         </Link>
       </div>
       <p className="mt-1 text-stone-600">
-        {tiles
-          ? "Open work by status, assign a technician, and see every open work order on the map. Filter by store to work one shop at a time."
-          : "All work orders in one list. Filter by status, hide completed, assign a technician, and see open work on the map. Filter by store to work one shop at a time."}
+        {tiles ? t(locale, "dispatch.tilesHelp") : t(locale, "dispatch.listHelp")}
       </p>
       <StoreFilter
         stores={stores}
         selected={selectedStore}
         pathname="/dispatch"
         extra={tiles ? { month: query.month } : dispatchFilterExtra({ ...filters, month: query.month })}
+        allLabel={t(locale, "common.allStores")}
+        noneLabel={t(locale, "common.noStore")}
       />
       {tiles ? (
-        <DispatchTilesBoard tickets={openTickets} technicians={technicians} canAssign={canAssign} />
+        <DispatchTilesBoard tickets={openTickets} technicians={technicians} canAssign={canAssign} locale={locale} />
       ) : (
         <>
           <DispatchStatusFilters
@@ -95,11 +98,11 @@ export default async function DispatchPage({
             month={query.month}
             counts={statusCounts}
           />
-          <p className="mt-3 text-sm text-stone-500">{summaryText(listTickets.length, filters.statuses, filters.hideCompleted)}</p>
+          <p className="mt-3 text-sm text-stone-500">{summaryText(locale, listTickets.length, filters.statuses, filters.hideCompleted)}</p>
           <ul className="mt-4 space-y-2">
             {listTickets.length === 0 ? (
               <li className="rounded-xl border border-stone-200 bg-white px-4 py-6 text-stone-600">
-                {emptyText(filters.statuses, filters.hideCompleted)}
+                {emptyText(locale, filters.statuses, filters.hideCompleted)}
               </li>
             ) : (
               listTickets.map((ticket) => (
@@ -113,7 +116,7 @@ export default async function DispatchPage({
                   status={ticket.status}
                 >
                   <p className="mt-1 text-xs text-stone-600">
-                    {[ticketStoreName(ticket), ticket.pivot?.name].filter(Boolean).join(" · ") || "No store or pivot"}
+                    {[ticketStoreName(ticket), ticket.pivot?.name].filter(Boolean).join(" · ") || t(locale, "dispatch.noStorePivot")}
                   </p>
                   {ticket.scheduledAt ? (
                     <p className="mt-1 text-xs font-medium text-emerald-900">{formatSchedule(ticket.scheduledAt)}</p>
@@ -124,6 +127,7 @@ export default async function DispatchPage({
                     status={ticket.status}
                     canAssign={canAssign}
                     technicians={technicians}
+                    locale={locale}
                   />
                 </DispatchWorkOrderCard>
               ))
@@ -134,11 +138,8 @@ export default async function DispatchPage({
 
       <DispatchCalendarToggle tickets={openTickets} month={query.month} store={selectedStore} />
 
-      <h2 className="font-display mt-10 text-xl">Open work orders map</h2>
-      <p className="mt-1 text-sm text-stone-600">
-        Green pins are work orders at the pivot. Amber pins are Verizon Connect Reveal trucks. Click a
-        pin for the work order or Google Maps.
-      </p>
+      <h2 className="font-display mt-10 text-xl">{t(locale, "dispatch.mapTitle")}</h2>
+      <p className="mt-1 text-sm text-stone-600">{t(locale, "dispatch.mapHelp")}</p>
       <div className="mt-4">
         <DispatchFleetMap ticketPins={ticketPins(openTickets)} canConfigure={session.role === ROLES.ADMIN} store={selectedStore} />
       </div>
@@ -146,18 +147,20 @@ export default async function DispatchPage({
   );
 }
 
-function summaryText(count: number, statuses: TicketStatus[], hideCompleted: boolean) {
-  const noun = count === 1 ? "work order" : "work orders";
-  if (count === 0) return emptyText(statuses, hideCompleted);
-  if (statuses.length === 1) return `${count} ${STATUS_LABELS[statuses[0]]} ${noun}.`;
-  if (statuses.length > 1) return `${count} ${noun} in ${statuses.length} statuses.`;
-  if (hideCompleted) return `${count} open ${noun}.`;
-  return `${count} ${noun}.`;
+function summaryText(locale: Locale, count: number, statuses: TicketStatus[], hideCompleted: boolean) {
+  const noun = count === 1 ? t(locale, "dispatch.oneWo") : t(locale, "dispatch.manyWo");
+  if (count === 0) return emptyText(locale, statuses, hideCompleted);
+  if (statuses.length === 1) {
+    return t(locale, "dispatch.countStatus", { count, status: statusLabel(locale, statuses[0]), noun });
+  }
+  if (statuses.length > 1) return t(locale, "dispatch.countStatuses", { count, noun, n: statuses.length });
+  if (hideCompleted) return t(locale, "dispatch.countOpen", { count, noun });
+  return t(locale, "dispatch.countAll", { count, noun });
 }
 
-function emptyText(statuses: TicketStatus[], hideCompleted: boolean) {
-  if (statuses.length === 1) return `No ${STATUS_LABELS[statuses[0]]} work orders.`;
-  if (statuses.length > 1) return "No work orders match these statuses.";
-  if (hideCompleted) return "No open work orders to show.";
-  return "No work orders to show.";
+function emptyText(locale: Locale, statuses: TicketStatus[], hideCompleted: boolean) {
+  if (statuses.length === 1) return t(locale, "dispatch.emptyStatus", { status: statusLabel(locale, statuses[0]) });
+  if (statuses.length > 1) return t(locale, "dispatch.emptyStatuses");
+  if (hideCompleted) return t(locale, "dispatch.emptyOpen");
+  return t(locale, "dispatch.emptyAll");
 }

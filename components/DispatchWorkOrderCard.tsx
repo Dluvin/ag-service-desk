@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { PriorityBadge, StatusBadge } from "@/components/Badges";
+import { useT } from "@/components/I18nProvider";
 
 export function DispatchWorkOrderCard({
   href,
@@ -24,6 +25,7 @@ export function DispatchWorkOrderCard({
   children: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const t = useT();
   const details = (
     <div className={expanded ? "block" : "hidden group-hover:block group-focus-within:block"}>
       {variant === "tile" ? <p className="mt-2 text-sm font-medium text-stone-800">{title}</p> : null}
@@ -37,7 +39,7 @@ export function DispatchWorkOrderCard({
       onClick={() => setExpanded((open) => !open)}
       className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900"
     >
-      {expanded ? "Hide" : "Details"}
+      {expanded ? t("common.hide") : t("common.details")}
     </button>
   );
 

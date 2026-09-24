@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ActionForm } from "@/components/ActionForm";
 import { quickCreateTicketCatalogAction } from "@/lib/actions";
+import { useT } from "@/components/I18nProvider";
 
 export function TicketCatalogQuickCreate({
   ticketId,
@@ -12,8 +13,10 @@ export function TicketCatalogQuickCreate({
   kind: "part" | "labor" | "equipment";
 }) {
   const [open, setOpen] = useState(false);
-  const noun = kind === "part" ? "part" : kind === "labor" ? "labor item" : "equipment";
-  const amountLabel = kind === "part" ? "Quantity" : "Hours";
+  const t = useT();
+  const noun =
+    kind === "part" ? t("ticket.newPart") : kind === "labor" ? t("ticket.newLabor") : t("ticket.newEquipment");
+  const amountLabel = kind === "part" ? t("ticket.quantity") : t("ticket.hours");
 
   useEffect(() => {
     if (!open) return;
@@ -31,7 +34,7 @@ export function TicketCatalogQuickCreate({
         onClick={() => setOpen(true)}
         className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-800 hover:bg-stone-100"
       >
-        New {noun}
+        {noun}
       </button>
       {open ? (
         <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-4 sm:items-center">
@@ -42,16 +45,16 @@ export function TicketCatalogQuickCreate({
             className="w-full max-w-md rounded-xl border border-stone-200 bg-white p-4 shadow-lg"
           >
             <h3 id={`new-${kind}-title`} className="font-display text-xl">
-              New {noun}
+              {noun}
             </h3>
             <p className="mt-1 text-sm text-stone-600">
-              Saves it to the catalog and logs it on this work order. You stay on this page.
+              {t("ticket.quickCreateHelp")}
             </p>
             <ActionForm action={quickCreateTicketCatalogAction} className="mt-4 space-y-3">
               <input type="hidden" name="ticketId" value={ticketId} />
               <input type="hidden" name="kind" value={kind} />
               <label className="block text-sm font-medium">
-                Name
+                {t("common.name")}
                 <input
                   name="name"
                   required
@@ -59,12 +62,12 @@ export function TicketCatalogQuickCreate({
                 />
               </label>
               <label className="block text-sm font-medium">
-                SKU / code
+                {t("ticket.skuCode")}
                 <input name="sku" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
               </label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block text-sm font-medium">
-                  {kind === "part" ? "Price each" : "Hourly rate"}
+                  {kind === "part" ? t("ticket.priceEach") : t("ticket.hourlyRate")}
                   <input
                     name="price"
                     type="number"
@@ -88,14 +91,14 @@ export function TicketCatalogQuickCreate({
               </div>
               <div className="flex flex-wrap gap-2 pt-1">
                 <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-                  Save and log
+                  {t("ticket.saveAndLog")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
                   className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-800 hover:bg-stone-100"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
               </div>
             </ActionForm>

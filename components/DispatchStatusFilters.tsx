@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { dispatchHref, type DispatchListQuery } from "@/lib/dispatch-list";
-import { STATUS_LABELS, TICKET_STATUSES, isFinishedStatus, type TicketStatus } from "@/lib/roles";
+import { TICKET_STATUSES, isFinishedStatus, type TicketStatus } from "@/lib/roles";
+import { useLocale, useT } from "@/components/I18nProvider";
+import { statusLabel } from "@/lib/i18n";
 
 export function DispatchStatusFilters({
   statuses,
@@ -16,6 +18,8 @@ export function DispatchStatusFilters({
   counts: Partial<Record<TicketStatus, number>>;
 }) {
   const router = useRouter();
+  const t = useT();
+  const locale = useLocale();
 
   function go(next: DispatchListQuery) {
     router.replace(dispatchHref({ store, month, statuses: next.statuses, hideCompleted: next.hideCompleted }));
@@ -35,7 +39,7 @@ export function DispatchStatusFilters({
   return (
     <div className="mt-4 rounded-xl border border-stone-200 bg-white p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm font-medium">Status</p>
+        <p className="text-sm font-medium">{t("dispatch.status")}</p>
         <label className="flex items-center gap-2 text-sm text-stone-700">
           <input
             type="checkbox"
@@ -48,7 +52,7 @@ export function DispatchStatusFilters({
             }
             className="size-4 rounded border-stone-300 text-emerald-800"
           />
-          Hide completed
+          {t("dispatch.hideCompleted")}
         </label>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -57,7 +61,7 @@ export function DispatchStatusFilters({
           onClick={() => go({ statuses: [], hideCompleted })}
           className={chipClass(statuses.length === 0)}
         >
-          All
+          {t("common.all")}
         </button>
         {TICKET_STATUSES.map((status) => {
           const active = statuses.includes(status);
@@ -69,7 +73,7 @@ export function DispatchStatusFilters({
               onClick={() => toggleStatus(status)}
               className={chipClass(active, muted)}
             >
-              {STATUS_LABELS[status]}
+              {statusLabel(locale, status)}
               <span className={active ? "text-emerald-100" : "text-stone-500"}>
                 {counts[status] ?? 0}
               </span>

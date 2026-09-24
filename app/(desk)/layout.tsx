@@ -9,6 +9,8 @@ import { PresenceBeacon } from "@/components/PresenceBeacon";
 import { ensureAssetTypes } from "@/lib/assets";
 import { PLAN_ORG_SELECT, resolveEntitlements } from "@/lib/plans";
 import { isShopStaff } from "@/lib/roles";
+import { getRequestLocale } from "@/lib/user-locale";
+import { I18nProvider } from "@/components/I18nProvider";
 
 export default async function DeskLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -28,9 +30,11 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
 
   const entitlements = resolveEntitlements(org);
   const assetTypes = await ensureAssetTypes(session.organizationId);
+  const locale = await getRequestLocale();
 
   return (
     <PlanProvider value={entitlements}>
+      <I18nProvider locale={locale}>
       <div className="min-h-full">
         {session.impersonatorId ? <ImpersonationBanner companyName={org.name} /> : null}
         {org.trialEndsAt && org.trialEndsAt.getTime() > Date.now() - 24 * 60 * 60 * 1000 ? (
@@ -38,6 +42,7 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
         ) : null}
         <Nav
           session={session}
+          locale={locale}
           hasLogo={Boolean(org?.logoMimeType)}
           assetTypes={assetTypes.map((type) => ({ name: type.name, slug: type.slug }))}
           showMaps={entitlements.mapsEnabled}
@@ -46,6 +51,7 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
         {isShopStaff(session.role) && !session.impersonatorId ? <PresenceBeacon /> : null}
         <main className="mx-auto max-w-7xl px-4 py-8 print:max-w-none print:px-0 print:py-0">{children}</main>
       </div>
+      </I18nProvider>
     </PlanProvider>
   );
 }

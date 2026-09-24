@@ -6,14 +6,20 @@ import type { MapPin } from "@/lib/map-pins";
 import { STORE_ALL, storeQuery } from "@/lib/stores";
 import { useRevealVehiclePins } from "./useRevealVehiclePins";
 import { usePlan } from "./PlanProvider";
+import { useT } from "./I18nProvider";
+
+function MapLoading() {
+  const t = useT();
+  return (
+    <div className="flex h-[28rem] items-center justify-center bg-stone-100 text-sm text-stone-600">
+      {t("map.loading")}
+    </div>
+  );
+}
 
 const Canvas = dynamic(() => import("./AllTicketsMapCanvas"), {
   ssr: false,
-  loading: () => (
-    <div className="flex h-[28rem] items-center justify-center bg-stone-100 text-sm text-stone-600">
-      Loading map…
-    </div>
-  ),
+  loading: () => <MapLoading />,
 });
 
 export function AllTicketsMap({
@@ -31,6 +37,7 @@ export function AllTicketsMap({
   showOpenMapLink?: boolean;
   openMapInNewTab?: boolean;
 }) {
+  const t = useT();
   const plan = usePlan();
   const showMap = plan.mapsEnabled;
   const showGps = plan.gpsEnabled;
@@ -52,7 +59,7 @@ export function AllTicketsMap({
   if (all.length === 0) {
     return (
       <div className="rounded-xl border border-stone-200 bg-white p-6 text-stone-600">
-        No open work orders or assigned trucks to map.
+        {t("map.empty")}
       </div>
     );
   }
@@ -63,9 +70,9 @@ export function AllTicketsMap({
     <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
       {showGps && fetched.configured === false && revealSetupHref ? (
         <p className="border-b border-stone-200 px-4 py-3 text-sm text-stone-600">
-          GPS is not connected yet.{" "}
+          {t("map.gpsOff")}{" "}
           <Link href={revealSetupHref} className="font-medium text-emerald-800 hover:underline">
-            Open Connectors
+            {t("map.openConnectors")}
           </Link>
           .
         </p>
@@ -77,12 +84,14 @@ export function AllTicketsMap({
       ) : null}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-4 py-3">
         <p className="text-sm font-semibold text-stone-900">
-          {ticketPins.length} open work order{ticketPins.length === 1 ? "" : "s"}
+          {t(ticketPins.length === 1 ? "map.openCount" : "map.openCountPlural", {
+            count: ticketPins.length,
+          })}
           {trucks.length > 0
-            ? ` · ${trucks.length} Verizon truck${trucks.length === 1 ? "" : "s"}`
+            ? t(trucks.length === 1 ? "map.trucks" : "map.trucksPlural", { count: trucks.length })
             : ""}
-          {onSiteCount > 0 ? ` · ${onSiteCount} on site` : ""}{" "}
-          on the map
+          {onSiteCount > 0 ? t("map.onSite", { count: onSiteCount }) : ""}
+          {t("map.onTheMap")}
         </p>
         {showOpenMapLink ? (
           <Link
@@ -91,21 +100,20 @@ export function AllTicketsMap({
             target={openMapInNewTab ? "_blank" : undefined}
             rel={openMapInNewTab ? "noopener noreferrer" : undefined}
           >
-            Open work order map
+            {t("map.openLink")}
           </Link>
         ) : null}
       </div>
       {showMap ? (
         <>
           <p className="border-b border-stone-200 px-4 py-2 text-xs text-stone-500">
-            Green = work order at the pivot. Red = assigned Verizon truck. Flashing On-site means GPS is
-            inside the pivot radius and time is being recorded. Truck pins refresh every 45 seconds.
+            {t("map.legend")}
           </p>
           <Canvas pins={all} />
         </>
       ) : (
         <p className="px-4 py-3 text-sm text-stone-600">
-          In-app maps are not on this plan. Use Google Maps on a work order for directions.
+          {t("map.planOff")}
         </p>
       )}
     </div>

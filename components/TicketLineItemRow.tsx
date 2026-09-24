@@ -2,6 +2,7 @@
 
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
+import { useT } from "@/components/I18nProvider";
 
 type LineAction = (formData: FormData) => Promise<void | { error?: string }>;
 
@@ -32,6 +33,7 @@ export function TicketLineItemRow({
   deleteAction: LineAction;
   deleteLabel: string;
 }) {
+  const t = useT();
   return (
     <li className="flex flex-wrap items-end justify-between gap-3 px-4 py-3 text-sm">
       <div className="min-w-0 flex-1">
@@ -56,19 +58,21 @@ export function TicketLineItemRow({
               />
             </label>
             <button className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-semibold text-white">
-              Save
+              {t("common.save")}
             </button>
           </ActionForm>
           <DeleteButton
             action={deleteAction}
             name="id"
             value={id}
-            label="Remove"
+            label={t("common.remove")}
             confirmText={deleteLabel}
           />
         </div>
       ) : (
-        <p className="font-medium">{amountName === "quantity" ? `${amount} ×` : `${amount} hr`}</p>
+        <p className="font-medium">
+          {amountName === "quantity" ? `${amount} ×` : t("ticket.hoursRead", { amount })}
+        </p>
       )}
     </li>
   );

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ticketWhere } from "@/lib/scope";
-import { isPrintableStatus, requiresInvoice, ROLES, STATUS_LABELS, type TicketStatus } from "@/lib/roles";
+import { isPrintableStatus, requiresInvoice, ROLES, type TicketStatus } from "@/lib/roles";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
 import { TicketListControls } from "@/components/TicketListControls";
 import { formatSchedule } from "@/lib/schedule";
@@ -18,6 +18,8 @@ import {
   type TicketListQuery,
   type TicketListSort,
 } from "@/lib/ticket-list";
+import { getRequestLocale } from "@/lib/user-locale";
+import { statusLabel, t, type Locale } from "@/lib/i18n";
 
 type TicketRow = Prisma.TicketGetPayload<{
   include: { farmer: { include: { store: true } }; pivot: true; technician: true; store: true };
@@ -30,6 +32,7 @@ export default async function TicketsPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const locale = await getRequestLocale();
 
   const query = parseTicketListQuery(await searchParams);
   const tickets = sortTickets(
@@ -49,30 +52,30 @@ export default async function TicketsPage({
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl">Work orders</h1>
+        <h1 className="font-display text-3xl">{t(locale, "tickets.title")}</h1>
         <div className="flex flex-wrap gap-2">
           <Link href="/tickets/print" className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold">
-            Batch print work orders
+            {t(locale, "tickets.batchPrint")}
           </Link>
           <Link href="/tickets/new" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-            {session.role === ROLES.FARMER ? "Request service" : "New work order"}
+            {session.role === ROLES.FARMER ? t(locale, "tickets.request") : t(locale, "tickets.new")}
           </Link>
         </div>
       </div>
       <TicketListControls status={query.status} sort={query.sort} dir={query.dir} />
-      <p className="mt-3 text-sm text-stone-500">{summaryText(tickets.length, query)}</p>
+      <p className="mt-3 text-sm text-stone-500">{summaryText(locale, tickets.length, query)}</p>
       <div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-stone-200/80 text-xs font-semibold uppercase tracking-wide text-stone-800">
             <tr>
-              <th className="px-4 py-2">Work order</th>
-              <th className="px-4 py-2">Customer / pivot</th>
-              <th className="px-4 py-2">Technician</th>
-              <th className="px-4 py-2">Priority</th>
-              <SortableHeader label="Status" column="status" query={query} />
-              <SortableHeader label="Opened" column="opened" query={query} />
-              <SortableHeader label="Scheduled" column="scheduled" query={query} />
-              <th className="px-4 py-2">Invoice</th>
+              <th className="px-4 py-2">{t(locale, "tickets.colWo")}</th>
+              <th className="px-4 py-2">{t(locale, "tickets.colCustomer")}</th>
+              <th className="px-4 py-2">{t(locale, "tickets.colTech")}</th>
+              <th className="px-4 py-2">{t(locale, "tickets.colPriority")}</th>
+              <SortableHeader label={t(locale, "tickets.colStatus")} column="status" query={query} />
+              <SortableHeader label={t(locale, "tickets.colOpened")} column="opened" query={query} />
+              <SortableHeader label={t(locale, "tickets.colScheduled")} column="scheduled" query={query} />
+              <th className="px-4 py-2">{t(locale, "tickets.colInvoice")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -80,8 +83,8 @@ export default async function TicketsPage({
               <tr>
                 <td colSpan={8} className="px-4 py-6 text-stone-600">
                   {query.status === "all"
-                    ? "No work orders yet."
-                    : `No ${STATUS_LABELS[query.status]} work orders.`}
+                    ? t(locale, "tickets.emptyAll")
+                    : t(locale, "tickets.emptyStatus", { status: statusLabel(locale, query.status) })}
                 </td>
               </tr>
             ) : (
@@ -91,6 +94,7 @@ export default async function TicketsPage({
                   status={group.status}
                   tickets={group.tickets}
                   showHeading={showGroups}
+                  locale={locale}
                 />
               ))
             )}
@@ -129,17 +133,19 @@ function TicketGroup({
   status,
   tickets,
   showHeading,
+  locale,
 }: {
   status: TicketStatus | "all";
   tickets: TicketRow[];
   showHeading: boolean;
+  locale: Locale;
 }) {
   return (
     <>
       {showHeading && status !== "all" ? (
         <tr className="bg-stone-200/80">
           <td colSpan={8} className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-stone-800">
-            {STATUS_LABELS[status]} · {tickets.length}
+            {t(locale, "tickets.grouped", { status: statusLabel(locale, status), count: tickets.length })}
           </td>
         </tr>
       ) : null}
@@ -156,7 +162,7 @@ function TicketGroup({
             <br />
             {ticket.pivot.name}
           </td>
-          <td className="px-4 py-3">{ticket.technician?.name ?? "Unassigned"}</td>
+            <td className="px-4 py-3">{ticket.technician?.name ?? t(locale, "common.unassigned")}</td>
           <td className="px-4 py-3">
             <PriorityBadge priority={ticket.priority} />
           </td>
@@ -172,7 +178,7 @@ function TicketGroup({
                 {ticket.invoiceAmount != null ? ` · ${formatMoney(ticket.invoiceAmount)}` : ""}
               </span>
             ) : requiresInvoice(ticket.status) ? (
-              <span className="text-red-700">Missing</span>
+              <span className="text-red-700">{t(locale, "tickets.invoiceMissing")}</span>
             ) : (
               "—"
             )}
@@ -180,7 +186,7 @@ function TicketGroup({
               <>
                 <br />
                 <Link href={`/tickets/${ticket.id}/print`} className="text-xs font-semibold text-emerald-800 hover:underline">
-                  Print
+                  {t(locale, "common.print")}
                 </Link>
               </>
             ) : null}
@@ -191,16 +197,18 @@ function TicketGroup({
   );
 }
 
-function summaryText(count: number, query: TicketListQuery) {
+function summaryText(locale: Locale, count: number, query: TicketListQuery) {
   if (count === 0) {
-    return query.status === "all" ? "No work orders to show." : `No ${STATUS_LABELS[query.status]} work orders.`;
+    return query.status === "all"
+      ? t(locale, "dispatch.emptyAll")
+      : t(locale, "tickets.emptyStatus", { status: statusLabel(locale, query.status) });
   }
-  const noun = count === 1 ? "work order" : "work orders";
+  const noun = count === 1 ? t(locale, "dispatch.oneWo") : t(locale, "dispatch.manyWo");
   if (query.sort === "status" && query.status === "all") {
-    return `${count} ${noun}, grouped by status.`;
+    return t(locale, "tickets.summaryGrouped", { count, noun });
   }
   if (query.status !== "all") {
-    return `${count} ${STATUS_LABELS[query.status]} ${noun}.`;
+    return t(locale, "dispatch.countStatus", { count, status: statusLabel(locale, query.status), noun });
   }
-  return `${count} ${noun}.`;
+  return t(locale, "dispatch.countAll", { count, noun });
 }
