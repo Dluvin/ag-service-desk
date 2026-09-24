@@ -150,33 +150,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           </section>
         ) : null}
 
-        <section>
-          <h2 className="font-display mt-8 text-xl">{t(locale, "ticket.updates")}</h2>
-          {ticket.updates.length > 0 ? (
-            <>
-              <ol className="mt-3 space-y-3">
-                <TicketUpdateItem update={ticket.updates[0]} locale={locale} />
-              </ol>
-              {ticket.updates.length > 1 ? (
-                <CollapsiblePanel
-                  title={t(locale, "ticket.showUpdates")}
-                  hideLabel={t(locale, "ticket.hideUpdates")}
-                  countLabel={`${ticket.updates.length - 1}`}
-                  defaultOpen={false}
-                >
-                  <ol className="space-y-3">
-                    {ticket.updates.slice(1).map((update) => (
-                      <TicketUpdateItem key={update.id} update={update} locale={locale} />
-                    ))}
-                  </ol>
-                </CollapsiblePanel>
-              ) : null}
-            </>
-          ) : (
-            <p className="mt-3 text-sm text-stone-600">{t(locale, "ticket.noUpdates")}</p>
-          )}
-
-          <CollapsiblePanel
+        <CollapsiblePanel
             title={canDispatch ? t(locale, "ticket.addUpdate") : t(locale, "ticket.addInfo")}
             hideLabel={canDispatch ? t(locale, "ticket.hideAddUpdate") : t(locale, "ticket.hideAddInfo")}
             defaultOpen={false}
@@ -230,7 +204,6 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               </button>
             </ActionForm>
           </CollapsiblePanel>
-        </section>
 
         {ticket.photos.length > 0 ? (
           <section className="mt-8">
@@ -399,7 +372,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         </div>
       </div>
 
-      <div className="lg:col-span-2 lg:sticky lg:top-4">
+      <div className="flex flex-col gap-6 lg:col-span-2">
         <GoogleMapPanel
           store={resolvedTicketStoreId(ticket)}
           markers={[
@@ -412,6 +385,32 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             },
           ]}
         />
+        <section>
+          <h2 className="font-display text-xl">{t(locale, "ticket.updates")}</h2>
+          {ticket.updates.length > 0 ? (
+            <>
+              <ol className="mt-3 space-y-3">
+                <TicketUpdateItem update={ticket.updates[0]} locale={locale} />
+              </ol>
+              {ticket.updates.length > 1 ? (
+                <CollapsiblePanel
+                  title={t(locale, "ticket.showUpdates")}
+                  hideLabel={t(locale, "ticket.hideUpdates")}
+                  countLabel={`${ticket.updates.length - 1}`}
+                  defaultOpen={false}
+                >
+                  <ol className="space-y-3">
+                    {ticket.updates.slice(1).map((update) => (
+                      <TicketUpdateItem key={update.id} update={update} locale={locale} />
+                    ))}
+                  </ol>
+                </CollapsiblePanel>
+              ) : null}
+            </>
+          ) : (
+            <p className="mt-3 text-sm text-stone-600">{t(locale, "ticket.noUpdates")}</p>
+          )}
+        </section>
       </div>
     </div>
   );
