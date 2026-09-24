@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguagePicker } from "@/components/LanguagePicker";
 import { assetTypeHref } from "@/lib/assets";
 import { t, type Locale } from "@/lib/i18n";
+import { OFFICE_FORMS } from "@/lib/office-forms";
 
 export function Nav({
   session,
@@ -113,6 +114,13 @@ export function Nav({
           <NavDropdown label={t(locale, "nav.workOrders")} links={ticketLinks} />
           <NavLinkMenu href="/assets" label={t(locale, "nav.assets")} links={assetLinks} />
           <NavLinkMenu href="/reports" label={t(locale, "nav.reports")} links={reportLinks} />
+          {!farmer ? (
+            <NavLinkMenu
+              href="/forms"
+              label={t(locale, "nav.forms")}
+              links={OFFICE_FORMS.map((form) => ({ href: `/forms/${form.slug}`, label: t(locale, form.titleKey) }))}
+            />
+          ) : null}
           {customerLinks.length ? (
             <NavLinkMenu href="/farmers" label={t(locale, "nav.customers")} links={customerLinks} />
           ) : null}

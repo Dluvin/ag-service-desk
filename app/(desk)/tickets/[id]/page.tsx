@@ -436,7 +436,7 @@ function TicketUpdateItem({
         {update.user.name} · {new Date(update.createdAt).toLocaleString()}
         {update.status ? ` · ${statusLabel(locale, update.status)}` : ""}
       </p>
-      <p className="mt-1 text-sm text-stone-800">{update.message}</p>
+      <p className="mt-1 whitespace-pre-wrap text-sm text-stone-800">{update.message}</p>
       <TicketPhotoGrid photos={update.photos} />
     </li>
   );

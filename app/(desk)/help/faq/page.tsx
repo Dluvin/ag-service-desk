@@ -125,6 +125,19 @@ function faqs(locale: Locale) {
       ),
     },
     {
+      id: "forms",
+      question: t(locale, "faq.forms.q"),
+      answer: (
+        <p>
+          {t(locale, "faq.forms.p1")}{" "}
+          <Link href="/forms" className={linkClass}>
+            {t(locale, "nav.forms")}
+          </Link>
+          .
+        </p>
+      ),
+    },
+    {
       id: "maps",
       question: t(locale, "faq.maps.q"),
       answer: (

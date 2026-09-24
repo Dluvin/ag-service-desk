@@ -281,7 +281,7 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
               {update.user.name} · {update.createdAt.toLocaleString()}
               {update.status ? ` · ${STATUS_LABELS[update.status as TicketStatus] ?? update.status}` : ""}
             </p>
-            <p>{update.message}</p>
+            <p className="whitespace-pre-wrap">{update.message}</p>
             {update.photos?.length ? <TicketPhotoGrid photos={update.photos} /> : null}
           </li>
         ))}

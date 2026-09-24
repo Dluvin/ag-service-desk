@@ -48,7 +48,7 @@ import { getPlatformSession } from "./platform";
 import { parseDispatchView, saveUserDispatchView } from "./dispatch-view";
 import { homePath } from "./home";
 import { parseLocale, t } from "./i18n";
-import { loadUserLocale, readLocaleCookie, safeNextPath, saveUserLocale, writeLocaleCookie } from "./user-locale";
+import { loadUserLocale, readLocaleCookie, safeNextPath, saveUserLocale, writeLocaleCookie, getRequestLocale } from "./user-locale";
 import { parseDateTimeLocal } from "./schedule";
 import { parseMoneyInput } from "./money";
 import { emailSignupToOwner } from "./signup-notify";
@@ -69,6 +69,8 @@ import {
   parseFarmId,
   resolveFarmIdForCustomer,
 } from "./farms";
+import { ticketWhere } from "./scope";
+import { officeFormBySlug, officeFormMessage } from "./office-forms";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -3094,4 +3096,34 @@ export async function deleteAssetAction(formData: FormData) {
 
   await prisma.asset.delete({ where: { id: assetId } });
   redirect(`/assets?type=${encodeURIComponent(asset.assetType.slug)}`);
+}
+
+export async function attachOfficeFormToTicketAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isShopStaff(session.role)) return { error: "Not allowed." };
+
+  const ticketId = formString(formData, "ticketId");
+  const slug = formString(formData, "formSlug");
+  const form = officeFormBySlug(slug);
+  if (!form) return { error: "Form not found." };
+  if (!ticketId) return { error: "Choose an open work order." };
+
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, ...ticketWhere(session) },
+  });
+  if (!ticket) return { error: "Work order not found." };
+  if (isFinishedStatus(ticket.status)) return { error: "That work order is already closed." };
+
+  const locale = await getRequestLocale();
+  const title = t(locale, form.titleKey);
+  const message = officeFormMessage(title, formData);
+
+  await prisma.ticketUpdate.create({
+    data: { ticketId: ticket.id, userId: session.userId, message },
+  });
+  await prisma.ticket.update({
+    where: { id: ticket.id },
+    data: { updatedAt: new Date() },
+  });
+  redirect(`/tickets/${ticket.id}`);
 }

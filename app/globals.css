@@ -263,4 +263,9 @@ h2,
     break-after: page;
     page-break-after: always;
   }
+
+  .office-form input,
+  .office-form textarea {
+    color: #1c1917;
+  }
 }

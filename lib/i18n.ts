@@ -52,6 +52,7 @@ const EN_UI = {
   "nav.vehicles": "Vehicles",
   "nav.support": "Support",
   "nav.faq": "FAQ",
+  "nav.forms": "Forms",
   "nav.dashboard": "Dashboard",
   "nav.logOut": "Log out",
 
@@ -336,6 +337,7 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
   "nav.vehicles": "Vehículos",
   "nav.support": "Soporte",
   "nav.faq": "Preguntas",
+  "nav.forms": "Formularios",
   "nav.dashboard": "Inicio",
   "nav.logOut": "Salir",
 
