@@ -3,6 +3,8 @@ import Link from "next/link";
 import { StoreFilter } from "@/components/StoreFilter";
 import { PrintButton } from "@/components/PrintButton";
 import type { StoreOption } from "@/lib/stores";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export function usd(value: number) {
   return `$${value.toFixed(2)}`;
@@ -26,7 +28,7 @@ export function TableCard({ title, children, className = "" }: { title: string; 
   );
 }
 
-export function ReportDateForm({
+export async function ReportDateForm({
   from,
   to,
   store,
@@ -35,18 +37,19 @@ export function ReportDateForm({
   to: string;
   store: string;
 }) {
+  const locale = await getRequestLocale();
   return (
     <form className="no-print mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4" method="get">
       {store !== "all" ? <input type="hidden" name="store" value={store} /> : null}
       <label className="text-sm font-medium">
-        From
+        {t(locale, "common.from")}
         <input name="from" type="date" defaultValue={from} className="mt-1 block rounded-lg border border-stone-300 px-3 py-2" />
       </label>
       <label className="text-sm font-medium">
-        To
+        {t(locale, "common.to")}
         <input name="to" type="date" defaultValue={to} className="mt-1 block rounded-lg border border-stone-300 px-3 py-2" />
       </label>
-      <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Update dates</button>
+      <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">{t(locale, "common.updateDates")}</button>
     </form>
   );
 }
@@ -70,7 +73,7 @@ export function ReportStoreFilter({
   return <StoreFilter stores={stores} selected={selected} pathname={pathname} extra={{ from, to }} />;
 }
 
-export function ReportNav({
+export async function ReportNav({
   current,
   from,
   to,
@@ -81,17 +84,18 @@ export function ReportNav({
   to?: string;
   store?: string;
 }) {
+  const locale = await getRequestLocale();
   const query = new URLSearchParams();
   if (from) query.set("from", from);
   if (to) query.set("to", to);
   if (store && store !== "all") query.set("store", store);
   const qs = query.toString() ? `?${query.toString()}` : "";
   const links = [
-    { id: "tickets" as const, href: `/reports${qs}`, label: "Work order reports" },
-    { id: "pivots" as const, href: `/reports/pivots${qs}`, label: "Pivot reports" },
-    { id: "customers" as const, href: `/reports/customers${qs}`, label: "Customer reports" },
-    { id: "farms" as const, href: `/reports/farms${qs}`, label: "Farm reports" },
-    { id: "assets" as const, href: `/reports/assets${qs}`, label: "Asset reports" },
+    { id: "tickets" as const, href: `/reports${qs}`, label: t(locale, "nav.woReports") },
+    { id: "pivots" as const, href: `/reports/pivots${qs}`, label: t(locale, "nav.pivotReports") },
+    { id: "customers" as const, href: `/reports/customers${qs}`, label: t(locale, "nav.customerReports") },
+    { id: "farms" as const, href: `/reports/farms${qs}`, label: t(locale, "nav.farmReports") },
+    { id: "assets" as const, href: `/reports/assets${qs}`, label: t(locale, "nav.assetReports") },
   ];
 
   return (
@@ -107,7 +111,7 @@ export function ReportNav({
           {link.label}
         </Link>
       ))}
-      <PrintButton label="Print reports" />
+      <PrintButton label={t(locale, "common.printReports")} />
     </div>
   );
 }

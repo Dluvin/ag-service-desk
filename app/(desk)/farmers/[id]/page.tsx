@@ -14,6 +14,8 @@ import { ContactInviteStatus } from "@/components/ContactInviteStatus";
 import { CustomerFarms } from "@/components/CustomerFarms";
 import { FarmerPivotList } from "@/components/FarmerPivotList";
 import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export default async function FarmerDetailPage({
   params,
@@ -26,6 +28,7 @@ export default async function FarmerDetailPage({
   if (!session) redirect("/login");
   const { id } = await params;
   const query = await searchParams;
+  const locale = await getRequestLocale();
 
   if (session.role === ROLES.FARMER && session.farmerId !== id) notFound();
 
@@ -111,15 +114,16 @@ export default async function FarmerDetailPage({
       <h1 className="font-display text-3xl">{farmer.name}</h1>
       <WelcomeMailNotice status={query.welcome} />
       {farmer.address ? <p className="text-stone-600">{farmer.address}</p> : null}
-      {farmer.store ? <p className="text-sm text-stone-600">Default store: {farmer.store.name}</p> : null}
+      {farmer.store ? <p className="text-sm text-stone-600">{t(locale, "customers.defaultStore", { name: farmer.store.name })}</p> : null}
       {canDeleteRecords(session.role) ? (
         <div className="mt-3">
           <DeleteButton
             action={deleteFarmerAction}
             name="farmerId"
             value={farmer.id}
-            label="Delete customer"
-            confirmText={`Delete ${farmer.name} and its farms, pivots, and work orders? This cannot be undone.`}
+            label={t(locale, "customers.delete")}
+            confirmText={t(locale, "customers.deleteConfirm", { name: farmer.name })}
+            typedMatch={farmer.name}
           />
         </div>
       ) : null}
@@ -147,29 +151,29 @@ export default async function FarmerDetailPage({
           {canEdit ? (
             <ActionForm action={updateFarmerAction} className="mb-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
               <input type="hidden" name="farmerId" value={farmer.id} />
-              <h2 className="font-display text-xl">Edit customer</h2>
+              <h2 className="font-display text-xl">{t(locale, "customers.edit")}</h2>
               <label className="block text-sm font-medium">
-                Customer name
+                {t(locale, "customers.name")}
                 <input name="name" required defaultValue={farmer.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
               </label>
               <label className="block text-sm font-medium">
-                Address
+                {t(locale, "common.address")}
                 <input name="address" defaultValue={farmer.address ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
               </label>
               <StoreSelect stores={stores} defaultValue={farmer.storeId} />
-              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save customer</button>
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">{t(locale, "customers.save")}</button>
             </ActionForm>
           ) : session.role === ROLES.FARMER ? (
             <ActionForm action={updateFarmerStoreAction} className="mb-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
               <input type="hidden" name="farmerId" value={farmer.id} />
-              <h2 className="font-display text-xl">Default store</h2>
-              <p className="text-sm text-stone-600">Pick the shop that should see your service calls on dispatch.</p>
+              <h2 className="font-display text-xl">{t(locale, "customers.defaultStoreTitle")}</h2>
+              <p className="text-sm text-stone-600">{t(locale, "customers.defaultStoreHelp")}</p>
               <StoreSelect stores={stores} defaultValue={farmer.storeId} />
-              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save default store</button>
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">{t(locale, "customers.saveStore")}</button>
             </ActionForm>
           ) : null}
 
-          <h2 className="font-display text-xl">Contacts</h2>
+          <h2 className="font-display text-xl">{t(locale, "common.contacts")}</h2>
           {farmer.contacts.length ? (
             <ul className="mt-2 space-y-3">
               {farmer.contacts.map((contact) => (
@@ -179,22 +183,21 @@ export default async function FarmerDetailPage({
                       <ActionForm action={updateFarmerContactAction} className="space-y-3">
                         <input type="hidden" name="contactId" value={contact.id} />
                         <label className="block text-sm font-medium">
-                          Name
+                          {t(locale, "common.name")}
                           <input name="contactName" required defaultValue={contact.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
                         </label>
                         <label className="block text-sm font-medium">
-                          Phone
+                          {t(locale, "common.phone")}
                           <input name="contactPhone" defaultValue={contact.phone ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
                         </label>
                         <label className="block text-sm font-medium">
-                          Email
+                          {t(locale, "common.email")}
                           <input name="contactEmail" type="email" defaultValue={contact.email ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
                           <span className="mt-1 block text-xs font-normal text-stone-500">
-                            Saving with an email creates a customer login and sends a welcome message if they do
-                            not already have one.
+                            {t(locale, "customers.emailCreatesLogin")}
                           </span>
                         </label>
-                        <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Save contact</button>
+                        <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "customers.saveContact")}</button>
                       </ActionForm>
                       <ContactInviteStatus
                         email={contact.email}
@@ -206,7 +209,7 @@ export default async function FarmerDetailPage({
                           <ActionForm action={resendFarmerContactInviteAction}>
                             <input type="hidden" name="contactId" value={contact.id} />
                             <button className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-800 hover:bg-stone-100">
-                              Resend invite
+                              {t(locale, "customers.resendInvite")}
                             </button>
                           </ActionForm>
                         ) : (
@@ -217,8 +220,8 @@ export default async function FarmerDetailPage({
                             action={deleteFarmerContactAction}
                             name="contactId"
                             value={contact.id}
-                            label="Delete contact"
-                            confirmText={`Delete contact ${contact.name}?`}
+                            label={t(locale, "customers.deleteContact")}
+                            confirmText={t(locale, "customers.deleteContactConfirm", { name: contact.name })}
                           />
                         ) : null}
                       </div>
@@ -227,7 +230,7 @@ export default async function FarmerDetailPage({
                     <>
                       <p className="font-medium">{contact.name}</p>
                       <p className="text-sm text-stone-600">
-                        {[contact.phone, contact.email].filter(Boolean).join(" · ") || "No phone or email"}
+                        {[contact.phone, contact.email].filter(Boolean).join(" · ") || t(locale, "customers.noPhoneEmail")}
                       </p>
                       <ContactInviteStatus
                         email={contact.email}
@@ -240,30 +243,29 @@ export default async function FarmerDetailPage({
             </ul>
           ) : (
             <p className="mt-2 text-sm text-stone-600">
-              {[farmer.phone, farmer.email].filter(Boolean).join(" · ") || "No contacts yet."}
+              {[farmer.phone, farmer.email].filter(Boolean).join(" · ") || t(locale, "customers.noContacts")}
             </p>
           )}
           {canEdit ? (
             <ActionForm action={addFarmerContactAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
               <input type="hidden" name="farmerId" value={farmer.id} />
-              <p className="text-sm font-semibold text-stone-800">Add contact</p>
+              <p className="text-sm font-semibold text-stone-800">{t(locale, "customers.addContact")}</p>
               <label className="block text-sm font-medium">
-                Name
+                {t(locale, "common.name")}
                 <input name="contactName" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
               </label>
               <label className="block text-sm font-medium">
-                Phone
+                {t(locale, "common.phone")}
                 <input name="contactPhone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
               </label>
               <label className="block text-sm font-medium">
-                Email
+                {t(locale, "common.email")}
                 <input name="contactEmail" type="email" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
                 <span className="mt-1 block text-xs font-normal text-stone-500">
-                  If you enter an email, they get a dashboard login and a welcome email to set a
-                  password.
+                  {t(locale, "customers.addEmailLogin")}
                 </span>
               </label>
-              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save contact</button>
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">{t(locale, "customers.saveContact")}</button>
             </ActionForm>
           ) : null}
         </div>
@@ -314,9 +316,9 @@ export default async function FarmerDetailPage({
           farmName: asset.farm?.name ?? UNASSIGNED_FARM_LABEL,
         }))}
       />
-      <h2 className="font-display mt-8 text-xl">Work orders</h2>
+      <h2 className="font-display mt-8 text-xl">{t(locale, "tickets.title")}</h2>
       <Link href="/tickets/new" className="mt-1 inline-block text-sm font-semibold text-emerald-800">
-        Request service
+        {t(locale, "tickets.request")}
       </Link>
       <ul className="mt-2 space-y-2">
         {farmer.tickets.map((ticket) => (

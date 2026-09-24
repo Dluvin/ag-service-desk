@@ -7,6 +7,8 @@ import { DISPATCH_STATUSES, ROLES } from "@/lib/roles";
 import { parseStoreParam, storeTicketWhere } from "@/lib/stores";
 import { StoreFilter } from "@/components/StoreFilter";
 import { DispatchCalendar } from "@/components/DispatchCalendar";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export default async function DispatchCalendarPage({
   searchParams,
@@ -18,6 +20,7 @@ export default async function DispatchCalendarPage({
   if (session.role === ROLES.FARMER) redirect("/dashboard");
 
   const query = await searchParams;
+  const locale = await getRequestLocale();
   const stores = await prisma.store.findMany({
     where: { organizationId: session.organizationId },
     orderBy: { name: "asc" },
@@ -44,10 +47,10 @@ export default async function DispatchCalendarPage({
     <div>
       <p className="text-sm text-stone-600">
         <Link href={backQuery ? `/dispatch?${backQuery}` : "/dispatch"} className="text-emerald-800 hover:underline">
-          Dispatch board
+          {t(locale, "dispatch.title")}
         </Link>
       </p>
-      <h1 className="font-display mt-2 text-3xl">Dispatch calendar</h1>
+      <h1 className="font-display mt-2 text-3xl">{t(locale, "desk.calendarTitle")}</h1>
       <p className="mt-1 text-stone-600">Scheduled work orders for the selected store. Open this page in its own window while you work the board and map.</p>
       <StoreFilter stores={stores} selected={selectedStore} pathname="/dispatch/calendar" />
       <DispatchCalendar

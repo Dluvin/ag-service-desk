@@ -1,3 +1,5 @@
+import { REST_EN, REST_ES } from "./i18n-rest";
+
 export const LOCALES = ["en", "es"] as const;
 export type Locale = (typeof LOCALES)[number];
 
@@ -5,7 +7,7 @@ export function parseLocale(value: string | null | undefined): Locale {
   return value === "es" ? "es" : "en";
 }
 
-const EN = {
+const EN_UI = {
   "lang.en": "English",
   "lang.es": "Español",
   "lang.switchToEn": "English",
@@ -286,9 +288,10 @@ const EN = {
   "email.there": "there",
 } as const;
 
+export const EN = { ...EN_UI, ...REST_EN };
 export type MessageKey = keyof typeof EN;
 
-const ES: Record<MessageKey, string> = {
+const ES_UI: Record<keyof typeof EN_UI, string> = {
   "lang.en": "English",
   "lang.es": "Español",
   "lang.switchToEn": "English",
@@ -571,6 +574,7 @@ const ES: Record<MessageKey, string> = {
   "email.there": "estimado/a",
 };
 
+const ES: Record<MessageKey, string> = { ...ES_UI, ...REST_ES };
 const TABLES: Record<Locale, Record<MessageKey, string>> = { en: EN, es: ES };
 
 export function t(locale: Locale, key: MessageKey, vars?: Record<string, string | number>) {

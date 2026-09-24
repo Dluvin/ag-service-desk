@@ -1,4 +1,7 @@
+"use client";
+
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
+import { useT } from "@/components/I18nProvider";
 
 export type ContactLoginStatus = {
   lastSeenAt: Date | null;
@@ -15,21 +18,25 @@ export function ContactInviteStatus({
   login: ContactLoginStatus | null;
   flash?: string;
 }) {
+  const t = useT();
   const now = Date.now();
-  let label = "No email — no dashboard login.";
+  let label = t("customers.invite.noEmail");
   let tone = "text-stone-600";
 
   if (email && login?.lastSeenAt) {
-    label = `Signed in · last ${login.lastSeenAt.toLocaleString()}`;
+    label = t("customers.invite.signedIn", { when: login.lastSeenAt.toLocaleString() });
     tone = "text-emerald-800";
   } else if (email && login?.inviteExpiresAt && login.inviteExpiresAt.getTime() > now) {
-    label = `Invite sent${login.inviteSentAt ? ` ${login.inviteSentAt.toLocaleString()}` : ""}. Link expires ${login.inviteExpiresAt.toLocaleString()}.`;
+    label = t("customers.invite.sent", {
+      when: login.inviteSentAt ? login.inviteSentAt.toLocaleString() : "",
+      expires: login.inviteExpiresAt.toLocaleString(),
+    });
     tone = "text-emerald-800";
   } else if (email && login) {
-    label = "Login exists, but they have not signed in. Resend the invite.";
+    label = t("customers.invite.exists");
     tone = "text-amber-800";
   } else if (email) {
-    label = "No login yet. Resend invite to create one and email a password link.";
+    label = t("customers.invite.none");
     tone = "text-amber-800";
   }
 

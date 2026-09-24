@@ -67,6 +67,7 @@ export default async function StoresPage() {
                       value={store.id}
                       label="Delete"
                       confirmText={`Delete store ${store.name}? Customers using it will have no default store.`}
+                      typedMatch={store.name}
                     />
                   </div>
                 ) : null}

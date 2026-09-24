@@ -70,6 +70,7 @@ export default async function TechniciansPage({
                     value={tech.id}
                     label="Delete"
                     confirmText={`Delete technician ${tech.name}? Assigned work orders will become unassigned.`}
+                    typedMatch={[tech.name, tech.email]}
                   />
                 ) : null}
               </div>

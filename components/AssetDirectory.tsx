@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ListSearch } from "@/components/ListSearch";
 import type { UnifiedAssetRow } from "@/lib/assets";
 import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
+import { useT } from "@/components/I18nProvider";
 
 function assetSearchText(asset: UnifiedAssetRow) {
   return [
@@ -29,6 +30,8 @@ function assetSubtitle(asset: UnifiedAssetRow) {
 }
 
 export function AssetDirectory({ assets }: { assets: UnifiedAssetRow[] }) {
+  const t = useT();
+  const unassigned = t("common.unassignedFarm");
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -73,13 +76,13 @@ export function AssetDirectory({ assets }: { assets: UnifiedAssetRow[] }) {
         <ListSearch
           value={query}
           onChange={setQuery}
-          label="Search Assets"
-          placeholder="Name, type, customer, farm, or serial"
+          label={t("assets.search")}
+          placeholder={t("assets.searchPlaceholder")}
         />
         {open && query.trim() ? (
           <ul className="absolute z-40 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-stone-200 bg-white py-1 text-sm shadow-lg">
             {suggestions.length === 0 ? (
-              <li className="px-3 py-2 text-stone-500">No matching Assets</li>
+              <li className="px-3 py-2 text-stone-500">{t("assets.noMatch")}</li>
             ) : (
               suggestions.map((asset) => (
                 <li key={`${asset.typeSlug}-${asset.id}`}>
@@ -100,7 +103,7 @@ export function AssetDirectory({ assets }: { assets: UnifiedAssetRow[] }) {
       </form>
       {matches.length === 0 ? (
         <p className="mt-4 text-sm text-stone-600">
-          {query.trim() ? "No Assets match that search." : "No Assets yet."}
+          {query.trim() ? t("assets.noMatch") : t("assets.empty")}
         </p>
       ) : (
         <ul className="mt-4 grid gap-4 md:grid-cols-2">
@@ -112,7 +115,7 @@ export function AssetDirectory({ assets }: { assets: UnifiedAssetRow[] }) {
               </Link>
               <p className="text-sm text-stone-600">
                 {asset.farmerName}
-                {` · ${asset.farmName ?? UNASSIGNED_FARM_LABEL}`}
+                {` · ${asset.farmName && asset.farmName !== UNASSIGNED_FARM_LABEL ? asset.farmName : unassigned}`}
               </p>
               <p className="mt-1 text-xs text-stone-500">
                 {asset.latitude.toFixed(5)}, {asset.longitude.toFixed(5)}

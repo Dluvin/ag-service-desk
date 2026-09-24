@@ -22,6 +22,8 @@ import {
   formatPlanCents,
 } from "@/lib/plans";
 import { ContactSalesNote } from "@/components/ContactSalesNote";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export default async function StaffPage({
   searchParams,
@@ -63,23 +65,24 @@ export default async function StaffPage({
   const extraSeats = plan ? extraStaffSeatsFor(plan.org, seatCount) : extraStaffSeats(seatCount);
   const allowUser = plan ? canAddUser(plan.org, seatCount) : true;
   const showGps = entitlements?.gpsEnabled ?? true;
+  const locale = await getRequestLocale();
 
   const groups = [
-    { role: ROLES.ADMIN, title: "Admins" },
-    { role: ROLES.MANAGER, title: "Managers" },
-    { role: ROLES.CLERICAL, title: "Office/Clerical" },
-    { role: ROLES.TECHNICIAN, title: "Technicians" },
+    { role: ROLES.ADMIN, title: t(locale, "staff.admins") },
+    { role: ROLES.MANAGER, title: t(locale, "staff.managers") },
+    { role: ROLES.CLERICAL, title: t(locale, "staff.clerical") },
+    { role: ROLES.TECHNICIAN, title: t(locale, "staff.technicians") },
   ].filter((group) => canEditStaffMember(session.role, group.role));
 
   return (
     <div className="grid gap-8 lg:grid-cols-5">
       <div className="lg:col-span-3">
-        <h1 className="font-display text-3xl">Staff</h1>
+        <h1 className="font-display text-3xl">{t(locale, "staff.title")}</h1>
         {session.role === ROLES.ADMIN ? (
           <p className="mt-1 text-sm text-stone-600">
-            See who has the desk open on{" "}
+            {t(locale, "staff.onlineHint")}{" "}
             <Link href="/online" className="font-medium text-emerald-800 hover:underline">
-              Who’s signed in
+              {t(locale, "nav.online")}
             </Link>
             .
           </p>
@@ -114,7 +117,7 @@ export default async function StaffPage({
                           <p className="text-sm text-stone-600">
                             {person.email}
                             {person.phone ? ` · ${person.phone}` : ""}
-                            {` · ${roleLabel(person.role)}`}
+                            {` · ${roleLabel(person.role, locale)}`}
                             {person.store ? ` · ${person.store.name}` : ""}
                           </p>
                         </div>
@@ -125,6 +128,7 @@ export default async function StaffPage({
                             value={person.id}
                             label="Delete"
                             confirmText={`Delete ${person.name}? Their login will stop working.`}
+                            typedMatch={[person.name, person.email]}
                           />
                         ) : null}
                       </div>
@@ -163,7 +167,7 @@ export default async function StaffPage({
             <select name="role" defaultValue={ROLES.TECHNICIAN} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
               {roleOptions.map((role) => (
                 <option key={role} value={role}>
-                  {roleLabel(role)}
+                  {roleLabel(role, locale)}
                 </option>
               ))}
             </select>

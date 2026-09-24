@@ -14,6 +14,8 @@ import {
   pivotToUnifiedRow,
 } from "@/lib/assets";
 import { AssetDirectory } from "@/components/AssetDirectory";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export default async function AssetsPage({
   searchParams,
@@ -24,6 +26,7 @@ export default async function AssetsPage({
   if (!session) redirect("/login");
 
   const query = await searchParams;
+  const locale = await getRequestLocale();
   const types = await ensureAssetTypes(session.organizationId);
   const filterSlug = query.type?.trim() || "";
   const selected = filterSlug ? types.find((type) => type.slug === filterSlug) : null;
@@ -59,7 +62,7 @@ export default async function AssetsPage({
   ].sort((a, b) => a.name.localeCompare(b.name));
 
   const canAdd = isShopStaff(session.role);
-  const title = selected ? selected.name : "All Assets";
+  const title = selected ? selected.name : t(locale, "assets.titleAll");
 
   return (
     <div>
@@ -68,7 +71,7 @@ export default async function AssetsPage({
           {selected ? (
             <p className="text-sm text-stone-500">
               <Link href="/assets" className="text-emerald-800 hover:underline">
-                Assets
+                {t(locale, "nav.assets")}
               </Link>
             </p>
           ) : null}
@@ -76,9 +79,9 @@ export default async function AssetsPage({
           <p className="mt-1 text-sm text-stone-600">
             {selected
               ? selected.kind === "PIVOT"
-                ? "Existing pivot records stay on the Pivots list and in this filter."
-                : `${selected.name} for this company.`
-              : "Pivots, wells, pumps, generators, and any types you add."}
+                ? t(locale, "assets.pivotFilterHelp")
+                : t(locale, "assets.typeHelp", { name: selected.name })
+              : t(locale, "assets.typeHelp", { name: t(locale, "nav.assets") })}
           </p>
         </div>
         {canAdd ? (

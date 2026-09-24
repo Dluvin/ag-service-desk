@@ -8,6 +8,8 @@ import { AllTicketsMap } from "@/components/AllTicketsMap";
 import { StoreFilter } from "@/components/StoreFilter";
 import { OPEN_TICKET_STATUSES, ticketPins } from "@/lib/map-pins";
 import { parseStoreParam, storePivotWhere, storeTicketWhere } from "@/lib/stores";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export default async function MapPage({
   searchParams,
@@ -18,6 +20,7 @@ export default async function MapPage({
   if (!session) redirect("/login");
 
   const query = await searchParams;
+  const locale = await getRequestLocale();
   const stores = await prisma.store.findMany({
     where: { organizationId: session.organizationId },
     orderBy: { name: "asc" },
@@ -46,7 +49,7 @@ export default async function MapPage({
 
   return (
     <div>
-      <h1 className="font-display text-3xl">Maps</h1>
+      <h1 className="font-display text-3xl">{t(locale, "desk.mapTitle")}</h1>
       <p className="mt-1 text-stone-600">
         Every open work order at its pivot, then the full pivot fleet. Filter by store to see one shop’s work orders, pivots, and trucks.
       </p>
@@ -54,7 +57,7 @@ export default async function MapPage({
         <StoreFilter stores={stores} selected={selectedStore} pathname="/map" />
       ) : null}
 
-      <h2 className="font-display mt-8 text-xl">Open work orders</h2>
+      <h2 className="font-display mt-8 text-xl">{t(locale, "dispatch.mapTitle")}</h2>
       <p className="mt-1 text-sm text-stone-600">Pins for open, assigned, in-progress, and waiting-on-parts work.</p>
       <div className="mt-4">
         <AllTicketsMap

@@ -6,6 +6,7 @@ import { AddAssetToFarmPanel } from "@/components/AddAssetToFarmPanel";
 import { ListSearch } from "@/components/ListSearch";
 import { PivotDocuments, type PivotDocumentItem } from "@/components/PivotDocuments";
 import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
+import { useT } from "@/components/I18nProvider";
 
 type FarmerPivot = {
   id: string;
@@ -50,6 +51,8 @@ export function FarmerPivotList({
   canManage: boolean;
   farmerId: string;
 }) {
+  const t = useT();
+  const unassigned = t("common.unassignedFarm");
   const [query, setQuery] = useState("");
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -139,17 +142,19 @@ export function FarmerPivotList({
   return (
     <>
       <h2 className="font-display mt-8 text-xl">
-        Assets by farm ({searching ? `${matchedAssets} of ${totalAssets}` : totalAssets})
+        {t("assetsByFarm.title", {
+          count: searching ? t("assetsByFarm.matched", { matched: matchedAssets, total: totalAssets }) : totalAssets,
+        })}
       </h2>
       <p className="mt-2 text-sm text-stone-600">
-        Existing pivots and other assets stay with this customer as{" "}
-        <span className="font-semibold">{UNASSIGNED_FARM_LABEL}</span> until you assign them to a farm.
+        {t("assetsByFarm.helpBefore")}{" "}
+        <span className="font-semibold">{unassigned}</span> {t("assetsByFarm.helpAfter")}
       </p>
       <ListSearch
         value={query}
         onChange={setQuery}
-        label="Search pivots"
-        placeholder="Pivot, serial, location, or asset"
+        label={t("assetsByFarm.search")}
+        placeholder={t("assetsByFarm.searchPlaceholder")}
       />
       {canManage ? (
         <AddAssetToFarmPanel
@@ -161,9 +166,9 @@ export function FarmerPivotList({
         />
       ) : null}
       {searching && matchedAssets === 0 ? (
-        <p className="mt-4 text-sm text-stone-600">No pivots match that search.</p>
+        <p className="mt-4 text-sm text-stone-600">{t("assetsByFarm.noMatch")}</p>
       ) : matchedAssets === 0 && farms.length === 0 ? (
-        <p className="mt-4 text-sm text-stone-600">No pivots or other assets on this customer yet.</p>
+        <p className="mt-4 text-sm text-stone-600">{t("assetsByFarm.empty")}</p>
       ) : (
         <div className="mt-4 space-y-6">
           {groups.map((group) => {
@@ -174,20 +179,20 @@ export function FarmerPivotList({
             return (
               <section key={farmKey(group.farmId)} className="rounded-xl border border-stone-200 bg-white p-4">
                 <h3 className="font-display text-lg">
-                  {group.farmId == null ? <span className="font-semibold">{UNASSIGNED_FARM_LABEL}</span> : group.farmName}
+                  {group.farmId == null ? <span className="font-semibold">{unassigned}</span> : group.farmName}
                 </h3>
                 {group.farmId == null ? (
                   <p className="mt-1 text-xs text-stone-500">
-                    Not assigned to a farm. These stay with this customer if a farm is moved.
+                    {t("assetsByFarm.unassignedHelp")}
                   </p>
                 ) : null}
                 {empty ? (
-                  <p className="mt-3 text-sm text-stone-600">No assets on this farm yet.</p>
+                  <p className="mt-3 text-sm text-stone-600">{t("assetsByFarm.noneOnFarm")}</p>
                 ) : (
                   <>
                     {groupPivots.length ? (
                       <div className="mt-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Pivots</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{t("common.pivots")}</p>
                         <ul
                           className={
                             groupPivots.length > 8
@@ -205,7 +210,7 @@ export function FarmerPivotList({
                               {pivot.documents.length > 0 ? (
                                 <span className="text-xs text-stone-500">
                                   {" "}
-                                  · {pivot.documents.length} file{pivot.documents.length === 1 ? "" : "s"}
+                                  · {t(pivot.documents.length === 1 ? "common.file" : "common.files", { count: pivot.documents.length })}
                                 </span>
                               ) : null}
                             </li>
@@ -215,7 +220,7 @@ export function FarmerPivotList({
                     ) : null}
                     {groupAssets.length ? (
                       <div className="mt-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Other assets</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{t("assetsByFarm.other")}</p>
                         <ul className="mt-1 space-y-1">
                           {groupAssets.map((asset) => (
                             <li key={asset.id}>
@@ -237,14 +242,14 @@ export function FarmerPivotList({
       )}
       {showDocuments && matches.pivots.length > 0 ? (
         <div className="mt-6 space-y-4">
-          <h3 className="font-display text-lg">Pivot documents</h3>
+          <h3 className="font-display text-lg">{t("assetsByFarm.documents")}</h3>
           {matches.pivots.map((pivot) =>
             canManage || pivot.documents.length > 0 ? (
               <div key={pivot.id} className="rounded-xl border border-stone-200 bg-white p-4">
                 <Link href={`/pivots/${pivot.id}`} className="font-medium text-emerald-800 hover:underline">
                   {pivot.name}
                 </Link>
-                <span className="ml-2 text-xs text-stone-500">{pivot.farmName ?? UNASSIGNED_FARM_LABEL}</span>
+                <span className="ml-2 text-xs text-stone-500">{pivot.farmName && pivot.farmName !== UNASSIGNED_FARM_LABEL ? pivot.farmName : unassigned}</span>
                 <PivotDocuments
                   pivotId={pivot.id}
                   documents={pivot.documents}

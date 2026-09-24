@@ -97,6 +97,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
               value={pivot.id}
               label="Delete pivot"
               confirmText={`Delete ${pivot.name} and its work orders? This cannot be undone.`}
+              typedMatch={pivot.name}
             />
           </div>
         ) : null}

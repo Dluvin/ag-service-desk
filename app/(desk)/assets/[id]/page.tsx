@@ -107,6 +107,7 @@ export default async function AssetDetailPage({ params }: { params: Promise<{ id
               value={asset.id}
               label={`Delete ${label.toLowerCase()}`}
               confirmText={`Delete ${asset.name}? This cannot be undone.`}
+              typedMatch={asset.name}
             />
           </div>
         ) : null}

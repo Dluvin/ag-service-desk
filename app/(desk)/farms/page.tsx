@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES } from "@/lib/roles";
 import { FarmsDirectory } from "@/components/FarmsDirectory";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export default async function FarmsPage() {
   const session = await getSession();
@@ -11,6 +13,7 @@ export default async function FarmsPage() {
     redirect(`/farmers/${session.farmerId}`);
   }
   if (session.role === ROLES.FARMER) redirect("/dashboard");
+  const locale = await getRequestLocale();
 
   const farms = await prisma.farm.findMany({
     where: { organizationId: session.organizationId },
@@ -23,10 +26,8 @@ export default async function FarmsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl">Farms</h1>
-      <p className="mt-1 text-sm text-stone-600">
-        All farms for this company. Open a farm to see its customer, contact, and assets.
-      </p>
+      <h1 className="font-display text-3xl">{t(locale, "farms.title")}</h1>
+      <p className="mt-1 text-sm text-stone-600">{t(locale, "farms.intro")}</p>
       <FarmsDirectory
         farms={farms.map((farm) => ({
           id: farm.id,

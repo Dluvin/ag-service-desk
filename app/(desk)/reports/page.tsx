@@ -8,6 +8,8 @@ import { ReportPrintBrand } from "@/components/PrintCompanyMark";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
 import { ReportDateForm, ReportNav, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
 import { loadReports } from "@/lib/reports";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export default async function ReportsPage({
   searchParams,
@@ -18,6 +20,7 @@ export default async function ReportsPage({
   if (!session) redirect("/login");
 
   const query = await searchParams;
+  const locale = await getRequestLocale();
   const stores = await prisma.store.findMany({
     where: { organizationId: session.organizationId },
     orderBy: { name: "asc" },
@@ -35,9 +38,9 @@ export default async function ReportsPage({
       <ReportPrintBrand />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl">Work order reports</h1>
+          <h1 className="font-display text-3xl">{t(locale, "reports.woTitle")}</h1>
           <p className="mt-1 text-stone-600">
-            Opened and closed work from {report.range.from} through {report.range.to}, plus what is still open now.
+            {t(locale, "reports.woIntro", { from: report.range.from, to: report.range.to })}
           </p>
         </div>
         <ReportNav current="tickets" from={report.range.from} to={report.range.to} store={selectedStore} />
@@ -55,23 +58,23 @@ export default async function ReportsPage({
 
       <section className="mt-10">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Opened in range" value={String(report.ticket.opened)} />
-          <Stat label="Closed in range" value={String(report.ticket.closed)} />
-          <Stat label="Open now" value={String(report.ticket.openNow)} />
-          <Stat label="Invoice total (closed)" value={usd(report.ticket.invoiceTotal)} />
-          <Stat label="Parts on closed" value={usd(report.ticket.partsTotal)} />
-          <Stat label="Labor hours (closed)" value={String(report.ticket.laborHours)} />
-          <Stat label="Labor $ (closed)" value={usd(report.ticket.laborTotal)} />
+          <Stat label={t(locale, "reports.openedInRange")} value={String(report.ticket.opened)} />
+          <Stat label={t(locale, "reports.closedInRange")} value={String(report.ticket.closed)} />
+          <Stat label={t(locale, "common.openNow")} value={String(report.ticket.openNow)} />
+          <Stat label={t(locale, "reports.invoiceClosed")} value={usd(report.ticket.invoiceTotal)} />
+          <Stat label={t(locale, "reports.partsClosed")} value={usd(report.ticket.partsTotal)} />
+          <Stat label={t(locale, "reports.laborHoursClosed")} value={String(report.ticket.laborHours)} />
+          <Stat label={t(locale, "reports.laborMoneyClosed")} value={usd(report.ticket.laborTotal)} />
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <TableCard title="By status">
+          <TableCard title={t(locale, "reports.byStatus")}>
             <table className="w-full text-left text-sm">
               <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
                 <tr>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">In range</th>
-                  <th className="px-3 py-2">All open/closed</th>
+                  <th className="px-3 py-2">{t(locale, "dispatch.status")}</th>
+                  <th className="px-3 py-2">{t(locale, "reports.inRange")}</th>
+                  <th className="px-3 py-2">{t(locale, "reports.allOpenClosed")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -87,12 +90,12 @@ export default async function ReportsPage({
               </tbody>
             </table>
           </TableCard>
-          <TableCard title="By priority (opened in range)">
+          <TableCard title={t(locale, "reports.byPriority")}>
             <table className="w-full text-left text-sm">
               <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
                 <tr>
-                  <th className="px-3 py-2">Priority</th>
-                  <th className="px-3 py-2">Work orders</th>
+                  <th className="px-3 py-2">{t(locale, "tickets.colPriority")}</th>
+                  <th className="px-3 py-2">{t(locale, "reports.workOrders")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -107,20 +110,20 @@ export default async function ReportsPage({
               </tbody>
             </table>
           </TableCard>
-          <TableCard title="By technician">
+          <TableCard title={t(locale, "reports.byTechnician")}>
             <table className="w-full text-left text-sm">
               <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
                 <tr>
-                  <th className="px-3 py-2">Technician</th>
-                  <th className="px-3 py-2">Opened</th>
-                  <th className="px-3 py-2">Closed</th>
+                  <th className="px-3 py-2">{t(locale, "common.technician")}</th>
+                  <th className="px-3 py-2">{t(locale, "common.opened")}</th>
+                  <th className="px-3 py-2">{t(locale, "common.closed")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {report.ticket.byTechnician.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="px-3 py-4 text-stone-600">
-                      No work orders in this range.
+                      {t(locale, "reports.noneInRange")}
                     </td>
                   </tr>
                 ) : (
@@ -135,21 +138,21 @@ export default async function ReportsPage({
               </tbody>
             </table>
           </TableCard>
-          <TableCard title="By store">
+          <TableCard title={t(locale, "reports.byStore")}>
             <table className="w-full text-left text-sm">
               <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
                 <tr>
-                  <th className="px-3 py-2">Store</th>
-                  <th className="px-3 py-2">Opened</th>
-                  <th className="px-3 py-2">Closed</th>
-                  <th className="px-3 py-2">Invoice</th>
+                  <th className="px-3 py-2">{t(locale, "common.store")}</th>
+                  <th className="px-3 py-2">{t(locale, "common.opened")}</th>
+                  <th className="px-3 py-2">{t(locale, "common.closed")}</th>
+                  <th className="px-3 py-2">{t(locale, "common.invoice")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {report.ticket.byStore.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-3 py-4 text-stone-600">
-                      No work orders in this range.
+                      {t(locale, "reports.noneInRange")}
                     </td>
                   </tr>
                 ) : (
@@ -167,23 +170,23 @@ export default async function ReportsPage({
           </TableCard>
         </div>
 
-        <TableCard title="Closed work orders in range" className="mt-6">
+        <TableCard title={t(locale, "reports.closedInRangeTitle")} className="mt-6">
           <table className="w-full text-left text-sm">
             <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
               <tr>
-                <th className="px-3 py-2">Work order</th>
-                <th className="px-3 py-2">Customer / pivot</th>
-                <th className="px-3 py-2">Tech</th>
-                <th className="px-3 py-2">Invoice</th>
-                <th className="px-3 py-2">Parts</th>
-                <th className="px-3 py-2">Hours</th>
+                <th className="px-3 py-2">{t(locale, "tickets.colWo")}</th>
+                <th className="px-3 py-2">{t(locale, "tickets.colCustomer")}</th>
+                <th className="px-3 py-2">{t(locale, "common.tech")}</th>
+                <th className="px-3 py-2">{t(locale, "common.invoice")}</th>
+                <th className="px-3 py-2">{t(locale, "common.parts")}</th>
+                <th className="px-3 py-2">{t(locale, "common.hours")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
               {report.ticket.closedRows.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-3 py-4 text-stone-600">
-                    No work orders were closed in this range.
+                    {t(locale, "reports.noneClosed")}
                   </td>
                 </tr>
               ) : (

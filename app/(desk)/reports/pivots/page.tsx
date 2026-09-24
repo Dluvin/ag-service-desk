@@ -8,6 +8,8 @@ import { ReportPrintBrand } from "@/components/PrintCompanyMark";
 import { ReportDateForm, ReportNav, ReportStoreFilter, Stat, TableCard } from "@/components/ReportUi";
 import { STARTUP_SEASON_YEAR } from "@/lib/startup";
 import { loadReports, toDayParam } from "@/lib/reports";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export default async function PivotReportsPage({
   searchParams,
@@ -18,6 +20,7 @@ export default async function PivotReportsPage({
   if (!session) redirect("/login");
 
   const query = await searchParams;
+  const locale = await getRequestLocale();
   const stores = await prisma.store.findMany({
     where: { organizationId: session.organizationId },
     orderBy: { name: "asc" },
@@ -35,15 +38,14 @@ export default async function PivotReportsPage({
       <ReportPrintBrand />
       <p className="text-sm text-stone-500">
         <Link href="/reports" className="text-emerald-800 hover:underline">
-          Reports
+          {t(locale, "nav.reports")}
         </Link>
       </p>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl">Pivot reports</h1>
+          <h1 className="font-display text-3xl">{t(locale, "reports.pivotTitle")}</h1>
           <p className="mt-1 text-stone-600">
-            Service load by machine from {report.range.from} through {report.range.to}, plus {STARTUP_SEASON_YEAR}{" "}
-            startup status.
+            {t(locale, "reports.pivotIntro", { from: report.range.from, to: report.range.to, year: STARTUP_SEASON_YEAR })}
           </p>
         </div>
         <ReportNav current="pivots" from={report.range.from} to={report.range.to} store={selectedStore} />
@@ -60,13 +62,13 @@ export default async function PivotReportsPage({
       />
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Pivots" value={String(report.pivot.total)} />
-        <Stat label="With open work orders" value={String(report.pivot.withOpenWork)} />
-        <Stat label="No work orders in range" value={String(report.pivot.quietInRange)} />
-        <Stat label={`${STARTUP_SEASON_YEAR} passed / failed`} value={`${report.pivot.startupPassed} / ${report.pivot.startupFailed}`} />
+        <Stat label={t(locale, "common.pivots")} value={String(report.pivot.total)} />
+        <Stat label={t(locale, "reports.withOpenWo")} value={String(report.pivot.withOpenWork)} />
+        <Stat label={t(locale, "reports.quietRange")} value={String(report.pivot.quietInRange)} />
+        <Stat label={t(locale, "reports.startupPf", { year: STARTUP_SEASON_YEAR })} value={`${report.pivot.startupPassed} / ${report.pivot.startupFailed}`} />
       </div>
 
-      <TableCard title="Busiest pivots in range" className="mt-6">
+      <TableCard title={t(locale, "reports.busiest")} className="mt-6">
         <table className="w-full text-left text-sm">
           <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
@@ -83,7 +85,7 @@ export default async function PivotReportsPage({
             {report.pivot.busiest.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-3 py-4 text-stone-600">
-                  No pivots in this view.
+                  {t(locale, "reports.noPivots")}
                 </td>
               </tr>
             ) : (
@@ -113,7 +115,7 @@ export default async function PivotReportsPage({
         </table>
       </TableCard>
 
-      <TableCard title="Pivots with open work orders" className="mt-6">
+      <TableCard title={t(locale, "reports.openOnPivots")} className="mt-6">
         <table className="w-full text-left text-sm">
           <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
@@ -127,7 +129,7 @@ export default async function PivotReportsPage({
             {report.pivot.openWork.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-3 py-4 text-stone-600">
-                  No open work orders on pivots in this view.
+                  {t(locale, "reports.noOpenOnPivots")}
                 </td>
               </tr>
             ) : (

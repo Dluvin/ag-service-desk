@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { createFarmAction, deleteFarmAction, updateFarmAction } from "@/lib/actions";
-import { farmAssignmentLabel } from "@/lib/farms";
+import { useT } from "@/components/I18nProvider";
 
 type FarmRecord = {
   id: string;
@@ -28,6 +28,7 @@ export function CustomerFarms({
   canEdit: boolean;
   canDelete: boolean;
 }) {
+  const t = useT();
   const [farmsOpen, setFarmsOpen] = useState(false);
   const [addFarmOpen, setAddFarmOpen] = useState(false);
 
@@ -39,17 +40,15 @@ export function CustomerFarms({
         aria-expanded={farmsOpen}
         className="flex w-full items-center justify-between gap-3 text-left"
       >
-        <h2 className="font-display text-xl">Farms ({farms.length})</h2>
+        <h2 className="font-display text-xl">{t("farms.countTitle", { count: farms.length })}</h2>
         <span className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium">
-          {farmsOpen ? "Hide" : "Show"}
+          {farmsOpen ? t("common.hide") : t("common.show")}
         </span>
       </button>
       {farmsOpen ? (
         <>
           <p className="mt-2 text-sm text-stone-600">
-            A farm is a physical site. Assets on a farm go with that farm if you move it to another
-            customer. Assets labeled Unassigned stay with this customer. To assign existing assets,
-            search for them in Add asset to farm below.
+            {t("farms.help")}
           </p>
           {farms.length ? (
             <ul className="mt-3 space-y-3">
@@ -59,13 +58,13 @@ export function CustomerFarms({
                     <>
                       <p className="mb-3">
                         <Link href={`/farms/${farm.id}`} className="font-semibold text-emerald-900 hover:underline">
-                          Open {farm.name}
+                          {t("farms.open", { name: farm.name })}
                         </Link>
                       </p>
                       <ActionForm action={updateFarmAction} className="space-y-3">
                         <input type="hidden" name="farmId" value={farm.id} />
                         <label className="block text-sm font-medium">
-                          Farm name
+                          {t("farms.name")}
                           <input
                             name="name"
                             required
@@ -74,16 +73,16 @@ export function CustomerFarms({
                           />
                         </label>
                         <label className="block text-sm font-medium">
-                          Location
+                          {t("common.location")}
                           <input
                             name="location"
                             defaultValue={farm.location ?? ""}
-                            placeholder="Optional address or field note"
+                            placeholder={t("farms.locationPlaceholder")}
                             className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
                           />
                         </label>
                         <label className="block text-sm font-medium">
-                          Current customer
+                          {t("farms.currentCustomer")}
                           <select
                             name="farmerId"
                             defaultValue={farm.farmerId}
@@ -96,17 +95,26 @@ export function CustomerFarms({
                             ))}
                           </select>
                           <span className="mt-1 block text-xs font-normal text-stone-500">
-                            Changing the customer moves this farm and every asset currently on it. The
-                            farm is not deleted. Unassigned assets stay with the previous customer.
+                            {t("farms.moveHint")}
                           </span>
                         </label>
                         <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-                          Save farm
+                          {t("farms.save")}
                         </button>
                       </ActionForm>
                       {farm.assignments.length ? (
                         <p className="mt-3 text-xs text-stone-500">
-                          Ownership: {farm.assignments.map(farmAssignmentLabel).join(" · ")}
+                          {t("farms.ownership", {
+                            text: farm.assignments
+                              .map((assignment) =>
+                                t("farms.span", {
+                                  start: assignment.startYear,
+                                  end: assignment.endYear ?? t("common.present"),
+                                  name: assignment.farmerName,
+                                }),
+                              )
+                              .join(" · "),
+                          })}
                         </p>
                       ) : null}
                       {canDelete ? (
@@ -115,8 +123,9 @@ export function CustomerFarms({
                             action={deleteFarmAction}
                             name="farmId"
                             value={farm.id}
-                            label="Delete farm"
-                            confirmText={`Delete ${farm.name}? Assets on it stay with the customer and become Unassigned.`}
+                            label={t("farms.delete")}
+                            confirmText={t("farms.deleteConfirm", { name: farm.name })}
+                            typedMatch={farm.name}
                           />
                         </div>
                       ) : null}
@@ -131,7 +140,17 @@ export function CustomerFarms({
                       {farm.location ? <p className="text-sm text-stone-600">{farm.location}</p> : null}
                       {farm.assignments.length ? (
                         <p className="mt-1 text-xs text-stone-500">
-                          Ownership: {farm.assignments.map(farmAssignmentLabel).join(" · ")}
+                          {t("farms.ownership", {
+                            text: farm.assignments
+                              .map((assignment) =>
+                                t("farms.span", {
+                                  start: assignment.startYear,
+                                  end: assignment.endYear ?? t("common.present"),
+                                  name: assignment.farmerName,
+                                }),
+                              )
+                              .join(" · "),
+                          })}
                         </p>
                       ) : null}
                     </>
@@ -140,7 +159,7 @@ export function CustomerFarms({
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-sm text-stone-600">No farms on this customer yet.</p>
+            <p className="mt-2 text-sm text-stone-600">{t("farms.noneOnCustomer")}</p>
           )}
         </>
       ) : null}
@@ -152,27 +171,27 @@ export function CustomerFarms({
             aria-expanded={addFarmOpen}
             className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
           >
-            <p className="text-sm font-semibold text-stone-800">Add farm</p>
+            <p className="text-sm font-semibold text-stone-800">{t("farms.add")}</p>
             <span className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium">
-              {addFarmOpen ? "Hide" : "Show"}
+              {addFarmOpen ? t("common.hide") : t("common.show")}
             </span>
           </button>
           {addFarmOpen ? (
             <ActionForm action={createFarmAction} className="space-y-3 border-t border-stone-200 p-4">
               <input type="hidden" name="farmerId" value={farmerId} />
               <label className="block text-sm font-medium">
-                Farm name
+                {t("farms.name")}
                 <input name="name" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
               </label>
               <label className="block text-sm font-medium">
-                Location
+                {t("common.location")}
                 <input
                   name="location"
-                  placeholder="Optional address or field note"
+                  placeholder={t("farms.locationPlaceholder")}
                   className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
                 />
               </label>
-              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save farm</button>
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">{t("farms.save")}</button>
             </ActionForm>
           ) : null}
         </div>

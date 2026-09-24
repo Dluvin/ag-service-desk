@@ -101,6 +101,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               value={ticket.id}
               label={t(locale, "ticket.delete")}
               confirmText={t(locale, "ticket.deleteConfirm", { number: ticket.number })}
+              typedMatch={String(ticket.number)}
             />
           ) : null}
         </div>
@@ -258,7 +259,8 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         ) : null}
 
         <h2 className="font-display mt-8 text-xl">{t(locale, "ticket.parts")}</h2>
-        <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
+        <div className="mt-3 overflow-hidden rounded-xl border border-stone-200 bg-white">
+        <ul className="divide-y divide-stone-100">
           {ticket.parts.length === 0 ? (
             <li className="p-4 text-sm text-stone-600">{t(locale, "ticket.noParts")}</li>
           ) : (
@@ -282,8 +284,8 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           )}
         </ul>
         {canDispatch ? (
-          <>
-          <ActionForm action={addTicketPartAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+          <div className="space-y-3 border-t border-stone-200 p-4">
+          <ActionForm action={addTicketPartAction} className="space-y-3">
             <input type="hidden" name="ticketId" value={ticket.id} />
             <PartsPicker />
             <label className="block text-sm font-medium">
@@ -302,14 +304,14 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             </div>
             <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "ticket.logPart")}</button>
           </ActionForm>
-          <div className="mt-2">
-            <TicketCatalogQuickCreate ticketId={ticket.id} kind="part" />
+          <TicketCatalogQuickCreate ticketId={ticket.id} kind="part" />
           </div>
-          </>
         ) : null}
+        </div>
 
         <h2 className="font-display mt-8 text-xl">{t(locale, "ticket.labor")}</h2>
-        <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
+        <div className="mt-3 overflow-hidden rounded-xl border border-stone-200 bg-white">
+        <ul className="divide-y divide-stone-100">
           {ticket.labor.length === 0 ? (
             <li className="p-4 text-sm text-stone-600">{t(locale, "ticket.noLabor")}</li>
           ) : (
@@ -333,8 +335,8 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           )}
         </ul>
         {canDispatch ? (
-          <>
-          <ActionForm action={addTicketLaborAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+          <div className="space-y-3 border-t border-stone-200 p-4">
+          <ActionForm action={addTicketLaborAction} className="space-y-3">
             <input type="hidden" name="ticketId" value={ticket.id} />
             <LaborPicker />
             <label className="block text-sm font-medium">
@@ -353,14 +355,14 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             </div>
             <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "ticket.logLabor")}</button>
           </ActionForm>
-          <div className="mt-2">
-            <TicketCatalogQuickCreate ticketId={ticket.id} kind="labor" />
+          <TicketCatalogQuickCreate ticketId={ticket.id} kind="labor" />
           </div>
-          </>
         ) : null}
+        </div>
 
         <h2 className="font-display mt-8 text-xl">{t(locale, "ticket.equipment")}</h2>
-        <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
+        <div className="mt-3 overflow-hidden rounded-xl border border-stone-200 bg-white">
+        <ul className="divide-y divide-stone-100">
           {ticket.equipment.length === 0 ? (
             <li className="p-4 text-sm text-stone-600">{t(locale, "ticket.noEquipment")}</li>
           ) : (
@@ -384,8 +386,8 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           )}
         </ul>
         {canDispatch ? (
-          <>
-          <ActionForm action={addTicketEquipmentAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+          <div className="space-y-3 border-t border-stone-200 p-4">
+          <ActionForm action={addTicketEquipmentAction} className="space-y-3">
             <input type="hidden" name="ticketId" value={ticket.id} />
             <EquipmentPicker />
             <label className="block text-sm font-medium">
@@ -404,11 +406,10 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             </div>
             <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "ticket.logEquipment")}</button>
           </ActionForm>
-          <div className="mt-2">
-            <TicketCatalogQuickCreate ticketId={ticket.id} kind="equipment" />
+          <TicketCatalogQuickCreate ticketId={ticket.id} kind="equipment" />
           </div>
-          </>
         ) : null}
+        </div>
       </div>
     </div>
   );

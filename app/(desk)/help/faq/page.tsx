@@ -1,242 +1,200 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t, type Locale } from "@/lib/i18n";
 
-const faqs = [
-  {
-    id: "login",
-    question: "How do I log in, and what if I forgot my password?",
-    answer: (
-      <>
+function faqs(locale: Locale) {
+  const linkClass = "font-semibold text-emerald-800 hover:underline";
+  return [
+    {
+      id: "login",
+      question: t(locale, "faq.login.q"),
+      answer: (
+        <>
+          <p>
+            {t(locale, "faq.login.p1a")}{" "}
+            <Link href="/login" className={linkClass}>
+              /login
+            </Link>
+            {t(locale, "faq.login.p1b")}
+          </p>
+          <p>
+            {t(locale, "faq.login.p2a")}{" "}
+            <Link href="/forgot" className={linkClass}>
+              {t(locale, "faq.login.reset")}
+            </Link>
+            {t(locale, "faq.login.p2b")}
+          </p>
+        </>
+      ),
+    },
+    {
+      id: "work-orders",
+      question: t(locale, "faq.wo.q"),
+      answer: (
+        <>
+          <p>
+            {t(locale, "faq.wo.p1a")}{" "}
+            <Link href="/tickets" className={linkClass}>
+              {t(locale, "nav.workOrders")}
+            </Link>{" "}
+            {t(locale, "faq.wo.p1b")}
+          </p>
+          <p>{t(locale, "faq.wo.p2")}</p>
+        </>
+      ),
+    },
+    {
+      id: "customers",
+      question: t(locale, "faq.cust.q"),
+      answer: (
+        <>
+          <p>
+            {t(locale, "faq.cust.p1a")}{" "}
+            <Link href="/farmers" className={linkClass}>
+              {t(locale, "nav.customers")}
+            </Link>{" "}
+            {t(locale, "faq.cust.p1b")}
+          </p>
+          <p>{t(locale, "faq.cust.p2")}</p>
+        </>
+      ),
+    },
+    {
+      id: "farms",
+      question: t(locale, "faq.farms.q"),
+      answer: (
+        <>
+          <p>
+            {t(locale, "faq.farms.p1a")}{" "}
+            <Link href="/farms" className={linkClass}>
+              {t(locale, "nav.farms")}
+            </Link>{" "}
+            {t(locale, "faq.farms.p1b")}
+          </p>
+          <p>{t(locale, "faq.farms.p2")}</p>
+        </>
+      ),
+    },
+    {
+      id: "assets",
+      question: t(locale, "faq.assets.q"),
+      answer: (
+        <>
+          <p>
+            <Link href="/assets" className={linkClass}>
+              {t(locale, "nav.assets")}
+            </Link>{" "}
+            {t(locale, "faq.assets.p1b")}
+          </p>
+          <p>{t(locale, "faq.assets.p2")}</p>
+        </>
+      ),
+    },
+    {
+      id: "dispatch",
+      question: t(locale, "faq.dispatch.q"),
+      answer: (
+        <>
+          <p>{t(locale, "faq.dispatch.p1")}</p>
+          <p>
+            {t(locale, "faq.dispatch.p2a")}{" "}
+            <Link href="/settings" className={linkClass}>
+              {t(locale, "faq.dispatch.settings")}
+            </Link>
+            {t(locale, "faq.dispatch.p2b")}
+          </p>
+        </>
+      ),
+    },
+    {
+      id: "print",
+      question: t(locale, "faq.print.q"),
+      answer: (
+        <>
+          <p>{t(locale, "faq.print.p1")}</p>
+          <p>
+            {t(locale, "faq.print.p2a")}{" "}
+            <Link href="/tickets/print" className={linkClass}>
+              {t(locale, "tickets.batchPrint")}
+            </Link>{" "}
+            {t(locale, "faq.print.p2b")}
+          </p>
+        </>
+      ),
+    },
+    {
+      id: "maps",
+      question: t(locale, "faq.maps.q"),
+      answer: (
+        <>
+          <p>{t(locale, "faq.maps.p1")}</p>
+          <p>
+            {t(locale, "faq.maps.p2a")}{" "}
+            <Link href="/map" className={linkClass}>
+              {t(locale, "nav.workOrderMap")}
+            </Link>
+            {t(locale, "faq.maps.p2b")}
+          </p>
+        </>
+      ),
+    },
+    {
+      id: "whos-signed-in",
+      question: t(locale, "faq.online.q"),
+      answer: (
         <p>
-          Staff, managers, technicians, and customers use the same login at{" "}
-          <Link href="/login" className="font-semibold text-emerald-800 hover:underline">
-            /login
+          {t(locale, "faq.online.p1a")}{" "}
+          <Link href="/online" className={linkClass}>
+            {t(locale, "faq.online.link")}
           </Link>
-          . Use the email your company set up for you.
+          {t(locale, "faq.online.p1b")}
         </p>
-        <p>
-          Forgot the password? Use{" "}
-          <Link href="/forgot" className="font-semibold text-emerald-800 hover:underline">
-            Reset password
-          </Link>
-          . We email a link if that address is in the system. Check spam if you do not see it. The
-          reset link is good for one day.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "work-orders",
-    question: "How do work orders work?",
-    answer: (
-      <>
-        <p>
-          Shop staff open a work order from{" "}
-          <Link href="/tickets" className="font-semibold text-emerald-800 hover:underline">
-            Work orders
-          </Link>{" "}
-          or the dispatch board. Pick the customer and pivot (or other asset), then assign a
-          technician when you are ready.
-        </p>
-        <p>
-          Status moves from Unassigned to Assigned, In progress, Waiting on parts, Repair done, then
-          Completed. Customers who log in can request service and follow their own work orders.
-          Customers are texted and emailed when a work order is moved to Repair done — not on every
-          status change. Managers get a text when a customer opens a work order and when status
-          changes. Office/clerical at the assigned store get a text when the work order is moved to
-          Repair done. Technicians get a text only when the job is assigned to them.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "customers",
-    question: "Where do I add and manage customers?",
-    answer: (
-      <>
-        <p>
-          Open{" "}
-          <Link href="/farmers" className="font-semibold text-emerald-800 hover:underline">
-            Customers
-          </Link>{" "}
-          to see every customer, add one, and set a default store so new work orders start at the
-          right shop.
-        </p>
-        <p>
-          Optional portal login lives on the customer, not on Staff. Enter an email when you add a
-          contact, or a login email when you add the customer. They get a welcome email to set a
-          password. Leave the password blank if you are creating the customer with a login.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "farms",
-    question: "What are farms, and how do they relate to customers?",
-    answer: (
-      <>
-        <p>
-          A farm belongs to a customer. Use{" "}
-          <Link href="/farms" className="font-semibold text-emerald-800 hover:underline">
-            Farms
-          </Link>{" "}
-          to see every farm, or open a customer and manage farms there.
-        </p>
-        <p>
-          Assign pivots and other assets to a farm so the customer record stays organized when one
-          grower has more than one place.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "assets",
-    question: "Where are assets and pivots?",
-    answer: (
-      <>
-        <p>
-          <Link href="/assets" className="font-semibold text-emerald-800 hover:underline">
-            Assets
-          </Link>{" "}
-          lists pivots plus wells, pumps, generators, and any types your shop added. Filter by type
-          from the Assets menu.
-        </p>
-        <p>
-          Shop staff can add types under Assets → Manage types. When you add a pivot, save GPS so
-          dispatch and maps can find the field — paste coordinates or a Google Maps link if you do
-          not drop a pin.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "dispatch",
-    question: "What is the difference between dispatch list and tiles?",
-    answer: (
-      <>
-        <p>
-          Dispatch is the shop board for open work. List view (the default) shows work orders in one
-          list, with status chips and Hide completed. Tiles view is columns by status, like a
-          classic board, and shows open work only.
-        </p>
-        <p>
-          Admins and managers pick their own view under{" "}
-          <Link href="/settings" className="font-semibold text-emerald-800 hover:underline">
-            Settings → Dispatch view
-          </Link>
-          . That choice is yours — it does not change anyone else’s board. Filter by store to work
-          one shop at a time.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "print",
-    question: "How do I print a work order?",
-    answer: (
-      <>
-        <p>
-          Open a Repair done or Completed work order and choose Print work order. In the print
-          dialog you can send it to a printer or Save as PDF. The printout includes repair notes,
-          parts, equipment, and labor.
-        </p>
-        <p>
-          To print several at once, use{" "}
-          <Link href="/tickets/print" className="font-semibold text-emerald-800 hover:underline">
-            Batch print work orders
-          </Link>{" "}
-          from the Work orders page. Select the ones you need; each starts on a new page.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "maps",
-    question: "What is the difference between in-app maps and Open in Google Maps?",
-    answer: (
-      <>
-        <p>
-          Open in Google Maps is on every work order that has pivot coordinates. It opens Google
-          Maps with those coordinates so a technician can navigate to the field — not only the
-          customer mailing address.
-        </p>
-        <p>
-          In-app satellite maps (dispatch map,{" "}
-          <Link href="/map" className="font-semibold text-emerald-800 hover:underline">
-            Work order map
-          </Link>
-          , and pin pickers) depend on your plan. Starter keeps Open in Google Maps and turns
-          in-app satellite maps off. Shop and Enterprise include the in-app maps. Live truck GPS is
-          a separate connector (for example Verizon Connect Reveal) on Connectors.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "whos-signed-in",
-    question: "Can I see who is signed in and where they are?",
-    answer: (
-      <>
-        <p>
-          Company admins can open{" "}
-          <Link href="/online" className="font-semibold text-emerald-800 hover:underline">
-            Settings → Who’s signed in
-          </Link>
-          . It lists shop staff who have the desk open, the screen they are on, and the last
-          location their browser sent if they allowed location. It is not truck GPS. Customer
-          logins are not shown.
-        </p>
-      </>
-    ),
-  },
-  {
-    id: "staff-invite",
-    question: "How do staff invite emails work?",
-    answer: (
-      <>
-        <p>
-          Admins and managers add company admins, managers, office/clerical, and technicians on{" "}
-          <Link href="/staff" className="font-semibold text-emerald-800 hover:underline">
-            Settings → Staff
-          </Link>
-          . Enter name and email. Leave the password blank so they choose one from the welcome
-          email. If you set a password, the email still asks them to change it. The welcome link is
-          good for seven days.
-        </p>
-        <p>
-          Customer logins are not staff seats and are not added here — use the Customers page.
-          After you save, the desk tells you if the welcome email was sent, skipped (mail is not
-          configured on the server), or failed. Ask them to check spam if the message does not
-          arrive.
-        </p>
-      </>
-    ),
-  },
-];
+      ),
+    },
+    {
+      id: "staff-invite",
+      question: t(locale, "faq.staff.q"),
+      answer: (
+        <>
+          <p>
+            {t(locale, "faq.staff.p1a")}{" "}
+            <Link href="/staff" className={linkClass}>
+              {t(locale, "faq.staff.link")}
+            </Link>
+            {t(locale, "faq.staff.p1b")}
+          </p>
+          <p>{t(locale, "faq.staff.p2")}</p>
+        </>
+      ),
+    },
+  ];
+}
 
 export default async function DeskFaqPage() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const locale = await getRequestLocale();
 
   return (
     <div className="max-w-3xl">
       <p className="text-sm text-stone-600">
         <Link href="/help" className="text-emerald-800 hover:underline">
-          Support
+          {t(locale, "nav.support")}
         </Link>
       </p>
-      <h1 className="font-display mt-2 text-3xl">FAQ</h1>
+      <h1 className="font-display mt-2 text-3xl">{t(locale, "faq.title")}</h1>
       <p className="mt-2 text-stone-600">
-        Common questions for the dealer desk. If you need something the desk does not do yet, send a{" "}
+        {t(locale, "faq.intro")}{" "}
         <Link href="/help" className="font-semibold text-emerald-800 hover:underline">
-          feature request
+          {t(locale, "help.featureRequest")}
         </Link>
         .
       </p>
 
       <div className="mt-6 space-y-3">
-        {faqs.map((faq) => (
+        {faqs(locale).map((faq) => (
           <details
             key={faq.id}
             id={faq.id}

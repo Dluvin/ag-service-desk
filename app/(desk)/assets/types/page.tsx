@@ -56,6 +56,7 @@ export default async function AssetTypesPage() {
                     value={type.id}
                     label="Delete type"
                     confirmText={`Delete ${type.name} and its assets? This cannot be undone.`}
+                    typedMatch={type.name}
                   />
                 ) : null}
               </li>

@@ -74,8 +74,9 @@ export default async function ManagersPage({
                       action={deleteStaffAction}
                       name="userId"
                       value={manager.id}
-                      label="Delete"
-                      confirmText={`Delete manager ${manager.name}? Their login will stop working.`}
+                    label="Delete"
+                    confirmText={`Delete manager ${manager.name}? Their login will stop working.`}
+                    typedMatch={[manager.name, manager.email]}
                     />
                   ) : null}
                 </div>

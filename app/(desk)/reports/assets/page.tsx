@@ -7,6 +7,8 @@ import { parseStoreParam } from "@/lib/stores";
 import { ReportPrintBrand } from "@/components/PrintCompanyMark";
 import { ReportDateForm, ReportNav, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
 import { loadAssetReports, toDayParam } from "@/lib/reports";
+import { getRequestLocale } from "@/lib/user-locale";
+import { t } from "@/lib/i18n";
 
 export default async function AssetReportsPage({
   searchParams,
@@ -17,6 +19,7 @@ export default async function AssetReportsPage({
   if (!session) redirect("/login");
 
   const query = await searchParams;
+  const locale = await getRequestLocale();
   const stores = await prisma.store.findMany({
     where: { organizationId: session.organizationId },
     orderBy: { name: "asc" },
@@ -34,15 +37,14 @@ export default async function AssetReportsPage({
       <ReportPrintBrand />
       <p className="text-sm text-stone-500">
         <Link href="/reports" className="text-emerald-800 hover:underline">
-          Reports
+          {t(locale, "nav.reports")}
         </Link>
       </p>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl">Asset reports</h1>
+          <h1 className="font-display text-3xl">{t(locale, "reports.assetTitle")}</h1>
           <p className="mt-1 text-stone-600">
-            Work orders by pivot and inventory of wells, pumps, generators, and other Assets from{" "}
-            {report.range.from} through {report.range.to}.
+            {t(locale, "reports.assetIntro", { from: report.range.from, to: report.range.to })}
           </p>
         </div>
         <ReportNav current="assets" from={report.range.from} to={report.range.to} store={selectedStore} />
@@ -59,17 +61,17 @@ export default async function AssetReportsPage({
       />
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Assets" value={String(report.total)} />
-        <Stat label="Pivots" value={String(report.pivots)} />
-        <Stat label="Other Assets" value={String(report.generic)} />
-        <Stat label="Pivots with open work" value={String(report.withOpenWork)} />
-        <Stat label="Opened in range" value={String(report.opened)} />
-        <Stat label="Closed in range" value={String(report.closed)} />
-        <Stat label="Invoice total (closed)" value={usd(report.invoice)} />
-        <Stat label="Pivots with no work orders" value={String(report.quietPivots)} />
+        <Stat label={t(locale, "common.assets")} value={String(report.total)} />
+        <Stat label={t(locale, "common.pivots")} value={String(report.pivots)} />
+        <Stat label={t(locale, "reports.otherAssets")} value={String(report.generic)} />
+        <Stat label={t(locale, "reports.pivotsOpenWork")} value={String(report.withOpenWork)} />
+        <Stat label={t(locale, "reports.openedInRange")} value={String(report.opened)} />
+        <Stat label={t(locale, "reports.closedInRange")} value={String(report.closed)} />
+        <Stat label={t(locale, "reports.invoiceClosed")} value={usd(report.invoice)} />
+        <Stat label={t(locale, "reports.quietPivots")} value={String(report.quietPivots)} />
       </div>
 
-      <TableCard title="By type" className="mt-6">
+      <TableCard title={t(locale, "reports.byType")} className="mt-6">
         <table className="w-full text-left text-sm">
           <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
@@ -86,7 +88,7 @@ export default async function AssetReportsPage({
             {report.byType.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-3 py-4 text-stone-600">
-                  No asset types in this view.
+                  {t(locale, "reports.noTypes")}
                 </td>
               </tr>
             ) : (
@@ -110,7 +112,7 @@ export default async function AssetReportsPage({
         </table>
       </TableCard>
 
-      <TableCard title="Pivots with work orders" className="mt-6">
+      <TableCard title={t(locale, "reports.pivotsWithWo")} className="mt-6">
         <table className="w-full text-left text-sm">
           <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
@@ -129,7 +131,7 @@ export default async function AssetReportsPage({
             {report.pivotRows.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-3 py-4 text-stone-600">
-                  No pivot work orders in this range.
+                  {t(locale, "reports.noPivotWo")}
                 </td>
               </tr>
             ) : (
@@ -159,7 +161,7 @@ export default async function AssetReportsPage({
         </table>
       </TableCard>
 
-      <TableCard title="Wells, pumps, generators, and other Assets" className="mt-6">
+      <TableCard title={t(locale, "reports.genericAssets")} className="mt-6">
         <table className="w-full text-left text-sm">
           <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
@@ -174,7 +176,7 @@ export default async function AssetReportsPage({
             {report.genericRows.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-3 py-4 text-stone-600">
-                  No wells, pumps, generators, or other Assets in this view.
+                  {t(locale, "reports.noGeneric")}
                 </td>
               </tr>
             ) : (

@@ -129,6 +129,7 @@ export default async function FarmDetailPage({ params }: { params: Promise<{ id:
           value={farm.id}
           label="Delete farm"
           confirmText={`Delete ${farm.name}? Assets become Unassigned.`}
+          typedMatch={farm.name}
         />
       ) : null}
       <section>
