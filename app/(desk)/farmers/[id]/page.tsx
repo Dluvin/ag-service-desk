@@ -201,16 +201,18 @@ export default async function FarmerDetailPage({
                         login={contact.email ? loginByEmail.get(contact.email.toLowerCase()) ?? null : null}
                         flash={query.invite === contact.id ? query.welcome : undefined}
                       />
-                      {contact.email ? (
-                        <ActionForm action={resendFarmerContactInviteAction} className="mt-2">
-                          <input type="hidden" name="contactId" value={contact.id} />
-                          <button className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-800 hover:bg-stone-100">
-                            Resend invite
-                          </button>
-                        </ActionForm>
-                      ) : null}
-                      {canDeleteRecords(session.role) ? (
-                        <div className="mt-3">
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                        {contact.email ? (
+                          <ActionForm action={resendFarmerContactInviteAction}>
+                            <input type="hidden" name="contactId" value={contact.id} />
+                            <button className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-800 hover:bg-stone-100">
+                              Resend invite
+                            </button>
+                          </ActionForm>
+                        ) : (
+                          <span />
+                        )}
+                        {canDeleteRecords(session.role) ? (
                           <DeleteButton
                             action={deleteFarmerContactAction}
                             name="contactId"
@@ -218,8 +220,8 @@ export default async function FarmerDetailPage({
                             label="Delete contact"
                             confirmText={`Delete contact ${contact.name}?`}
                           />
-                        </div>
-                      ) : null}
+                        ) : null}
+                      </div>
                     </>
                   ) : (
                     <>
