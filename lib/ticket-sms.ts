@@ -35,30 +35,33 @@ function farmerPhones(farmer: { phone: string | null; contacts: { phone: string 
   return [...recipients.keys()];
 }
 
-async function managerPhones(
+async function shopStaffPhones(
   organizationId: string,
   storeId: string | null,
+  roles: string[],
   actorUserId?: string | null,
+  fallbackToAll = true,
 ) {
   const recipients = new Map<string, string>();
   const select = { id: true, phone: true };
+  const roleFilter = { in: roles };
 
-  let managers = storeId
+  let people = storeId
     ? await prisma.user.findMany({
-        where: { organizationId, role: ROLES.MANAGER, storeId },
+        where: { organizationId, role: roleFilter, storeId },
         select,
       })
     : [];
-  if (managers.length === 0) {
-    managers = await prisma.user.findMany({
-      where: { organizationId, role: ROLES.MANAGER },
+  if (people.length === 0 && (!storeId || fallbackToAll)) {
+    people = await prisma.user.findMany({
+      where: { organizationId, role: roleFilter },
       select,
     });
   }
 
-  for (const manager of managers) {
-    if (actorUserId && manager.id === actorUserId) continue;
-    addRecipient(recipients, manager.phone);
+  for (const person of people) {
+    if (actorUserId && person.id === actorUserId) continue;
+    addRecipient(recipients, person.phone);
   }
   return recipients;
 }
@@ -98,8 +101,23 @@ export async function notifyTicketSms(input: {
     addRecipient(recipients, ticket.technician?.phone);
   } else {
     const storeId = ticket.storeId ?? ticket.farmer.storeId;
-    const managers = await managerPhones(input.organizationId, storeId, input.actorUserId);
+    const managers = await shopStaffPhones(
+      input.organizationId,
+      storeId,
+      [ROLES.MANAGER],
+      input.actorUserId,
+    );
     for (const [phone, value] of managers) recipients.set(phone, value);
+    if (input.kind === "updated" && ticket.status === "REPAIR_DONE") {
+      const clerical = await shopStaffPhones(
+        input.organizationId,
+        storeId,
+        [ROLES.CLERICAL],
+        input.actorUserId,
+        false,
+      );
+      for (const [phone, value] of clerical) recipients.set(phone, value);
+    }
   }
 
   if (recipients.size === 0) return;

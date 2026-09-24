@@ -44,7 +44,8 @@ const faqs = [
           Completed. Customers who log in can request service and follow their own work orders.
           Customers are texted and emailed when a work order is moved to Repair done — not on every
           status change. Managers get a text when a customer opens a work order and when status
-          changes. Technicians get a text only when the job is assigned to them.
+          changes. Office/clerical at the assigned store get a text when the work order is moved to
+          Repair done. Technicians get a text only when the job is assigned to them.
         </p>
       </>
     ),

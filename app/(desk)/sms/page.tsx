@@ -21,11 +21,12 @@ export default async function SmsSettingsPage() {
         When a customer opens a work order, Bird texts the managers at that customer&apos;s store. If
         the customer has no store, it texts every manager. A technician is texted only when the work
         order is assigned to them. Status changes text the store&apos;s managers (or all managers if
-        there is no store). Customers are texted and emailed only when a work order is moved to Repair
-        done — not on Assigned, In progress, Waiting on parts, Completed, or Cancelled. Staff messages
-        include a link to that work order. Manager and technician numbers come from each person&apos;s
-        phone field; customer texts use customer contact phones, and the customer email uses the
-        farmer email.
+        there is no store). When a work order is moved to Repair done, office/clerical at that store
+        are also texted (or every office/clerical login if there is no store). Customers are texted
+        and emailed only when a work order is moved to Repair done — not on Assigned, In progress,
+        Waiting on parts, Completed, or Cancelled. Staff messages include a link to that work order.
+        Manager, office/clerical, and technician numbers come from each person&apos;s phone field;
+        customer texts use customer contact phones, and the customer email uses the farmer email.
       </p>
       <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-stone-600">
         <li>In Bird, enable the US (and any other countries you serve) under SMS Destinations.</li>
