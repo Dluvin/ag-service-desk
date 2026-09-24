@@ -85,38 +85,153 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+function CheckRow({ name, options }: { name: string; options: string[] }) {
+  return (
+    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+      {options.map((option) => (
+        <label key={option} className="inline-flex items-center gap-1">
+          <input type="checkbox" name={name} value={option} />
+          {option}
+        </label>
+      ))}
+    </div>
+  );
+}
+
 function ServiceTicketForm() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-sm">
       <Grid>
-        <FormField label="Service ticket #">
-          <FormLine name="ticket_number" />
+        <FormField label="Number">
+          <FormLine name="paper_number" />
         </FormField>
-        <FormField label="Date">
-          <FormLine name="date" type="date" />
+        <FormField label="Date service requested">
+          <FormLine name="date_requested" />
         </FormField>
-        <FormField label="Customer">
-          <FormLine name="customer" />
+        <FormField label="Time request received">
+          <FormLine name="time_received" />
+        </FormField>
+        <FormField label="Date service performed">
+          <FormLine name="date_performed" />
         </FormField>
         <FormField label="Bill to">
           <FormLine name="bill_to" />
         </FormField>
-        <FormField label="Job / site">
-          <FormLine name="job_site" className="sm:col-span-2" />
+        <FormField label="Contact">
+          <FormLine name="contact" />
+        </FormField>
+        <FormField label="Contact #">
+          <FormLine name="contact_phone" />
+        </FormField>
+        <FormField label="Farm name">
+          <FormLine name="farm_name" />
+        </FormField>
+        <FormField label="By">
+          <FormLine name="by" />
         </FormField>
       </Grid>
-      <Section title="Labor">
+      <YesNo name="completion_notice" label="Completion notification" />
+      <YesNo name="warranty" label="Hold for warranty" />
+      <Section title="Unit ID (circle one)">
+        <CheckRow
+          name="unit_type"
+          options={["PIVOT", "PUMP", "PIPE", "WIRE", "GENERATOR", "ELECTRICAL", "OTHER"]}
+        />
+        <Grid>
+          <FormField label="Unit ID / other">
+            <FormLine name="unit_id" />
+          </FormField>
+          <FormField label="Age of eq">
+            <FormLine name="age_of_eq" placeholder="<2YRS  >2YRS-<5YRS  >5YRS" />
+          </FormField>
+          <FormField label="Make">
+            <FormLine name="make" />
+          </FormField>
+          <FormField label="Model">
+            <FormLine name="model" />
+          </FormField>
+        </Grid>
+      </Section>
+      <FormField label="Describe problem">
+        <FormArea name="problem" rows={4} />
+      </FormField>
+      <FormField label="Detail service performed (if invoice to be held / warranty, explain why)">
+        <FormArea name="service_performed" rows={5} />
+      </FormField>
+      <Section title="Equipment used (circle each piece on this job)">
+        <CheckRow
+          name="equipment_used"
+          options={[
+            "JD FORKLIFT",
+            "CASE FORKLIFT",
+            "S-550",
+            "G-550",
+            "RP-115-1",
+            "RP-115-2",
+            "J3-550",
+            "M59",
+            "8540",
+            "J-550",
+            "PC88",
+            "PIV0001",
+            "IV-350",
+            "2000/350",
+            "GN2",
+            "GN1",
+            "GN6",
+          ]}
+        />
+        <FormField label="Rental equipment rented from">
+          <FormLine name="rental_from" />
+        </FormField>
+        <FormField label="Other equipment">
+          <FormLine name="equipment_other" />
+        </FormField>
+      </Section>
+      <Section title="List dates & who worked on this job">
         <LineTable
-          name="labor"
-          rows={5}
+          name="crew"
+          rows={4}
           columns={[
-            { key: "hrs", label: "Hrs.", className: "w-20" },
-            { key: "tech", label: "Tech name", className: "w-40" },
-            { key: "notes", label: "Notes" },
+            { key: "date", label: "Date", className: "w-28" },
+            { key: "who", label: "Crew / who", className: "w-40" },
+            { key: "start", label: "Start time", className: "w-24" },
+            { key: "stop", label: "Stop time", className: "w-24" },
+            { key: "hours", label: "Labor hours", className: "w-24" },
           ]}
         />
       </Section>
-      <Section title="Parts">
+      <Grid>
+        <FormField label="Rate per hour">
+          <FormLine name="labor_rate" />
+        </FormField>
+        <FormField label="Total labor">
+          <FormLine name="total_labor" />
+        </FormField>
+        <YesNo name="service_truck" label="Service truck" />
+        <FormField label="Eq. transport mileage">
+          <FormLine name="eq_mileage" />
+        </FormField>
+        <FormField label="Invoice #">
+          <FormLine name="invoice" />
+        </FormField>
+        <FormField label="Total to invoice">
+          <FormLine name="total_invoice" />
+        </FormField>
+      </Grid>
+      <YesNo name="parts_on_truck" label="Required parts on truck" />
+      <Section title="List parts picked up / put on truck">
+        <LineTable
+          name="truck_parts"
+          rows={6}
+          columns={[
+            { key: "qty", label: "Qty", className: "w-20" },
+            { key: "part", label: "Part #", className: "w-36" },
+            { key: "description", label: "Description" },
+          ]}
+        />
+      </Section>
+      <Section title="List parts used (on back)">
         <LineTable
           name="parts"
           rows={10}
@@ -124,37 +239,6 @@ function ServiceTicketForm() {
             { key: "qty", label: "Qty", className: "w-20" },
             { key: "part", label: "Part #", className: "w-36" },
             { key: "description", label: "Description" },
-          ]}
-        />
-      </Section>
-      <Grid>
-        <FormField label="Date billed">
-          <FormLine name="date_billed" type="date" />
-        </FormField>
-        <FormField label="Invoice #">
-          <FormLine name="invoice" />
-        </FormField>
-        <YesNo name="backorder" label="Back order" />
-      </Grid>
-      <Section title="Back order parts">
-        <LineTable
-          name="back_parts"
-          rows={8}
-          columns={[
-            { key: "qty", label: "Qty.", className: "w-20" },
-            { key: "part", label: "Part #", className: "w-36" },
-            { key: "description", label: "Description" },
-          ]}
-        />
-      </Section>
-      <Section title="Service truck / transport / equipment">
-        <LineTable
-          name="equipment"
-          rows={4}
-          columns={[
-            { key: "qty", label: "Qty", className: "w-20" },
-            { key: "item", label: "Item", className: "w-48" },
-            { key: "notes", label: "Notes" },
           ]}
         />
       </Section>

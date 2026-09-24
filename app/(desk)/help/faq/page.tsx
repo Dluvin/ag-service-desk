@@ -138,6 +138,11 @@ function faqs(locale: Locale) {
       ),
     },
     {
+      id: "ocr",
+      question: t(locale, "faq.ocr.q"),
+      answer: <p>{t(locale, "faq.ocr.p1")}</p>,
+    },
+    {
       id: "maps",
       question: t(locale, "faq.maps.q"),
       answer: (

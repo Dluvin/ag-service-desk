@@ -7,10 +7,12 @@ import { createTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { NewTicketSiteFields } from "@/components/NewTicketSiteFields";
 import { TicketPhotoFields } from "@/components/TicketPhotoFields";
+import { TicketOcrImport } from "@/components/TicketOcrImport";
 import { StoreSelect } from "@/components/StoreSelect";
 import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
 import { getRequestLocale } from "@/lib/user-locale";
 import { priorityLabel, t } from "@/lib/i18n";
+import { visionOcrConfigured } from "@/lib/ticket-ocr";
 
 export default async function NewTicketPage({
   searchParams,
@@ -55,6 +57,11 @@ export default async function NewTicketPage({
       <p className="mt-1 text-sm text-stone-600">
         {session.role === ROLES.FARMER ? t(locale, "ticket.requestHelp") : t(locale, "ticket.newHelp")}
       </p>
+      {isShopStaff(session.role) ? (
+        <div className="mt-6">
+          <TicketOcrImport configured={visionOcrConfigured()} />
+        </div>
+      ) : null}
       <ActionForm action={createTicketAction} encType="multipart/form-data" className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">
         <NewTicketSiteFields
           pivots={pivots.map((pivot) => ({

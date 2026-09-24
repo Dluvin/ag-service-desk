@@ -40,7 +40,7 @@ import { closeOpenSiteVisits } from "./onsite";
 import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, normalizeRevealAppId, syncRevealVehicles } from "./reveal";
 import { notifyFarmerRepairDone, notifyTicketSms } from "./ticket-sms";
 import { sendBirdSms, toE164 } from "./bird";
-import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./ticket-photos";
+import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles, readTicketPhotoFile } from "./ticket-photos";
 import { documentFilesFromForm, removePivotDocumentFile, safePivotReturnTo, savePivotDocuments } from "./pivot-documents";
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
 import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelcomeLoginEmail, userFromPasswordToken, welcomeQuery, type WelcomeMailStatus } from "./welcome-mail";
@@ -71,6 +71,12 @@ import {
 } from "./farms";
 import { ticketWhere } from "./scope";
 import { officeFormBySlug, officeFormMessage } from "./office-forms";
+import {
+  ocrImageFromForm,
+  readHandwrittenTicket,
+  readHandwrittenTicketFile,
+  visionOcrConfigured,
+} from "./ticket-ocr";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -3125,5 +3131,235 @@ export async function attachOfficeFormToTicketAction(formData: FormData) {
     where: { id: ticket.id },
     data: { updatedAt: new Date() },
   });
+  redirect(`/tickets/${ticket.id}`);
+}
+
+export async function scanHandwrittenTicketAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isShopStaff(session.role)) return { error: "Not allowed." };
+  if (!visionOcrConfigured()) {
+    return { error: "Handwritten import is not configured. Add OPENAI_API_KEY on the server, then try again." };
+  }
+
+  const photoId = formString(formData, "photoId");
+  try {
+    if (photoId) {
+      const photo = await prisma.ticketPhoto.findFirst({
+        where: { id: photoId, ticket: ticketWhere(session) },
+      });
+      if (!photo) return { error: "Photo not found." };
+      const bytes = await readTicketPhotoFile(photo.id);
+      const draft = await readHandwrittenTicket({ bytes, mimeType: photo.mimeType || "image/jpeg" });
+      return { draft };
+    }
+    const file = ocrImageFromForm(formData);
+    if (!file) return { error: "Choose a photo of the handwritten ticket." };
+    const draft = await readHandwrittenTicketFile(file);
+    return { draft };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "The scan failed." };
+  }
+}
+
+function ocrLinesFromForm(formData: FormData, prefix: "parts" | "labor" | "equipment") {
+  const count = Number(formString(formData, `${prefix}Count`) || "0");
+  const rows: { quantity: number; name: string; sku: string }[] = [];
+  for (let i = 0; i < count && i < 40; i += 1) {
+    const name = formString(formData, `${prefix}.${i}.name`);
+    if (!name) continue;
+    const quantity = Number(formString(formData, `${prefix}.${i}.quantity`) || "1");
+    rows.push({
+      name,
+      sku: formString(formData, `${prefix}.${i}.sku`),
+      quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+    });
+  }
+  return rows;
+}
+
+async function matchCatalogPart(organizationId: string, sku: string, name: string) {
+  if (sku) {
+    const bySku = await prisma.catalogPart.findFirst({
+      where: { organizationId, active: true, sku },
+    });
+    if (bySku) return bySku;
+  }
+  return prisma.catalogPart.findFirst({
+    where: { organizationId, active: true, name },
+  });
+}
+
+async function matchCatalogLabor(organizationId: string, sku: string, name: string) {
+  if (sku) {
+    const bySku = await prisma.catalogLabor.findFirst({
+      where: { organizationId, active: true, sku },
+    });
+    if (bySku) return bySku;
+  }
+  return prisma.catalogLabor.findFirst({
+    where: { organizationId, active: true, name },
+  });
+}
+
+async function matchCatalogEquipment(organizationId: string, sku: string, name: string) {
+  if (sku) {
+    const bySku = await prisma.catalogEquipment.findFirst({
+      where: { organizationId, active: true, sku },
+    });
+    if (bySku) return bySku;
+  }
+  return prisma.catalogEquipment.findFirst({
+    where: { organizationId, active: true, name },
+  });
+}
+
+export async function applyHandwrittenTicketAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isShopStaff(session.role)) return { error: "Not allowed." };
+
+  const ticketId = formString(formData, "ticketId");
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, ...ticketWhere(session) },
+  });
+  if (!ticket) return { error: "Work order not found." };
+  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+    return { error: "This work order is not assigned to you." };
+  }
+
+  const title = formString(formData, "title");
+  const description = formString(formData, "description");
+  const technicianName = formString(formData, "technician");
+  const invoiceNumber = formString(formData, "invoiceNumber");
+  const invoiceAmount = parseMoneyInput(formString(formData, "invoiceAmount"));
+  const customer = formString(formData, "customer");
+  const jobSite = formString(formData, "jobSite");
+  const date = formString(formData, "date");
+  const rawText = formString(formData, "rawText");
+  const paperNumber = formString(formData, "paperNumber");
+  const farmName = formString(formData, "farmName");
+  const problem = formString(formData, "problem");
+  const servicePerformed = formString(formData, "servicePerformed");
+  const unitType = formString(formData, "unitType");
+  const make = formString(formData, "make");
+  const model = formString(formData, "model");
+  const ageOfEq = formString(formData, "ageOfEq");
+  const crew = formString(formData, "crew");
+  const startTime = formString(formData, "startTime");
+  const stopTime = formString(formData, "stopTime");
+  const laborHours = formString(formData, "laborHours");
+  const warranty = formString(formData, "warranty");
+  const replaceTitle = formString(formData, "replaceTitle") === "on";
+  const applyInvoice = formString(formData, "applyInvoice") === "on";
+  const applyTech = formString(formData, "applyTech") === "on";
+  const parts = ocrLinesFromForm(formData, "parts");
+  const labor = ocrLinesFromForm(formData, "labor");
+  const equipment = ocrLinesFromForm(formData, "equipment");
+
+  const header = [
+    "Imported from a handwritten SERVICE ORDER (check the values).",
+    paperNumber ? `Paper # ${paperNumber}` : "",
+    customer ? `Bill to: ${customer}` : "",
+    farmName ? `Farm name: ${farmName}` : "",
+    jobSite ? `Job / site: ${jobSite}` : "",
+    date ? `Date requested: ${date}` : "",
+    technicianName ? `Tech on paper: ${technicianName}` : "",
+    crew ? `Crew: ${crew}` : "",
+    [startTime, stopTime].filter(Boolean).length ? `Times: ${startTime || "?"} – ${stopTime || "?"}` : "",
+    laborHours ? `Labor hours: ${laborHours}` : "",
+    unitType ? `Unit: ${[unitType, formString(formData, "unitId")].filter(Boolean).join(" ")}` : "",
+    make || model ? `Make/model: ${[make, model].filter(Boolean).join(" ")}` : "",
+    ageOfEq ? `Age of eq: ${ageOfEq}` : "",
+    warranty ? `Hold for warranty: ${warranty}` : "",
+    problem ? `Describe problem: ${problem}` : "",
+    servicePerformed ? `Service performed: ${servicePerformed}` : "",
+    description,
+    rawText && rawText !== description ? `Transcription:\n${rawText}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const photos = photoFilesFromForm(formData);
+  const photoCheck = validatePhotoFiles(photos);
+  if (photoCheck.error) return photoCheck;
+
+  const update = await prisma.ticketUpdate.create({
+    data: { ticketId: ticket.id, userId: session.userId, message: header || "Imported from a handwritten ticket." },
+  });
+  const saved = await saveTicketPhotos({
+    files: photos,
+    ticketId: ticket.id,
+    updateId: update.id,
+    userId: session.userId,
+  });
+  if (saved.error) return saved;
+
+  for (const row of parts) {
+    const catalog = await matchCatalogPart(session.organizationId, row.sku, row.name);
+    await prisma.ticketPart.create({
+      data: {
+        ticketId: ticket.id,
+        userId: session.userId,
+        catalogPartId: catalog?.id ?? null,
+        name: catalog?.name ?? row.name,
+        quantity: row.quantity,
+        sku: catalog?.sku ?? (row.sku || null),
+        unitPrice: catalog?.price ?? null,
+      },
+    });
+  }
+  for (const row of labor) {
+    const catalog = await matchCatalogLabor(session.organizationId, row.sku, row.name);
+    await prisma.ticketLabor.create({
+      data: {
+        ticketId: ticket.id,
+        userId: session.userId,
+        catalogLaborId: catalog?.id ?? null,
+        name: catalog?.name ?? row.name,
+        hours: row.quantity,
+        sku: catalog?.sku ?? (row.sku || null),
+        unitRate: catalog?.rate ?? null,
+      },
+    });
+  }
+  for (const row of equipment) {
+    const catalog = await matchCatalogEquipment(session.organizationId, row.sku, row.name);
+    await prisma.ticketEquipment.create({
+      data: {
+        ticketId: ticket.id,
+        userId: session.userId,
+        catalogEquipmentId: catalog?.id ?? null,
+        name: catalog?.name ?? row.name,
+        hours: row.quantity,
+        sku: catalog?.sku ?? (row.sku || null),
+        unitRate: catalog?.rate ?? null,
+      },
+    });
+  }
+
+  let technicianId = ticket.technicianId;
+  if (applyTech && technicianName) {
+    const tech = await prisma.user.findFirst({
+      where: {
+        organizationId: session.organizationId,
+        role: ROLES.TECHNICIAN,
+        name: { equals: technicianName },
+      },
+    });
+    if (tech) technicianId = tech.id;
+  }
+
+  await prisma.ticket.update({
+    where: { id: ticket.id },
+    data: {
+      ...(replaceTitle && title ? { title } : {}),
+      ...(applyInvoice && invoiceNumber && !ticket.invoiceNumber
+        ? { invoiceNumber, invoiceAmount: invoiceAmount ?? ticket.invoiceAmount }
+        : {}),
+      ...(technicianId !== ticket.technicianId
+        ? { technicianId, status: ticket.status === "OPEN" ? "ASSIGNED" : ticket.status }
+        : {}),
+    },
+  });
+
   redirect(`/tickets/${ticket.id}`);
 }

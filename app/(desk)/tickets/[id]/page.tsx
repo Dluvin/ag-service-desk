@@ -18,6 +18,7 @@ import { LaborPicker } from "@/components/LaborPicker";
 import { EquipmentPicker } from "@/components/EquipmentPicker";
 import { TicketLineItemRow } from "@/components/TicketLineItemRow";
 import { TicketCatalogQuickCreate } from "@/components/TicketCatalogQuickCreate";
+import { TicketOcrImport } from "@/components/TicketOcrImport";
 import { CollapsiblePanel } from "@/components/CollapsiblePanel";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
 import { formatSchedule } from "@/lib/schedule";
@@ -26,6 +27,7 @@ import { StoreSelect } from "@/components/StoreSelect";
 import { resolvedTicketStoreId, ticketStoreName } from "@/lib/stores";
 import { getRequestLocale } from "@/lib/user-locale";
 import { statusLabel, t, type Locale } from "@/lib/i18n";
+import { visionOcrConfigured } from "@/lib/ticket-ocr";
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -61,6 +63,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
       })
     : [];
   const shopName = ticketStoreName(ticket);
+  const ocrConfigured = visionOcrConfigured();
 
   return (
     <div className="grid gap-6 lg:grid-cols-5 lg:items-start">
@@ -204,6 +207,16 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               </button>
             </ActionForm>
           </CollapsiblePanel>
+
+        {canDispatch ? (
+          <div className="mt-6">
+            <TicketOcrImport
+              ticketId={ticket.id}
+              configured={ocrConfigured}
+              photos={ticket.photos.map((photo) => ({ id: photo.id, fileName: photo.fileName }))}
+            />
+          </div>
+        ) : null}
 
         {ticket.photos.length > 0 ? (
           <section className="mt-8">
