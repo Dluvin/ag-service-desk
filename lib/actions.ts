@@ -1829,6 +1829,143 @@ export async function addTicketEquipmentAction(formData: FormData) {
   redirect(`/tickets/${ticketId}`);
 }
 
+export async function quickCreateTicketCatalogAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role === ROLES.FARMER) {
+    return { error: "Customers can view the catalog but cannot add to it." };
+  }
+
+  const ticketId = formString(formData, "ticketId");
+  const kind = formString(formData, "kind");
+  const name = formString(formData, "name");
+  const sku = formString(formData, "sku") || null;
+  const amount = Number(formString(formData, "amount") || "1");
+  const money = parseMoneyInput(formString(formData, "price"));
+
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, organizationId: session.organizationId },
+  });
+  if (!ticket) return { error: "Work order not found." };
+  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+    return { error: "This work order is not assigned to you." };
+  }
+  if (!name) return { error: "Name is required." };
+  if (Number.isNaN(amount) || amount <= 0) {
+    return { error: kind === "part" ? "Quantity must be greater than 0." : "Hours must be greater than 0." };
+  }
+  if (kind !== "part" && kind !== "labor" && kind !== "equipment") {
+    return { error: "Choose part, labor, or equipment." };
+  }
+
+  if (kind === "part") {
+    const catalog = await prisma.catalogPart.upsert({
+      where: { organizationId_name: { organizationId: session.organizationId, name } },
+      create: {
+        organizationId: session.organizationId,
+        name,
+        sku,
+        price: money,
+        source: "MANUAL",
+      },
+      update: {
+        sku: sku || undefined,
+        price: money ?? undefined,
+        active: true,
+      },
+    });
+    await prisma.ticketPart.create({
+      data: {
+        ticketId,
+        userId: session.userId,
+        catalogPartId: catalog.id,
+        name: catalog.name,
+        quantity: amount,
+        sku: catalog.sku,
+        unitPrice: catalog.price,
+      },
+    });
+    await prisma.ticketUpdate.create({
+      data: {
+        ticketId,
+        userId: session.userId,
+        message: `Parts logged: ${amount} × ${catalog.name}${catalog.sku ? ` (${catalog.sku})` : ""}.`,
+      },
+    });
+  } else if (kind === "labor") {
+    const catalog = await prisma.catalogLabor.upsert({
+      where: { organizationId_name: { organizationId: session.organizationId, name } },
+      create: {
+        organizationId: session.organizationId,
+        name,
+        sku,
+        rate: money,
+        itemType: "Service",
+        source: "MANUAL",
+      },
+      update: {
+        sku: sku || undefined,
+        rate: money ?? undefined,
+        active: true,
+      },
+    });
+    await prisma.ticketLabor.create({
+      data: {
+        ticketId,
+        userId: session.userId,
+        catalogLaborId: catalog.id,
+        name: catalog.name,
+        hours: amount,
+        sku: catalog.sku,
+        unitRate: catalog.rate,
+      },
+    });
+    await prisma.ticketUpdate.create({
+      data: {
+        ticketId,
+        userId: session.userId,
+        message: `Labor logged: ${amount} hr × ${catalog.name}${catalog.sku ? ` (${catalog.sku})` : ""}.`,
+      },
+    });
+  } else {
+    const catalog = await prisma.catalogEquipment.upsert({
+      where: { organizationId_name: { organizationId: session.organizationId, name } },
+      create: {
+        organizationId: session.organizationId,
+        name,
+        sku,
+        rate: money,
+        itemType: "Equipment",
+        source: "MANUAL",
+      },
+      update: {
+        sku: sku || undefined,
+        rate: money ?? undefined,
+        active: true,
+      },
+    });
+    await prisma.ticketEquipment.create({
+      data: {
+        ticketId,
+        userId: session.userId,
+        catalogEquipmentId: catalog.id,
+        name: catalog.name,
+        hours: amount,
+        sku: catalog.sku,
+        unitRate: catalog.rate,
+      },
+    });
+    await prisma.ticketUpdate.create({
+      data: {
+        ticketId,
+        userId: session.userId,
+        message: `Equipment used: ${amount} hr × ${catalog.name}${catalog.sku ? ` (${catalog.sku})` : ""}.`,
+      },
+    });
+  }
+
+  redirect(`/tickets/${ticketId}`);
+}
+
 async function requireTicketLineEdit(ticketId: string) {
   const session = await requireSession();
   if (session.role === ROLES.FARMER) {

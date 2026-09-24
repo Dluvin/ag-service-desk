@@ -17,6 +17,8 @@ import { PartsPicker } from "@/components/PartsPicker";
 import { LaborPicker } from "@/components/LaborPicker";
 import { EquipmentPicker } from "@/components/EquipmentPicker";
 import { TicketLineItemRow } from "@/components/TicketLineItemRow";
+import { TicketCatalogQuickCreate } from "@/components/TicketCatalogQuickCreate";
+import { CollapsiblePanel } from "@/components/CollapsiblePanel";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
 import { formatSchedule } from "@/lib/schedule";
 import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
@@ -145,20 +147,31 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         ) : null}
 
         <h2 className="font-display mt-8 text-xl">Updates</h2>
-        <ol className="mt-3 space-y-3">
-          {ticket.updates.map((update) => (
-            <li key={update.id} className="rounded-lg border border-stone-200 bg-white p-3">
-              <p className="text-xs text-stone-500">
-                {update.user.name} · {new Date(update.createdAt).toLocaleString()}
-                {update.status ? ` · ${STATUS_LABELS[update.status as keyof typeof STATUS_LABELS] ?? update.status}` : ""}
-              </p>
-              <p className="mt-1 text-sm text-stone-800">{update.message}</p>
-              <TicketPhotoGrid photos={update.photos} />
-            </li>
-          ))}
-        </ol>
+        {ticket.updates.length > 0 ? (
+          <CollapsiblePanel
+            title="Show updates"
+            countLabel={`${ticket.updates.length}`}
+            defaultOpen={ticket.updates.length <= 2}
+          >
+            <ol className="space-y-3">
+              {ticket.updates.map((update) => (
+                <li key={update.id} className="rounded-lg border border-stone-200 bg-white p-3">
+                  <p className="text-xs text-stone-500">
+                    {update.user.name} · {new Date(update.createdAt).toLocaleString()}
+                    {update.status ? ` · ${STATUS_LABELS[update.status as keyof typeof STATUS_LABELS] ?? update.status}` : ""}
+                  </p>
+                  <p className="mt-1 text-sm text-stone-800">{update.message}</p>
+                  <TicketPhotoGrid photos={update.photos} />
+                </li>
+              ))}
+            </ol>
+          </CollapsiblePanel>
+        ) : (
+          <p className="mt-3 text-sm text-stone-600">No updates yet.</p>
+        )}
 
-        <ActionForm action={updateTicketAction} encType="multipart/form-data" className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+        <CollapsiblePanel title={canDispatch ? "Add update" : "Add information"} defaultOpen={false}>
+        <ActionForm action={updateTicketAction} encType="multipart/form-data" className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
           <input type="hidden" name="ticketId" value={ticket.id} />
           {canDispatch ? (
             <>
@@ -202,10 +215,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             />
           </label>
           <TicketPhotoFields />
-          <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
+          <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
             {canDispatch ? "Save update" : "Add to work order"}
           </button>
         </ActionForm>
+        </CollapsiblePanel>
 
         {ticket.photos.length > 0 ? (
           <section className="mt-8">
@@ -239,6 +253,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           )}
         </ul>
         {canDispatch ? (
+          <>
           <ActionForm action={addTicketPartAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
             <input type="hidden" name="ticketId" value={ticket.id} />
             <PartsPicker />
@@ -256,8 +271,12 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <input name="sku" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Filled from catalog if selected" />
               </label>
             </div>
-            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Log part</button>
+            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Log part</button>
           </ActionForm>
+          <div className="mt-2">
+            <TicketCatalogQuickCreate ticketId={ticket.id} kind="part" />
+          </div>
+          </>
         ) : null}
 
         <h2 className="font-display mt-8 text-xl">Labor</h2>
@@ -285,6 +304,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           )}
         </ul>
         {canDispatch ? (
+          <>
           <ActionForm action={addTicketLaborAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
             <input type="hidden" name="ticketId" value={ticket.id} />
             <LaborPicker />
@@ -302,8 +322,12 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <input name="sku" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Filled from catalog if selected" />
               </label>
             </div>
-            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Log labor</button>
+            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Log labor</button>
           </ActionForm>
+          <div className="mt-2">
+            <TicketCatalogQuickCreate ticketId={ticket.id} kind="labor" />
+          </div>
+          </>
         ) : null}
 
         <h2 className="font-display mt-8 text-xl">Equipment used</h2>
@@ -331,6 +355,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           )}
         </ul>
         {canDispatch ? (
+          <>
           <ActionForm action={addTicketEquipmentAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
             <input type="hidden" name="ticketId" value={ticket.id} />
             <EquipmentPicker />
@@ -348,8 +373,12 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <input name="sku" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Filled from catalog if selected" />
               </label>
             </div>
-            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Log equipment</button>
+            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Log equipment</button>
           </ActionForm>
+          <div className="mt-2">
+            <TicketCatalogQuickCreate ticketId={ticket.id} kind="equipment" />
+          </div>
+          </>
         ) : null}
       </div>
       <div className="lg:col-span-2">

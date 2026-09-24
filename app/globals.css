@@ -196,6 +196,36 @@ h2,
   margin-top: 0;
 }
 
+@media screen {
+  button:not(:disabled),
+  a.rounded-lg,
+  a.rounded-md {
+    transition:
+      transform 0.08s ease,
+      filter 0.08s ease,
+      background-color 0.12s ease,
+      box-shadow 0.12s ease;
+  }
+
+  button:not(:disabled):hover,
+  a.rounded-lg:hover,
+  a.rounded-md:hover {
+    filter: brightness(1.08);
+  }
+
+  button:not(:disabled):active,
+  a.rounded-lg:active,
+  a.rounded-md:active {
+    transform: translateY(1px) scale(0.97);
+    filter: brightness(0.88);
+  }
+
+  button.bg-emerald-800:not(:disabled):hover,
+  a.bg-emerald-800:hover {
+    background-color: #047857;
+  }
+}
+
 .no-print {
   display: revert;
 }
