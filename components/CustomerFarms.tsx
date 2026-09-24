@@ -29,16 +29,17 @@ export function CustomerFarms({
   canDelete: boolean;
 }) {
   const t = useT();
-  const [farmsOpen, setFarmsOpen] = useState(false);
+  const [farmsOpen, setFarmsOpen] = useState(true);
   const [addFarmOpen, setAddFarmOpen] = useState(false);
 
   return (
-    <section className="mt-8">
+    <section className="mt-8 space-y-3">
+      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
       <button
         type="button"
         onClick={() => setFarmsOpen((open) => !open)}
         aria-expanded={farmsOpen}
-        className="flex w-full items-center justify-between gap-3 text-left"
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
       >
         <h2 className="font-display text-xl">{t("farms.countTitle", { count: farms.length })}</h2>
         <span className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium">
@@ -46,14 +47,14 @@ export function CustomerFarms({
         </span>
       </button>
       {farmsOpen ? (
-        <>
-          <p className="mt-2 text-sm text-stone-600">
+        <div className="border-t border-stone-200 p-4">
+          <p className="text-sm text-stone-600">
             {t("farms.help")}
           </p>
           {farms.length ? (
             <ul className="mt-3 space-y-3">
               {farms.map((farm) => (
-                <li key={farm.id} className="rounded-xl border border-stone-200 bg-white p-4">
+                <li key={farm.id} className="rounded-xl border border-stone-200 bg-stone-50 p-4">
                   {canEdit ? (
                     <>
                       <p className="mb-3">
@@ -161,10 +162,11 @@ export function CustomerFarms({
           ) : (
             <p className="mt-2 text-sm text-stone-600">{t("farms.noneOnCustomer")}</p>
           )}
-        </>
+        </div>
       ) : null}
+      </div>
       {canEdit ? (
-        <div className="mt-3 rounded-xl border border-stone-200 bg-white">
+        <div className="rounded-xl border border-stone-200 bg-white">
           <button
             type="button"
             onClick={() => setAddFarmOpen((open) => !open)}

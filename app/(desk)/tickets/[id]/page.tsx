@@ -302,9 +302,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <input name="sku" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder={t(locale, "ticket.catalogFill")} />
               </label>
             </div>
-            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "ticket.logPart")}</button>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "ticket.logPart")}</button>
+              <TicketCatalogQuickCreate ticketId={ticket.id} kind="part" />
+            </div>
           </ActionForm>
-          <TicketCatalogQuickCreate ticketId={ticket.id} kind="part" />
           </div>
         ) : null}
         </div>
@@ -353,9 +355,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <input name="sku" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder={t(locale, "ticket.catalogFill")} />
               </label>
             </div>
-            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "ticket.logLabor")}</button>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "ticket.logLabor")}</button>
+              <TicketCatalogQuickCreate ticketId={ticket.id} kind="labor" />
+            </div>
           </ActionForm>
-          <TicketCatalogQuickCreate ticketId={ticket.id} kind="labor" />
           </div>
         ) : null}
         </div>
@@ -404,9 +408,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <input name="sku" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder={t(locale, "ticket.catalogFill")} />
               </label>
             </div>
-            <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "ticket.logEquipment")}</button>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "ticket.logEquipment")}</button>
+              <TicketCatalogQuickCreate ticketId={ticket.id} kind="equipment" />
+            </div>
           </ActionForm>
-          <TicketCatalogQuickCreate ticketId={ticket.id} kind="equipment" />
           </div>
         ) : null}
         </div>

@@ -114,6 +114,7 @@ export const REST_EN = {
   "assetsByFarm.noneOnFarm": "No assets on this farm yet.",
   "assetsByFarm.other": "Other assets",
   "assetsByFarm.documents": "Pivot documents",
+  "assetsByFarm.add": "Add asset to farm",
 
   "assets.titleAll": "All Assets",
   "assets.search": "Search Assets",
@@ -385,6 +386,7 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "assetsByFarm.noneOnFarm": "Aún no hay activos en esta finca.",
   "assetsByFarm.other": "Otros activos",
   "assetsByFarm.documents": "Documentos del pivote",
+  "assetsByFarm.add": "Agregar activo a la finca",
 
   "assets.titleAll": "Todos los activos",
   "assets.search": "Buscar activos",

@@ -8,6 +8,7 @@ import {
   type AssignableAsset,
 } from "@/components/AssetAssignTypeahead";
 import { assignCustomerAssetsToFarmAction } from "@/lib/actions";
+import { useT } from "@/components/I18nProvider";
 
 export type AssignFarmOption = {
   farmId: string;
@@ -22,13 +23,17 @@ export function AddAssetToFarmPanel({
   farms,
   showCustomer = false,
   lockFarmId,
+  collapsed = false,
 }: {
   farmerId?: string;
   assets: AssignableAsset[];
   farms: AssignFarmOption[];
   showCustomer?: boolean;
   lockFarmId?: string;
+  collapsed?: boolean;
 }) {
+  const t = useT();
+  const [open, setOpen] = useState(!collapsed);
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const selectedAssets = useMemo(
     () => assets.filter((asset) => selectedKeys.has(assetKey(asset))),
@@ -55,13 +60,16 @@ export function AddAssetToFarmPanel({
 
   if (assets.length === 0) return null;
 
-  return (
-    <ActionForm action={assignCustomerAssetsToFarmAction} className="mt-4 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+  const form = (
+    <ActionForm
+      action={assignCustomerAssetsToFarmAction}
+      className={collapsed ? "space-y-3 border-t border-stone-200 p-4" : "mt-4 space-y-3 rounded-xl border border-stone-200 bg-white p-4"}
+    >
       <input type="hidden" name="farmerId" value={resolvedFarmerId} />
       {lockFarmId ? <input type="hidden" name="returnFarmId" value={lockFarmId} /> : null}
       {lockFarmId ? <input type="hidden" name="farmMode" value="existing" /> : null}
       {lockFarmId ? <input type="hidden" name="farmId" value={lockFarmId} /> : null}
-      <p className="text-sm font-semibold text-stone-800">Add asset to farm</p>
+      {collapsed ? null : <p className="text-sm font-semibold text-stone-800">{t("assetsByFarm.add")}</p>}
       <p className="text-sm text-stone-600">
         {lockFarmId
           ? "Search for a pivot or other asset on this customer, then add it to this farm."
@@ -144,5 +152,24 @@ export function AddAssetToFarmPanel({
         Assign to farm
       </button>
     </ActionForm>
+  );
+
+  if (!collapsed) return form;
+
+  return (
+    <div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+      >
+        <p className="text-sm font-semibold text-stone-800">{t("assetsByFarm.add")}</p>
+        <span className="rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium">
+          {open ? t("common.hide") : t("common.show")}
+        </span>
+      </button>
+      {open ? form : null}
+    </div>
   );
 }

@@ -156,15 +156,6 @@ export function FarmerPivotList({
         label={t("assetsByFarm.search")}
         placeholder={t("assetsByFarm.searchPlaceholder")}
       />
-      {canManage ? (
-        <AddAssetToFarmPanel
-          farmerId={farmerId}
-          assets={assignable}
-          farms={farms
-            .filter((farm): farm is FarmGroup & { farmId: string } => Boolean(farm.farmId))
-            .map((farm) => ({ farmId: farm.farmId, farmName: farm.farmName, farmerId }))}
-        />
-      ) : null}
       {searching && matchedAssets === 0 ? (
         <p className="mt-4 text-sm text-stone-600">{t("assetsByFarm.noMatch")}</p>
       ) : matchedAssets === 0 && farms.length === 0 ? (
@@ -240,6 +231,16 @@ export function FarmerPivotList({
           })}
         </div>
       )}
+      {canManage ? (
+        <AddAssetToFarmPanel
+          collapsed
+          farmerId={farmerId}
+          assets={assignable}
+          farms={farms
+            .filter((farm): farm is FarmGroup & { farmId: string } => Boolean(farm.farmId))
+            .map((farm) => ({ farmId: farm.farmId, farmName: farm.farmName, farmerId }))}
+        />
+      ) : null}
       {showDocuments && matches.pivots.length > 0 ? (
         <div className="mt-6 space-y-4">
           <h3 className="font-display text-lg">{t("assetsByFarm.documents")}</h3>
