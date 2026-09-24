@@ -190,6 +190,32 @@ export default async function FarmerDetailPage({
           />
         </div>
       </div>
+      <section className="mt-8">
+        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <h2 className="font-display text-xl">{t(locale, "tickets.title")}</h2>
+            <Link href="/tickets/new" className="text-sm font-semibold text-emerald-800 hover:underline">
+              {t(locale, "tickets.request")}
+            </Link>
+          </div>
+          <div className="border-t border-stone-200 p-4">
+            {farmer.tickets.length === 0 ? (
+              <p className="text-sm text-stone-600">{t(locale, "tickets.emptyAll")}</p>
+            ) : (
+              <ul className="space-y-2">
+                {farmer.tickets.map((ticket) => (
+                  <li key={ticket.id} className="flex items-center justify-between gap-2">
+                    <Link href={`/tickets/${ticket.id}`} className="hover:underline">
+                      #{ticket.number} {ticket.title}
+                    </Link>
+                    <StatusBadge status={ticket.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
       <CustomerFarms
         farmerId={farmer.id}
         canEdit={canEdit}
@@ -236,20 +262,6 @@ export default async function FarmerDetailPage({
           farmName: asset.farm?.name ?? UNASSIGNED_FARM_LABEL,
         }))}
       />
-      <h2 className="font-display mt-8 text-xl">{t(locale, "tickets.title")}</h2>
-      <Link href="/tickets/new" className="mt-1 inline-block text-sm font-semibold text-emerald-800">
-        {t(locale, "tickets.request")}
-      </Link>
-      <ul className="mt-2 space-y-2">
-        {farmer.tickets.map((ticket) => (
-          <li key={ticket.id} className="flex items-center justify-between gap-2">
-            <Link href={`/tickets/${ticket.id}`} className="hover:underline">
-              #{ticket.number} {ticket.title}
-            </Link>
-            <StatusBadge status={ticket.status} />
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }

@@ -115,8 +115,31 @@ export function FarmerPivotList({
   const searching = Boolean(query.trim());
   const totalAssets = pivots.length + assets.length;
   const matchedAssets = matches.pivots.length + matches.assets.length;
-  const showDocuments = canManage || pivots.some((pivot) => pivot.documents.length > 0);
   const returnTo = `/farmers/${farmerId}`;
+  const [pivotFind, setPivotFind] = useState("");
+  const [pivotMenuOpen, setPivotMenuOpen] = useState(false);
+  const listedPivots = useMemo(() => {
+    const q = pivotFind.trim().toLowerCase();
+    const list = q
+      ? pivots.filter((pivot) =>
+          [pivot.name, pivot.serialNumber, pivot.farmName, pivot.locationNote]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase()
+            .includes(q),
+        )
+      : pivots;
+    return [...list].sort((a, b) => a.name.localeCompare(b.name));
+  }, [pivotFind, pivots]);
+  const pivotChoices = useMemo(() => {
+    const q = pivotFind.trim().toLowerCase();
+    const list = q
+      ? pivots.filter((pivot) =>
+          [pivot.name, pivot.serialNumber].filter(Boolean).join(" ").toLowerCase().includes(q),
+        )
+      : pivots;
+    return [...list].sort((a, b) => a.name.localeCompare(b.name)).slice(0, 40);
+  }, [pivotFind, pivots]);
   const assignable = [
     ...pivots.map((pivot) => ({
       kind: "pivot" as const,
@@ -241,25 +264,81 @@ export function FarmerPivotList({
             .map((farm) => ({ farmId: farm.farmId, farmName: farm.farmName, farmerId }))}
         />
       ) : null}
-      {showDocuments && matches.pivots.length > 0 ? (
-        <div className="mt-6 space-y-4">
-          <h3 className="font-display text-lg">{t("assetsByFarm.documents")}</h3>
-          {matches.pivots.map((pivot) =>
-            canManage || pivot.documents.length > 0 ? (
-              <div key={pivot.id} className="rounded-xl border border-stone-200 bg-white p-4">
-                <Link href={`/pivots/${pivot.id}`} className="font-medium text-emerald-800 hover:underline">
-                  {pivot.name}
-                </Link>
-                <span className="ml-2 text-xs text-stone-500">{pivot.farmName && pivot.farmName !== UNASSIGNED_FARM_LABEL ? pivot.farmName : unassigned}</span>
-                <PivotDocuments
-                  pivotId={pivot.id}
-                  documents={pivot.documents}
-                  canManage={canManage}
-                  returnTo={returnTo}
-                  compact
-                />
-              </div>
-            ) : null,
+      {pivots.length > 0 ? (
+        <div className="mt-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <h3 className="font-display text-lg">{t("assetsByFarm.allPivots")}</h3>
+            <div className="relative min-w-[14rem] flex-1 sm:max-w-xs">
+              <label className="sr-only" htmlFor="customer-pivot-find">
+                {t("assetsByFarm.findPivot")}
+              </label>
+              <input
+                id="customer-pivot-find"
+                value={pivotFind}
+                autoComplete="off"
+                placeholder={t("assetsByFarm.findPivotPlaceholder")}
+                className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+                onFocus={() => setPivotMenuOpen(true)}
+                onChange={(event) => {
+                  setPivotFind(event.target.value);
+                  setPivotMenuOpen(true);
+                }}
+                onBlur={() => {
+                  window.setTimeout(() => setPivotMenuOpen(false), 180);
+                }}
+              />
+              {pivotMenuOpen ? (
+                <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-stone-200 bg-white py-1 text-sm shadow-lg">
+                  {pivotChoices.length === 0 ? (
+                    <li className="px-3 py-2 text-stone-500">{t("assetsByFarm.noMatch")}</li>
+                  ) : (
+                    pivotChoices.map((pivot) => (
+                      <li key={pivot.id}>
+                        <button
+                          type="button"
+                          className="block w-full px-3 py-2 text-left hover:bg-emerald-50"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => {
+                            setPivotFind(pivot.name);
+                            setPivotMenuOpen(false);
+                          }}
+                        >
+                          <span className="block font-medium">{pivot.name}</span>
+                          {pivot.serialNumber ? (
+                            <span className="block text-xs text-stone-500">{pivot.serialNumber}</span>
+                          ) : null}
+                        </button>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              ) : null}
+            </div>
+          </div>
+          {listedPivots.length === 0 ? (
+            <p className="mt-3 text-sm text-stone-600">{t("assetsByFarm.noMatch")}</p>
+          ) : (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {listedPivots.map((pivot) => (
+                <div key={pivot.id} className="rounded-xl border border-stone-200 bg-white p-4">
+                  <Link href={`/pivots/${pivot.id}`} className="font-medium text-emerald-800 hover:underline">
+                    {pivot.name}
+                  </Link>
+                  <span className="ml-2 text-xs text-stone-500">
+                    {pivot.farmName && pivot.farmName !== UNASSIGNED_FARM_LABEL ? pivot.farmName : unassigned}
+                  </span>
+                  {canManage || pivot.documents.length > 0 ? (
+                    <PivotDocuments
+                      pivotId={pivot.id}
+                      documents={pivot.documents}
+                      canManage={canManage}
+                      returnTo={returnTo}
+                      compact
+                    />
+                  ) : null}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       ) : null}
