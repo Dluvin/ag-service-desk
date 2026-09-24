@@ -62,8 +62,9 @@ const faqs = [
           right shop.
         </p>
         <p>
-          Optional portal login lives on the customer, not on Staff. Enter a login email when you add
-          or edit the customer. Leave the password blank so they set one from the welcome email.
+          Optional portal login lives on the customer, not on Staff. Enter an email when you add a
+          contact, or a login email when you add the customer. They get a welcome email to set a
+          password. Leave the password blank if you are creating the customer with a login.
         </p>
       </>
     ),

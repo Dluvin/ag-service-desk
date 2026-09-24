@@ -16,9 +16,14 @@ export async function hashNewUserPassword(password: string) {
   return { hash: await bcrypt.hash(randomBytes(32).toString("hex"), 10), hadPassword: false };
 }
 
-export function welcomeQuery(path: string, status: WelcomeMailStatus) {
+export function welcomeQuery(path: string, status: WelcomeMailStatus, extra?: Record<string, string>) {
   const url = new URL(path, "http://local.invalid");
   url.searchParams.set("welcome", status);
+  if (extra) {
+    for (const [key, value] of Object.entries(extra)) {
+      if (value) url.searchParams.set(key, value);
+    }
+  }
   return `${url.pathname}${url.search}`;
 }
 

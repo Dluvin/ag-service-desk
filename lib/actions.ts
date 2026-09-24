@@ -78,6 +78,67 @@ function uniqueEmailError(error: unknown) {
   return null;
 }
 
+async function sendFarmerContactInvite(
+  input: {
+    organizationId: string;
+    organizationName: string;
+    farmerId: string;
+    name: string;
+    email: string;
+  },
+  options: { force: boolean },
+) {
+  const email = input.email.toLowerCase();
+  if (!email) return { welcome: null as const };
+
+  const existing = await prisma.user.findFirst({
+    where: { organizationId: input.organizationId, email },
+  });
+  if (existing) {
+    if (existing.role !== ROLES.FARMER || existing.farmerId !== input.farmerId) {
+      return { error: "That email is already used in this company." as const };
+    }
+    if (!options.force) return { welcome: null as const };
+    if (existing.name !== input.name) {
+      await prisma.user.update({ where: { id: existing.id }, data: { name: input.name } });
+    }
+    const welcome = await sendWelcomeLoginEmail({
+      userId: existing.id,
+      email: existing.email,
+      name: input.name,
+      organizationName: input.organizationName,
+      hadPassword: false,
+    });
+    return { welcome };
+  }
+
+  const { hash, hadPassword } = await hashNewUserPassword("");
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        organizationId: input.organizationId,
+        farmerId: input.farmerId,
+        name: input.name,
+        email,
+        role: ROLES.FARMER,
+        passwordHash: hash,
+      },
+    });
+  } catch (error) {
+    return { error: uniqueEmailError(error) ?? "Could not create a login for that contact. Try a different email." };
+  }
+
+  const welcome = await sendWelcomeLoginEmail({
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    organizationName: input.organizationName,
+    hadPassword,
+  });
+  return { welcome };
+}
+
 function createFarmWithContact(
   organizationId: string,
   input: {
@@ -302,18 +363,24 @@ export async function createFarmerAction(formData: FormData) {
     storeId: await resolveStoreId(session.organizationId, formString(formData, "storeId")),
   });
 
-  if (loginEmail) {
-    const { hash, hadPassword } = await hashNewUserPassword(loginPassword);
-    const user = await prisma.user.create({
-      data: {
-        organizationId: session.organizationId,
-        farmerId: farmer.id,
-        name,
-        email: loginEmail,
-        role: ROLES.FARMER,
-        passwordHash: hash,
-      },
-    });
+  const portalEmail = loginEmail || formString(formData, "contactEmail").toLowerCase();
+  if (portalEmail) {
+    const { hash, hadPassword } = await hashNewUserPassword(loginEmail ? loginPassword : "");
+    let user;
+    try {
+      user = await prisma.user.create({
+        data: {
+          organizationId: session.organizationId,
+          farmerId: farmer.id,
+          name: formString(formData, "contactName") || name,
+          email: portalEmail,
+          role: ROLES.FARMER,
+          passwordHash: hash,
+        },
+      });
+    } catch (error) {
+      return { error: uniqueEmailError(error) ?? "Could not create a login for that email. Try a different address." };
+    }
     const welcome = await sendWelcomeLoginEmail({
       userId: user.id,
       email: user.email,
@@ -342,7 +409,7 @@ export async function addFarmerContactAction(formData: FormData) {
   });
   if (!farmer) return { error: "Customer not found." };
 
-  await prisma.farmerContact.create({
+  const contact = await prisma.farmerContact.create({
     data: {
       farmerId,
       name,
@@ -350,6 +417,20 @@ export async function addFarmerContactAction(formData: FormData) {
       phone: phone || null,
     },
   });
+  const invite = await sendFarmerContactInvite(
+    {
+      organizationId: session.organizationId,
+      organizationName: session.organizationName,
+      farmerId,
+      name,
+      email,
+    },
+    { force: false },
+  );
+  if ("error" in invite && invite.error) return { error: invite.error };
+  if (invite.welcome) {
+    redirect(welcomeQuery(`/farmers/${farmerId}`, invite.welcome, { invite: contact.id }));
+  }
   redirect(`/farmers/${farmerId}`);
 }
 
@@ -534,11 +615,52 @@ export async function updateFarmerContactAction(formData: FormData) {
   });
   if (!contact) return { error: "Contact not found." };
 
+  const invite = await sendFarmerContactInvite(
+    {
+      organizationId: session.organizationId,
+      organizationName: session.organizationName,
+      farmerId: contact.farmerId,
+      name,
+      email,
+    },
+    { force: false },
+  );
+  if ("error" in invite && invite.error) return { error: invite.error };
+
   await prisma.farmerContact.update({
     where: { id: contactId },
     data: { name, email: email || null, phone: phone || null },
   });
+  if (invite.welcome) {
+    redirect(welcomeQuery(`/farmers/${contact.farmerId}`, invite.welcome, { invite: contact.id }));
+  }
   redirect(`/farmers/${contact.farmerId}`);
+}
+
+export async function resendFarmerContactInviteAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role === ROLES.FARMER) return { error: "Ask the service company to send customer invites." };
+
+  const contactId = formString(formData, "contactId");
+  const contact = await prisma.farmerContact.findFirst({
+    where: { id: contactId, farmer: { organizationId: session.organizationId } },
+  });
+  if (!contact) return { error: "Contact not found." };
+  if (!contact.email) return { error: "Add an email to this contact before sending an invite." };
+
+  const invite = await sendFarmerContactInvite(
+    {
+      organizationId: session.organizationId,
+      organizationName: session.organizationName,
+      farmerId: contact.farmerId,
+      name: contact.name,
+      email: contact.email,
+    },
+    { force: true },
+  );
+  if ("error" in invite && invite.error) return { error: invite.error };
+  if (!invite.welcome) return { error: "Could not send that invite." };
+  redirect(welcomeQuery(`/farmers/${contact.farmerId}`, invite.welcome, { invite: contact.id }));
 }
 
 export async function createTechnicianAction(formData: FormData) {

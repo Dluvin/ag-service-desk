@@ -3,13 +3,14 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES, canDeleteRecords, isShopStaff } from "@/lib/roles";
-import { addFarmerContactAction, deleteFarmerAction, deleteFarmerContactAction, updateFarmerAction, updateFarmerContactAction, updateFarmerStoreAction } from "@/lib/actions";
+import { addFarmerContactAction, deleteFarmerAction, deleteFarmerContactAction, resendFarmerContactInviteAction, updateFarmerAction, updateFarmerContactAction, updateFarmerStoreAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { SelectableMap } from "@/components/SelectableMap";
 import { StatusBadge } from "@/components/Badges";
 import { StoreSelect } from "@/components/StoreSelect";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
+import { ContactInviteStatus } from "@/components/ContactInviteStatus";
 import { CustomerFarms } from "@/components/CustomerFarms";
 import { FarmerPivotList } from "@/components/FarmerPivotList";
 import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
@@ -19,7 +20,7 @@ export default async function FarmerDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ welcome?: string }>;
+  searchParams: Promise<{ welcome?: string; invite?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -62,6 +63,24 @@ export default async function FarmerDetailPage({
     }),
   ]);
   const canEdit = isShopStaff(session.role);
+  const portalUsers = await prisma.user.findMany({
+    where: { organizationId: session.organizationId, farmerId: farmer.id, role: ROLES.FARMER },
+    select: {
+      email: true,
+      lastSeenAt: true,
+      passwordResets: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true, expiresAt: true } },
+    },
+  });
+  const loginByEmail = new Map(
+    portalUsers.map((user) => [
+      user.email.toLowerCase(),
+      {
+        lastSeenAt: user.lastSeenAt,
+        inviteSentAt: user.passwordResets[0]?.createdAt ?? null,
+        inviteExpiresAt: user.passwordResets[0]?.expiresAt ?? null,
+      },
+    ]),
+  );
 
   return (
     <div>
@@ -146,9 +165,26 @@ export default async function FarmerDetailPage({
                         <label className="block text-sm font-medium">
                           Email
                           <input name="contactEmail" type="email" defaultValue={contact.email ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                          <span className="mt-1 block text-xs font-normal text-stone-500">
+                            Saving with an email creates a customer login and sends a welcome message if they do
+                            not already have one.
+                          </span>
                         </label>
-                        <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save contact</button>
+                        <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Save contact</button>
                       </ActionForm>
+                      <ContactInviteStatus
+                        email={contact.email}
+                        login={contact.email ? loginByEmail.get(contact.email.toLowerCase()) ?? null : null}
+                        flash={query.invite === contact.id ? query.welcome : undefined}
+                      />
+                      {contact.email ? (
+                        <ActionForm action={resendFarmerContactInviteAction} className="mt-2">
+                          <input type="hidden" name="contactId" value={contact.id} />
+                          <button className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-800 hover:bg-stone-100">
+                            Resend invite
+                          </button>
+                        </ActionForm>
+                      ) : null}
                       {canDeleteRecords(session.role) ? (
                         <div className="mt-3">
                           <DeleteButton
@@ -167,6 +203,10 @@ export default async function FarmerDetailPage({
                       <p className="text-sm text-stone-600">
                         {[contact.phone, contact.email].filter(Boolean).join(" · ") || "No phone or email"}
                       </p>
+                      <ContactInviteStatus
+                        email={contact.email}
+                        login={contact.email ? loginByEmail.get(contact.email.toLowerCase()) ?? null : null}
+                      />
                     </>
                   )}
                 </li>
@@ -192,6 +232,10 @@ export default async function FarmerDetailPage({
               <label className="block text-sm font-medium">
                 Email
                 <input name="contactEmail" type="email" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+                <span className="mt-1 block text-xs font-normal text-stone-500">
+                  If you enter an email, they get a dashboard login and a welcome email to set a
+                  password.
+                </span>
               </label>
               <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save contact</button>
             </ActionForm>

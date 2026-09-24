@@ -81,6 +81,9 @@ export default async function FarmersPage({
           <label className="block text-sm font-medium">
             Email
             <input name="contactEmail" type="email" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <span className="mt-1 block text-xs font-normal text-stone-500">
+              Sends a welcome email and customer login unless you also enter a login email below.
+            </span>
           </label>
           <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Optional portal login</p>
           <label className="block text-sm font-medium">
