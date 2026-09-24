@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
 import { STATUS_LABELS, canAssignTickets, canDeleteRecords, isPrintableStatus, isShopStaff } from "@/lib/roles";
-import { updateTicketAction, addTicketPartAction, addTicketLaborAction, addTicketEquipmentAction, deleteTicketAction } from "@/lib/actions";
+import { updateTicketAction, addTicketPartAction, addTicketLaborAction, addTicketEquipmentAction, deleteTicketAction, updateTicketPartAction, deleteTicketPartAction, updateTicketLaborAction, deleteTicketLaborAction, updateTicketEquipmentAction, deleteTicketEquipmentAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
@@ -16,6 +16,7 @@ import { TicketPhotoGrid } from "@/components/TicketPhotoGrid";
 import { PartsPicker } from "@/components/PartsPicker";
 import { LaborPicker } from "@/components/LaborPicker";
 import { EquipmentPicker } from "@/components/EquipmentPicker";
+import { TicketLineItemRow } from "@/components/TicketLineItemRow";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
 import { formatSchedule } from "@/lib/schedule";
 import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
@@ -219,18 +220,21 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             <li className="p-4 text-sm text-stone-600">No parts logged on this call yet.</li>
           ) : (
             ticket.parts.map((part) => (
-              <li key={part.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                <span>
-                  <span className="font-medium">{part.quantity} × {part.name}</span>
-                  {part.sku ? <span className="text-stone-500"> · {part.sku}</span> : null}
-                  {part.unitPrice != null ? (
-                    <span className="text-stone-500"> · ${part.unitPrice.toFixed(2)} ea</span>
-                  ) : null}
-                </span>
-                <span className="text-xs text-stone-500">
-                  {part.user.name} · {new Date(part.createdAt).toLocaleString()}
-                </span>
-              </li>
+              <TicketLineItemRow
+                key={part.id}
+                id={part.id}
+                name={part.name}
+                sku={part.sku}
+                rate={part.unitPrice != null ? `$${part.unitPrice.toFixed(2)} ea` : null}
+                amount={part.quantity}
+                amountName="quantity"
+                amountLabel="Quantity"
+                loggedBy={`${part.user.name} · ${new Date(part.createdAt).toLocaleString()}`}
+                canEdit={canDispatch}
+                updateAction={updateTicketPartAction}
+                deleteAction={deleteTicketPartAction}
+                deleteLabel={`Remove ${part.quantity} × ${part.name} from this work order?`}
+              />
             ))
           )}
         </ul>
@@ -262,18 +266,21 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             <li className="p-4 text-sm text-stone-600">No labor logged on this call yet.</li>
           ) : (
             ticket.labor.map((item) => (
-              <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                <span>
-                  <span className="font-medium">{item.hours} hr × {item.name}</span>
-                  {item.sku ? <span className="text-stone-500"> · {item.sku}</span> : null}
-                  {item.unitRate != null ? (
-                    <span className="text-stone-500"> · ${item.unitRate.toFixed(2)}/hr</span>
-                  ) : null}
-                </span>
-                <span className="text-xs text-stone-500">
-                  {item.user.name} · {new Date(item.createdAt).toLocaleString()}
-                </span>
-              </li>
+              <TicketLineItemRow
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                sku={item.sku}
+                rate={item.unitRate != null ? `$${item.unitRate.toFixed(2)}/hr` : null}
+                amount={item.hours}
+                amountName="hours"
+                amountLabel="Hours"
+                loggedBy={`${item.user.name} · ${new Date(item.createdAt).toLocaleString()}`}
+                canEdit={canDispatch}
+                updateAction={updateTicketLaborAction}
+                deleteAction={deleteTicketLaborAction}
+                deleteLabel={`Remove ${item.hours} hr × ${item.name} from this work order?`}
+              />
             ))
           )}
         </ul>
@@ -305,18 +312,21 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             <li className="p-4 text-sm text-stone-600">No equipment logged on this call yet.</li>
           ) : (
             ticket.equipment.map((item) => (
-              <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                <span>
-                  <span className="font-medium">{item.hours} hr × {item.name}</span>
-                  {item.sku ? <span className="text-stone-500"> · {item.sku}</span> : null}
-                  {item.unitRate != null ? (
-                    <span className="text-stone-500"> · ${item.unitRate.toFixed(2)}/hr</span>
-                  ) : null}
-                </span>
-                <span className="text-xs text-stone-500">
-                  {item.user.name} · {new Date(item.createdAt).toLocaleString()}
-                </span>
-              </li>
+              <TicketLineItemRow
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                sku={item.sku}
+                rate={item.unitRate != null ? `$${item.unitRate.toFixed(2)}/hr` : null}
+                amount={item.hours}
+                amountName="hours"
+                amountLabel="Hours"
+                loggedBy={`${item.user.name} · ${new Date(item.createdAt).toLocaleString()}`}
+                canEdit={canDispatch}
+                updateAction={updateTicketEquipmentAction}
+                deleteAction={deleteTicketEquipmentAction}
+                deleteLabel={`Remove ${item.hours} hr × ${item.name} from this work order?`}
+              />
             ))
           )}
         </ul>

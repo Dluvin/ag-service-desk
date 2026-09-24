@@ -1829,6 +1829,159 @@ export async function addTicketEquipmentAction(formData: FormData) {
   redirect(`/tickets/${ticketId}`);
 }
 
+async function requireTicketLineEdit(ticketId: string) {
+  const session = await requireSession();
+  if (session.role === ROLES.FARMER) {
+    return { error: "Customers can view this but cannot change it." as const };
+  }
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, organizationId: session.organizationId },
+  });
+  if (!ticket) return { error: "Work order not found." as const };
+  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+    return { error: "This work order is not assigned to you." as const };
+  }
+  return { session, ticket };
+}
+
+export async function updateTicketPartAction(formData: FormData) {
+  const session = await requireSession();
+  const id = formString(formData, "id");
+  const quantity = Number(formString(formData, "quantity"));
+  const part = await prisma.ticketPart.findFirst({
+    where: { id },
+    include: { ticket: { select: { id: true, organizationId: true, technicianId: true } } },
+  });
+  if (!part || part.ticket.organizationId !== session.organizationId) return { error: "Part not found." };
+  const access = await requireTicketLineEdit(part.ticketId);
+  if ("error" in access) return access;
+  if (Number.isNaN(quantity) || quantity <= 0) return { error: "Quantity must be greater than 0." };
+
+  await prisma.ticketPart.update({ where: { id }, data: { quantity } });
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId: part.ticketId,
+      userId: session.userId,
+      message: `Parts updated: ${quantity} × ${part.name}${part.sku ? ` (${part.sku})` : ""}.`,
+    },
+  });
+  redirect(`/tickets/${part.ticketId}`);
+}
+
+export async function deleteTicketPartAction(formData: FormData) {
+  const session = await requireSession();
+  const id = formString(formData, "id");
+  const part = await prisma.ticketPart.findFirst({
+    where: { id },
+    include: { ticket: { select: { organizationId: true, technicianId: true } } },
+  });
+  if (!part || part.ticket.organizationId !== session.organizationId) return { error: "Part not found." };
+  const access = await requireTicketLineEdit(part.ticketId);
+  if ("error" in access) return access;
+
+  await prisma.ticketPart.delete({ where: { id } });
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId: part.ticketId,
+      userId: session.userId,
+      message: `Parts removed: ${part.quantity} × ${part.name}${part.sku ? ` (${part.sku})` : ""}.`,
+    },
+  });
+  redirect(`/tickets/${part.ticketId}`);
+}
+
+export async function updateTicketLaborAction(formData: FormData) {
+  const session = await requireSession();
+  const id = formString(formData, "id");
+  const hours = Number(formString(formData, "hours"));
+  const item = await prisma.ticketLabor.findFirst({
+    where: { id },
+    include: { ticket: { select: { organizationId: true, technicianId: true } } },
+  });
+  if (!item || item.ticket.organizationId !== session.organizationId) return { error: "Labor not found." };
+  const access = await requireTicketLineEdit(item.ticketId);
+  if ("error" in access) return access;
+  if (Number.isNaN(hours) || hours <= 0) return { error: "Hours must be greater than 0." };
+
+  await prisma.ticketLabor.update({ where: { id }, data: { hours } });
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId: item.ticketId,
+      userId: session.userId,
+      message: `Labor updated: ${hours} hr × ${item.name}${item.sku ? ` (${item.sku})` : ""}.`,
+    },
+  });
+  redirect(`/tickets/${item.ticketId}`);
+}
+
+export async function deleteTicketLaborAction(formData: FormData) {
+  const session = await requireSession();
+  const id = formString(formData, "id");
+  const item = await prisma.ticketLabor.findFirst({
+    where: { id },
+    include: { ticket: { select: { organizationId: true, technicianId: true } } },
+  });
+  if (!item || item.ticket.organizationId !== session.organizationId) return { error: "Labor not found." };
+  const access = await requireTicketLineEdit(item.ticketId);
+  if ("error" in access) return access;
+
+  await prisma.ticketLabor.delete({ where: { id } });
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId: item.ticketId,
+      userId: session.userId,
+      message: `Labor removed: ${item.hours} hr × ${item.name}${item.sku ? ` (${item.sku})` : ""}.`,
+    },
+  });
+  redirect(`/tickets/${item.ticketId}`);
+}
+
+export async function updateTicketEquipmentAction(formData: FormData) {
+  const session = await requireSession();
+  const id = formString(formData, "id");
+  const hours = Number(formString(formData, "hours"));
+  const item = await prisma.ticketEquipment.findFirst({
+    where: { id },
+    include: { ticket: { select: { organizationId: true, technicianId: true } } },
+  });
+  if (!item || item.ticket.organizationId !== session.organizationId) return { error: "Equipment not found." };
+  const access = await requireTicketLineEdit(item.ticketId);
+  if ("error" in access) return access;
+  if (Number.isNaN(hours) || hours <= 0) return { error: "Hours must be greater than 0." };
+
+  await prisma.ticketEquipment.update({ where: { id }, data: { hours } });
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId: item.ticketId,
+      userId: session.userId,
+      message: `Equipment updated: ${hours} hr × ${item.name}${item.sku ? ` (${item.sku})` : ""}.`,
+    },
+  });
+  redirect(`/tickets/${item.ticketId}`);
+}
+
+export async function deleteTicketEquipmentAction(formData: FormData) {
+  const session = await requireSession();
+  const id = formString(formData, "id");
+  const item = await prisma.ticketEquipment.findFirst({
+    where: { id },
+    include: { ticket: { select: { organizationId: true, technicianId: true } } },
+  });
+  if (!item || item.ticket.organizationId !== session.organizationId) return { error: "Equipment not found." };
+  const access = await requireTicketLineEdit(item.ticketId);
+  if ("error" in access) return access;
+
+  await prisma.ticketEquipment.delete({ where: { id } });
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId: item.ticketId,
+      userId: session.userId,
+      message: `Equipment removed: ${item.hours} hr × ${item.name}${item.sku ? ` (${item.sku})` : ""}.`,
+    },
+  });
+  redirect(`/tickets/${item.ticketId}`);
+}
+
 export async function createCatalogEquipmentAction(formData: FormData) {
   const session = await requireSession();
   if (!canManageParts(session.role)) return { error: "Only admins and managers can add equipment." };
