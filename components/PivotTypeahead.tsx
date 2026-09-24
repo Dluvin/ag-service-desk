@@ -18,12 +18,20 @@ export function PivotTypeahead({
   onSelect,
   required,
   disabled,
+  label = "Pivot",
+  placeholder,
+  emptyLabel = "No matching pivots",
+  hiddenName = "pivotId",
 }: {
   pivots: PivotChoice[];
   pivotId: string;
   onSelect: (pivot: PivotChoice | null) => void;
   required?: boolean;
   disabled?: boolean;
+  label?: string;
+  placeholder?: string;
+  emptyLabel?: string;
+  hiddenName?: string;
 }) {
   const plan = usePlan();
   const selected = pivots.find((pivot) => pivot.id === pivotId) ?? null;
@@ -55,14 +63,17 @@ export function PivotTypeahead({
 
   return (
     <label className="relative block text-sm font-medium">
-      Pivot
-      <input type="hidden" name="pivotId" value={pivotId} />
+      {label}
+      <input type="hidden" name={hiddenName} value={pivotId} />
       <input
         value={text}
         required={required && !disabled}
         disabled={disabled}
         autoComplete="off"
-        placeholder={disabled ? "Select a customer first" : "Start typing a pivot name"}
+        placeholder={
+          placeholder ??
+          (disabled ? "Select a customer first" : `Start typing a ${label.toLowerCase()} name`)
+        }
         className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 disabled:bg-stone-100"
         onFocus={() => {
           if (!disabled) setOpen(true);
@@ -90,7 +101,7 @@ export function PivotTypeahead({
             onMouseLeave={() => setHoveredId(null)}
           >
             {matches.length === 0 ? (
-              <li className="px-3 py-2 text-stone-500">No matching pivots</li>
+              <li className="px-3 py-2 text-stone-500">{emptyLabel}</li>
             ) : (
               matches.map((pivot) => (
                 <li key={pivot.id}>

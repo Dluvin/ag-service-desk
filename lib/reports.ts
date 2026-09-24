@@ -13,6 +13,7 @@ import {
 import { STARTUP_SEASON_YEAR, inspectionLabel } from "./startup";
 import { UNASSIGNED_FARM_LABEL } from "./farms";
 import { ensureAssetTypes, isPivotAssetType } from "./assets";
+import { ticketSiteName } from "./ticket-site";
 
 export function toDayParam(date: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -53,6 +54,7 @@ const ticketReportInclude = {
   farmer: { include: { store: true } },
   store: true,
   pivot: { include: { farm: true } },
+  asset: { include: { assetType: true } },
   technician: true,
   parts: { select: { quantity: true, unitPrice: true } },
   labor: { select: { hours: true, unitRate: true } },
@@ -198,6 +200,7 @@ export async function loadReports(session: SessionUser, options: { store: string
   const openByPivot = new Map<string, number>();
   const lastByPivot = new Map<string, Date>();
   for (const ticket of tickets) {
+    if (!ticket.pivotId) continue;
     openByPivot.set(ticket.pivotId, (openByPivot.get(ticket.pivotId) ?? 0) + (ticket.status === "COMPLETED" || ticket.status === "CANCELLED" ? 0 : 1));
     const last = lastByPivot.get(ticket.pivotId);
     if (!last || ticket.createdAt > last) lastByPivot.set(ticket.pivotId, ticket.createdAt);
@@ -247,7 +250,7 @@ export async function loadReports(session: SessionUser, options: { store: string
         number: ticket.number,
         title: ticket.title,
         farm: ticket.farmer.name,
-        pivot: ticket.pivot.name,
+        pivot: ticket.pivot?.name ?? ticketSiteName(ticket),
         technician: ticket.technician?.name ?? "Unassigned",
         store: ticketStoreName(ticket),
         invoiceNumber: ticket.invoiceNumber,
@@ -348,7 +351,7 @@ export async function loadFarmReports(session: SessionUser, options: { store: st
   const totals = spendFor(closed);
 
   function farmKey(ticket: ReportTicket) {
-    return ticket.pivot.farmId ?? "unassigned";
+    return ticket.pivot?.farmId ?? "unassigned";
   }
 
   const lastByFarm = new Map<string, Date>();
@@ -360,8 +363,8 @@ export async function loadFarmReports(session: SessionUser, options: { store: st
 
   const rows = farms
     .map((farm) => {
-      const openedRows = opened.filter((ticket) => ticket.pivot.farmId === farm.id);
-      const closedRows = closed.filter((ticket) => ticket.pivot.farmId === farm.id);
+      const openedRows = opened.filter((ticket) => ticket.pivot?.farmId === farm.id);
+      const closedRows = closed.filter((ticket) => ticket.pivot?.farmId === farm.id);
       const spend = spendFor(closedRows);
       return {
         id: farm.id,
@@ -373,7 +376,7 @@ export async function loadFarmReports(session: SessionUser, options: { store: st
         assets: farm._count.assets,
         opened: openedRows.length,
         closed: closedRows.length,
-        openNow: tickets.filter((ticket) => ticket.pivot.farmId === farm.id && isOpenTicket(ticket)).length,
+        openNow: tickets.filter((ticket) => ticket.pivot?.farmId === farm.id && isOpenTicket(ticket)).length,
         invoice: spend.invoice,
         parts: spend.parts,
         laborHours: spend.laborHours,
@@ -383,9 +386,9 @@ export async function loadFarmReports(session: SessionUser, options: { store: st
     })
     .sort((a, b) => b.opened - a.opened || b.invoice - a.invoice || a.name.localeCompare(b.name));
 
-  const unopened = opened.filter((ticket) => !ticket.pivot.farmId);
-  const unclosed = closed.filter((ticket) => !ticket.pivot.farmId);
-  const unassignedTickets = tickets.filter((ticket) => !ticket.pivot.farmId);
+  const unopened = opened.filter((ticket) => !ticket.pivot?.farmId);
+  const unclosed = closed.filter((ticket) => !ticket.pivot?.farmId);
+  const unassignedTickets = tickets.filter((ticket) => !ticket.pivot?.farmId);
   if (unassignedTickets.length > 0) {
     const spend = spendFor(unclosed);
     rows.push({
@@ -457,6 +460,7 @@ export async function loadAssetReports(session: SessionUser, options: { store: s
   const openByPivot = new Map<string, number>();
   const lastByPivot = new Map<string, Date>();
   for (const ticket of tickets) {
+    if (!ticket.pivotId) continue;
     openByPivot.set(ticket.pivotId, (openByPivot.get(ticket.pivotId) ?? 0) + (isOpenTicket(ticket) ? 1 : 0));
     const last = lastByPivot.get(ticket.pivotId);
     if (!last || ticket.createdAt > last) lastByPivot.set(ticket.pivotId, ticket.createdAt);

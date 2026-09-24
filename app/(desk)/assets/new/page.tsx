@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -19,7 +20,26 @@ export default async function NewAssetPage({
   const query = await searchParams;
   const types = await ensureAssetTypes(session.organizationId);
   const selected = types.find((type) => type.slug === query.type?.trim());
-  if (!selected) redirect("/assets");
+  if (!selected) {
+    return (
+      <div className="max-w-lg">
+        <h1 className="font-display text-3xl">Add asset</h1>
+        <p className="mt-1 text-sm text-stone-600">Choose the type first. Pivots are the usual choice.</p>
+        <ul className="mt-6 grid gap-2">
+          {types.map((type) => (
+            <li key={type.id}>
+              <Link
+                href={assetTypeNewHref(type)}
+                className="block rounded-lg border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-emerald-900 hover:border-emerald-700 hover:bg-emerald-50"
+              >
+                {assetTypeSingular(type.name)}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
   if (isPivotAssetType(selected)) redirect(assetTypeNewHref(selected));
 
   const [farmers, farms] = await Promise.all([

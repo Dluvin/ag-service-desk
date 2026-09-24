@@ -6,6 +6,7 @@ export const closedTicketPrintInclude = {
   organization: true,
   farmer: { include: { contacts: { orderBy: { name: "asc" as const } } } },
   pivot: true,
+  asset: { include: { assetType: true } },
   technician: true,
   updates: { include: { user: true, photos: true }, orderBy: { createdAt: "asc" as const } },
   parts: { orderBy: { createdAt: "asc" as const } },

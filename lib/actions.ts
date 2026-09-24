@@ -1362,13 +1362,18 @@ export async function createTicketAction(formData: FormData) {
   }
 
   let pivot = null as Awaited<ReturnType<typeof prisma.pivot.findFirst>>;
+  let asset = null as Awaited<ReturnType<typeof prisma.asset.findFirst>>;
+  const types = await ensureAssetTypes(session.organizationId);
+  const typeSlug = formString(formData, "assetTypeSlug");
+  const selectedType = types.find((type) => type.slug === typeSlug) ?? types.find(isPivotAssetType) ?? types[0];
+  const creatingPivot = !selectedType || isPivotAssetType(selectedType);
 
   if (siteMode === "new") {
     if (session.role === ROLES.FARMER && !session.farmerId) {
       return { error: "Your customer account is not linked." };
     }
 
-    const pivotName = formString(formData, "pivotName");
+    const assetName = formString(formData, "assetName") || formString(formData, "pivotName");
     const serialNumber = formString(formData, "serialNumber");
     const mapsInput = formString(formData, "mapsInput");
     const latitude = Number(formString(formData, "latitude"));
@@ -1376,8 +1381,8 @@ export async function createTicketAction(formData: FormData) {
     const parsed = mapsInput ? parseMapsLocation(mapsInput) : null;
     const lat = parsed?.latitude ?? latitude;
     const lng = parsed?.longitude ?? longitude;
-    if (!pivotName || Number.isNaN(lat) || Number.isNaN(lng)) {
-      return { error: "Pivot name and a map location are required." };
+    if (!assetName || Number.isNaN(lat) || Number.isNaN(lng)) {
+      return { error: "Asset name and a map location are required." };
     }
 
     let farmerId = formString(formData, "farmerId");
@@ -1402,30 +1407,60 @@ export async function createTicketAction(formData: FormData) {
     });
     if (!farmer) return { error: "Customer not found." };
 
-    pivot = await prisma.pivot.create({
-      data: {
-        organizationId: session.organizationId,
-        farmerId,
-        name: pivotName,
-        latitude: lat,
-        longitude: lng,
-        serialNumber: serialNumber || null,
-        locationNote: mapsInput || null,
-      },
-    });
-  } else {
+    if (creatingPivot) {
+      pivot = await prisma.pivot.create({
+        data: {
+          organizationId: session.organizationId,
+          farmerId,
+          name: assetName,
+          latitude: lat,
+          longitude: lng,
+          serialNumber: serialNumber || null,
+          locationNote: mapsInput || null,
+        },
+      });
+    } else {
+      if (!selectedType) return { error: "Choose an asset type." };
+      const farm = await resolveFarmIdForCustomer(session.organizationId, farmerId, parseFarmId(formString(formData, "farmId")));
+      if (farm.error) return { error: farm.error };
+      asset = await prisma.asset.create({
+        data: {
+          organizationId: session.organizationId,
+          assetTypeId: selectedType.id,
+          farmerId,
+          farmId: farm.farmId,
+          name: assetName,
+          latitude: lat,
+          longitude: lng,
+          serialNumber: serialNumber || null,
+          locationNote: mapsInput || null,
+        },
+      });
+    }
+  } else if (creatingPivot) {
     const pivotId = formString(formData, "pivotId");
-    if (!pivotId) return { error: "Select a pivot or add a new location." };
+    if (!pivotId) return { error: "Select an asset or add a new location." };
     pivot = await prisma.pivot.findFirst({
       where: { id: pivotId, organizationId: session.organizationId },
     });
-    if (!pivot) return { error: "Pivot not found." };
+    if (!pivot) return { error: "Asset not found." };
     if (session.role === ROLES.FARMER && session.farmerId !== pivot.farmerId) {
-      return { error: "You can only open work orders on your own pivots." };
+      return { error: "You can only open work orders on your own equipment." };
+    }
+  } else {
+    const assetId = formString(formData, "assetId");
+    if (!assetId) return { error: "Select an asset or add a new location." };
+    asset = await prisma.asset.findFirst({
+      where: { id: assetId, organizationId: session.organizationId },
+      include: { assetType: true },
+    });
+    if (!asset) return { error: "Asset not found." };
+    if (session.role === ROLES.FARMER && session.farmerId !== asset.farmerId) {
+      return { error: "You can only open work orders on your own equipment." };
     }
   }
 
-  if (!pivot) return { error: "Pivot not found." };
+  if (!pivot && !asset) return { error: "Select an asset or add a new location." };
 
   const photos = photoFilesFromForm(formData);
   const photoCheck = validatePhotoFiles(photos);
@@ -1436,8 +1471,9 @@ export async function createTicketAction(formData: FormData) {
   else if (session.role === ROLES.TECHNICIAN) assigned = session.userId;
   else if (!canAssignTickets(session.role)) assigned = null;
 
+  const siteFarmerId = pivot?.farmerId ?? asset!.farmerId;
   const farmer = await prisma.farmer.findFirst({
-    where: { id: pivot.farmerId, organizationId: session.organizationId },
+    where: { id: siteFarmerId, organizationId: session.organizationId },
     select: { storeId: true },
   });
   const storeId =
@@ -1447,8 +1483,9 @@ export async function createTicketAction(formData: FormData) {
 
   const ticket = await openServiceTicket({
     organizationId: session.organizationId,
-    farmerId: pivot.farmerId,
-    pivotId: pivot.id,
+    farmerId: siteFarmerId,
+    pivotId: pivot?.id ?? null,
+    assetId: asset?.id ?? null,
     technicianId: assigned,
     storeId,
     userId: session.userId,

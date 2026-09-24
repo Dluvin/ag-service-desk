@@ -13,6 +13,7 @@ import {
 import { DispatchFleetMap } from "@/components/DispatchFleetMap";
 import { ticketPins } from "@/lib/map-pins";
 import { parseStoreParam, storeTicketWhere, ticketStoreName } from "@/lib/stores";
+import { ticketSiteName } from "@/lib/ticket-site";
 import { StoreFilter } from "@/components/StoreFilter";
 import { DispatchCalendarToggle } from "@/components/DispatchCalendarToggle";
 import { DispatchWorkOrderCard } from "@/components/DispatchWorkOrderCard";
@@ -55,7 +56,7 @@ export default async function DispatchPage({
         ...ticketWhere(session),
         ...storeTicketWhere(selectedStore),
       },
-      include: { farmer: { include: { store: true } }, pivot: true, technician: true, store: true },
+      include: { farmer: { include: { store: true } }, pivot: true, asset: { include: { assetType: true } }, technician: true, store: true },
       orderBy: [{ priority: "desc" }, { updatedAt: "desc" }],
     }),
     loadTechnicians(session.organizationId),
@@ -116,7 +117,7 @@ export default async function DispatchPage({
                   status={ticket.status}
                 >
                   <p className="mt-1 text-xs text-stone-600">
-                    {[ticketStoreName(ticket), ticket.pivot?.name].filter(Boolean).join(" · ") || t(locale, "dispatch.noStorePivot")}
+                    {[ticketStoreName(ticket), ticketSiteName(ticket)].filter(Boolean).join(" · ") || t(locale, "dispatch.noStorePivot")}
                   </p>
                   {ticket.scheduledAt ? (
                     <p className="mt-1 text-xs font-medium text-emerald-900">{formatSchedule(ticket.scheduledAt)}</p>

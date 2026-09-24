@@ -10,6 +10,7 @@ import { STARTUP_SEASON_YEAR } from "@/lib/startup";
 import { AllTicketsMap } from "@/components/AllTicketsMap";
 import { OPEN_TICKET_STATUSES, ticketPins } from "@/lib/map-pins";
 import { ticketStoreName } from "@/lib/stores";
+import { ticketSiteName } from "@/lib/ticket-site";
 import { ActionForm } from "@/components/ActionForm";
 import { StoreSelect } from "@/components/StoreSelect";
 import { updateFarmerStoreAction } from "@/lib/actions";
@@ -42,7 +43,7 @@ export default async function DashboardPage() {
         ...ticketWhere(session),
         status: { in: [...OPEN_TICKET_STATUSES] },
       },
-      include: { farmer: { include: { store: true } }, pivot: true, technician: true, store: true },
+      include: { farmer: { include: { store: true } }, pivot: true, asset: { include: { assetType: true } }, technician: true, store: true },
       orderBy: { updatedAt: "desc" },
     }),
     prisma.pivot.count({ where: pivotWhere(session) }),
@@ -116,7 +117,7 @@ export default async function DashboardPage() {
                     <p className="font-medium">#{ticket.number} {ticket.title}</p>
                     <p className="text-sm text-stone-600">
                       {ticket.farmer.name}
-                      {ticketStoreName(ticket) ? ` · ${ticketStoreName(ticket)}` : ""} · {ticket.pivot.name}
+                      {ticketStoreName(ticket) ? ` · ${ticketStoreName(ticket)}` : ""} · {ticketSiteName(ticket)}
                       {ticket.technician ? ` · ${ticket.technician.name}` : ""}
                     </p>
                   </div>

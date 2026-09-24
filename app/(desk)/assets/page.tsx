@@ -13,7 +13,7 @@ import {
   isPivotAssetType,
   pivotToUnifiedRow,
 } from "@/lib/assets";
-import { AssetDirectory } from "@/components/AssetDirectory";
+import { ChooseAssetTypeButton } from "@/components/ChooseAssetTypeButton";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
 
@@ -93,9 +93,12 @@ export default async function AssetsPage({
               Add {assetTypeSingular(selected.name).toLowerCase()}
             </Link>
           ) : (
-            <Link href="/assets/types" className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-800">
-              Manage types
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <ChooseAssetTypeButton types={types} />
+              <Link href="/assets/types" className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-800">
+                Manage types
+              </Link>
+            </div>
           )
         ) : null}
       </div>
@@ -139,16 +142,7 @@ export default async function AssetsPage({
 
       {!selected && canAdd ? (
         <p className="mt-4 text-sm text-stone-600">
-          Add{" "}
-          {types.map((type, index) => (
-            <span key={type.id}>
-              {index > 0 ? (index === types.length - 1 ? ", or " : ", ") : ""}
-              <Link href={assetTypeNewHref(type)} className="font-semibold text-emerald-800 hover:underline">
-                {assetTypeSingular(type.name).toLowerCase()}
-              </Link>
-            </span>
-          ))}
-          .
+          Use Add asset to choose a type, then fill in the location.
         </p>
       ) : null}
 

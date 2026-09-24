@@ -29,6 +29,7 @@ import { getRequestLocale } from "@/lib/user-locale";
 import { statusLabel, t, type Locale } from "@/lib/i18n";
 import { visionOcrConfigured } from "@/lib/ticket-ocr";
 import { orgOcrIsOn } from "@/lib/ocr-samples";
+import { ticketSite } from "@/lib/ticket-site";
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -41,6 +42,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     include: {
       farmer: { include: { contacts: { orderBy: { name: "asc" } }, store: true } },
       pivot: true,
+      asset: { include: { assetType: true } },
       technician: true,
       store: true,
         updates: { include: { user: true, photos: true }, orderBy: { createdAt: "desc" } },
@@ -53,6 +55,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     },
   });
   if (!ticket) notFound();
+  const site = ticketSite(ticket);
 
   const technicians = canAssignTickets(session.role) ? await loadTechnicians(session.organizationId) : [];
   const canDispatch = isShopStaff(session.role);
@@ -72,14 +75,16 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
       <div className="lg:col-span-3">
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-500">
           <span>{t(locale, "ticket.number", { number: ticket.number })}</span>
-          <a
-            href={googleMapsPlaceUrl(ticket.pivot.latitude, ticket.pivot.longitude)}
-            target="_blank"
-            rel="noreferrer"
-            className="min-h-11 inline-flex items-center font-medium text-emerald-800 hover:underline"
-          >
-            {t(locale, "ticket.maps")}
-          </a>
+          {site ? (
+            <a
+              href={googleMapsPlaceUrl(site.latitude, site.longitude)}
+              target="_blank"
+              rel="noreferrer"
+              className="min-h-11 inline-flex items-center font-medium text-emerald-800 hover:underline"
+            >
+              {t(locale, "ticket.maps")}
+            </a>
+          ) : null}
         </p>
         <h1 className="font-display text-3xl">{ticket.title}</h1>
         <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -128,9 +133,13 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               ? ` · ${ticket.farmer.phone}`
               : ""}
           {" · "}
-          <Link href={`/pivots/${ticket.pivotId}`} className="text-emerald-800 hover:underline">
-            {ticket.pivot.name}
-          </Link>
+          {site ? (
+            <Link href={site.href} className="text-emerald-800 hover:underline">
+              {site.name}
+            </Link>
+          ) : (
+            "Asset"
+          )}
           {" · "}
           {ticket.technician ? t(locale, "ticket.assignedTo", { name: ticket.technician.name }) : t(locale, "common.unassigned")}
           {shopName ? ` · ${shopName}` : ""}
@@ -391,15 +400,19 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
       <div className="flex flex-col gap-6 lg:col-span-2">
         <GoogleMapPanel
           store={resolvedTicketStoreId(ticket)}
-          markers={[
-            {
-              id: ticket.pivot.id,
-              name: ticket.pivot.name,
-              lat: ticket.pivot.latitude,
-              lng: ticket.pivot.longitude,
-              subtitle: ticket.farmer.name,
-            },
-          ]}
+          markers={
+            site
+              ? [
+                  {
+                    id: site.href,
+                    name: site.name,
+                    lat: site.latitude,
+                    lng: site.longitude,
+                    subtitle: ticket.farmer.name,
+                  },
+                ]
+              : []
+          }
         />
         <section>
           <h2 className="font-display text-xl">{t(locale, "ticket.updates")}</h2>

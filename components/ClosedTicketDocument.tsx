@@ -1,6 +1,7 @@
 import { TicketPhotoGrid } from "@/components/TicketPhotoGrid";
 import { STATUS_LABELS, type TicketStatus } from "@/lib/roles";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
+import { ticketSite } from "@/lib/ticket-site";
 
 type PrintTicket = {
   number: number;
@@ -21,7 +22,8 @@ type PrintTicket = {
     address: string | null;
     contacts?: { name: string; phone: string | null; email: string | null }[];
   };
-  pivot: { name: string; serialNumber: string | null; latitude: number; longitude: number; locationNote: string | null };
+  pivot?: { name: string; serialNumber: string | null; latitude: number; longitude: number; locationNote: string | null } | null;
+  asset?: { name: string; serialNumber: string | null; latitude: number; longitude: number; locationNote: string | null; assetType?: { name: string } | null } | null;
   technician: { name: string } | null;
   siteVisits?: { startedAt: Date; endedAt: Date | null }[];
   parts: { quantity: number; name: string; sku: string | null; unitPrice: number | null }[];
@@ -124,13 +126,21 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
           ))}
         </section>
         <section>
-          <h2 className="font-display text-lg">Pivot</h2>
-          <p className="font-medium">{ticket.pivot.name}</p>
-          {ticket.pivot.serialNumber ? <p>SN {ticket.pivot.serialNumber}</p> : null}
-          {ticket.pivot.locationNote ? <p>{ticket.pivot.locationNote}</p> : null}
-          <p>
-            {ticket.pivot.latitude.toFixed(5)}, {ticket.pivot.longitude.toFixed(5)}
-          </p>
+          <h2 className="font-display text-lg">Asset</h2>
+          {(() => {
+            const site = ticketSite(ticket);
+            if (!site) return <p>No location on this work order.</p>;
+            return (
+              <>
+                <p className="font-medium">{site.name}</p>
+                {site.serialNumber ? <p>SN {site.serialNumber}</p> : null}
+                {site.locationNote ? <p>{site.locationNote}</p> : null}
+                <p>
+                  {site.latitude.toFixed(5)}, {site.longitude.toFixed(5)}
+                </p>
+              </>
+            );
+          })()}
           <p className="mt-2">Technician: {ticket.technician?.name ?? "Unassigned"}</p>
           <p>Opened: {ticket.createdAt.toLocaleString()}</p>
           {ticket.siteVisits && ticket.siteVisits.length > 0 ? (

@@ -314,6 +314,7 @@ model Asset {
   serialNumber   String?
   notes          String?
   createdAt      DateTime     @default(now())
+  tickets        Ticket[]
 
   @@index([organizationId, assetTypeId])
   @@index([farmerId])
@@ -326,8 +327,10 @@ model Ticket {
   organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   farmerId       String
   farmer         Farmer        @relation(fields: [farmerId], references: [id], onDelete: Cascade)
-  pivotId        String
-  pivot          Pivot         @relation(fields: [pivotId], references: [id], onDelete: Cascade)
+  pivotId        String?
+  pivot          Pivot?        @relation(fields: [pivotId], references: [id], onDelete: Cascade)
+  assetId        String?
+  asset          Asset?        @relation(fields: [assetId], references: [id], onDelete: SetNull)
   technicianId   String?
   technician     User?         @relation("TechnicianTickets", fields: [technicianId], references: [id], onDelete: SetNull)
   storeId        String?

@@ -9,6 +9,7 @@ import { OfficeFormDocument } from "@/components/office-forms/OfficeFormDocument
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
 import { orgFormsIsOn } from "@/lib/ocr-samples";
+import { ticketSiteName } from "@/lib/ticket-site";
 
 export default async function OfficeFormPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getSession();
@@ -46,6 +47,7 @@ export default async function OfficeFormPage({ params }: { params: Promise<{ slu
         status: true,
         farmer: { select: { name: true } },
         pivot: { select: { name: true } },
+        asset: { select: { name: true, assetType: { select: { name: true } } } },
       },
     }),
   ]);
@@ -72,7 +74,7 @@ export default async function OfficeFormPage({ params }: { params: Promise<{ slu
           number: ticket.number,
           title: ticket.title,
           farmerName: ticket.farmer.name,
-          pivotName: ticket.pivot.name,
+          pivotName: ticketSiteName(ticket),
           status: ticket.status,
         }))}
       />

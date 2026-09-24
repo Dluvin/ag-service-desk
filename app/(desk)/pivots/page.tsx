@@ -7,6 +7,8 @@ import { canImportPivots, isShopStaff } from "@/lib/roles";
 import { importAgSensePivotsAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { PivotDirectory } from "@/components/PivotDirectory";
+import { ChooseAssetTypeButton } from "@/components/ChooseAssetTypeButton";
+import { ensureAssetTypes } from "@/lib/assets";
 
 export default async function PivotsPage({
   searchParams,
@@ -19,7 +21,7 @@ export default async function PivotsPage({
   const query = await searchParams;
   const canAdd = isShopStaff(session.role);
   const canImport = canImportPivots(session.role);
-  const [pivots, farmers] = await Promise.all([
+  const [pivots, farmers, types] = await Promise.all([
     prisma.pivot.findMany({
       where: pivotWhere(session),
       include: {
@@ -35,6 +37,7 @@ export default async function PivotsPage({
           orderBy: { name: "asc" },
         })
       : Promise.resolve([]),
+    canAdd ? ensureAssetTypes(session.organizationId) : Promise.resolve([]),
   ]);
 
   return (
@@ -43,9 +46,7 @@ export default async function PivotsPage({
         <div className="flex items-center justify-between">
           <h1 className="font-display text-3xl">Pivots</h1>
           {canAdd ? (
-            <Link href="/pivots/new" className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-              Add pivot
-            </Link>
+            <ChooseAssetTypeButton types={types} />
           ) : null}
         </div>
         {query.imported || query.updated || query.skipped || query.farmers ? (

@@ -192,8 +192,8 @@ const EN_UI = {
 
   "ticket.newTitle": "New work order",
   "ticket.requestTitle": "Request service",
-  "ticket.newHelp": "Pick a customer (start typing the name), then start typing the pivot name. You can still add a new pivot if needed.",
-  "ticket.requestHelp": "Start typing a pivot name, or add a new location, then describe the problem. The shop will get the work order.",
+  "ticket.newHelp": "Pick a customer, choose the asset type (pivot is the default), then pick that asset. You can still add a new asset if needed.",
+  "ticket.requestHelp": "Choose the asset type, start typing the name, or add a new location, then describe the problem. The shop will get the work order.",
   "ticket.title": "Title",
   "ticket.description": "Description",
   "ticket.priority": "Priority",
@@ -480,8 +480,8 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
 
   "ticket.newTitle": "Nueva orden de trabajo",
   "ticket.requestTitle": "Pedir servicio",
-  "ticket.newHelp": "Elija un cliente (escriba el nombre) y luego el pivote. Puede agregar un pivote nuevo si hace falta.",
-  "ticket.requestHelp": "Escriba el nombre del pivote, o agregue un lugar, y describa el problema. El taller recibe la orden.",
+  "ticket.newHelp": "Elija un cliente, el tipo de activo (el pivote es el predeterminado) y luego el equipo. Puede agregar un activo nuevo si hace falta.",
+  "ticket.requestHelp": "Elija el tipo de activo, escriba el nombre o agregue un lugar, y describa el problema. El taller recibe la orden.",
   "ticket.title": "Título",
   "ticket.description": "Descripción",
   "ticket.priority": "Prioridad",

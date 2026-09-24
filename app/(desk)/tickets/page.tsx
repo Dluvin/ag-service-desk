@@ -20,9 +20,10 @@ import {
 } from "@/lib/ticket-list";
 import { getRequestLocale } from "@/lib/user-locale";
 import { statusLabel, t, type Locale } from "@/lib/i18n";
+import { ticketSiteName } from "@/lib/ticket-site";
 
 type TicketRow = Prisma.TicketGetPayload<{
-  include: { farmer: { include: { store: true } }; pivot: true; technician: true; store: true };
+  include: { farmer: { include: { store: true } }; pivot: true; asset: { include: { assetType: true } }; technician: true; store: true };
 }>;
 
 export default async function TicketsPage({
@@ -41,7 +42,7 @@ export default async function TicketsPage({
         ...ticketWhere(session),
         ...(query.status === "all" ? {} : { status: query.status }),
       },
-      include: { farmer: { include: { store: true } }, pivot: true, technician: true, store: true },
+      include: { farmer: { include: { store: true } }, pivot: true, asset: { include: { assetType: true } }, technician: true, store: true },
       orderBy: { updatedAt: "desc" },
     }),
     query,
@@ -160,7 +161,7 @@ function TicketGroup({
             {ticket.farmer.name}
             {ticketStoreName(ticket) ? ` · ${ticketStoreName(ticket)}` : ""}
             <br />
-            {ticket.pivot.name}
+            {ticketSiteName(ticket)}
           </td>
             <td className="px-4 py-3">{ticket.technician?.name ?? t(locale, "common.unassigned")}</td>
           <td className="px-4 py-3">

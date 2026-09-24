@@ -5,6 +5,7 @@ import { appBaseUrl } from "./app-url";
 import { ticketRepairDoneEmail } from "./email";
 import { statusLabel, t, type Locale, type MessageKey } from "./i18n";
 import { loadOrgLocales } from "./user-locale";
+import { ticketSiteName } from "./ticket-site";
 
 function clip(text: string, max = 140) {
   const compact = text.replace(/\s+/g, " ").trim();
@@ -87,7 +88,8 @@ function staffSmsBody(
     title: string;
     status: string;
     farmer: { name: string };
-    pivot: { name: string };
+    pivot: { name: string } | null;
+    asset?: { name: string; assetType?: { name: string } | null } | null;
     technician: { name: string } | null;
   },
   note?: string,
@@ -98,7 +100,7 @@ function staffSmsBody(
     title: ticket.title,
     tech: ticket.technician?.name ?? t(locale, "sms.aTechnician"),
     customer: ticket.farmer.name,
-    pivot: ticket.pivot.name,
+    pivot: ticketSiteName(ticket),
     status: statusLabel(locale, ticket.status),
     note: clip(note || ""),
   };
@@ -121,6 +123,7 @@ export async function notifyTicketSms(input: {
     include: {
       farmer: { select: { name: true, storeId: true } },
       pivot: true,
+      asset: { include: { assetType: true } },
       technician: true,
     },
   });
@@ -249,7 +252,7 @@ export async function notifyFarmerRepairDone(input: {
       farmerName: ticket.farmer.name,
       ticketNumber: ticket.number,
       title: ticket.title,
-      pivotName: ticket.pivot.name,
+      pivotName: ticketSiteName(ticket),
       ticketId: ticket.id,
       locale,
     });

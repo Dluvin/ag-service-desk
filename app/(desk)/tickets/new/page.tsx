@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { pivotWhere, loadTechnicians } from "@/lib/scope";
 import { PRIORITIES, ROLES, canAssignTickets, isShopStaff } from "@/lib/roles";
 import { createTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
@@ -14,6 +13,8 @@ import { getRequestLocale } from "@/lib/user-locale";
 import { priorityLabel, t } from "@/lib/i18n";
 import { visionOcrConfigured } from "@/lib/ticket-ocr";
 import { orgOcrIsOn } from "@/lib/ocr-samples";
+import { assetWhere, pivotWhere, loadTechnicians } from "@/lib/scope";
+import { ensureAssetTypes } from "@/lib/assets";
 
 export default async function NewTicketPage({
   searchParams,
@@ -25,12 +26,18 @@ export default async function NewTicketPage({
   const locale = await getRequestLocale();
   const query = await searchParams;
 
-  const [pivots, technicians, farmers, stores, actor] = await Promise.all([
+  const [pivots, assets, types, technicians, farmers, stores, actor] = await Promise.all([
     prisma.pivot.findMany({
       where: pivotWhere(session),
       include: { farmer: true },
       orderBy: { name: "asc" },
     }),
+    prisma.asset.findMany({
+      where: assetWhere(session),
+      include: { farmer: true, assetType: true },
+      orderBy: { name: "asc" },
+    }),
+    ensureAssetTypes(session.organizationId),
     loadTechnicians(session.organizationId),
     session.role === ROLES.FARMER
       ? Promise.resolve([])
@@ -73,6 +80,22 @@ export default async function NewTicketPage({
             latitude: pivot.latitude,
             longitude: pivot.longitude,
             locationNote: pivot.locationNote,
+          }))}
+          assets={assets.map((asset) => ({
+            id: asset.id,
+            name: asset.name,
+            farmerName: asset.farmer.name,
+            farmerId: asset.farmerId,
+            latitude: asset.latitude,
+            longitude: asset.longitude,
+            locationNote: asset.locationNote,
+            typeSlug: asset.assetType.slug,
+          }))}
+          types={types.map((type) => ({
+            id: type.id,
+            name: type.name,
+            slug: type.slug,
+            kind: type.kind,
           }))}
           farmers={farmers}
           canAddFarmer={isShopStaff(session.role)}

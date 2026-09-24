@@ -50,7 +50,7 @@ export async function syncOnsiteVisits(args: {
       organizationId: args.organizationId,
       status: { in: [...OPEN_TICKET_STATUSES] },
     },
-    include: { pivot: true },
+    include: { pivot: true, asset: true },
   });
 
   const openVisits = await prisma.siteVisit.findMany({
@@ -66,15 +66,17 @@ export async function syncOnsiteVisits(args: {
     if (vehicle.lat == null || vehicle.lng == null) continue;
 
     const nearby = tickets
-      .map((ticket) => ({
-        ticket,
-        meters: metersBetween(
-          vehicle.lat,
-          vehicle.lng,
-          ticket.pivot.latitude,
-          ticket.pivot.longitude,
-        ),
-      }))
+      .flatMap((ticket) => {
+        const lat = ticket.pivot?.latitude ?? ticket.asset?.latitude;
+        const lng = ticket.pivot?.longitude ?? ticket.asset?.longitude;
+        if (lat == null || lng == null) return [];
+        return [
+          {
+            ticket,
+            meters: metersBetween(vehicle.lat, vehicle.lng, lat, lng),
+          },
+        ];
+      })
       .filter((item) => item.meters <= args.radiusMeters)
       .sort((a, b) => a.meters - b.meters);
 

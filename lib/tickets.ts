@@ -11,7 +11,8 @@ export async function nextTicketNumber(organizationId: string) {
 export async function openServiceTicket(input: {
   organizationId: string;
   farmerId: string;
-  pivotId: string;
+  pivotId?: string | null;
+  assetId?: string | null;
   technicianId: string | null;
   storeId?: string | null;
   userId: string;
@@ -26,7 +27,8 @@ export async function openServiceTicket(input: {
     data: {
       organizationId: input.organizationId,
       farmerId: input.farmerId,
-      pivotId: input.pivotId,
+      pivotId: input.pivotId ?? null,
+      assetId: input.assetId ?? null,
       technicianId: input.technicianId,
       storeId: input.storeId ?? null,
       number,

@@ -3,6 +3,7 @@ import { DispatchColumnList } from "@/components/DispatchColumnList";
 import { DispatchWorkOrderCard } from "@/components/DispatchWorkOrderCard";
 import { DISPATCH_STATUSES } from "@/lib/roles";
 import { ticketStoreName } from "@/lib/stores";
+import { ticketSiteName } from "@/lib/ticket-site";
 import { formatSchedule } from "@/lib/schedule";
 import { statusLabel, t, type Locale } from "@/lib/i18n";
 
@@ -16,6 +17,7 @@ type TileTicket = {
   scheduledAt: Date | null;
   farmer: { name: string; store: { name: string } | null };
   pivot: { name: string } | null;
+  asset?: { name: string; assetType?: { name: string } | null } | null;
   store: { name: string } | null;
 };
 
@@ -53,7 +55,7 @@ export function DispatchTilesBoard({
                   status={ticket.status}
                 >
                   <p className="mt-1 text-xs text-stone-600">
-                    {[ticketStoreName(ticket), ticket.pivot?.name].filter(Boolean).join(" · ") || t(locale, "dispatch.noStorePivot")}
+                    {[ticketStoreName(ticket), ticketSiteName(ticket)].filter(Boolean).join(" · ") || t(locale, "dispatch.noStorePivot")}
                   </p>
                   {ticket.scheduledAt ? (
                     <p className="mt-1 text-xs font-medium text-emerald-900">{formatSchedule(ticket.scheduledAt)}</p>
