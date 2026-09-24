@@ -14,6 +14,7 @@ import {
   pivotToUnifiedRow,
 } from "@/lib/assets";
 import { ChooseAssetTypeButton } from "@/components/ChooseAssetTypeButton";
+import { AssetDirectory } from "@/components/AssetDirectory";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
 

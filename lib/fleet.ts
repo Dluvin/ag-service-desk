@@ -110,7 +110,7 @@ export async function getRevealMapSnapshot(
           href: visit ? `/tickets/${visit.ticket.id}` : undefined,
           onSite: Boolean(visit),
           onSiteTicketId: visit?.ticket.id,
-          onSitePivotId: visit?.ticket.pivotId,
+          onSitePivotId: visit?.ticket.pivotId ?? undefined,
         };
       }),
       error: null,
