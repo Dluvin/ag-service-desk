@@ -37,7 +37,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
       pivot: true,
       technician: true,
       store: true,
-        updates: { include: { user: true, photos: true }, orderBy: { createdAt: "asc" } },
+        updates: { include: { user: true, photos: true }, orderBy: { createdAt: "desc" } },
         parts: { include: { user: true }, orderBy: { createdAt: "asc" } },
         labor: { include: { user: true }, orderBy: { createdAt: "asc" } },
         equipment: { include: { user: true }, orderBy: { createdAt: "asc" } },
@@ -60,7 +60,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   const shopName = ticketStoreName(ticket);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-5">
+    <div className="grid gap-6 lg:grid-cols-5 lg:items-start">
       <div className="lg:col-span-3">
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-stone-500">
           <span>Work order #{ticket.number}</span>
@@ -145,82 +145,103 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             </ul>
           </section>
         ) : null}
+      </div>
 
-        <h2 className="font-display mt-8 text-xl">Updates</h2>
-        {ticket.updates.length > 0 ? (
-          <CollapsiblePanel
-            title="Show updates"
-            countLabel={`${ticket.updates.length}`}
-            defaultOpen={ticket.updates.length <= 2}
-          >
-            <ol className="space-y-3">
-              {ticket.updates.map((update) => (
-                <li key={update.id} className="rounded-lg border border-stone-200 bg-white p-3">
-                  <p className="text-xs text-stone-500">
-                    {update.user.name} · {new Date(update.createdAt).toLocaleString()}
-                    {update.status ? ` · ${STATUS_LABELS[update.status as keyof typeof STATUS_LABELS] ?? update.status}` : ""}
-                  </p>
-                  <p className="mt-1 text-sm text-stone-800">{update.message}</p>
-                  <TicketPhotoGrid photos={update.photos} />
-                </li>
-              ))}
-            </ol>
-          </CollapsiblePanel>
-        ) : (
-          <p className="mt-3 text-sm text-stone-600">No updates yet.</p>
-        )}
+      <div className="contents lg:col-span-2 lg:row-span-2 lg:flex lg:flex-col lg:gap-6">
+        <div className="order-last lg:order-none">
+          <GoogleMapPanel
+            store={resolvedTicketStoreId(ticket)}
+            markers={[
+              {
+                id: ticket.pivot.id,
+                name: ticket.pivot.name,
+                lat: ticket.pivot.latitude,
+                lng: ticket.pivot.longitude,
+                subtitle: ticket.farmer.name,
+              },
+            ]}
+          />
+        </div>
 
-        <CollapsiblePanel title={canDispatch ? "Add update" : "Add information"} defaultOpen={false}>
-        <ActionForm action={updateTicketAction} encType="multipart/form-data" className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-          <input type="hidden" name="ticketId" value={ticket.id} />
-          {canDispatch ? (
-            <>
-              <TicketStatusFields
-                status={ticket.status}
-                invoiceNumber={ticket.invoiceNumber}
-                invoiceAmount={ticket.invoiceAmount}
-              />
-              <ScheduleDateTimeField label="Scheduled for" initialValue={ticket.scheduledAt} />
-              <StoreSelect stores={stores} defaultValue={ticket.storeId ?? ticket.farmer.storeId} label="Store" />
-              {canAssignTickets(session.role) ? (
-                <label className="block text-sm font-medium">
-                  Technician
-                  <select name="technicianId" defaultValue={ticket.technicianId ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
-                    <option value="">Unassigned</option>
-                    {technicians.map((tech) => (
-                      <option key={tech.id} value={tech.id}>
-                        {tech.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              ) : (
-                <input type="hidden" name="technicianId" value={ticket.technicianId ?? ""} />
-              )}
-            </>
+        <section>
+          <h2 className="font-display text-xl lg:mt-0 mt-8">Updates</h2>
+          {ticket.updates.length > 0 ? (
+            <CollapsiblePanel
+              title="Show updates"
+              countLabel={`${ticket.updates.length}`}
+              defaultOpen={ticket.updates.length <= 2}
+            >
+              <ol className="space-y-3">
+                {ticket.updates.map((update) => (
+                  <li key={update.id} className="rounded-lg border border-stone-200 bg-white p-3">
+                    <p className="text-xs text-stone-500">
+                      {update.user.name} · {new Date(update.createdAt).toLocaleString()}
+                      {update.status ? ` · ${STATUS_LABELS[update.status as keyof typeof STATUS_LABELS] ?? update.status}` : ""}
+                    </p>
+                    <p className="mt-1 text-sm text-stone-800">{update.message}</p>
+                    <TicketPhotoGrid photos={update.photos} />
+                  </li>
+                ))}
+              </ol>
+            </CollapsiblePanel>
           ) : (
-            <input type="hidden" name="status" value={ticket.status} />
+            <p className="mt-3 text-sm text-stone-600">No updates yet.</p>
           )}
-          <label className="block text-sm font-medium">
-            {canDispatch ? "Work note" : "Add information"}
-            <textarea
-              name="message"
-              rows={4}
-              placeholder={
-                canDispatch
-                  ? "What was done, parts needed, follow-up…"
-                  : "More detail for the service team: what you see, when it started, who to call on site…"
-              }
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
-            />
-          </label>
-          <TicketPhotoFields />
-          <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-            {canDispatch ? "Save update" : "Add to work order"}
-          </button>
-        </ActionForm>
-        </CollapsiblePanel>
 
+          <CollapsiblePanel title={canDispatch ? "Add update" : "Add information"} defaultOpen={false}>
+            <ActionForm action={updateTicketAction} encType="multipart/form-data" className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+              <input type="hidden" name="ticketId" value={ticket.id} />
+              {canDispatch ? (
+                <>
+                  <TicketStatusFields
+                    status={ticket.status}
+                    invoiceNumber={ticket.invoiceNumber}
+                    invoiceAmount={ticket.invoiceAmount}
+                  />
+                  <ScheduleDateTimeField label="Scheduled for" initialValue={ticket.scheduledAt} />
+                  <StoreSelect stores={stores} defaultValue={ticket.storeId ?? ticket.farmer.storeId} label="Store" />
+                  {canAssignTickets(session.role) ? (
+                    <label className="block text-sm font-medium">
+                      Technician
+                      <select name="technicianId" defaultValue={ticket.technicianId ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
+                        <option value="">Unassigned</option>
+                        {technicians.map((tech) => (
+                          <option key={tech.id} value={tech.id}>
+                            {tech.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <input type="hidden" name="technicianId" value={ticket.technicianId ?? ""} />
+                  )}
+                </>
+              ) : (
+                <input type="hidden" name="status" value={ticket.status} />
+              )}
+              <label className="block text-sm font-medium">
+                {canDispatch ? "Work note" : "Add information"}
+                <textarea
+                  name="message"
+                  rows={4}
+                  placeholder={
+                    canDispatch
+                      ? "What was done, parts needed, follow-up…"
+                      : "More detail for the service team: what you see, when it started, who to call on site…"
+                  }
+                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+                />
+              </label>
+              <TicketPhotoFields />
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+                {canDispatch ? "Save update" : "Add to work order"}
+              </button>
+            </ActionForm>
+          </CollapsiblePanel>
+        </section>
+      </div>
+
+      <div className="lg:col-span-3">
         {ticket.photos.length > 0 ? (
           <section className="mt-8">
             <h2 className="font-display text-xl">Photos</h2>
@@ -380,20 +401,6 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           </div>
           </>
         ) : null}
-      </div>
-      <div className="lg:col-span-2">
-        <GoogleMapPanel
-          store={resolvedTicketStoreId(ticket)}
-          markers={[
-            {
-              id: ticket.pivot.id,
-              name: ticket.pivot.name,
-              lat: ticket.pivot.latitude,
-              lng: ticket.pivot.longitude,
-              subtitle: ticket.farmer.name,
-            },
-          ]}
-        />
       </div>
     </div>
   );
