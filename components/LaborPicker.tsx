@@ -35,14 +35,6 @@ export function LaborPicker() {
     };
   }, [query]);
 
-  if (total === 0) {
-    return (
-      <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-        {t("catalog.emptyLabor")}
-      </p>
-    );
-  }
-
   return (
     <div className="space-y-2">
       <input type="hidden" name="catalogLaborId" value={selected?.id ?? ""} />

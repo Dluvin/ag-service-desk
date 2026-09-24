@@ -3,14 +3,14 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ROLES, canDeleteRecords, isShopStaff } from "@/lib/roles";
-import { addFarmerContactAction, deleteFarmerAction, deleteFarmerContactAction, resendFarmerContactInviteAction, updateFarmerAction, updateFarmerContactAction, updateFarmerStoreAction } from "@/lib/actions";
+import { deleteFarmerAction, updateFarmerAction, updateFarmerStoreAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { SelectableMap } from "@/components/SelectableMap";
 import { StatusBadge } from "@/components/Badges";
 import { StoreSelect } from "@/components/StoreSelect";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
-import { ContactInviteStatus } from "@/components/ContactInviteStatus";
+import { CustomerContacts } from "@/components/CustomerContacts";
 import { CustomerFarms } from "@/components/CustomerFarms";
 import { FarmerPivotList } from "@/components/FarmerPivotList";
 import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
@@ -173,101 +173,21 @@ export default async function FarmerDetailPage({
             </ActionForm>
           ) : null}
 
-          <h2 className="font-display text-xl">{t(locale, "common.contacts")}</h2>
-          {farmer.contacts.length ? (
-            <ul className="mt-2 space-y-3">
-              {farmer.contacts.map((contact) => (
-                <li key={contact.id} className="rounded-xl border border-stone-200 bg-white p-4">
-                  {canEdit ? (
-                    <>
-                      <ActionForm action={updateFarmerContactAction} className="space-y-3">
-                        <input type="hidden" name="contactId" value={contact.id} />
-                        <label className="block text-sm font-medium">
-                          {t(locale, "common.name")}
-                          <input name="contactName" required defaultValue={contact.name} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-                        </label>
-                        <label className="block text-sm font-medium">
-                          {t(locale, "common.phone")}
-                          <input name="contactPhone" defaultValue={contact.phone ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-                        </label>
-                        <label className="block text-sm font-medium">
-                          {t(locale, "common.email")}
-                          <input name="contactEmail" type="email" defaultValue={contact.email ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-                          <span className="mt-1 block text-xs font-normal text-stone-500">
-                            {t(locale, "customers.emailCreatesLogin")}
-                          </span>
-                        </label>
-                        <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">{t(locale, "customers.saveContact")}</button>
-                      </ActionForm>
-                      <ContactInviteStatus
-                        email={contact.email}
-                        login={contact.email ? loginByEmail.get(contact.email.toLowerCase()) ?? null : null}
-                        flash={query.invite === contact.id ? query.welcome : undefined}
-                      />
-                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                        {contact.email ? (
-                          <ActionForm action={resendFarmerContactInviteAction}>
-                            <input type="hidden" name="contactId" value={contact.id} />
-                            <button className="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-800 hover:bg-stone-100">
-                              {t(locale, "customers.resendInvite")}
-                            </button>
-                          </ActionForm>
-                        ) : (
-                          <span />
-                        )}
-                        {canDeleteRecords(session.role) ? (
-                          <DeleteButton
-                            action={deleteFarmerContactAction}
-                            name="contactId"
-                            value={contact.id}
-                            label={t(locale, "customers.deleteContact")}
-                            confirmText={t(locale, "customers.deleteContactConfirm", { name: contact.name })}
-                          />
-                        ) : null}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-medium">{contact.name}</p>
-                      <p className="text-sm text-stone-600">
-                        {[contact.phone, contact.email].filter(Boolean).join(" · ") || t(locale, "customers.noPhoneEmail")}
-                      </p>
-                      <ContactInviteStatus
-                        email={contact.email}
-                        login={contact.email ? loginByEmail.get(contact.email.toLowerCase()) ?? null : null}
-                      />
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-sm text-stone-600">
-              {[farmer.phone, farmer.email].filter(Boolean).join(" · ") || t(locale, "customers.noContacts")}
-            </p>
-          )}
-          {canEdit ? (
-            <ActionForm action={addFarmerContactAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
-              <input type="hidden" name="farmerId" value={farmer.id} />
-              <p className="text-sm font-semibold text-stone-800">{t(locale, "customers.addContact")}</p>
-              <label className="block text-sm font-medium">
-                {t(locale, "common.name")}
-                <input name="contactName" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-              </label>
-              <label className="block text-sm font-medium">
-                {t(locale, "common.phone")}
-                <input name="contactPhone" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-              </label>
-              <label className="block text-sm font-medium">
-                {t(locale, "common.email")}
-                <input name="contactEmail" type="email" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
-                <span className="mt-1 block text-xs font-normal text-stone-500">
-                  {t(locale, "customers.addEmailLogin")}
-                </span>
-              </label>
-              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">{t(locale, "customers.saveContact")}</button>
-            </ActionForm>
-          ) : null}
+          <CustomerContacts
+            farmerId={farmer.id}
+            farmerPhone={farmer.phone}
+            farmerEmail={farmer.email}
+            canEdit={canEdit}
+            canDelete={canDeleteRecords(session.role)}
+            contacts={farmer.contacts.map((contact) => ({
+              id: contact.id,
+              name: contact.name,
+              phone: contact.phone,
+              email: contact.email,
+              login: contact.email ? loginByEmail.get(contact.email.toLowerCase()) ?? null : null,
+              flash: query.invite === contact.id ? query.welcome : undefined,
+            }))}
+          />
         </div>
       </div>
       <CustomerFarms

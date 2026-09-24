@@ -25,7 +25,7 @@ import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
 import { StoreSelect } from "@/components/StoreSelect";
 import { resolvedTicketStoreId, ticketStoreName } from "@/lib/stores";
 import { getRequestLocale } from "@/lib/user-locale";
-import { statusLabel, t } from "@/lib/i18n";
+import { statusLabel, t, type Locale } from "@/lib/i18n";
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -149,46 +149,29 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             </ul>
           </section>
         ) : null}
-      </div>
-
-      <div className="contents lg:col-span-2 lg:row-span-2 lg:flex lg:flex-col lg:gap-6">
-        <div className="order-last lg:order-none">
-          <GoogleMapPanel
-            store={resolvedTicketStoreId(ticket)}
-            markers={[
-              {
-                id: ticket.pivot.id,
-                name: ticket.pivot.name,
-                lat: ticket.pivot.latitude,
-                lng: ticket.pivot.longitude,
-                subtitle: ticket.farmer.name,
-              },
-            ]}
-          />
-        </div>
 
         <section>
-          <h2 className="font-display text-xl lg:mt-0 mt-8">{t(locale, "ticket.updates")}</h2>
+          <h2 className="font-display mt-8 text-xl">{t(locale, "ticket.updates")}</h2>
           {ticket.updates.length > 0 ? (
-            <CollapsiblePanel
-              title={t(locale, "ticket.showUpdates")}
-              hideLabel={t(locale, "ticket.hideUpdates")}
-              countLabel={`${ticket.updates.length}`}
-              defaultOpen={ticket.updates.length <= 2}
-            >
-              <ol className="space-y-3">
-                {ticket.updates.map((update) => (
-                  <li key={update.id} className="rounded-lg border border-stone-200 bg-white p-3">
-                    <p className="text-xs text-stone-500">
-                      {update.user.name} · {new Date(update.createdAt).toLocaleString()}
-                      {update.status ? ` · ${statusLabel(locale, update.status)}` : ""}
-                    </p>
-                    <p className="mt-1 text-sm text-stone-800">{update.message}</p>
-                    <TicketPhotoGrid photos={update.photos} />
-                  </li>
-                ))}
+            <>
+              <ol className="mt-3 space-y-3">
+                <TicketUpdateItem update={ticket.updates[0]} locale={locale} />
               </ol>
-            </CollapsiblePanel>
+              {ticket.updates.length > 1 ? (
+                <CollapsiblePanel
+                  title={t(locale, "ticket.showUpdates")}
+                  hideLabel={t(locale, "ticket.hideUpdates")}
+                  countLabel={`${ticket.updates.length - 1}`}
+                  defaultOpen={false}
+                >
+                  <ol className="space-y-3">
+                    {ticket.updates.slice(1).map((update) => (
+                      <TicketUpdateItem key={update.id} update={update} locale={locale} />
+                    ))}
+                  </ol>
+                </CollapsiblePanel>
+              ) : null}
+            </>
           ) : (
             <p className="mt-3 text-sm text-stone-600">{t(locale, "ticket.noUpdates")}</p>
           )}
@@ -248,9 +231,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             </ActionForm>
           </CollapsiblePanel>
         </section>
-      </div>
 
-      <div className="lg:col-span-3">
         {ticket.photos.length > 0 ? (
           <section className="mt-8">
             <h2 className="font-display text-xl">{t(locale, "ticket.photos")}</h2>
@@ -417,6 +398,47 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         ) : null}
         </div>
       </div>
+
+      <div className="lg:col-span-2 lg:sticky lg:top-4">
+        <GoogleMapPanel
+          store={resolvedTicketStoreId(ticket)}
+          markers={[
+            {
+              id: ticket.pivot.id,
+              name: ticket.pivot.name,
+              lat: ticket.pivot.latitude,
+              lng: ticket.pivot.longitude,
+              subtitle: ticket.farmer.name,
+            },
+          ]}
+        />
+      </div>
     </div>
+  );
+}
+
+function TicketUpdateItem({
+  update,
+  locale,
+}: {
+  update: {
+    id: string;
+    message: string;
+    createdAt: Date;
+    status: string | null;
+    user: { name: string };
+    photos: { id: string; fileName: string }[];
+  };
+  locale: Locale;
+}) {
+  return (
+    <li className="rounded-lg border border-stone-200 bg-white p-3">
+      <p className="text-xs text-stone-500">
+        {update.user.name} · {new Date(update.createdAt).toLocaleString()}
+        {update.status ? ` · ${statusLabel(locale, update.status)}` : ""}
+      </p>
+      <p className="mt-1 text-sm text-stone-800">{update.message}</p>
+      <TicketPhotoGrid photos={update.photos} />
+    </li>
   );
 }
