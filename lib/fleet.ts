@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { fetchRevealLocations, loadRevealCreds } from "./reveal";
+import { loadStoredRevealLocations, withDemoRevealMotion } from "./reveal-locations";
 import { syncOnsiteVisits } from "./onsite";
 import type { MapPin } from "./map-pins";
 import { ROLES } from "./roles";
@@ -14,8 +15,12 @@ export async function getRevealMapSnapshot(
   error: string | null;
 }> {
   const org = await prisma.organization.findUnique({ where: { id: organizationId } });
+  if (!org) {
+    return { configured: false, pins: [], error: null };
+  }
   const creds = await loadRevealCreds(organizationId);
-  if (!org || !creds) {
+  const stored = creds ? [] : await loadStoredRevealLocations(organizationId);
+  if (!creds && stored.length === 0) {
     return { configured: false, pins: [], error: null };
   }
 
@@ -33,7 +38,9 @@ export async function getRevealMapSnapshot(
         .map((tech) => [tech.revealVehicleNumber as string, tech]),
     );
 
-    const locations = await fetchRevealLocations(organizationId);
+    const locations = creds
+      ? await fetchRevealLocations(organizationId)
+      : withDemoRevealMotion(stored);
     const mapSettings = await prisma.revealVehicle.findMany({
       where: { organizationId, active: true },
       select: { number: true, name: true, showOnMap: true, storeId: true },

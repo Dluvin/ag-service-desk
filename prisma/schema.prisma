@@ -82,16 +82,21 @@ model OrgOcrSample {
 }
 
 model RevealVehicle {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  number         String
-  name           String
-  active         Boolean      @default(true)
-  showOnMap      Boolean      @default(true)
-  storeId        String?
-  store          Store?       @relation(fields: [storeId], references: [id], onDelete: SetNull)
-  syncedAt       DateTime     @default(now())
+  id                String       @id @default(cuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  number            String
+  name              String
+  active            Boolean      @default(true)
+  showOnMap         Boolean      @default(true)
+  storeId           String?
+  store             Store?       @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  syncedAt          DateTime     @default(now())
+  lastLatitude      Float?
+  lastLongitude     Float?
+  lastAddress       String?
+  displayState      String?
+  locationUpdatedAt DateTime?
 
   @@unique([organizationId, number])
 }

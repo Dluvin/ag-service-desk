@@ -9,6 +9,7 @@ import { VehicleMapToggle } from "@/components/VehicleMapToggle";
 import { VehicleStoreSelect } from "@/components/VehicleStoreSelect";
 import { googleMapsPlaceUrl } from "@/lib/maps";
 import { fetchRevealLocationReport, loadRevealCreds, type RevealLocation } from "@/lib/reveal";
+import { loadStoredRevealLocations, withDemoRevealMotion } from "@/lib/reveal-locations";
 import { loadOrgPlan } from "@/lib/org-plan";
 import { contactSalesGpsMessage, showVehicleGps } from "@/lib/plans";
 import { ContactSalesNote } from "@/components/ContactSalesNote";
@@ -86,6 +87,12 @@ export default async function VehiclesPage({
     } catch (error) {
       locationError = error instanceof Error ? error.message : "Could not load current locations.";
     }
+  } else if (vehicles.length > 0) {
+    const demo = withDemoRevealMotion(await loadStoredRevealLocations(session.organizationId));
+    gpsFound = demo.length;
+    locationsByNumber = new Map(
+      demo.map((location) => [location.vehicleNumber.trim().toLowerCase(), location]),
+    );
   }
 
   return (
@@ -113,7 +120,7 @@ export default async function VehiclesPage({
         </p>
       ) : null}
 
-      {configured && vehicles.length > 0 ? (
+      {gpsFound > 0 ? (
         <p className="mt-3 text-sm text-stone-600">
           GPS loaded for {gpsFound} of {vehicles.length} trucks.
         </p>

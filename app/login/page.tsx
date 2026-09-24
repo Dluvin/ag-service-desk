@@ -103,6 +103,10 @@ export default async function LoginPage({
                 <p>Technician: mike@heartland.ag</p>
                 <p>Customer: tom@greenacres.farm</p>
                 <p>Second tenant admin: admin@prairie.ag</p>
+                <p className="mt-2 font-semibold text-stone-800">Marketing demo (same password)</p>
+                <p>High Plains Irrigation admin: admin@highplains.ag</p>
+                <p>Manager: manager@highplains.ag · Tech: carlos@highplains.ag</p>
+                <p>Customer: beth@twinrivers.farm</p>
               </div>
             ) : null}
           </div>
