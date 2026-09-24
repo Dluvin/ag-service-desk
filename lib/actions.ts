@@ -42,7 +42,7 @@ import { sendBirdSms, toE164 } from "./bird";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles } from "./ticket-photos";
 import { documentFilesFromForm, removePivotDocumentFile, safePivotReturnTo, savePivotDocuments } from "./pivot-documents";
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
-import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelcomeLoginEmail, userFromPasswordToken, welcomeQuery } from "./welcome-mail";
+import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelcomeLoginEmail, userFromPasswordToken, welcomeQuery, type WelcomeMailStatus } from "./welcome-mail";
 import { getPlatformSession } from "./platform";
 import { parseDispatchView, saveUserDispatchView } from "./dispatch-view";
 import { homePath } from "./home";
@@ -87,18 +87,18 @@ async function sendFarmerContactInvite(
     email: string;
   },
   options: { force: boolean },
-) {
+): Promise<{ welcome: WelcomeMailStatus | null } | { error: string }> {
   const email = input.email.toLowerCase();
-  if (!email) return { welcome: null as const };
+  if (!email) return { welcome: null };
 
   const existing = await prisma.user.findFirst({
     where: { organizationId: input.organizationId, email },
   });
   if (existing) {
     if (existing.role !== ROLES.FARMER || existing.farmerId !== input.farmerId) {
-      return { error: "That email is already used in this company." as const };
+      return { error: "That email is already used in this company." };
     }
-    if (!options.force) return { welcome: null as const };
+    if (!options.force) return { welcome: null };
     if (existing.name !== input.name) {
       await prisma.user.update({ where: { id: existing.id }, data: { name: input.name } });
     }
@@ -427,7 +427,7 @@ export async function addFarmerContactAction(formData: FormData) {
     },
     { force: false },
   );
-  if ("error" in invite && invite.error) return { error: invite.error };
+  if ("error" in invite) return { error: invite.error };
   if (invite.welcome) {
     redirect(welcomeQuery(`/farmers/${farmerId}`, invite.welcome, { invite: contact.id }));
   }
@@ -625,7 +625,7 @@ export async function updateFarmerContactAction(formData: FormData) {
     },
     { force: false },
   );
-  if ("error" in invite && invite.error) return { error: invite.error };
+  if ("error" in invite) return { error: invite.error };
 
   await prisma.farmerContact.update({
     where: { id: contactId },
@@ -658,7 +658,7 @@ export async function resendFarmerContactInviteAction(formData: FormData) {
     },
     { force: true },
   );
-  if ("error" in invite && invite.error) return { error: invite.error };
+  if ("error" in invite) return { error: invite.error };
   if (!invite.welcome) return { error: "Could not send that invite." };
   redirect(welcomeQuery(`/farmers/${contact.farmerId}`, invite.welcome, { invite: contact.id }));
 }

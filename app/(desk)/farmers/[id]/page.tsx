@@ -65,21 +65,45 @@ export default async function FarmerDetailPage({
   const canEdit = isShopStaff(session.role);
   const portalUsers = await prisma.user.findMany({
     where: { organizationId: session.organizationId, farmerId: farmer.id, role: ROLES.FARMER },
-    select: {
-      email: true,
-      lastSeenAt: true,
-      passwordResets: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true, expiresAt: true } },
-    },
+    select: { id: true, email: true },
   });
+  const inviteTokens = portalUsers.length
+    ? await prisma.passwordResetToken.findMany({
+        where: { userId: { in: portalUsers.map((user) => user.id) } },
+        orderBy: { createdAt: "desc" },
+        select: { userId: true, createdAt: true, expiresAt: true },
+      })
+    : [];
+  const latestInvite = new Map<string, { createdAt: Date; expiresAt: Date }>();
+  for (const token of inviteTokens) {
+    if (!latestInvite.has(token.userId)) latestInvite.set(token.userId, token);
+  }
+  const lastSeenById = new Map<string, Date | null>();
+  if (portalUsers.length) {
+    try {
+      const ids = portalUsers.map((user) => `'${user.id}'`).join(",");
+      const rows = await prisma.$queryRawUnsafe<{ id: string; lastSeenAt: Date | string | null }[]>(
+        `SELECT id, lastSeenAt FROM User WHERE id IN (${ids})`,
+      );
+      for (const row of rows) {
+        lastSeenById.set(row.id, row.lastSeenAt ? new Date(row.lastSeenAt) : null);
+      }
+    } catch {
+      // lastSeenAt may be missing until prisma generate / db push
+    }
+  }
   const loginByEmail = new Map(
-    portalUsers.map((user) => [
-      user.email.toLowerCase(),
-      {
-        lastSeenAt: user.lastSeenAt,
-        inviteSentAt: user.passwordResets[0]?.createdAt ?? null,
-        inviteExpiresAt: user.passwordResets[0]?.expiresAt ?? null,
-      },
-    ]),
+    portalUsers.map((user) => {
+      const invite = latestInvite.get(user.id);
+      return [
+        user.email.toLowerCase(),
+        {
+          lastSeenAt: lastSeenById.get(user.id) ?? null,
+          inviteSentAt: invite?.createdAt ?? null,
+          inviteExpiresAt: invite?.expiresAt ?? null,
+        },
+      ];
+    }),
   );
 
   return (
