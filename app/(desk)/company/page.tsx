@@ -1,9 +1,13 @@
 import { redirect } from "next/navigation";
+import { OcrOnboardingChecklist } from "@/components/OcrOnboardingChecklist";
+import { TicketFormSettings } from "@/components/TicketFormSettings";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/roles";
 import { removeCompanyLogoAction, saveCompanyLogoAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { loadOrgOcrSettings } from "@/lib/ocr-samples";
+import { getRequestLocale } from "@/lib/user-locale";
 
 export default async function CompanyLogoPage() {
   const session = await getSession();
@@ -12,6 +16,8 @@ export default async function CompanyLogoPage() {
 
   const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
   if (!org) redirect("/dashboard");
+  const ticketForm = await loadOrgOcrSettings(session.organizationId);
+  const locale = await getRequestLocale();
 
   return (
     <div className="max-w-xl">
@@ -43,6 +49,21 @@ export default async function CompanyLogoPage() {
         <p className="text-xs text-stone-500">PNG, JPG, WebP, or GIF. 2 MB or smaller.</p>
         <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save logo</button>
       </ActionForm>
+      <div className="mt-10 border-t border-stone-200 pt-8 space-y-8">
+        <OcrOnboardingChecklist
+          locale={locale}
+          ocrOn={ticketForm.ocrOn}
+          sampleCount={ticketForm.samples.length}
+          boxesConfirmed={Boolean(ticketForm.boxesConfirmedAt)}
+          firstScan={Boolean(ticketForm.firstScanAt)}
+          fieldListReviewed={Boolean(ticketForm.fieldListReviewedAt)}
+        />
+        <TicketFormSettings
+          templateKey={ticketForm.templateKey}
+          fieldNotes={ticketForm.fieldNotes}
+          samples={ticketForm.samples}
+        />
+      </div>
     </div>
   );
 }

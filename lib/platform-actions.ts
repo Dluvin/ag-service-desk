@@ -16,6 +16,7 @@ import {
 import { removeCompanyLogoFile } from "./company-logo";
 import { PLAN } from "./plan";
 import { isGpsProvider, isPlanId, orgFieldsForPlan } from "./plans";
+import { setOrgFormsEnabled, setOrgOcrEnabled } from "./ocr-samples";
 import { seedApprovedDemo } from "./demo-tenant";
 import { startTenantBilling, stripeIsConfigured } from "./stripe";
 import { emailTenantApproved } from "./signup-notify";
@@ -222,6 +223,10 @@ export async function updateTenantPlanAction(formData: FormData) {
         includedUsersOverride,
       }),
     });
+    const ocrRaw = formString(formData, "ocrEnabled");
+    await setOrgOcrEnabled(org.id, ocrRaw === "" ? null : ocrRaw === "1");
+    const formsRaw = formString(formData, "formsEnabled");
+    await setOrgFormsEnabled(org.id, formsRaw === "" ? null : formsRaw === "1");
     revalidatePath("/platform");
     return { success: "Plan saved." };
   } catch (error) {

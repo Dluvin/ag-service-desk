@@ -273,6 +273,8 @@ export const REST_EN = {
   "forms.title": "Forms",
   "forms.help":
     "Fill these office tickets, print them, or download a copy. Save onto an open work order by choosing the job first. The dealer logo is used except on AgSense, which keeps the AgSense mark from that sheet.",
+  "forms.notEnabled":
+    "Office forms are not on for this company yet. Enterprise includes them. Platform can turn the plan flag on for Starter or Shop.",
   "forms.back": "All forms",
   "forms.download": "Download",
   "forms.saveToWorkOrder": "Save to work order",
@@ -298,11 +300,11 @@ export const REST_EN = {
   "forms.electricalBlurb": "Shop part-number list for fittings, wire, and flanges.",
   "faq.forms.q": "Where are the office forms?",
   "faq.forms.p1":
-    "Shop staff can open Forms in the menu. Fill a ticket, print or download it, then save it to an open work order. You choose which work order when you save. The filled form is added as an update on that job.",
+    "Shop staff can open Forms in the menu when the plan flag is on (Enterprise includes it; Starter and Shop stay off unless platform turns it on). Fill a ticket, print or download it, then save it to an open work order. You choose which work order when you save. The filled form is added as an update on that job.",
 
   "ocr.title": "Import handwritten ticket",
   "ocr.help":
-    "Photo a paper SERVICE ORDER. The desk reads the boxes (farm, unit, problem, work done, equipment, crew times) and shows suggested fields. Check them, then apply.",
+    "Photo the filled paper ticket. The desk reads this company’s form (your sample photos if you uploaded them) and shows suggested fields. Check them, then apply.",
   "ocr.notConfigured":
     "Handwritten import needs OPENAI_API_KEY on the server. Add it, restart the app, then scan a photo.",
   "ocr.photo": "Photo of the paper ticket",
@@ -333,7 +335,42 @@ export const REST_EN = {
   "ocr.servicePerformed": "Service performed",
   "faq.ocr.q": "Can I import a handwritten work order from a photo?",
   "faq.ocr.p1":
-    "Yes, on a work order or New work order, use Import handwritten ticket. After a scan, check the fields, then apply. The server needs an OpenAI API key for the reading step.",
+    "Yes. On a work order or New work order, use Import handwritten ticket when the plan flag is on (Enterprise includes it; Starter and Shop stay off unless platform turns it on). After a scan, check the fields, then apply. Admins follow Settings → Paper ticket: upload samples, confirm boxes, then tweak the field list if a box is always missed.",
+
+  "ticketForm.title": "Paper ticket form",
+  "ticketForm.help":
+    "Scans read this company’s form. Default is the built-in irrigation service order. If you use a Valley or Lindsay pad, pick that layout. Or upload 1–2 blank or filled photos of your ticket. Staff still review fields before save.",
+  "ticketForm.layout": "Named layout",
+  "ticketForm.fields": "Field list (optional)",
+  "ticketForm.fieldsHint": "bill to, farm, problem, hours, parts…",
+  "ticketForm.saveLayout": "Save layout",
+  "ticketForm.samples": "Sample photos",
+  "ticketForm.samplesHelp": "Up to two photos of a blank or filled ticket. Used to teach the reader.",
+  "ticketForm.noSamples": "No samples yet. Named layout still works.",
+  "ticketForm.upload": "Upload sample photos",
+  "ticketForm.saveSamples": "Save samples",
+  "ticketForm.removeSample": "Remove",
+
+  "ocr.notEnabled":
+    "Handwritten import is not on for this company yet. Enterprise includes it. Platform can turn it on for Starter or Shop.",
+
+  "ocrOnboard.title": "Dealer onboarding",
+  "ocrOnboard.help":
+    "Turn scans on, upload this company’s paper ticket, confirm the boxes once, then staff scan a real job and review. If a box is always missed, tweak the field list.",
+  "ocrOnboard.progress": "{done} of {total} done",
+  "ocrOnboard.flag": "Turn the feature on for this company",
+  "ocrOnboard.flagHelp": "Enterprise includes handwritten scans. Starter and Shop stay off until platform turns the plan flag on.",
+  "ocrOnboard.upload": "Upload the paper ticket",
+  "ocrOnboard.uploadHelp": "1–2 blank or filled photos of their pad, below.",
+  "ocrOnboard.boxes": "Confirm the boxes once",
+  "ocrOnboard.boxesHelp": "Walk bill to, farm, problem, hours, and parts against the sample.",
+  "ocrOnboard.confirmBoxes": "Boxes look right",
+  "ocrOnboard.scan": "Staff scan a real job and review",
+  "ocrOnboard.scanHelp": "First month is how we catch layout misses. Check fields before save.",
+  "ocrOnboard.scanJob": "Open a new work order to scan",
+  "ocrOnboard.fields": "Tweak the field list if a box is always missed",
+  "ocrOnboard.fieldsHelp": "Add the missing label to the field list, save, then mark this done.",
+  "ocrOnboard.markFields": "Field list is good",
 } as const;
 
 export const REST_ES: Record<keyof typeof REST_EN, string> = {
@@ -614,6 +651,8 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "forms.title": "Formularios",
   "forms.help":
     "Llene estos tickets de oficina, imprímalos o descargue una copia. Para guardarlos en una orden abierta, elija el trabajo primero. Se usa el logotipo del dealer, salvo AgSense, que conserva la marca de esa hoja.",
+  "forms.notEnabled":
+    "Los formularios de oficina aún no están activos en esta empresa. Enterprise los incluye. La plataforma puede encender el flag del plan en Starter o Shop.",
   "forms.back": "Todos los formularios",
   "forms.download": "Descargar",
   "forms.saveToWorkOrder": "Guardar en la orden",
@@ -639,11 +678,11 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "forms.electricalBlurb": "Lista de números de pieza del taller: fittings, cable y bridas.",
   "faq.forms.q": "¿Dónde están los formularios de oficina?",
   "faq.forms.p1":
-    "El personal del taller abre Formularios en el menú. Llene un ticket, imprímalo o descárguelo, y guárdelo en una orden abierta. Al guardar elige la orden. El formulario queda como una actualización de ese trabajo.",
+    "El personal del taller abre Formularios en el menú cuando el flag del plan está activo (Enterprise lo incluye; Starter y Shop quedan apagados hasta que la plataforma lo encienda). Llene un ticket, imprímalo o descárguelo, y guárdelo en una orden abierta. Al guardar elige la orden. El formulario queda como una actualización de ese trabajo.",
 
   "ocr.title": "Importar ticket a mano",
   "ocr.help":
-    "Fotografía un SERVICE ORDER de papel. El escritorio lee las casillas (finca, unidad, falla, trabajo, equipo, horarios) y muestra campos sugeridos. Revíselos y aplique.",
+    "Fotografía el ticket de papel lleno. El escritorio lee el formulario de esta empresa (las fotos de muestra si las subió) y muestra campos sugeridos. Revíselos y aplique.",
   "ocr.notConfigured":
     "La importación a mano necesita OPENAI_API_KEY en el servidor. Agréguela, reinicie y luego escanee una foto.",
   "ocr.photo": "Foto del ticket de papel",
@@ -674,5 +713,40 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "ocr.servicePerformed": "Servicio realizado",
   "faq.ocr.q": "¿Puedo importar una orden manuscrita desde una foto?",
   "faq.ocr.p1":
-    "Sí. En una orden o en Nueva orden, use Importar ticket a mano. Tras el escaneo, revise los campos y aplique. El servidor necesita una clave de OpenAI para la lectura.",
+    "Sí. En una orden o en Nueva orden, use Importar ticket a mano cuando el flag del plan esté activo (Enterprise lo incluye; Starter y Shop quedan apagados hasta que la plataforma lo encienda). Tras el escaneo, revise los campos y aplique. Los administradores siguen Ajustes → Ticket de papel: suban muestras, confirmen casillas y ajusten la lista de campos si siempre falta una.",
+
+  "ticketForm.title": "Formulario de ticket de papel",
+  "ticketForm.help":
+    "Los escaneos leen el formulario de esta empresa. El predeterminado es la orden de servicio de riego. Si usan un talonario Valley o Lindsay, elijan ese diseño. O suban 1–2 fotos en blanco o llenas de su ticket. El personal sigue revisando los campos antes de guardar.",
+  "ticketForm.layout": "Diseño con nombre",
+  "ticketForm.fields": "Lista de campos (opcional)",
+  "ticketForm.fieldsHint": "facturar a, finca, problema, horas, piezas…",
+  "ticketForm.saveLayout": "Guardar diseño",
+  "ticketForm.samples": "Fotos de muestra",
+  "ticketForm.samplesHelp": "Hasta dos fotos de un ticket en blanco o lleno. Sirven para enseñar al lector.",
+  "ticketForm.noSamples": "Aún no hay muestras. El diseño con nombre igual funciona.",
+  "ticketForm.upload": "Subir fotos de muestra",
+  "ticketForm.saveSamples": "Guardar muestras",
+  "ticketForm.removeSample": "Quitar",
+
+  "ocr.notEnabled":
+    "La importación a mano aún no está activa en esta empresa. Enterprise la incluye. La plataforma puede encenderla en Starter o Shop.",
+
+  "ocrOnboard.title": "Puesta en marcha del concesionario",
+  "ocrOnboard.help":
+    "Activen los escaneos, suban el ticket de papel de esta empresa, confirmen las casillas una vez, y el personal escanee un trabajo real y lo revise. Si siempre falta una casilla, ajusten la lista de campos.",
+  "ocrOnboard.progress": "{done} de {total} listos",
+  "ocrOnboard.flag": "Activar la función para esta empresa",
+  "ocrOnboard.flagHelp": "Enterprise incluye escaneo a mano. Starter y Shop quedan apagados hasta que la plataforma encienda el flag del plan.",
+  "ocrOnboard.upload": "Subir el ticket de papel",
+  "ocrOnboard.uploadHelp": "1–2 fotos en blanco o llenas de su talonario, abajo.",
+  "ocrOnboard.boxes": "Confirmar las casillas una vez",
+  "ocrOnboard.boxesHelp": "Revisen facturar a, finca, problema, horas y piezas contra la muestra.",
+  "ocrOnboard.confirmBoxes": "Las casillas están bien",
+  "ocrOnboard.scan": "El personal escanea un trabajo real y revisa",
+  "ocrOnboard.scanHelp": "El primer mes es para coger fallos de diseño. Revisen los campos antes de guardar.",
+  "ocrOnboard.scanJob": "Abrir una orden nueva para escanear",
+  "ocrOnboard.fields": "Ajustar la lista de campos si siempre falta una casilla",
+  "ocrOnboard.fieldsHelp": "Añadan la etiqueta que falta, guarden, y marquen esto como listo.",
+  "ocrOnboard.markFields": "La lista de campos está bien",
 };

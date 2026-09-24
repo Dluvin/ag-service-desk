@@ -13,6 +13,7 @@ import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
 import { getRequestLocale } from "@/lib/user-locale";
 import { priorityLabel, t } from "@/lib/i18n";
 import { visionOcrConfigured } from "@/lib/ticket-ocr";
+import { orgOcrIsOn } from "@/lib/ocr-samples";
 
 export default async function NewTicketPage({
   searchParams,
@@ -59,7 +60,7 @@ export default async function NewTicketPage({
       </p>
       {isShopStaff(session.role) ? (
         <div className="mt-6">
-          <TicketOcrImport configured={visionOcrConfigured()} />
+          <TicketOcrImport configured={visionOcrConfigured()} enabled={await orgOcrIsOn(session.organizationId)} />
         </div>
       ) : null}
       <ActionForm action={createTicketAction} encType="multipart/form-data" className="mt-6 space-y-4 rounded-xl border border-stone-200 bg-white p-6">

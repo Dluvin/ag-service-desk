@@ -5,12 +5,21 @@ import { isShopStaff } from "@/lib/roles";
 import { OFFICE_FORMS } from "@/lib/office-forms";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
+import { orgFormsIsOn } from "@/lib/ocr-samples";
 
 export default async function FormsIndexPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (!isShopStaff(session.role)) notFound();
   const locale = await getRequestLocale();
+  if (!(await orgFormsIsOn(session.organizationId))) {
+    return (
+      <div className="max-w-xl">
+        <h1 className="font-display text-3xl">{t(locale, "forms.title")}</h1>
+        <p className="mt-2 text-stone-600">{t(locale, "forms.notEnabled")}</p>
+      </div>
+    );
+  }
 
   return (
     <div>

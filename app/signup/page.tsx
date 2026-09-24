@@ -23,7 +23,7 @@ export default function SignupPage() {
           {PLAN.includedSeats} staff seats. Extra seats are ${PLAN.extraSeatDollars}/month. Customer logins
           are not counted as staff seats.
         </p>
-        <ActionForm action={signupAction} className="mt-6 grid gap-4 sm:grid-cols-2">
+        <ActionForm action={signupAction} encType="multipart/form-data" className="mt-6 grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium sm:col-span-2">
             Company name
             <input name="company" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
@@ -74,6 +74,38 @@ export default function SignupPage() {
           <label className="block text-sm font-medium sm:col-span-2">
             Anything we should know
             <textarea name="notes" rows={3} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+          </label>
+          <label className="block text-sm font-medium sm:col-span-2">
+            Paper ticket layout
+            <select name="ocrTemplateKey" defaultValue="irrigation-service-order" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
+              <option value="irrigation-service-order">Irrigation service order (built-in)</option>
+              <option value="valley-service-order">Valley service order</option>
+              <option value="lindsay-service-order">Lindsay service order</option>
+            </select>
+            <span className="mt-1 block text-xs font-normal text-stone-500">
+              Default is the irrigation SERVICE ORDER. Pick Valley or Lindsay if that is your pad.
+            </span>
+          </label>
+          <label className="block text-sm font-medium sm:col-span-2">
+            Photos of your paper ticket (optional)
+            <input
+              name="ticketSamples"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              className="mt-1 w-full text-sm font-normal"
+            />
+            <span className="mt-1 block text-xs font-normal text-stone-500">
+              1–2 blank or filled photos. We use them to read your company’s form. You can also add these later in Settings.
+            </span>
+          </label>
+          <label className="block text-sm font-medium sm:col-span-2">
+            Fields on your ticket (optional)
+            <input
+              name="ocrFieldNotes"
+              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+              placeholder="bill to, farm, problem, hours, parts…"
+            />
           </label>
           <button className="sm:col-span-2 w-full rounded-lg bg-emerald-800 px-4 py-2.5 font-semibold text-white hover:bg-emerald-700">
             Request company

@@ -8,6 +8,7 @@ import { AGSENSE_LOGO_SRC, officeFormBySlug } from "@/lib/office-forms";
 import { OfficeFormDocument } from "@/components/office-forms/OfficeFormDocument";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
+import { orgFormsIsOn } from "@/lib/ocr-samples";
 
 export default async function OfficeFormPage({ params }: { params: Promise<{ slug: string }> }) {
   const session = await getSession();
@@ -17,6 +18,14 @@ export default async function OfficeFormPage({ params }: { params: Promise<{ slu
   const form = officeFormBySlug(slug);
   if (!form) notFound();
   const locale = await getRequestLocale();
+  if (!(await orgFormsIsOn(session.organizationId))) {
+    return (
+      <div className="max-w-xl">
+        <h1 className="font-display text-3xl">{t(locale, "forms.title")}</h1>
+        <p className="mt-2 text-stone-600">{t(locale, "forms.notEnabled")}</p>
+      </div>
+    );
+  }
 
   const [org, tickets] = await Promise.all([
     prisma.organization.findUnique({

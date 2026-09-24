@@ -81,10 +81,12 @@ export function TicketOcrImport({
   ticketId,
   photos,
   configured,
+  enabled = true,
 }: {
   ticketId?: string;
   photos?: { id: string; fileName: string }[];
   configured: boolean;
+  enabled?: boolean;
 }) {
   const t = useT();
   const [scanState, scanAction, scanning] = useActionState(
@@ -100,11 +102,14 @@ export function TicketOcrImport({
     if (scanState?.draft) setDraft(scanState.draft);
   }, [scanState]);
 
+  const canScan = configured && enabled;
+
   return (
     <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-4">
       <h2 className="font-display text-xl">{t("ocr.title")}</h2>
       <p className="text-sm text-stone-600">{t("ocr.help")}</p>
-      {!configured ? <p className="text-sm text-amber-800">{t("ocr.notConfigured")}</p> : null}
+      {!enabled ? <p className="text-sm text-amber-800">{t("ocr.notEnabled")}</p> : null}
+      {enabled && !configured ? <p className="text-sm text-amber-800">{t("ocr.notConfigured")}</p> : null}
 
       <form action={scanAction} encType="multipart/form-data" className="space-y-3">
         {photos?.length ? (
@@ -129,7 +134,7 @@ export function TicketOcrImport({
         ) : null}
         <button
           className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-          disabled={!configured || scanning}
+          disabled={!canScan || scanning}
         >
           {scanning ? t("ocr.scanning") : t("ocr.scan")}
         </button>

@@ -11,6 +11,7 @@ import { PLAN_ORG_SELECT, resolveEntitlements } from "@/lib/plans";
 import { isShopStaff } from "@/lib/roles";
 import { getRequestLocale } from "@/lib/user-locale";
 import { I18nProvider } from "@/components/I18nProvider";
+import { loadOrgPlanFlagOverrides } from "@/lib/ocr-samples";
 
 export default async function DeskLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -28,7 +29,8 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
     redirect("/login?paused=1");
   }
 
-  const entitlements = resolveEntitlements(org);
+  const flags = await loadOrgPlanFlagOverrides(session.organizationId);
+  const entitlements = resolveEntitlements({ ...org, ...flags });
   const assetTypes = await ensureAssetTypes(session.organizationId);
   const locale = await getRequestLocale();
 
@@ -47,6 +49,7 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
           assetTypes={assetTypes.map((type) => ({ name: type.name, slug: type.slug }))}
           showMaps={entitlements.mapsEnabled}
           showGps={entitlements.gpsEnabled}
+          showForms={entitlements.formsEnabled}
         />
         {isShopStaff(session.role) && !session.impersonatorId ? <PresenceBeacon /> : null}
         <main className="mx-auto max-w-7xl px-4 py-8 print:max-w-none print:px-0 print:py-0">{children}</main>

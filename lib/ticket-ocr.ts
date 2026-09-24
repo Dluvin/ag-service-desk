@@ -1,3 +1,5 @@
+import { ocrSystemPrompt, ocrUserPrompt, parseOcrTemplateKey, type OcrTemplateKey } from "./ocr-templates";
+
 export type OcrLineItem = {
   quantity: number;
   name: string;
@@ -216,13 +218,32 @@ function extractJson(text: string) {
   return JSON.parse(body.slice(start, end + 1)) as unknown;
 }
 
-export async function readHandwrittenTicket(input: { bytes: Buffer; mimeType: string }): Promise<TicketOcrDraft> {
+export type OcrScanContext = {
+  templateKey?: OcrTemplateKey;
+  fieldNotes?: string;
+  sampleImages?: { bytes: Buffer; mimeType: string }[];
+};
+
+export async function readHandwrittenTicket(
+  input: { bytes: Buffer; mimeType: string } & OcrScanContext,
+): Promise<TicketOcrDraft> {
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
     throw new Error("Handwritten import is not configured. Set OPENAI_API_KEY on the server.");
   }
+  const samples = (input.sampleImages ?? []).slice(0, 2);
+  const templateKey = parseOcrTemplateKey(input.templateKey);
+  const imageParts = [
+    ...samples.map((sample) => ({
+      type: "image_url" as const,
+      image_url: { url: `data:${sample.mimeType};base64,${sample.bytes.toString("base64")}` },
+    })),
+    {
+      type: "image_url" as const,
+      image_url: { url: `data:${input.mimeType};base64,${input.bytes.toString("base64")}` },
+    },
+  ];
   const base = (process.env.OPENAI_BASE_URL?.trim() || "https://api.openai.com/v1").replace(/\/$/, "");
-  const dataUrl = `data:${input.mimeType};base64,${input.bytes.toString("base64")}`;
   const response = await fetch(`${base}/chat/completions`, {
     method: "POST",
     headers: {
@@ -236,43 +257,15 @@ export async function readHandwrittenTicket(input: { bytes: Buffer; mimeType: st
       messages: [
         {
           role: "system",
-          content:
-            "You read photos of the irrigation dealer SERVICE ORDER paper form (landscape, red NUMBER in the top right). Fields include BILL TO, CONTACT, FARM NAME, UNIT ID (PIVOT/PUMP/PIPE/WIRE/GENERATOR/ELECTRICAL circled), AGE OF EQ, MAKE/MODEL, DESCRIBE PROBLEM, DETAIL SERVICE PERFORMED, EQUIPMENT USED (circled machine names), LIST DATES & WHO WORKED, labor hours, SERVICE TRUCK, TOTAL TO INVOICE, HOLD FOR WARRANTY, COMPLETION NOTIFICATION. Return JSON only. Empty string if unreadable. title is a short version of DESCRIBE PROBLEM.",
+          content: ocrSystemPrompt({
+            templateKey,
+            fieldNotes: input.fieldNotes ?? "",
+            sampleCount: samples.length,
+          }),
         },
         {
           role: "user",
-          content: [
-            {
-              type: "text",
-              text: `This is a SERVICE ORDER. Extract JSON with:
-paperNumber (red NUMBER, e.g. 14310),
-date (DATE SERVICE REQUESTED or DATE worked),
-billTo, customer (same as bill to if only one name),
-contact, contactPhone,
-farmName, jobSite (farm name if no other site),
-completionNotice (YES or NO if circled),
-warranty / holdForWarranty (YES or NO),
-unitType (PIVOT, PUMP, PIPE, WIRE, GENERATOR, ELECTRICAL, or OTHER — whichever is circled),
-unitId,
-ageOfEq (<2YRS, >2YRS-<5YRS, or >5YRS if marked),
-make, model,
-problem (DESCRIBE PROBLEM handwriting),
-servicePerformed (DETAIL SERVICE PERFORMED handwriting),
-title (short problem),
-technician / crew (who worked, BY, or crew names),
-startTime, stopTime, laborHours,
-serviceTruck (YES if SERVICE TRUCK is marked),
-partsOnTruck (YES or NO),
-invoiceNumber, invoiceAmount / totalToInvoice,
-equipmentUsed (array of circled equipment names such as JD FORKLIFT, CASE FORKLIFT, S-550, G-550, RP-115-1, M59, 8540, PC88, GN2),
-parts (array of {quantity, name, sku, notes} from LIST PARTS or parts on truck),
-labor (array of {quantity as hours, name as crew, sku, notes with start/stop}),
-equipment (same as equipmentUsed if not already listed),
-rawText (full transcription including hard-to-read words).
-quantity must be a number.`,
-            },
-            { type: "image_url", image_url: { url: dataUrl } },
-          ],
+          content: [{ type: "text", text: ocrUserPrompt(samples.length) }, ...imageParts],
         },
       ],
     }),
@@ -288,9 +281,9 @@ quantity must be a number.`,
   return parseOcrDraft(extractJson(content));
 }
 
-export async function readHandwrittenTicketFile(file: File) {
+export async function readHandwrittenTicketFile(file: File, context: OcrScanContext = {}) {
   const invalid = validateOcrImage(file);
   if (invalid.error) throw new Error(invalid.error);
   const bytes = Buffer.from(await file.arrayBuffer());
-  return readHandwrittenTicket({ bytes, mimeType: mimeForOcr(file) });
+  return readHandwrittenTicket({ bytes, mimeType: mimeForOcr(file), ...context });
 }

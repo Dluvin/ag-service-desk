@@ -15,7 +15,7 @@ export type PlanId = (typeof PLAN_IDS)[number];
 export const GPS_PROVIDERS = ["NONE", "REVEAL", "VERIZON", "OTHER"] as const;
 export type GpsProvider = (typeof GPS_PROVIDERS)[number];
 
-export type PlanFeature = "maps" | "gps" | "stores";
+export type PlanFeature = "maps" | "gps" | "stores" | "ocr" | "forms";
 
 export type PlanCatalog = {
   id: PlanId;
@@ -24,6 +24,8 @@ export type PlanCatalog = {
   monthlyCents: number;
   perUser: boolean;
   mapsEnabled: boolean;
+  ocrEnabled: boolean;
+  formsEnabled: boolean;
   directionsEnabled: boolean;
   /** Hard user cap. null = unlimited (or pay-per-seat with no lock). */
   maxUsers: number | null;
@@ -45,6 +47,8 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     monthlyCents: 1995,
     perUser: true,
     mapsEnabled: false,
+    ocrEnabled: false,
+    formsEnabled: false,
     directionsEnabled: true,
     maxUsers: null,
     includedUsers: 1,
@@ -61,6 +65,8 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     monthlyCents: 40000,
     perUser: false,
     mapsEnabled: true,
+    ocrEnabled: false,
+    formsEnabled: false,
     directionsEnabled: true,
     maxUsers: 10,
     includedUsers: 10,
@@ -77,6 +83,8 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     monthlyCents: 150000,
     perUser: false,
     mapsEnabled: true,
+    ocrEnabled: true,
+    formsEnabled: true,
     directionsEnabled: true,
     maxUsers: null,
     includedUsers: null,
@@ -94,6 +102,8 @@ export const DEFAULT_PLAN: PlanId = "SHOP";
 export type PlanOrg = {
   plan?: string | null;
   mapsEnabled?: boolean | null;
+  ocrEnabled?: boolean | null;
+  formsEnabled?: boolean | null;
   gpsEnabled?: boolean | null;
   gpsProvider?: string | null;
   revealGps?: boolean | null;
@@ -120,6 +130,8 @@ export type ResolvedPlan = {
   label: string;
   perUser: boolean;
   mapsEnabled: boolean;
+  ocrEnabled: boolean;
+  formsEnabled: boolean;
   directionsEnabled: boolean;
   gpsEnabled: boolean;
   gpsProvider: GpsProvider;
@@ -156,6 +168,8 @@ export function resolveEntitlements(org: PlanOrg | null | undefined): ResolvedPl
   const catalog = planCatalog(org?.plan);
   const revealGps = Boolean(org?.revealGps) && catalog.revealAddOnAvailable;
   const mapsEnabled = org?.mapsEnabled ?? catalog.mapsEnabled;
+  const ocrEnabled = org?.ocrEnabled ?? catalog.ocrEnabled;
+  const formsEnabled = org?.formsEnabled ?? catalog.formsEnabled;
   const gpsEnabled = Boolean(org?.gpsEnabled) || catalog.gpsEnabled || revealGps;
 
   let gpsProvider: GpsProvider = isGpsProvider(org?.gpsProvider) ? org.gpsProvider : catalog.gpsProvider;
@@ -171,6 +185,8 @@ export function resolveEntitlements(org: PlanOrg | null | undefined): ResolvedPl
     label: catalog.label,
     perUser: catalog.perUser,
     mapsEnabled,
+    ocrEnabled,
+    formsEnabled,
     directionsEnabled: catalog.directionsEnabled,
     gpsEnabled,
     gpsProvider,
@@ -188,6 +204,8 @@ export function resolveEntitlements(org: PlanOrg | null | undefined): ResolvedPl
 export function planAllows(org: PlanOrg | null | undefined, feature: PlanFeature) {
   const entitlements = resolveEntitlements(org);
   if (feature === "maps") return entitlements.mapsEnabled;
+  if (feature === "ocr") return entitlements.ocrEnabled;
+  if (feature === "forms") return entitlements.formsEnabled;
   if (feature === "gps") return entitlements.gpsEnabled;
   return entitlements.maxStores == null || entitlements.maxStores > 0;
 }
@@ -198,6 +216,14 @@ export function showInAppMap(org: PlanOrg | null | undefined) {
 
 export function showVehicleGps(org: PlanOrg | null | undefined) {
   return planAllows(org, "gps");
+}
+
+export function showHandwrittenOcr(org: PlanOrg | null | undefined) {
+  return planAllows(org, "ocr");
+}
+
+export function showOfficeForms(org: PlanOrg | null | undefined) {
+  return planAllows(org, "forms");
 }
 
 export function canAddStore(org: PlanOrg | null | undefined, currentCount: number, adding = 1) {

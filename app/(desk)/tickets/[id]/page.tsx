@@ -28,6 +28,7 @@ import { resolvedTicketStoreId, ticketStoreName } from "@/lib/stores";
 import { getRequestLocale } from "@/lib/user-locale";
 import { statusLabel, t, type Locale } from "@/lib/i18n";
 import { visionOcrConfigured } from "@/lib/ticket-ocr";
+import { orgOcrIsOn } from "@/lib/ocr-samples";
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -64,6 +65,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     : [];
   const shopName = ticketStoreName(ticket);
   const ocrConfigured = visionOcrConfigured();
+  const ocrEnabled = await orgOcrIsOn(session.organizationId);
 
   return (
     <div className="grid gap-6 lg:grid-cols-5 lg:items-start">
@@ -213,6 +215,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             <TicketOcrImport
               ticketId={ticket.id}
               configured={ocrConfigured}
+              enabled={ocrEnabled}
               photos={ticket.photos.map((photo) => ({ id: photo.id, fileName: photo.fileName }))}
             />
           </div>

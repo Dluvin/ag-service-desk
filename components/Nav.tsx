@@ -19,6 +19,7 @@ export function Nav({
   assetTypes = [],
   showMaps = true,
   showGps = true,
+  showForms = true,
 }: {
   session: SessionUser;
   locale: Locale;
@@ -26,6 +27,7 @@ export function Nav({
   assetTypes?: { name: string; slug: string }[];
   showMaps?: boolean;
   showGps?: boolean;
+  showForms?: boolean;
 }) {
   const farmer = session.role === ROLES.FARMER;
   const beforeTickets = farmer
@@ -79,6 +81,7 @@ export function Nav({
           { href: "/online", label: t(locale, "nav.online") },
           { href: "/stores", label: t(locale, "nav.stores") },
           { href: "/company", label: t(locale, "nav.logo") },
+          { href: "/company/ticket-form", label: t(locale, "nav.ticketForm") },
           { href: "/startup/checklist", label: t(locale, "nav.checklist") },
           { href: "/sms", label: t(locale, "nav.sms") },
           ...(showGps
@@ -114,7 +117,7 @@ export function Nav({
           <NavDropdown label={t(locale, "nav.workOrders")} links={ticketLinks} />
           <NavLinkMenu href="/assets" label={t(locale, "nav.assets")} links={assetLinks} />
           <NavLinkMenu href="/reports" label={t(locale, "nav.reports")} links={reportLinks} />
-          {!farmer ? (
+          {!farmer && showForms ? (
             <NavLinkMenu
               href="/forms"
               label={t(locale, "nav.forms")}

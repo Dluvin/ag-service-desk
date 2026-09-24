@@ -77,6 +77,20 @@ import {
   readHandwrittenTicketFile,
   visionOcrConfigured,
 } from "./ticket-ocr";
+import {
+  addOrgOcrSamples,
+  applyOrgOcrFromSignup,
+  confirmOrgOcrBoxes,
+  loadOrgOcrScanContext,
+  markOrgOcrFieldListReviewed,
+  markOrgOcrFirstScan,
+  orgOcrIsOn,
+  orgFormsIsOn,
+  removeOrgOcrSample,
+  saveOrgOcrTemplate,
+  ticketSampleFilesFromForm,
+} from "./ocr-samples";
+import { parseOcrTemplateKey } from "./ocr-templates";
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -296,7 +310,7 @@ export async function signupAction(formData: FormData) {
   const existing = await prisma.organization.findUnique({ where: { slug } });
   if (existing) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
 
-  await prisma.organization.create({
+  const org = await prisma.organization.create({
     data: {
       name: company,
       slug,
@@ -338,6 +352,12 @@ export async function signupAction(formData: FormData) {
       },
     },
   });
+
+  try {
+    await applyOrgOcrFromSignup(org.id, formData);
+  } catch {
+    // signup still succeeds if sample photos fail
+  }
 
   await emailSignupToOwner({
     company,
@@ -2869,6 +2889,49 @@ export async function removeCompanyLogoAction(_formData: FormData) {
   redirect("/company");
 }
 
+export async function saveTicketFormTemplateAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can change the paper ticket form." };
+  const templateKey = parseOcrTemplateKey(formString(formData, "ocrTemplateKey"));
+  const fieldNotes = formString(formData, "ocrFieldNotes").slice(0, 2000);
+  await saveOrgOcrTemplate(session.organizationId, templateKey, fieldNotes);
+  redirect("/company/ticket-form");
+}
+
+export async function uploadTicketFormSamplesAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can change the paper ticket form." };
+  const files = ticketSampleFilesFromForm(formData);
+  if (!files.length) return { error: "Choose 1 or 2 photos of your paper ticket." };
+  const saved = await addOrgOcrSamples(session.organizationId, files);
+  if (saved.error) return { error: saved.error };
+  redirect("/company/ticket-form");
+}
+
+export async function removeTicketFormSampleAction(formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can change the paper ticket form." };
+  const sampleId = formString(formData, "sampleId");
+  if (!sampleId) return { error: "Sample not found." };
+  const result = await removeOrgOcrSample(session.organizationId, sampleId);
+  if (result.error) return { error: result.error };
+  redirect("/company/ticket-form");
+}
+
+export async function confirmOcrBoxesAction(_formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can confirm the paper ticket boxes." };
+  await confirmOrgOcrBoxes(session.organizationId);
+  redirect("/company/ticket-form");
+}
+
+export async function markOcrFieldListReviewedAction(_formData: FormData) {
+  const session = await requireSession();
+  if (!isAdmin(session.role)) return { error: "Only company admins can finish the field list." };
+  await markOrgOcrFieldListReviewed(session.organizationId);
+  redirect("/company/ticket-form");
+}
+
 export async function saveBirdSettingsAction(formData: FormData) {
   const session = await requireSession();
   if (session.role !== ROLES.ADMIN) return { error: "Only company admins can save Bird SMS settings." };
@@ -3107,6 +3170,9 @@ export async function deleteAssetAction(formData: FormData) {
 export async function attachOfficeFormToTicketAction(formData: FormData) {
   const session = await requireSession();
   if (!isShopStaff(session.role)) return { error: "Not allowed." };
+  if (!(await orgFormsIsOn(session.organizationId))) {
+    return { error: "Office forms are not on for this company yet." };
+  }
 
   const ticketId = formString(formData, "ticketId");
   const slug = formString(formData, "formSlug");
@@ -3137,11 +3203,15 @@ export async function attachOfficeFormToTicketAction(formData: FormData) {
 export async function scanHandwrittenTicketAction(formData: FormData) {
   const session = await requireSession();
   if (!isShopStaff(session.role)) return { error: "Not allowed." };
+  if (!(await orgOcrIsOn(session.organizationId))) {
+    return { error: "Handwritten import is not on for this company yet." };
+  }
   if (!visionOcrConfigured()) {
     return { error: "Handwritten import is not configured. Add OPENAI_API_KEY on the server, then try again." };
   }
 
   const photoId = formString(formData, "photoId");
+  const context = await loadOrgOcrScanContext(session.organizationId);
   try {
     if (photoId) {
       const photo = await prisma.ticketPhoto.findFirst({
@@ -3149,12 +3219,18 @@ export async function scanHandwrittenTicketAction(formData: FormData) {
       });
       if (!photo) return { error: "Photo not found." };
       const bytes = await readTicketPhotoFile(photo.id);
-      const draft = await readHandwrittenTicket({ bytes, mimeType: photo.mimeType || "image/jpeg" });
+      const draft = await readHandwrittenTicket({
+        bytes,
+        mimeType: photo.mimeType || "image/jpeg",
+        ...context,
+      });
+      await markOrgOcrFirstScan(session.organizationId);
       return { draft };
     }
     const file = ocrImageFromForm(formData);
     if (!file) return { error: "Choose a photo of the handwritten ticket." };
-    const draft = await readHandwrittenTicketFile(file);
+    const draft = await readHandwrittenTicketFile(file, context);
+    await markOrgOcrFirstScan(session.organizationId);
     return { draft };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "The scan failed." };
@@ -3216,6 +3292,9 @@ async function matchCatalogEquipment(organizationId: string, sku: string, name: 
 export async function applyHandwrittenTicketAction(formData: FormData) {
   const session = await requireSession();
   if (!isShopStaff(session.role)) return { error: "Not allowed." };
+  if (!(await orgOcrIsOn(session.organizationId))) {
+    return { error: "Handwritten import is not on for this company yet." };
+  }
 
   const ticketId = formString(formData, "ticketId");
   const ticket = await prisma.ticket.findFirst({

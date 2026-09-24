@@ -16,6 +16,7 @@ import {
 import { PLAN } from "@/lib/plan";
 import { PlatformPlanForm } from "@/components/PlatformPlanForm";
 import { renameDemoIrrigationCompany } from "@/lib/rename-demo-irrigation";
+import { loadOrgOcrOverrides } from "@/lib/ocr-samples";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export default async function PlatformHomePage() {
 
   await renameDemoIrrigationCompany();
 
+  const ocrFlags = await loadOrgOcrOverrides();
   const tenants = await prisma.organization.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -134,7 +136,13 @@ export default async function PlatformHomePage() {
                       </ActionForm>
                     </div>
                   </div>
-                  <PlatformPlanForm org={org} />
+                  <PlatformPlanForm
+                    org={{
+                      ...org,
+                      ocrEnabled: ocrFlags.get(org.id)?.ocrEnabled ?? null,
+                      formsEnabled: ocrFlags.get(org.id)?.formsEnabled ?? null,
+                    }}
+                  />
                   {org.stripeSubscriptionId ? (
                     <p className="mt-2 text-sm font-medium text-emerald-800">Stripe subscription is on file.</p>
                   ) : (

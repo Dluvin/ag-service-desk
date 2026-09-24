@@ -17,6 +17,8 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
       <p className="text-sm font-semibold text-stone-800">
         Plan: {entitlements.label}
         {entitlements.mapsEnabled ? " · maps on" : " · no in-app maps"}
+        {entitlements.ocrEnabled ? " · scans on" : " · no handwritten scans"}
+        {entitlements.formsEnabled ? " · forms on" : " · no office forms"}
         {entitlements.gpsEnabled ? ` · GPS ${entitlements.gpsProvider}` : " · no live GPS"}
         {entitlements.maxStores != null ? ` · ${entitlements.maxStores} stores` : " · unlimited stores"}
       </p>
@@ -68,6 +70,30 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
             placeholder={entitlements.includedUsers == null ? "Unlimited" : String(entitlements.includedUsers)}
             className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm"
           />
+        </label>
+        <label className="block text-xs font-medium text-stone-600 sm:col-span-2">
+          Handwritten scans (plan flag)
+          <select
+            name="ocrEnabled"
+            defaultValue={org.ocrEnabled == null ? "" : org.ocrEnabled ? "1" : "0"}
+            className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm"
+          >
+            <option value="">Plan default ({PLANS[entitlements.plan].ocrEnabled ? "on" : "off"})</option>
+            <option value="1">On for this company</option>
+            <option value="0">Off for this company</option>
+          </select>
+        </label>
+        <label className="block text-xs font-medium text-stone-600 sm:col-span-2">
+          Office forms (plan flag)
+          <select
+            name="formsEnabled"
+            defaultValue={org.formsEnabled == null ? "" : org.formsEnabled ? "1" : "0"}
+            className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm"
+          >
+            <option value="">Plan default ({PLANS[entitlements.plan].formsEnabled ? "on" : "off"})</option>
+            <option value="1">On for this company</option>
+            <option value="0">Off for this company</option>
+          </select>
         </label>
         <label className="flex items-center gap-2 text-sm text-stone-700 sm:col-span-2">
           <input type="checkbox" name="revealGps" value="1" defaultChecked={entitlements.revealGps} />

@@ -40,6 +40,13 @@ model Organization {
   stripeCheckoutUrl   String?
   // STARTER | SHOP | ENTERPRISE — prices and defaults in lib/plans.ts. Existing orgs default to SHOP.
   plan                String   @default("SHOP")
+  ocrTemplateKey      String   @default("irrigation-service-order")
+  ocrFieldNotes       String?
+  ocrEnabled          Boolean? // null = derive from plan
+  formsEnabled        Boolean? // null = derive from plan
+  ocrBoxesConfirmedAt DateTime?
+  ocrFirstScanAt      DateTime?
+  ocrFieldListReviewedAt DateTime?
   mapsEnabled         Boolean? // null = derive from plan
   gpsEnabled          Boolean  @default(false)
   gpsProvider         String   @default("NONE") // NONE | REVEAL | VERIZON | OTHER
@@ -62,6 +69,16 @@ model Organization {
   assetTypes          AssetType[]
   assets              Asset[]
   farms               Farm[]
+  ocrSamples          OrgOcrSample[]
+}
+
+model OrgOcrSample {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fileName       String
+  mimeType       String
+  createdAt      DateTime     @default(now())
 }
 
 model RevealVehicle {
