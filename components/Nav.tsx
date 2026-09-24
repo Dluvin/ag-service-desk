@@ -40,6 +40,7 @@ export function Nav({
   ];
   const reportLinks = [
     { href: "/reports", label: "Work order reports" },
+    { href: "/reports/pivots", label: "Pivot reports" },
     { href: "/reports/customers", label: "Customer reports" },
     { href: "/reports/farms", label: "Farm reports" },
     { href: "/reports/assets", label: "Asset reports" },

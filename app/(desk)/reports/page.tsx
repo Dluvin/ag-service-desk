@@ -7,8 +7,7 @@ import { parseStoreParam } from "@/lib/stores";
 import { ReportPrintBrand } from "@/components/PrintCompanyMark";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
 import { ReportDateForm, ReportNav, ReportStoreFilter, Stat, TableCard, usd } from "@/components/ReportUi";
-import { STARTUP_SEASON_YEAR } from "@/lib/startup";
-import { loadReports, toDayParam } from "@/lib/reports";
+import { loadReports } from "@/lib/reports";
 
 export default async function ReportsPage({
   searchParams,
@@ -36,9 +35,9 @@ export default async function ReportsPage({
       <ReportPrintBrand />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl">Reports</h1>
+          <h1 className="font-display text-3xl">Work order reports</h1>
           <p className="mt-1 text-stone-600">
-            Work order and pivot activity from {report.range.from} through {report.range.to}.
+            Opened and closed work from {report.range.from} through {report.range.to}, plus what is still open now.
           </p>
         </div>
         <ReportNav current="tickets" from={report.range.from} to={report.range.to} store={selectedStore} />
@@ -54,10 +53,8 @@ export default async function ReportsPage({
         show={session.role !== ROLES.FARMER}
       />
 
-      <section id="ticket-reports" className="mt-10 scroll-mt-6">
-        <h2 className="font-display text-2xl">Work order reports</h2>
-        <p className="mt-1 text-sm text-stone-600">Opened and closed work in this date range, plus what is still open now.</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="mt-10">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Opened in range" value={String(report.ticket.opened)} />
           <Stat label="Closed in range" value={String(report.ticket.closed)} />
           <Stat label="Open now" value={String(report.ticket.openNow)} />
@@ -209,101 +206,6 @@ export default async function ReportsPage({
                     </td>
                     <td className="px-3 py-2">{usd(ticket.partsTotal)}</td>
                     <td className="px-3 py-2">{ticket.laborHours}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </TableCard>
-      </section>
-
-      <section id="pivot-reports" className="mt-12 scroll-mt-6">
-        <h2 className="font-display text-2xl">Pivot reports</h2>
-        <p className="mt-1 text-sm text-stone-600">
-          Service load by machine in this range, plus {STARTUP_SEASON_YEAR} startup status.
-        </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Pivots" value={String(report.pivot.total)} />
-          <Stat label="With open work orders" value={String(report.pivot.withOpenWork)} />
-          <Stat label="No work orders in range" value={String(report.pivot.quietInRange)} />
-          <Stat label={`${STARTUP_SEASON_YEAR} passed / failed`} value={`${report.pivot.startupPassed} / ${report.pivot.startupFailed}`} />
-        </div>
-
-        <TableCard title="Busiest pivots in range" className="mt-6">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
-              <tr>
-                <th className="px-3 py-2">Pivot</th>
-                <th className="px-3 py-2">Customer</th>
-                <th className="px-3 py-2">Store</th>
-                <th className="px-3 py-2">Work orders</th>
-                <th className="px-3 py-2">Open</th>
-                <th className="px-3 py-2">Last work order</th>
-                <th className="px-3 py-2">Startup</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {report.pivot.busiest.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-3 py-4 text-stone-600">
-                    No pivots in this view.
-                  </td>
-                </tr>
-              ) : (
-                report.pivot.busiest.map((pivot) => (
-                  <tr key={pivot.id}>
-                    <td className="px-3 py-2">
-                      <Link href={`/pivots/${pivot.id}`} className="font-medium text-emerald-900 hover:underline">
-                        {pivot.name}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2">
-                      <Link href={`/farmers/${pivot.farmId}`} className="hover:underline">
-                        {pivot.farm}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2">{pivot.store}</td>
-                    <td className="px-3 py-2">{pivot.ticketsInRange}</td>
-                    <td className="px-3 py-2">{pivot.openTickets}</td>
-                    <td className="px-3 py-2 text-stone-600">
-                      {pivot.lastTicketAt ? toDayParam(pivot.lastTicketAt) : "—"}
-                    </td>
-                    <td className="px-3 py-2">{pivot.startup}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </TableCard>
-
-        <TableCard title="Pivots with open work orders" className="mt-6">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
-              <tr>
-                <th className="px-3 py-2">Pivot</th>
-                <th className="px-3 py-2">Customer</th>
-                <th className="px-3 py-2">Open work orders</th>
-                <th className="px-3 py-2">Startup</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {report.pivot.openWork.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-3 py-4 text-stone-600">
-                    No open work orders on pivots in this view.
-                  </td>
-                </tr>
-              ) : (
-                report.pivot.openWork.map((pivot) => (
-                  <tr key={pivot.id}>
-                    <td className="px-3 py-2">
-                      <Link href={`/pivots/${pivot.id}`} className="font-medium text-emerald-900 hover:underline">
-                        {pivot.name}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2">{pivot.farm}</td>
-                    <td className="px-3 py-2">{pivot.openTickets}</td>
-                    <td className="px-3 py-2">{pivot.startup}</td>
                   </tr>
                 ))
               )}

@@ -87,8 +87,8 @@ export function ReportNav({
   if (store && store !== "all") query.set("store", store);
   const qs = query.toString() ? `?${query.toString()}` : "";
   const links = [
-    { id: "tickets" as const, href: `/reports${qs}#ticket-reports`, label: "Work order reports" },
-    { id: "pivots" as const, href: `/reports${qs}#pivot-reports`, label: "Pivot reports" },
+    { id: "tickets" as const, href: `/reports${qs}`, label: "Work order reports" },
+    { id: "pivots" as const, href: `/reports/pivots${qs}`, label: "Pivot reports" },
     { id: "customers" as const, href: `/reports/customers${qs}`, label: "Customer reports" },
     { id: "farms" as const, href: `/reports/farms${qs}`, label: "Farm reports" },
     { id: "assets" as const, href: `/reports/assets${qs}`, label: "Asset reports" },

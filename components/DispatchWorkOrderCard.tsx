@@ -63,17 +63,21 @@ export function DispatchWorkOrderCard({
 
   return (
     <li className="group rounded-lg border border-stone-200 bg-white px-3 py-2 shadow-sm">
-      <div className="flex items-center gap-3">
-        <PriorityBadge priority={priority} />
-        <Link
-          href={href}
-          className="min-w-0 flex-1 truncate font-medium text-emerald-950 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
-        >
-          #{number} {title}
-        </Link>
-        <p className="min-w-0 max-w-[10rem] truncate text-sm text-stone-600 sm:max-w-[14rem]">{customer}</p>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex min-w-0 items-start gap-2 sm:contents">
+          <PriorityBadge priority={priority} />
+          <Link
+            href={href}
+            className="min-w-0 flex-1 font-medium text-emerald-950 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 sm:flex sm:items-baseline sm:gap-1"
+          >
+            <span className="shrink-0 whitespace-nowrap">#{number}</span>
+            <span className="mt-0.5 block truncate sm:mt-0 sm:min-w-0 sm:flex-1">{title}</span>
+          </Link>
+          <span className="shrink-0 sm:hidden">{detailsButton}</span>
+        </div>
+        <p className="min-w-0 truncate text-sm text-stone-600 sm:max-w-[14rem]">{customer}</p>
         <StatusBadge status={status} />
-        {detailsButton}
+        <span className="hidden shrink-0 sm:inline-flex">{detailsButton}</span>
       </div>
       {details}
     </li>
