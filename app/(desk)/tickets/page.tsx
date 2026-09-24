@@ -63,7 +63,7 @@ export default async function TicketsPage({
       <p className="mt-3 text-sm text-stone-500">{summaryText(tickets.length, query)}</p>
       <div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+          <thead className="bg-stone-200/80 text-xs font-semibold uppercase tracking-wide text-stone-800">
             <tr>
               <th className="px-4 py-2">Work order</th>
               <th className="px-4 py-2">Customer / pivot</th>
@@ -116,7 +116,7 @@ function SortableHeader({
     <th className="px-4 py-2" aria-sort={active ? (query.dir === "asc" ? "ascending" : "descending") : "none"}>
       <Link
         href={ticketListHref({ ...query, sort: column, dir: nextDir })}
-        className={active ? "font-semibold text-emerald-800 hover:underline" : "hover:text-stone-800 hover:underline"}
+        className={active ? "font-semibold text-emerald-800 hover:underline" : "font-semibold text-stone-800 hover:underline"}
       >
         {label}
         {active ? (query.dir === "asc" ? " ↑" : " ↓") : ""}
@@ -137,8 +137,8 @@ function TicketGroup({
   return (
     <>
       {showHeading && status !== "all" ? (
-        <tr className="bg-stone-50">
-          <td colSpan={8} className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-stone-500">
+        <tr className="bg-stone-200/80">
+          <td colSpan={8} className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-stone-800">
             {STATUS_LABELS[status]} · {tickets.length}
           </td>
         </tr>
