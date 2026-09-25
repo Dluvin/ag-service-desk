@@ -3330,13 +3330,51 @@ async function matchCatalogEquipment(organizationId: string, sku: string, name: 
   });
 }
 
+function lineKey(sku: string, name: string) {
+  return `${sku.trim().toLowerCase()}|${name.trim().toLowerCase()}`;
+}
+
+function alreadyHasText(existing: string, extra: string) {
+  const have = existing.trim().toLowerCase();
+  const add = extra.trim().toLowerCase();
+  return Boolean(have && add && have.includes(add));
+}
+
+function appendTitle(existing: string, extra: string) {
+  const have = existing.trim();
+  const add = extra.trim();
+  if (!add) return have;
+  if (!have) return add;
+  if (alreadyHasText(have, add)) return have;
+  return `${have} · ${add}`.slice(0, 240);
+}
+
+function appendDetails(existing: string, extras: string[]) {
+  let next = existing.trim();
+  for (const extra of extras) {
+    const add = extra.trim();
+    if (!add || alreadyHasText(next, add)) continue;
+    next = next ? `${next}\n\n${add}` : add;
+  }
+  return next;
+}
+
 async function addOcrPartsToTicket(
   organizationId: string,
   userId: string,
   ticketId: string,
   parts: { quantity: number; name: string; sku: string }[],
 ) {
+  if (!parts.length) return;
+  const existing = await prisma.ticketPart.findMany({
+    where: { ticketId },
+    select: { name: true, sku: true },
+  });
+  const seen = new Set(existing.map((row) => lineKey(row.sku ?? "", row.name)));
   for (const row of parts) {
+    const key = lineKey(row.sku, row.name);
+    if (seen.has(key)) continue;
+    seen.add(key);
     const catalog = await matchCatalogPart(organizationId, row.sku, row.name);
     await prisma.ticketPart.create({
       data: {
@@ -3390,7 +3428,6 @@ export async function applyHandwrittenTicketAction(formData: FormData) {
   const stopTime = formString(formData, "stopTime");
   const laborHours = formString(formData, "laborHours");
   const warranty = formString(formData, "warranty");
-  const replaceTitle = formString(formData, "replaceTitle") === "on";
   const applyInvoice = formString(formData, "applyInvoice") === "on";
   const applyTech = formString(formData, "applyTech") === "on";
   const parts = ocrLinesFromForm(formData, "parts");
@@ -3399,6 +3436,7 @@ export async function applyHandwrittenTicketAction(formData: FormData) {
 
   const header = [
     "Imported from a handwritten SERVICE ORDER (check the values).",
+    title ? `Paper title: ${title}` : "",
     paperNumber ? `Paper # ${paperNumber}` : "",
     customer ? `Bill to: ${customer}` : "",
     farmName ? `Farm name: ${farmName}` : "",
@@ -3436,7 +3474,15 @@ export async function applyHandwrittenTicketAction(formData: FormData) {
   if (saved.error) return saved;
 
   await addOcrPartsToTicket(session.organizationId, session.userId, ticket.id, parts);
+  const existingLabor = await prisma.ticketLabor.findMany({
+    where: { ticketId: ticket.id },
+    select: { name: true, sku: true },
+  });
+  const laborSeen = new Set(existingLabor.map((row) => lineKey(row.sku ?? "", row.name)));
   for (const row of labor) {
+    const key = lineKey(row.sku, row.name);
+    if (laborSeen.has(key)) continue;
+    laborSeen.add(key);
     const catalog = await matchCatalogLabor(session.organizationId, row.sku, row.name);
     await prisma.ticketLabor.create({
       data: {
@@ -3450,7 +3496,15 @@ export async function applyHandwrittenTicketAction(formData: FormData) {
       },
     });
   }
+  const existingEquipment = await prisma.ticketEquipment.findMany({
+    where: { ticketId: ticket.id },
+    select: { name: true, sku: true },
+  });
+  const equipmentSeen = new Set(existingEquipment.map((row) => lineKey(row.sku ?? "", row.name)));
   for (const row of equipment) {
+    const key = lineKey(row.sku, row.name);
+    if (equipmentSeen.has(key)) continue;
+    equipmentSeen.add(key);
     const catalog = await matchCatalogEquipment(session.organizationId, row.sku, row.name);
     await prisma.ticketEquipment.create({
       data: {
@@ -3466,7 +3520,7 @@ export async function applyHandwrittenTicketAction(formData: FormData) {
   }
 
   let technicianId = ticket.technicianId;
-  if (applyTech && technicianName) {
+  if (applyTech && technicianName && !ticket.technicianId) {
     const tech = await prisma.user.findFirst({
       where: {
         organizationId: session.organizationId,
@@ -3477,18 +3531,36 @@ export async function applyHandwrittenTicketAction(formData: FormData) {
     if (tech) technicianId = tech.id;
   }
 
-  await prisma.ticket.update({
-    where: { id: ticket.id },
-    data: {
-      ...(replaceTitle && title ? { title } : {}),
-      ...(applyInvoice && invoiceNumber && !ticket.invoiceNumber
-        ? { invoiceNumber, invoiceAmount: invoiceAmount ?? ticket.invoiceAmount }
-        : {}),
-      ...(technicianId !== ticket.technicianId
-        ? { technicianId, status: ticket.status === "OPEN" ? "ASSIGNED" : ticket.status }
-        : {}),
-    },
-  });
+  const ticketPatch: {
+    title?: string;
+    description?: string;
+    invoiceNumber?: string;
+    invoiceAmount?: number | null;
+    technicianId?: string | null;
+    status?: (typeof ticket)["status"];
+  } = {};
+  const nextTitle = appendTitle(ticket.title, title);
+  if (nextTitle !== ticket.title) ticketPatch.title = nextTitle;
+  const nextDescription = appendDetails(ticket.description, [
+    problem ? `Problem: ${problem}` : "",
+    servicePerformed ? `Service performed: ${servicePerformed}` : "",
+    description,
+  ]);
+  if (nextDescription !== ticket.description) ticketPatch.description = nextDescription;
+  if (applyInvoice && invoiceNumber && !ticket.invoiceNumber) {
+    ticketPatch.invoiceNumber = invoiceNumber;
+    ticketPatch.invoiceAmount = invoiceAmount ?? ticket.invoiceAmount;
+  }
+  if (technicianId && technicianId !== ticket.technicianId) {
+    ticketPatch.technicianId = technicianId;
+    if (ticket.status === "OPEN") ticketPatch.status = "ASSIGNED";
+  }
+  if (Object.keys(ticketPatch).length) {
+    await prisma.ticket.update({
+      where: { id: ticket.id },
+      data: ticketPatch,
+    });
+  }
 
   redirect(`/tickets/${ticket.id}`);
 }

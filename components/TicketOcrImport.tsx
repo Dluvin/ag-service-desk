@@ -109,6 +109,7 @@ export function TicketOcrImport({
     <div className="space-y-4 rounded-xl border border-stone-200 bg-white p-4">
       <h2 className="font-display text-xl">{t("ocr.title")}</h2>
       <p className="text-sm text-stone-600">{t("ocr.help")}</p>
+      {ticketId ? <p className="text-sm text-stone-600">{t("ocr.applyHelp")}</p> : null}
       {!enabled ? <p className="text-sm text-amber-800">{t("ocr.notEnabled")}</p> : null}
       {enabled && !configured ? <p className="text-sm text-amber-800">{t("ocr.notConfigured")}</p> : null}
 
@@ -155,10 +156,7 @@ export function TicketOcrImport({
                 className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
               />
             </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="replaceTitle" />
-              {t("ocr.replaceTitle")}
-            </label>
+            <p className="text-xs text-stone-500">{t("ocr.titleStays")}</p>
             <label className="block text-sm font-medium">
               {t("ticket.description")}
               <textarea
@@ -175,8 +173,8 @@ export function TicketOcrImport({
                 <input
                   name="customer"
                   value={draft.customer}
-                  onChange={(event) => setDraft({ ...draft, customer: event.target.value })}
-                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+                  readOnly
+                  className="mt-1 w-full rounded-lg border border-stone-300 bg-stone-50 px-3 py-2"
                 />
               </label>
               <label className="block text-sm font-medium">
@@ -184,8 +182,8 @@ export function TicketOcrImport({
                 <input
                   name="jobSite"
                   value={draft.jobSite}
-                  onChange={(event) => setDraft({ ...draft, jobSite: event.target.value })}
-                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+                  readOnly
+                  className="mt-1 w-full rounded-lg border border-stone-300 bg-stone-50 px-3 py-2"
                 />
               </label>
               <label className="block text-sm font-medium">
@@ -238,8 +236,8 @@ export function TicketOcrImport({
                 <input
                   name="farmName"
                   value={draft.farmName}
-                  onChange={(event) => setDraft({ ...draft, farmName: event.target.value })}
-                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+                  readOnly
+                  className="mt-1 w-full rounded-lg border border-stone-300 bg-stone-50 px-3 py-2"
                 />
               </label>
               <label className="block text-sm font-medium">
