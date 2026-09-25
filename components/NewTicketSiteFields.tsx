@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MapLocationPicker } from "@/components/MapLocationPicker";
 import { FarmTypeahead } from "@/components/FarmTypeahead";
 import { PivotTypeahead } from "@/components/PivotTypeahead";
 import { assetTypeSingular, isPivotAssetType } from "@/lib/assets";
+import { bestNameMatch, OCR_FILL_NEW_SITE_EVENT, typeSlugFromOcrUnit, type OcrFillNewSiteDetail } from "@/lib/ocr-site-match";
 
 type SiteOption = {
   id: string;
@@ -68,6 +69,45 @@ export function NewTicketSiteFields({
     [sites, farmerId],
   );
   const lockedFarm = farmers.find((farm) => farm.id === lockedFarmerId) ?? null;
+
+  useEffect(() => {
+    function onFill(event: Event | OcrFillNewSiteDetail) {
+      const detail =
+        event && typeof event === "object" && "detail" in event
+          ? (event as CustomEvent<OcrFillNewSiteDetail>).detail
+          : (event as OcrFillNewSiteDetail);
+      if (!detail || lockedFarmerId) return;
+
+      const nextSlug = typeSlugFromOcrUnit(detail.unitType, types) ?? typeSlug;
+      const nextType = types.find((type) => type.slug === nextSlug);
+      const nextIsPivot = nextType ? isPivotAssetType(nextType) : true;
+      const pool = nextIsPivot
+        ? pivots.map((pivot) => ({ ...pivot, typeSlug: nextSlug }))
+        : assets.filter((asset) => asset.typeSlug === nextSlug);
+
+      const farm =
+        bestNameMatch(farmers, (row) => row.name, [detail.customer, detail.farmName]) ??
+        (() => {
+          const viaSite = bestNameMatch(pool, (row) => row.farmerName, [detail.customer, detail.farmName]);
+          return viaSite ? farmers.find((row) => row.id === viaSite.farmerId) ?? null : null;
+        })();
+      if (!farm) return;
+
+      const farmPool = pool.filter((site) => site.farmerId === farm.id);
+      const site =
+        bestNameMatch(farmPool, (row) => row.name, [detail.unitId, detail.jobSite, detail.farmName]) ??
+        bestNameMatch(farmPool, (row) => row.locationNote ?? "", [detail.jobSite, detail.farmName]);
+
+      setTypeSlug(nextSlug);
+      setSiteMode("existing");
+      setFarmerMode("existing");
+      setFarmerId(farm.id);
+      setSiteId(site?.id ?? "");
+    }
+
+    window.addEventListener(OCR_FILL_NEW_SITE_EVENT, onFill);
+    return () => window.removeEventListener(OCR_FILL_NEW_SITE_EVENT, onFill);
+  }, [assets, farmers, lockedFarmerId, pivots, typeSlug, types]);
 
   function selectFarm(farm: { id: string; name: string } | null) {
     setFarmerId(farm?.id ?? "");

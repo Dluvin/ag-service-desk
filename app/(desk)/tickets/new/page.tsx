@@ -7,6 +7,7 @@ import { ActionForm } from "@/components/ActionForm";
 import { NewTicketSiteFields } from "@/components/NewTicketSiteFields";
 import { TicketPhotoFields } from "@/components/TicketPhotoFields";
 import { TicketOcrImport } from "@/components/TicketOcrImport";
+import { NewTicketOcrPartsFields } from "@/components/NewTicketOcrPartsFields";
 import { StoreSelect } from "@/components/StoreSelect";
 import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
 import { getRequestLocale } from "@/lib/user-locale";
@@ -148,6 +149,7 @@ export default async function NewTicketPage({
           </label>
         ) : null}
         <ScheduleDateTimeField label={t(locale, "ticket.scheduledFor")} />
+        {showOcr ? <NewTicketOcrPartsFields /> : null}
         <TicketPhotoFields />
         <button className="rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white">
           {session.role === ROLES.FARMER ? t(locale, "tickets.request") : t(locale, "dispatch.create")}

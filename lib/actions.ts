@@ -1523,6 +1523,10 @@ export async function createTicketAction(formData: FormData) {
   });
   if (saved.error) return saved;
 
+  if (isShopStaff(session.role)) {
+    await addOcrPartsToTicket(session.organizationId, session.userId, ticket.id, ocrLinesFromForm(formData, "parts"));
+  }
+
   redirect(`/tickets/${ticket.id}`);
 }
 
@@ -3326,6 +3330,28 @@ async function matchCatalogEquipment(organizationId: string, sku: string, name: 
   });
 }
 
+async function addOcrPartsToTicket(
+  organizationId: string,
+  userId: string,
+  ticketId: string,
+  parts: { quantity: number; name: string; sku: string }[],
+) {
+  for (const row of parts) {
+    const catalog = await matchCatalogPart(organizationId, row.sku, row.name);
+    await prisma.ticketPart.create({
+      data: {
+        ticketId,
+        userId,
+        catalogPartId: catalog?.id ?? null,
+        name: catalog?.name ?? row.name,
+        quantity: row.quantity,
+        sku: catalog?.sku ?? (row.sku || null),
+        unitPrice: catalog?.price ?? null,
+      },
+    });
+  }
+}
+
 export async function applyHandwrittenTicketAction(formData: FormData) {
   const session = await requireSession();
   if (!isShopStaff(session.role)) return { error: "Not allowed." };
@@ -3409,20 +3435,7 @@ export async function applyHandwrittenTicketAction(formData: FormData) {
   });
   if (saved.error) return saved;
 
-  for (const row of parts) {
-    const catalog = await matchCatalogPart(session.organizationId, row.sku, row.name);
-    await prisma.ticketPart.create({
-      data: {
-        ticketId: ticket.id,
-        userId: session.userId,
-        catalogPartId: catalog?.id ?? null,
-        name: catalog?.name ?? row.name,
-        quantity: row.quantity,
-        sku: catalog?.sku ?? (row.sku || null),
-        unitPrice: catalog?.price ?? null,
-      },
-    });
-  }
+  await addOcrPartsToTicket(session.organizationId, session.userId, ticket.id, parts);
   for (const row of labor) {
     const catalog = await matchCatalogLabor(session.organizationId, row.sku, row.name);
     await prisma.ticketLabor.create({

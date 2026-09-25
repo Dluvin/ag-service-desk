@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { googleMapsEmbedUrl } from "@/lib/maps";
 import { usePlan } from "./PlanProvider";
 
@@ -37,6 +37,10 @@ export function PivotTypeahead({
   const selected = pivots.find((pivot) => pivot.id === pivotId) ?? null;
   const [text, setText] = useState(selected?.name ?? "");
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (selected) setText(selected.name);
+  }, [pivotId, selected?.name]);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const matches = useMemo(() => {

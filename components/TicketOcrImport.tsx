@@ -5,6 +5,7 @@ import { ActionForm } from "@/components/ActionForm";
 import { useT } from "@/components/I18nProvider";
 import { applyHandwrittenTicketAction, scanHandwrittenTicketAction } from "@/lib/actions";
 import { emptyOcrDraft, type OcrLineItem, type TicketOcrDraft } from "@/lib/ticket-ocr";
+import { dispatchOcrFillNewSite } from "@/lib/ocr-site-match";
 
 type ScanState = { error?: string; draft?: TicketOcrDraft } | null;
 
@@ -341,15 +342,15 @@ export function TicketOcrImport({
               type="button"
               className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white"
               onClick={() => {
-                const title = document.querySelector<HTMLInputElement>('input[name="title"]');
-                const description = document.querySelector<HTMLTextAreaElement>('textarea[name="description"]');
+                const title = document.querySelector<HTMLInputElement>('form[enctype="multipart/form-data"] input[name="title"]')
+                  ?? document.querySelector<HTMLInputElement>('input[name="title"]');
+                const description = document.querySelector<HTMLTextAreaElement>('form[enctype="multipart/form-data"] textarea[name="description"]')
+                  ?? document.querySelector<HTMLTextAreaElement>('textarea[name="description"]');
                 if (title && draft.title) title.value = draft.title;
                 if (description) {
                   const extra = [
                     draft.description,
                     draft.paperNumber && `Paper # ${draft.paperNumber}`,
-                    draft.customer && `Bill to: ${draft.customer}`,
-                    draft.farmName && `Farm: ${draft.farmName}`,
                     draft.problem && `Problem: ${draft.problem}`,
                     draft.servicePerformed && `Service performed: ${draft.servicePerformed}`,
                   ]
@@ -357,6 +358,18 @@ export function TicketOcrImport({
                     .join("\n");
                   description.value = extra || draft.rawText;
                 }
+                dispatchOcrFillNewSite({
+                  customer: draft.customer,
+                  farmName: draft.farmName,
+                  jobSite: draft.jobSite,
+                  unitId: draft.unitId,
+                  unitType: draft.unitType,
+                  parts: draft.parts.map((row) => ({
+                    quantity: row.quantity,
+                    name: row.name,
+                    sku: row.sku,
+                  })),
+                });
               }}
             >
               {t("ocr.fillForm")}

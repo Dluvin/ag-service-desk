@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export function FarmTypeahead({
   farms,
@@ -20,6 +20,10 @@ export function FarmTypeahead({
   const selected = farms.find((farm) => farm.id === farmerId) ?? null;
   const [text, setText] = useState(selected?.name ?? "");
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (selected) setText(selected.name);
+  }, [farmerId, selected?.name]);
 
   const matches = useMemo(() => {
     const q = text.trim().toLowerCase();
