@@ -36,6 +36,7 @@ type PrintTicket = {
     user: { name: string };
     photos?: { id: string; fileName: string }[];
   }[];
+  photos?: { id: string; fileName: string }[];
 };
 
 function money(value: number) {
@@ -108,6 +109,13 @@ export function ClosedTicketDocument({ ticket }: { ticket: PrintTicket }) {
         {STATUS_LABELS[ticket.status as TicketStatus] ?? ticket.status} · {ticket.priority}
       </p>
       <p className="mt-4 whitespace-pre-wrap">{ticket.description}</p>
+
+      {ticket.photos && ticket.photos.length > 0 ? (
+        <section className="mt-6">
+          <h2 className="font-display text-lg">Photos</h2>
+          <TicketPhotoGrid photos={ticket.photos} />
+        </section>
+      ) : null}
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2 text-sm">
         <section>

@@ -7,6 +7,16 @@ function normalize(value: string) {
   return value.trim().toLowerCase().replace(/^#/, "");
 }
 
+function isNextRedirect(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "digest" in error &&
+    typeof (error as { digest?: unknown }).digest === "string" &&
+    String((error as { digest: string }).digest).startsWith("NEXT_REDIRECT")
+  );
+}
+
 export function DeleteButton({
   action,
   name,
@@ -55,6 +65,9 @@ export function DeleteButton({
     try {
       await action(formData);
       setOpen(false);
+    } catch (error) {
+      if (isNextRedirect(error)) throw error;
+      throw error;
     } finally {
       setPending(false);
     }

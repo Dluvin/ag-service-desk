@@ -40,7 +40,7 @@ import { closeOpenSiteVisits } from "./onsite";
 import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, normalizeRevealAppId, syncRevealVehicles } from "./reveal";
 import { notifyFarmerRepairDone, notifyTicketSms } from "./ticket-sms";
 import { sendBirdSms, toE164 } from "./bird";
-import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles, readTicketPhotoFile } from "./ticket-photos";
+import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles, readTicketPhotoFile, removeTicketPhotoFile } from "./ticket-photos";
 import { documentFilesFromForm, removePivotDocumentFile, safePivotReturnTo, savePivotDocuments } from "./pivot-documents";
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
 import { hashNewUserPassword, mailIsConfigured, sendPasswordResetEmail, sendWelcomeLoginEmail, userFromPasswordToken, welcomeQuery, type WelcomeMailStatus } from "./welcome-mail";
@@ -2179,6 +2179,29 @@ async function requireTicketLineEdit(ticketId: string) {
     return { error: "This work order is not assigned to you." as const };
   }
   return { session, ticket };
+}
+
+export async function deleteTicketPhotoAction(formData: FormData) {
+  const session = await requireSession();
+  const photoId = formString(formData, "photoId");
+  const photo = await prisma.ticketPhoto.findFirst({
+    where: { id: photoId, ticket: { organizationId: session.organizationId } },
+    include: { ticket: { select: { id: true, technicianId: true } } },
+  });
+  if (!photo) return { error: "Photo not found." };
+  const access = await requireTicketLineEdit(photo.ticketId);
+  if ("error" in access) return access;
+
+  await prisma.ticketPhoto.delete({ where: { id: photo.id } });
+  await removeTicketPhotoFile(photo.id);
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId: photo.ticketId,
+      userId: session.userId,
+      message: `Removed photo: ${photo.fileName}.`,
+    },
+  });
+  redirect(`/tickets/${photo.ticketId}`);
 }
 
 export async function updateTicketPartAction(formData: FormData) {

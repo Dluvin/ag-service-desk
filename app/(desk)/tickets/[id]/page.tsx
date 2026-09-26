@@ -3,8 +3,9 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
-import { canAssignTickets, canDeleteRecords, isPrintableStatus, isShopStaff } from "@/lib/roles";
+import { canAssignTickets, canDeleteRecords, isShopStaff } from "@/lib/roles";
 import { updateTicketAction, addTicketPartAction, addTicketLaborAction, addTicketEquipmentAction, deleteTicketAction, updateTicketPartAction, deleteTicketPartAction, updateTicketLaborAction, deleteTicketLaborAction, updateTicketEquipmentAction, deleteTicketEquipmentAction } from "@/lib/actions";
+import { queueQbEstimateAction } from "@/lib/qbwc-actions";
 import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
@@ -52,6 +53,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         siteVisits: { orderBy: { startedAt: "asc" } },
         photos: { orderBy: { createdAt: "desc" } },
         inspections: { orderBy: { createdAt: "desc" } },
+        qbEstimateJobs: { orderBy: { createdAt: "desc" }, take: 1 },
     },
   });
   if (!ticket) notFound();
@@ -96,14 +98,20 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               {ticket.invoiceAmount != null ? ` · $${ticket.invoiceAmount.toFixed(2)}` : ""}
             </span>
           ) : null}
-          {isPrintableStatus(ticket.status) ? (
-            <Link
-              href={`/tickets/${ticket.id}/print`}
-              className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"
-            >
-              {t(locale, "ticket.print")}
-            </Link>
+          {canAssignTickets(session.role) ? (
+            <ActionForm action={queueQbEstimateAction} className="inline">
+              <input type="hidden" name="ticketId" value={ticket.id} />
+              <button className="rounded-lg border border-emerald-800 px-3 py-1.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">
+                Send as QuickBooks estimate
+              </button>
+            </ActionForm>
           ) : null}
+          <Link
+            href={`/tickets/${ticket.id}/print`}
+            className="rounded-lg bg-emerald-800 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"
+          >
+            {t(locale, "ticket.print")}
+          </Link>
           {canDeleteRecords(session.role) ? (
             <DeleteButton
               action={deleteTicketAction}
@@ -115,6 +123,17 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             />
           ) : null}
         </div>
+        {ticket.qbEstimateJobs[0] ? (
+          <p className="mt-2 text-sm text-stone-600">
+            {ticket.qbEstimateJobs[0].status === "SENT"
+              ? `QuickBooks estimate${ticket.qbEstimateJobs[0].qbRefNumber ? ` #${ticket.qbEstimateJobs[0].qbRefNumber}` : ""} sent`
+              : ticket.qbEstimateJobs[0].status === "ERROR"
+                ? `QuickBooks estimate failed: ${ticket.qbEstimateJobs[0].error || "see Web Connector"}`
+                : ticket.qbEstimateJobs[0].status === "SENDING"
+                  ? "QuickBooks estimate is sending now"
+                  : "QuickBooks estimate queued — run Update Selected in Web Connector"}
+          </p>
+        ) : null}
         {ticket.inspections[0] ? (
           <p className="mt-2 text-sm">
             <Link href={`/startup/${ticket.inspections[0].id}`} className="text-emerald-800 hover:underline">
@@ -233,7 +252,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         {ticket.photos.length > 0 ? (
           <section className="mt-8">
             <h2 className="font-display text-xl">{t(locale, "ticket.photos")}</h2>
-            <TicketPhotoGrid photos={ticket.photos} />
+            <TicketPhotoGrid photos={ticket.photos} canDelete={canDispatch} />
           </section>
         ) : null}
 
@@ -419,7 +438,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           {ticket.updates.length > 0 ? (
             <>
               <ol className="mt-3 space-y-3">
-                <TicketUpdateItem update={ticket.updates[0]} locale={locale} />
+                <TicketUpdateItem update={ticket.updates[0]} locale={locale} canDelete={canDispatch} />
               </ol>
               {ticket.updates.length > 1 ? (
                 <CollapsiblePanel
@@ -430,7 +449,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 >
                   <ol className="space-y-3">
                     {ticket.updates.slice(1).map((update) => (
-                      <TicketUpdateItem key={update.id} update={update} locale={locale} />
+                      <TicketUpdateItem key={update.id} update={update} locale={locale} canDelete={canDispatch} />
                     ))}
                   </ol>
                 </CollapsiblePanel>
@@ -448,6 +467,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
 function TicketUpdateItem({
   update,
   locale,
+  canDelete,
 }: {
   update: {
     id: string;
@@ -458,6 +478,7 @@ function TicketUpdateItem({
     photos: { id: string; fileName: string }[];
   };
   locale: Locale;
+  canDelete: boolean;
 }) {
   return (
     <li className="rounded-lg border border-stone-200 bg-white p-3">
@@ -466,7 +487,7 @@ function TicketUpdateItem({
         {update.status ? ` · ${statusLabel(locale, update.status)}` : ""}
       </p>
       <p className="mt-1 whitespace-pre-wrap text-sm text-stone-800">{update.message}</p>
-      <TicketPhotoGrid photos={update.photos} />
+      <TicketPhotoGrid photos={update.photos} canDelete={canDelete} />
     </li>
   );
 }

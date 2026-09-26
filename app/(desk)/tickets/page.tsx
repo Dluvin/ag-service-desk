@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ticketWhere } from "@/lib/scope";
-import { isPrintableStatus, requiresInvoice, ROLES, type TicketStatus } from "@/lib/roles";
+import { requiresInvoice, ROLES, type TicketStatus } from "@/lib/roles";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
 import { TicketListControls } from "@/components/TicketListControls";
 import { formatSchedule } from "@/lib/schedule";
@@ -183,14 +183,10 @@ function TicketGroup({
             ) : (
               "—"
             )}
-            {isPrintableStatus(ticket.status) ? (
-              <>
-                <br />
-                <Link href={`/tickets/${ticket.id}/print`} className="text-xs font-semibold text-emerald-800 hover:underline">
-                  {t(locale, "common.print")}
-                </Link>
-              </>
-            ) : null}
+            <br />
+            <Link href={`/tickets/${ticket.id}/print`} className="text-xs font-semibold text-emerald-800 hover:underline">
+              {t(locale, "ticket.print")}
+            </Link>
           </td>
         </tr>
       ))}

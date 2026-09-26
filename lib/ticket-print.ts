@@ -13,6 +13,7 @@ export const closedTicketPrintInclude = {
   labor: { orderBy: { createdAt: "asc" as const } },
   equipment: { orderBy: { createdAt: "asc" as const } },
   siteVisits: { orderBy: { startedAt: "asc" as const } },
+  photos: { orderBy: { createdAt: "desc" as const } },
 } satisfies Prisma.TicketInclude;
 
 export const MAX_BATCH_PRINT = 75;

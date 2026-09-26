@@ -70,6 +70,9 @@ model Organization {
   assets              Asset[]
   farms               Farm[]
   ocrSamples          OrgOcrSample[]
+  qbwcConfig          QbwcConfig?
+  qbwcSessions        QbwcSession[]
+  qbEstimateJobs      QbEstimateJob[]
 }
 
 model OrgOcrSample {
@@ -353,6 +356,7 @@ model Ticket {
   equipment      TicketEquipment[]
   inspections    StartupInspection[]
   siteVisits     SiteVisit[]
+  qbEstimateJobs QbEstimateJob[]
 
   @@unique([organizationId, number])
 }
@@ -543,5 +547,44 @@ model TicketPhoto {
   mimeType  String
   createdAt DateTime      @default(now())
 
+  @@index([ticketId])
+}
+
+model QbwcConfig {
+  organizationId String       @id
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  username       String       @unique
+  passwordHash   String       @default("")
+  ownerId        String
+  fileId         String
+  companyName    String?
+  lastError      String?
+  lastSyncAt     DateTime?
+  updatedAt      DateTime     @updatedAt
+}
+
+model QbwcSession {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  jobId          String?
+  lastError      String?
+  createdAt      DateTime     @default(now())
+}
+
+model QbEstimateJob {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ticketId       String
+  ticket         Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  status         String       @default("QUEUED")
+  qbTxnId        String?
+  qbRefNumber    String?
+  error          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, status])
   @@index([ticketId])
 }

@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { homePath } from "@/lib/home";
 
-const PUBLIC = new Set(["/", "/login", "/signup", "/signup/thanks", "/welcome", "/forgot", "/contact", "/privacy", "/support", "/platform/login"]);
+const PUBLIC = new Set(["/", "/login", "/signup", "/signup/thanks", "/welcome", "/forgot", "/contact", "/privacy", "/support", "/platform/login", "/qbwc"]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (
     pathname.startsWith("/api/stripe/webhook") ||
     pathname.startsWith("/api/login-brand") ||
-    pathname.startsWith("/api/company-logo")
+    pathname.startsWith("/api/company-logo") ||
+    pathname.startsWith("/qbwc")
   ) {
     return NextResponse.next();
   }

@@ -231,7 +231,7 @@ export const REST_EN = {
     ". That choice is yours — it does not change anyone else’s board. Filter by store to work one shop at a time.",
   "faq.print.q": "How do I print a work order?",
   "faq.print.p1":
-    "Open a Repair done or Completed work order and choose Print work order. In the print dialog you can send it to a printer or Save as PDF. The printout includes repair notes, parts, equipment, and labor.",
+    "Open a work order and choose View / Print. In the print dialog you can send it to a printer or Save as PDF. The printout includes notes, photos, parts, equipment, and labor.",
   "faq.print.p2a": "To print several at once, use",
   "faq.print.p2b": "from the Work orders page. Select the ones you need; each starts on a new page.",
   "faq.maps.q": "What is the difference between in-app maps and Open in Google Maps?",
@@ -611,7 +611,7 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
     ". Esa elección es suya: no cambia el tablero de nadie más. Filtre por tienda para un taller a la vez.",
   "faq.print.q": "¿Cómo imprimo una orden de trabajo?",
   "faq.print.p1":
-    "Abra una orden en Reparación hecha o Completado y elija Imprimir orden. En el diálogo puede mandarla a la impresora o Guardar como PDF. El impreso incluye notas, piezas, equipo y mano de obra.",
+    "Abra una orden y elija Ver / Imprimir. En el diálogo puede mandarla a la impresora o Guardar como PDF. El impreso incluye notas, fotos, piezas, equipo y mano de obra.",
   "faq.print.p2a": "Para imprimir varias a la vez, use",
   "faq.print.p2b": "en Órdenes de trabajo. Seleccione las que necesite; cada una empieza en una página nueva.",
   "faq.maps.q": "¿Cuál es la diferencia entre mapas en la app y Abrir en Google Maps?",

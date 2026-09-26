@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "./prisma";
 
@@ -81,4 +81,12 @@ export async function saveTicketPhotos(input: {
 
 export async function readTicketPhotoFile(photoId: string) {
   return readFile(/*turbopackIgnore: true*/ photoFilePath(photoId));
+}
+
+export async function removeTicketPhotoFile(photoId: string) {
+  try {
+    await unlink(/*turbopackIgnore: true*/ photoFilePath(photoId));
+  } catch {
+    // already gone
+  }
 }
