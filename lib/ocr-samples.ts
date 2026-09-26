@@ -29,8 +29,13 @@ type ColumnInfo = { name: string };
 
 function asNullableBool(value: unknown): boolean | null {
   if (value === null || value === undefined) return null;
-  if (value === true || value === 1 || value === 1n || value === "1") return true;
-  if (value === false || value === 0 || value === 0n || value === "0") return false;
+  if (typeof value === "bigint") {
+    if (value === BigInt(1)) return true;
+    if (value === BigInt(0)) return false;
+    return null;
+  }
+  if (value === true || value === 1 || value === "1") return true;
+  if (value === false || value === 0 || value === "0") return false;
   return null;
 }
 
