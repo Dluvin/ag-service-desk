@@ -37,19 +37,21 @@ export async function queueQbEstimateAction(formData: FormData) {
   if (!(await qbwcIsReady(session.organizationId))) {
     return { error: "Set a Web Connector password under Settings → Connectors first, then add the .qwc file in QuickBooks." };
   }
-  const already = await prisma.qbEstimateJob.findFirst({
-    where: { ticketId: ticket.id, status: { in: ["QUEUED", "SENDING"] } },
-    select: { id: true },
-  });
-  if (already) return { error: "This work order is already waiting for the next Web Connector run." };
-  const failed = await prisma.qbEstimateJob.findFirst({
-    where: { ticketId: ticket.id, status: "ERROR" },
+  const latest = await prisma.qbEstimateJob.findFirst({
+    where: { ticketId: ticket.id },
     orderBy: { createdAt: "desc" },
-    select: { id: true },
   });
-  if (failed) {
+  if (latest && !(latest.status === "SENT" && latest.qbTxnId)) {
+    await prisma.qbEstimateJob.deleteMany({
+      where: {
+        ticketId: ticket.id,
+        id: { not: latest.id },
+        qbTxnId: null,
+        status: { in: ["QUEUED", "SENDING", "ERROR"] },
+      },
+    });
     await prisma.qbEstimateJob.update({
-      where: { id: failed.id },
+      where: { id: latest.id },
       data: { status: "QUEUED", error: null, qbTxnId: null, qbRefNumber: null },
     });
   } else {
