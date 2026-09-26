@@ -2,7 +2,9 @@ import { prisma } from "./prisma";
 import { ROLES, type TicketStatus } from "./roles";
 import { isPlaceholderUsNumber, sendBirdSms, toE164 } from "./bird";
 import { appBaseUrl } from "./app-url";
-import { ticketRepairDoneEmail } from "./email";
+import { ticketRepairDoneEmail, officeRepairDoneEmail } from "./email";
+import { closedTicketPrintInclude } from "./ticket-print";
+import { workOrderAttachmentHtml } from "./work-order-html";
 import { statusLabel, t, type Locale, type MessageKey } from "./i18n";
 import { loadOrgLocales } from "./user-locale";
 import { ticketSiteName } from "./ticket-site";
@@ -257,4 +259,64 @@ export async function notifyFarmerRepairDone(input: {
       locale,
     });
   }
+
+  await notifyStoreClericalRepairDone({
+    organizationId: input.organizationId,
+    ticketId: input.ticketId,
+    locales,
+  });
+}
+
+async function notifyStoreClericalRepairDone(input: {
+  organizationId: string;
+  ticketId: string;
+  locales: Map<string, Locale>;
+}) {
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: input.ticketId, organizationId: input.organizationId },
+    include: {
+      ...closedTicketPrintInclude,
+      store: true,
+    },
+  });
+  if (!ticket || ticket.status !== "REPAIR_DONE") return;
+
+  const storeId = ticket.storeId ?? ticket.farmer.storeId;
+  const clerical = await prisma.user.findMany({
+    where: {
+      organizationId: input.organizationId,
+      role: ROLES.CLERICAL,
+      storeId,
+      email: { not: "" },
+    },
+    select: { id: true, name: true, email: true },
+  });
+  if (clerical.length === 0) return;
+
+  const html = workOrderAttachmentHtml(ticket);
+  const storeName =
+    ticket.store?.name ||
+    (await prisma.store.findFirst({ where: { id: storeId ?? "" }, select: { name: true } }))?.name ||
+    "Office";
+
+  await Promise.allSettled(
+    clerical.map((person) =>
+      officeRepairDoneEmail({
+        to: person.email,
+        firstName: person.name,
+        organizationName: ticket.organization.name,
+        organizationId: input.organizationId,
+        farmerName: ticket.farmer.name,
+        ticketNumber: ticket.number,
+        title: ticket.title,
+        pivotName: ticketSiteName(ticket),
+        storeName,
+        ticketId: ticket.id,
+        attachmentHtml: html,
+        locale: input.locales.get(person.id) ?? "en",
+      }).catch((error) => {
+        console.error(`Office repair-done email to ${person.email} failed`, error);
+      }),
+    ),
+  );
 }

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
-import { createSession, destroySession, getSession, requireSession, verifyLogin } from "./auth";
+import { createSession, destroySession, getSession, requireSession, verifyLogin, type SessionUser } from "./auth";
 import {
   PRIORITIES,
   ROLES,
@@ -13,6 +13,7 @@ import {
   isAdmin,
   canAddTechnicians,
   canAssignTickets,
+  canEditWorkOrder,
   canDeleteRecords,
   canEditStaffMember,
   canImportPivots,
@@ -28,6 +29,7 @@ import {
   type Role,
   type TicketStatus,
 } from "./roles";
+import { ticketSiteName } from "./ticket-site";
 import { openServiceTicket } from "./tickets";
 import { INSPECTION_STATUS, STARTUP_CHECKS, STARTUP_SEASON_YEAR, checkLabel, ensureStartupTemplates, uniqueCheckKey } from "./startup";
 import { parseMapsLocation } from "./maps";
@@ -1346,23 +1348,10 @@ export async function deletePivotDocumentAction(formData: FormData) {
   redirect(safePivotReturnTo(formString(formData, "returnTo"), `/pivots/${document.pivotId}`));
 }
 
-export async function createTicketAction(formData: FormData) {
-  const session = await requireSession();
-  const title = formString(formData, "title");
-  const description = formString(formData, "description");
-  const priority = formString(formData, "priority") || "NORMAL";
-  const technicianId = formString(formData, "technicianId") || null;
-  const siteMode = formString(formData, "siteMode") || "existing";
-
-  if (!title || !description) {
-    return { error: "Title and description are required." };
-  }
-  if (!PRIORITIES.includes(priority as (typeof PRIORITIES)[number])) {
-    return { error: "Invalid priority." };
-  }
-
+async function resolveWorkOrderSite(session: SessionUser, formData: FormData) {
   let pivot = null as Awaited<ReturnType<typeof prisma.pivot.findFirst>>;
   let asset = null as Awaited<ReturnType<typeof prisma.asset.findFirst>>;
+  const siteMode = formString(formData, "siteMode") || "existing";
   const types = await ensureAssetTypes(session.organizationId);
   const typeSlug = formString(formData, "assetTypeSlug");
   const selectedType = types.find((type) => type.slug === typeSlug) ?? types.find(isPivotAssetType) ?? types[0];
@@ -1461,6 +1450,26 @@ export async function createTicketAction(formData: FormData) {
   }
 
   if (!pivot && !asset) return { error: "Select an asset or add a new location." };
+  return { pivot, asset };
+}
+
+export async function createTicketAction(formData: FormData) {
+  const session = await requireSession();
+  const title = formString(formData, "title");
+  const description = formString(formData, "description");
+  const priority = formString(formData, "priority") || "NORMAL";
+  const technicianId = formString(formData, "technicianId") || null;
+
+  if (!title || !description) {
+    return { error: "Title and description are required." };
+  }
+  if (!PRIORITIES.includes(priority as (typeof PRIORITIES)[number])) {
+    return { error: "Invalid priority." };
+  }
+
+  const site = await resolveWorkOrderSite(session, formData);
+  if ("error" in site) return site;
+  const { pivot, asset } = site;
 
   const photos = photoFilesFromForm(formData);
   const photoCheck = validatePhotoFiles(photos);
@@ -1527,6 +1536,92 @@ export async function createTicketAction(formData: FormData) {
     await addOcrPartsToTicket(session.organizationId, session.userId, ticket.id, ocrLinesFromForm(formData, "parts"));
   }
 
+  redirect(`/tickets/${ticket.id}`);
+}
+
+export async function editWorkOrderAction(formData: FormData) {
+  const session = await requireSession();
+  if (!canEditWorkOrder(session.role)) return { error: "Only admins and managers can edit a work order." };
+
+  const ticketId = formString(formData, "ticketId");
+  const title = formString(formData, "title");
+  const description = formString(formData, "description");
+  const priority = formString(formData, "priority") || "NORMAL";
+  const technicianId = formString(formData, "technicianId") || null;
+
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, organizationId: session.organizationId },
+    include: {
+      farmer: { select: { name: true } },
+      pivot: { select: { name: true } },
+      asset: { include: { assetType: { select: { name: true } } } },
+      technician: { select: { name: true } },
+    },
+  });
+  if (!ticket) return { error: "Work order not found." };
+  if (!title || !description) return { error: "Title and description are required." };
+  if (!PRIORITIES.includes(priority as (typeof PRIORITIES)[number])) return { error: "Invalid priority." };
+
+  const site = await resolveWorkOrderSite(session, formData);
+  if ("error" in site) return site;
+  const { pivot, asset } = site;
+  const farmerId = pivot?.farmerId ?? asset!.farmerId;
+  const nextTech = technicianId;
+  let nextStatus = ticket.status;
+  if (nextTech && nextStatus === "OPEN") nextStatus = "ASSIGNED";
+  if (!nextTech && nextStatus === "ASSIGNED") nextStatus = "OPEN";
+
+  const previousTech = ticket.technicianId;
+  const storeId = await resolveStoreId(session.organizationId, formString(formData, "storeId"));
+  const scheduledAt = parseDateTimeLocal(formString(formData, "scheduledAt"));
+
+  await prisma.ticket.update({
+    where: { id: ticket.id },
+    data: {
+      title,
+      description,
+      priority,
+      farmerId,
+      pivotId: pivot?.id ?? null,
+      assetId: asset?.id ?? null,
+      technicianId: nextTech,
+      status: nextStatus,
+      storeId,
+      scheduledAt,
+    },
+  });
+
+  const nextSiteName = ticketSiteName({ pivot, asset });
+  const notes: string[] = [];
+  if (title !== ticket.title) notes.push(`title to “${title}”`);
+  if (description !== ticket.description) notes.push("description");
+  if (priority !== ticket.priority) notes.push(`priority to ${priority.toLowerCase()}`);
+  if (farmerId !== ticket.farmerId || (pivot?.id ?? null) !== ticket.pivotId || (asset?.id ?? null) !== ticket.assetId) {
+    notes.push(`site to ${nextSiteName}`);
+  }
+  if (nextTech !== previousTech) {
+    const tech = nextTech
+      ? await prisma.user.findFirst({ where: { id: nextTech }, select: { name: true } })
+      : null;
+    notes.push(tech ? `technician to ${tech.name}` : "unassigned technician");
+  }
+  await prisma.ticketUpdate.create({
+    data: {
+      ticketId: ticket.id,
+      userId: session.userId,
+      message: notes.length ? `Edited work order: ${notes.join("; ")}.` : "Edited work order.",
+      status: nextStatus !== ticket.status ? nextStatus : null,
+    },
+  });
+
+  if (nextTech && nextTech !== previousTech) {
+    await notifyTicketSms({
+      organizationId: session.organizationId,
+      ticketId: ticket.id,
+      kind: "assigned",
+      actorUserId: session.userId,
+    });
+  }
   redirect(`/tickets/${ticket.id}`);
 }
 

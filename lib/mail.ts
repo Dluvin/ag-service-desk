@@ -23,6 +23,7 @@ export async function sendEmail(input: {
   text: string;
   html: string;
   fromName?: string;
+  attachments?: { filename: string; content: Buffer; contentType?: string }[];
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const fromEnv = process.env.EMAIL_FROM?.trim();
   if (!fromEnv) return { ok: false, error: "EMAIL_FROM is not set." };
@@ -42,12 +43,17 @@ export async function sendEmail(input: {
         subject: input.subject,
         text: input.text,
         html: input.html,
+        attachments: input.attachments?.map((file) => ({
+          filename: file.filename,
+          content: file.content.toString("base64"),
+          content_type: file.contentType,
+        })),
       }),
     });
     if (!response.ok) {
       const detail = await response.text();
       console.error("Resend email failed", response.status, detail);
-      return { ok: false, error: "Welcome email could not be sent." };
+      return { ok: false, error: "Email could not be sent." };
     }
     return { ok: true };
   }
@@ -73,10 +79,15 @@ export async function sendEmail(input: {
       subject: input.subject,
       text: input.text,
       html: input.html,
+      attachments: input.attachments?.map((file) => ({
+        filename: file.filename,
+        content: file.content,
+        contentType: file.contentType,
+      })),
     });
     return { ok: true };
   } catch (error) {
     console.error("SMTP email failed", error);
-    return { ok: false, error: "Welcome email could not be sent." };
+    return { ok: false, error: "Email could not be sent." };
   }
 }

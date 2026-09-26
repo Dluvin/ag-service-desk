@@ -193,6 +193,9 @@ const EN_UI = {
   "ticket.newTitle": "New work order",
   "ticket.requestTitle": "Request service",
   "ticket.newHelp": "Pick a customer, choose the asset type (pivot is the default), then pick that asset. You can still add a new asset if needed.",
+  "ticket.edit": "Edit work order",
+  "ticket.editTitle": "Edit work order #{number}",
+  "ticket.editHelp": "Change the customer, asset, title, priority, store, technician, or schedule. Status only changes if you assign or unassign a technician.",
   "ticket.requestHelp": "Choose the asset type, start typing the name, or add a new location, then describe the problem. The shop will get the work order.",
   "ticket.title": "Title",
   "ticket.description": "Description",
@@ -289,6 +292,10 @@ const EN_UI = {
   "email.repairView": "View the work order",
   "email.repairViewLine": "View the work order: {url}",
   "email.repairQuestions": "If you have questions, reply to your dealer.",
+  "email.officeRepairSubject": "{org}: work order #{number} is repair done — {store}",
+  "email.officeRepairHi": "Hi {first},",
+  "email.officeRepairBody": "Work order #{number} ({title}) for {customer} at {pivot} is marked Repair done. A copy is attached for invoicing and the office file.",
+  "email.officeRepairViewLine": "Open it in AG Desk: {url}",
   "email.there": "there",
 } as const;
 
@@ -483,6 +490,9 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
   "ticket.newTitle": "Nueva orden de trabajo",
   "ticket.requestTitle": "Pedir servicio",
   "ticket.newHelp": "Elija un cliente, el tipo de activo (el pivote es el predeterminado) y luego el equipo. Puede agregar un activo nuevo si hace falta.",
+  "ticket.edit": "Editar orden",
+  "ticket.editTitle": "Editar orden #{number}",
+  "ticket.editHelp": "Cambie el cliente, el activo, el título, la prioridad, la tienda, el técnico o la fecha. El estado solo cambia si asigna o desasigna un técnico.",
   "ticket.requestHelp": "Elija el tipo de activo, escriba el nombre o agregue un lugar, y describa el problema. El taller recibe la orden.",
   "ticket.title": "Título",
   "ticket.description": "Descripción",
@@ -579,6 +589,10 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
   "email.repairView": "Ver la orden de trabajo",
   "email.repairViewLine": "Ver la orden de trabajo: {url}",
   "email.repairQuestions": "Si tiene preguntas, responda a su dealer.",
+  "email.officeRepairSubject": "{org}: orden #{number} en reparación hecha — {store}",
+  "email.officeRepairHi": "Hola {first}:",
+  "email.officeRepairBody": "La orden #{number} ({title}) de {customer} en {pivot} está en Reparación hecha. Va adjunto un ejemplar para facturar y el archivo de oficina.",
+  "email.officeRepairViewLine": "Ábrala en AG Desk: {url}",
   "email.there": "estimado/a",
 };
 

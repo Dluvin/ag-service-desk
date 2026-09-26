@@ -30,6 +30,9 @@ export function NewTicketSiteFields({
   mapsApiKey,
   lockedFarmerId,
   defaultPivotId,
+  defaultAssetId,
+  defaultTypeSlug,
+  defaultFarmerId,
 }: {
   pivots: Omit<SiteOption, "typeSlug">[];
   assets: SiteOption[];
@@ -39,19 +42,26 @@ export function NewTicketSiteFields({
   mapsApiKey?: string;
   lockedFarmerId?: string | null;
   defaultPivotId?: string;
+  defaultAssetId?: string;
+  defaultTypeSlug?: string;
+  defaultFarmerId?: string;
 }) {
   const pivotType = types.find(isPivotAssetType) ?? types[0] ?? null;
   const defaultPivot = pivots.find((pivot) => pivot.id === defaultPivotId);
-  const initialFarmId = lockedFarmerId || defaultPivot?.farmerId || "";
-  const [typeSlug, setTypeSlug] = useState(pivotType?.slug ?? types[0]?.slug ?? "pivots");
+  const defaultAsset = assets.find((asset) => asset.id === defaultAssetId);
+  const initialFarmId =
+    lockedFarmerId || defaultFarmerId || defaultPivot?.farmerId || defaultAsset?.farmerId || "";
+  const [typeSlug, setTypeSlug] = useState(
+    defaultTypeSlug || (defaultAsset ? defaultAsset.typeSlug : pivotType?.slug) || types[0]?.slug || "pivots",
+  );
   const [siteMode, setSiteMode] = useState<"existing" | "new">(
-    defaultPivotId || pivots.length || assets.length ? "existing" : "new",
+    defaultPivotId || defaultAssetId || pivots.length || assets.length ? "existing" : "new",
   );
   const [farmerMode, setFarmerMode] = useState<"existing" | "new">(
     farmers.length && !lockedFarmerId ? "existing" : "new",
   );
   const [farmerId, setFarmerId] = useState(initialFarmId);
-  const [siteId, setSiteId] = useState(defaultPivotId ?? "");
+  const [siteId, setSiteId] = useState(defaultPivotId || defaultAssetId || "");
 
   const selectedType = types.find((type) => type.slug === typeSlug) ?? pivotType;
   const isPivot = selectedType ? isPivotAssetType(selectedType) : true;

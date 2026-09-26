@@ -78,6 +78,10 @@ export function canAssignTickets(role: string) {
   return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.CLERICAL;
 }
 
+export function canEditWorkOrder(role: string) {
+  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+}
+
 export function canEditStartupChecklist(role: string) {
   return role === ROLES.ADMIN || role === ROLES.MANAGER;
 }

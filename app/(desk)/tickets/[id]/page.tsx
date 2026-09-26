@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
-import { canAssignTickets, canDeleteRecords, isShopStaff } from "@/lib/roles";
+import { canAssignTickets, canDeleteRecords, canEditWorkOrder, isShopStaff } from "@/lib/roles";
 import { updateTicketAction, addTicketPartAction, addTicketLaborAction, addTicketEquipmentAction, deleteTicketAction, updateTicketPartAction, deleteTicketPartAction, updateTicketLaborAction, deleteTicketLaborAction, updateTicketEquipmentAction, deleteTicketEquipmentAction } from "@/lib/actions";
 import { queueQbEstimateAction } from "@/lib/qbwc-actions";
 import { ActionForm } from "@/components/ActionForm";
@@ -105,6 +105,14 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 Send as QuickBooks estimate
               </button>
             </ActionForm>
+          ) : null}
+          {canEditWorkOrder(session.role) ? (
+            <Link
+              href={`/tickets/${ticket.id}/edit`}
+              className="rounded-lg border border-emerald-800 px-3 py-1.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
+            >
+              {t(locale, "ticket.edit")}
+            </Link>
           ) : null}
           <Link
             href={`/tickets/${ticket.id}/print`}
