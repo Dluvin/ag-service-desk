@@ -72,7 +72,9 @@ function isRetryableEstimateJob(job: { status: string; error: string | null; qbT
     error.includes("0x80040400") ||
     error.includes("parsing") ||
     error.includes("did not return") ||
-    error.includes("xml text stream")
+    error.includes("xml text stream") ||
+    error.includes("invalid reference") ||
+    error.includes("does not exist in the list")
   );
 }
 

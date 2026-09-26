@@ -51,8 +51,17 @@ type EstimateLine = {
   rate: number | null;
 };
 
+function catalogItemName(
+  catalog: { name: string; sku: string | null } | null | undefined,
+  lineName: string,
+  lineSku: string | null | undefined,
+) {
+  return catalog?.name || lineName || catalog?.sku || lineSku || "Services";
+}
+
 function lineXml(line: EstimateLine) {
-  const itemName = qbText(line.itemName, 31) || "Services";
+  // Item Name is 31 chars; FullName allows parent:child up to 159. Never slice the leaf to 31.
+  const itemName = qbText(line.itemName, 159) || "Services";
   const description = qbText(line.description, 4095);
   const qty = qbNumber(line.quantity, 1);
   const rate = line.rate == null ? null : qbNumber(line.rate, 0);
@@ -78,9 +87,9 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
           farmer: true,
           pivot: true,
           asset: { include: { assetType: { select: { name: true } } } },
-          parts: { include: { catalogPart: { select: { name: true } } } },
-          labor: { include: { catalogLabor: { select: { name: true } } } },
-          equipment: { include: { catalogEquipment: { select: { name: true } } } },
+          parts: { include: { catalogPart: { select: { name: true, sku: true } } } },
+          labor: { include: { catalogLabor: { select: { name: true, sku: true } } } },
+          equipment: { include: { catalogEquipment: { select: { name: true, sku: true } } } },
         },
       },
     },
@@ -92,7 +101,7 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   const lines: EstimateLine[] = [];
   for (const row of ticket.parts) {
     lines.push({
-      itemName: row.catalogPart?.name || row.name,
+      itemName: catalogItemName(row.catalogPart, row.name, row.sku),
       description: [row.name, row.sku].filter(Boolean).join(" - ") || row.name,
       quantity: row.quantity,
       rate: row.unitPrice,
@@ -100,7 +109,7 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   }
   for (const row of ticket.labor) {
     lines.push({
-      itemName: row.catalogLabor?.name || row.name,
+      itemName: catalogItemName(row.catalogLabor, row.name, row.sku),
       description: [row.name, row.sku].filter(Boolean).join(" - ") || row.name,
       quantity: row.hours,
       rate: row.unitRate,
@@ -108,7 +117,7 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   }
   for (const row of ticket.equipment) {
     lines.push({
-      itemName: row.catalogEquipment?.name || row.name,
+      itemName: catalogItemName(row.catalogEquipment, row.name, row.sku),
       description: [row.name, row.sku].filter(Boolean).join(" - ") || row.name,
       quantity: row.hours,
       rate: row.unitRate,
