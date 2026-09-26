@@ -141,6 +141,7 @@ export default async function PlatformHomePage() {
                       ...org,
                       ocrEnabled: ocrFlags.get(org.id)?.ocrEnabled ?? null,
                       formsEnabled: ocrFlags.get(org.id)?.formsEnabled ?? null,
+                      qbwcEnabled: ocrFlags.get(org.id)?.qbwcEnabled ?? null,
                     }}
                   />
                   {org.stripeSubscriptionId ? (

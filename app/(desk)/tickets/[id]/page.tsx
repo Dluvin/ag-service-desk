@@ -29,7 +29,7 @@ import { resolvedTicketStoreId, ticketStoreName } from "@/lib/stores";
 import { getRequestLocale } from "@/lib/user-locale";
 import { statusLabel, t, type Locale } from "@/lib/i18n";
 import { visionOcrConfigured } from "@/lib/ticket-ocr";
-import { orgOcrIsOn } from "@/lib/ocr-samples";
+import { orgOcrIsOn, orgQbwcIsOn } from "@/lib/ocr-samples";
 import { ticketSite } from "@/lib/ticket-site";
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -71,6 +71,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   const shopName = ticketStoreName(ticket);
   const ocrConfigured = visionOcrConfigured();
   const ocrEnabled = await orgOcrIsOn(session.organizationId);
+  const qbwcEnabled = await orgQbwcIsOn(session.organizationId);
 
   return (
     <div className="grid gap-6 lg:grid-cols-5 lg:items-start">
@@ -98,7 +99,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               {ticket.invoiceAmount != null ? ` · $${ticket.invoiceAmount.toFixed(2)}` : ""}
             </span>
           ) : null}
-          {canAssignTickets(session.role) ? (
+          {canAssignTickets(session.role) && qbwcEnabled ? (
             <ActionForm action={queueQbEstimateAction} className="inline">
               <input type="hidden" name="ticketId" value={ticket.id} />
               <button className="rounded-lg border border-emerald-800 px-3 py-1.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">

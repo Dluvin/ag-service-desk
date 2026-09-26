@@ -39,7 +39,7 @@ async function main() {
     },
   });
   await prisma.$executeRaw`
-    UPDATE Organization SET ocrEnabled = 1, formsEnabled = 1 WHERE id = ${org.id}
+    UPDATE Organization SET ocrEnabled = 1, formsEnabled = 1, qbwcEnabled = 1 WHERE id = ${org.id}
   `;
 
   const kearney = await prisma.store.create({

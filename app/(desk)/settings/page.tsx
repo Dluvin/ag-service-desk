@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
-import { canEditDeskSettings, isAdmin } from "@/lib/roles";
+import { canEditDeskSettings } from "@/lib/roles";
 import { homePath } from "@/lib/home";
 import { loadUserDispatchView } from "@/lib/dispatch-view";
 import { saveDispatchViewAction } from "@/lib/actions";
@@ -9,25 +9,13 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguagePicker } from "@/components/LanguagePicker";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
-import { prisma } from "@/lib/prisma";
-import { ensureQbwcConfig } from "@/lib/qbwc";
-import { QbwcSetup } from "@/components/QbwcSetup";
 
 export default async function DeskSettingsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (!canEditDeskSettings(session.role)) redirect(homePath(session.role));
 
-  const [dispatchView, locale, qbwc] = await Promise.all([
-    loadUserDispatchView(session.userId),
-    getRequestLocale(),
-    isAdmin(session.role) ? ensureQbwcConfig(session.organizationId) : Promise.resolve(null),
-  ]);
-  const queuedCount = qbwc
-    ? await prisma.qbEstimateJob.count({
-        where: { organizationId: session.organizationId, status: "QUEUED" },
-      })
-    : 0;
+  const [dispatchView, locale] = await Promise.all([loadUserDispatchView(session.userId), getRequestLocale()]);
 
   return (
     <div className="max-w-xl">
@@ -74,18 +62,6 @@ export default async function DeskSettingsPage() {
         </label>
         <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">{t(locale, "common.save")}</button>
       </ActionForm>
-      {qbwc ? (
-        <div className="mt-6">
-          <QbwcSetup
-            username={qbwc.username}
-            hasPassword={Boolean(qbwc.passwordHash)}
-            companyName={qbwc.companyName}
-            lastError={qbwc.lastError}
-            lastSyncAt={qbwc.lastSyncAt}
-            queuedCount={queuedCount}
-          />
-        </div>
-      ) : null}
     </div>
   );
 }

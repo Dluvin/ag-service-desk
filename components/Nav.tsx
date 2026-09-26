@@ -84,11 +84,9 @@ export function Nav({
           { href: "/company/ticket-form", label: t(locale, "nav.ticketForm") },
           { href: "/startup/checklist", label: t(locale, "nav.checklist") },
           { href: "/sms", label: t(locale, "nav.sms") },
+          { href: "/reveal", label: t(locale, "nav.connectors") },
           ...(showGps
-            ? [
-                { href: "/reveal", label: t(locale, "nav.connectors") },
-                { href: "/vehicles", label: t(locale, "nav.vehicles") },
-              ]
+            ? [{ href: "/vehicles", label: t(locale, "nav.vehicles") }]
             : []),
         ]
       : session.role === ROLES.MANAGER

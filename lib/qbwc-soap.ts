@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { orgQbwcIsOn } from "./ocr-samples";
 import { createQbwcSession, getQbwcSession, verifyQbwcLogin } from "./qbwc";
 import { estimateAddXml, parseEstimateAddResponse } from "./qbwc-xml";
 
@@ -53,6 +54,7 @@ async function queuedCount(organizationId: string) {
 }
 
 async function nextRequestXml(sessionId: string, organizationId: string, major: string, minor: string) {
+  if (!(await orgQbwcIsOn(organizationId))) return "";
   const session = await prisma.qbwcSession.findFirst({ where: { id: sessionId } });
   if (session?.jobId) {
     const current = await prisma.qbEstimateJob.findFirst({
@@ -161,7 +163,7 @@ export function qbwcFile(opts: {
   <AppName>${encodeXml(opts.appName)}</AppName>
   <AppID></AppID>
   <AppURL>${encodeXml(opts.appUrl)}</AppURL>
-  <AppDescription>Create QuickBooks Desktop estimates from AG Desk work orders.</AppDescription>
+  <AppDescription>Create QuickBooks Desktop estimates from AG Desk Pro work orders.</AppDescription>
   <AppSupport>${encodeXml(opts.supportUrl)}</AppSupport>
   <UserName>${encodeXml(opts.username)}</UserName>
   <OwnerID>${encodeXml(opts.ownerId)}</OwnerID>
@@ -183,7 +185,7 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
     const username = xmlText(xml, "strUserName");
     const password = xmlText(xml, "strPassword");
     const config = await verifyQbwcLogin(username, password);
-    if (!config) {
+    if (!config || !(await orgQbwcIsOn(config.organizationId))) {
       return soapEnvelope(
         `<authenticateResponse><authenticateResult><string></string><string>nvu</string></authenticateResult></authenticateResponse>`,
       );

@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   if (url.searchParams.has("wsdl") || url.pathname.endsWith(".wsdl")) {
     return xmlResponse(qbwcWsdl(serviceUrl(request)), "text/xml; charset=utf-8");
   }
-  return new NextResponse("QuickBooks Web Connector service for AG Desk estimates.", {
+  return new NextResponse("QuickBooks Web Connector service for AGDESKPRO.", {
     status: 200,
     headers: { "content-type": "text/plain; charset=utf-8" },
   });

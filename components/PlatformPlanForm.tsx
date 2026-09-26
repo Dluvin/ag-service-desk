@@ -19,6 +19,7 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
         {entitlements.mapsEnabled ? " · maps on" : " · no in-app maps"}
         {entitlements.ocrEnabled ? " · scans on" : " · no handwritten scans"}
         {entitlements.formsEnabled ? " · forms on" : " · no office forms"}
+        {entitlements.qbwcEnabled ? " · QuickBooks Desktop on" : " · no QuickBooks Desktop"}
         {entitlements.gpsEnabled ? ` · GPS ${entitlements.gpsProvider}` : " · no live GPS"}
         {entitlements.maxStores != null ? ` · ${entitlements.maxStores} stores` : " · unlimited stores"}
       </p>
@@ -91,6 +92,18 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
             className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm"
           >
             <option value="">Plan default ({PLANS[entitlements.plan].formsEnabled ? "on" : "off"})</option>
+            <option value="1">On for this company</option>
+            <option value="0">Off for this company</option>
+          </select>
+        </label>
+        <label className="block text-xs font-medium text-stone-600 sm:col-span-2">
+          QuickBooks Desktop estimates (plan flag)
+          <select
+            name="qbwcEnabled"
+            defaultValue={org.qbwcEnabled == null ? "" : org.qbwcEnabled ? "1" : "0"}
+            className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm"
+          >
+            <option value="">Plan default ({PLANS[entitlements.plan].qbwcEnabled ? "on" : "off"})</option>
             <option value="1">On for this company</option>
             <option value="0">Off for this company</option>
           </select>

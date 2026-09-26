@@ -15,7 +15,7 @@ export type PlanId = (typeof PLAN_IDS)[number];
 export const GPS_PROVIDERS = ["NONE", "REVEAL", "VERIZON", "OTHER"] as const;
 export type GpsProvider = (typeof GPS_PROVIDERS)[number];
 
-export type PlanFeature = "maps" | "gps" | "stores" | "ocr" | "forms";
+export type PlanFeature = "maps" | "gps" | "stores" | "ocr" | "forms" | "qbwc";
 
 export type PlanCatalog = {
   id: PlanId;
@@ -26,6 +26,7 @@ export type PlanCatalog = {
   mapsEnabled: boolean;
   ocrEnabled: boolean;
   formsEnabled: boolean;
+  qbwcEnabled: boolean;
   directionsEnabled: boolean;
   /** Hard user cap. null = unlimited (or pay-per-seat with no lock). */
   maxUsers: number | null;
@@ -49,6 +50,7 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     mapsEnabled: false,
     ocrEnabled: false,
     formsEnabled: false,
+    qbwcEnabled: false,
     directionsEnabled: true,
     maxUsers: null,
     includedUsers: 1,
@@ -67,6 +69,7 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     mapsEnabled: true,
     ocrEnabled: false,
     formsEnabled: false,
+    qbwcEnabled: false,
     directionsEnabled: true,
     maxUsers: 10,
     includedUsers: 10,
@@ -85,6 +88,7 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     mapsEnabled: true,
     ocrEnabled: true,
     formsEnabled: true,
+    qbwcEnabled: true,
     directionsEnabled: true,
     maxUsers: null,
     includedUsers: null,
@@ -104,6 +108,7 @@ export type PlanOrg = {
   mapsEnabled?: boolean | null;
   ocrEnabled?: boolean | null;
   formsEnabled?: boolean | null;
+  qbwcEnabled?: boolean | null;
   gpsEnabled?: boolean | null;
   gpsProvider?: string | null;
   revealGps?: boolean | null;
@@ -132,6 +137,7 @@ export type ResolvedPlan = {
   mapsEnabled: boolean;
   ocrEnabled: boolean;
   formsEnabled: boolean;
+  qbwcEnabled: boolean;
   directionsEnabled: boolean;
   gpsEnabled: boolean;
   gpsProvider: GpsProvider;
@@ -170,6 +176,7 @@ export function resolveEntitlements(org: PlanOrg | null | undefined): ResolvedPl
   const mapsEnabled = org?.mapsEnabled ?? catalog.mapsEnabled;
   const ocrEnabled = org?.ocrEnabled ?? catalog.ocrEnabled;
   const formsEnabled = org?.formsEnabled ?? catalog.formsEnabled;
+  const qbwcEnabled = org?.qbwcEnabled ?? catalog.qbwcEnabled;
   const gpsEnabled = Boolean(org?.gpsEnabled) || catalog.gpsEnabled || revealGps;
 
   let gpsProvider: GpsProvider = isGpsProvider(org?.gpsProvider) ? org.gpsProvider : catalog.gpsProvider;
@@ -187,6 +194,7 @@ export function resolveEntitlements(org: PlanOrg | null | undefined): ResolvedPl
     mapsEnabled,
     ocrEnabled,
     formsEnabled,
+    qbwcEnabled,
     directionsEnabled: catalog.directionsEnabled,
     gpsEnabled,
     gpsProvider,
@@ -206,6 +214,7 @@ export function planAllows(org: PlanOrg | null | undefined, feature: PlanFeature
   if (feature === "maps") return entitlements.mapsEnabled;
   if (feature === "ocr") return entitlements.ocrEnabled;
   if (feature === "forms") return entitlements.formsEnabled;
+  if (feature === "qbwc") return entitlements.qbwcEnabled;
   if (feature === "gps") return entitlements.gpsEnabled;
   return entitlements.maxStores == null || entitlements.maxStores > 0;
 }
@@ -224,6 +233,10 @@ export function showHandwrittenOcr(org: PlanOrg | null | undefined) {
 
 export function showOfficeForms(org: PlanOrg | null | undefined) {
   return planAllows(org, "forms");
+}
+
+export function showQuickBooksDesktop(org: PlanOrg | null | undefined) {
+  return planAllows(org, "qbwc");
 }
 
 export function canAddStore(org: PlanOrg | null | undefined, currentCount: number, adding = 1) {
@@ -273,6 +286,14 @@ export function contactSalesUserMessage(org: PlanOrg | null | undefined) {
   return `The ${label} plan includes ${includedUsers ?? maxUsers} staff logins.${extra} ${contactSalesLabel()} to add more.`;
 }
 
+export function contactSalesQbwcMessage(org: PlanOrg | null | undefined) {
+  const { label, qbwcEnabled } = resolveEntitlements(org);
+  if (qbwcEnabled) {
+    return `QuickBooks Desktop estimates are on for this company. Set them up under Settings → Connectors.`;
+  }
+  return `QuickBooks Desktop estimates (Web Connector) are included on Enterprise, and can be turned on per dealer from platform. They are off on ${label} by default. ${contactSalesLabel()} to add them.`;
+}
+
 export function contactSalesGpsMessage(org: PlanOrg | null | undefined) {
   const entitlements = resolveEntitlements(org);
   if (entitlements.revealAddOnAvailable) {
@@ -319,6 +340,7 @@ export function landingPlanTiles(): LandingPlanTile[] {
         { label: "1–2 stores", included: true },
         { label: "In-app satellite maps", included: false },
         { label: "Live vehicle GPS / Reveal", included: false },
+        { label: "QuickBooks Desktop estimates", included: false },
       ],
     },
     {
@@ -341,6 +363,7 @@ export function landingPlanTiles(): LandingPlanTile[] {
         },
         { label: "Unlimited users and stores", included: false },
         { label: "Live GPS included", included: false },
+        { label: "QuickBooks Desktop estimates", included: false },
       ],
     },
     {
@@ -357,6 +380,7 @@ export function landingPlanTiles(): LandingPlanTile[] {
         { label: "Unlimited stores", included: true },
         { label: "Verizon GPS included", included: true },
         { label: "Other GPS: contact sales, no setup fee", included: true },
+        { label: "QuickBooks Desktop estimates", included: true },
       ],
     },
   ];

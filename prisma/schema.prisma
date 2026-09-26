@@ -44,6 +44,7 @@ model Organization {
   ocrFieldNotes       String?
   ocrEnabled          Boolean? // null = derive from plan
   formsEnabled        Boolean? // null = derive from plan
+  qbwcEnabled         Boolean? // null = derive from plan — QuickBooks Desktop Web Connector
   ocrBoxesConfirmedAt DateTime?
   ocrFirstScanAt      DateTime?
   ocrFieldListReviewedAt DateTime?
