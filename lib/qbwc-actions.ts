@@ -42,13 +42,25 @@ export async function queueQbEstimateAction(formData: FormData) {
     select: { id: true },
   });
   if (already) return { error: "This work order is already waiting for the next Web Connector run." };
-  await prisma.qbEstimateJob.create({
-    data: {
-      organizationId: session.organizationId,
-      ticketId: ticket.id,
-      status: "QUEUED",
-    },
+  const failed = await prisma.qbEstimateJob.findFirst({
+    where: { ticketId: ticket.id, status: "ERROR" },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
   });
+  if (failed) {
+    await prisma.qbEstimateJob.update({
+      where: { id: failed.id },
+      data: { status: "QUEUED", error: null, qbTxnId: null, qbRefNumber: null },
+    });
+  } else {
+    await prisma.qbEstimateJob.create({
+      data: {
+        organizationId: session.organizationId,
+        ticketId: ticket.id,
+        status: "QUEUED",
+      },
+    });
+  }
   revalidatePath(`/tickets/${ticket.id}`);
   return { success: "Queued. Run Update Selected in QuickBooks Web Connector to create the estimate." };
 }

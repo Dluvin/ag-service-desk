@@ -103,7 +103,9 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             <ActionForm action={queueQbEstimateAction} className="inline">
               <input type="hidden" name="ticketId" value={ticket.id} />
               <button className="rounded-lg border border-emerald-800 px-3 py-1.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">
-                Send as QuickBooks estimate
+                {ticket.qbEstimateJobs[0]?.status === "ERROR" || ticket.qbEstimateJobs[0]?.status === "SENT"
+                  ? "Send as QuickBooks estimate again"
+                  : "Send as QuickBooks estimate"}
               </button>
             </ActionForm>
           ) : null}

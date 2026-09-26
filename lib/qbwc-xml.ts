@@ -152,8 +152,14 @@ export function parseEstimateAddResponse(xml: string) {
   const message = xml.match(/<EstimateAddRs\b[^>]*statusMessage="([^"]*)"/i)?.[1] ?? "";
   const txnId = xml.match(/<TxnID>([^<]+)<\/TxnID>/i)?.[1] ?? "";
   const refNumber = xml.match(/<RefNumber>([^<]+)<\/RefNumber>/i)?.[1] ?? "";
-  if (code && code !== "0") {
+  if (!code) {
+    return { error: "QuickBooks did not return an estimate response. Send the work order again, then Update Selected." };
+  }
+  if (code !== "0") {
     return { error: decodeXml(message || `QuickBooks status ${code}`) };
+  }
+  if (!txnId) {
+    return { error: "QuickBooks accepted the request but did not return an estimate id." };
   }
   return { txnId, refNumber };
 }
