@@ -50,9 +50,7 @@ function intResult(method: string, value: number) {
 }
 
 async function queuedCount(organizationId: string) {
-  return prisma.qbEstimateJob.count({
-    where: { organizationId, qbTxnId: null, status: { in: ["QUEUED", "SENDING", "ERROR", "SENT"] } },
-  });
+  return prisma.qbEstimateJob.count({ where: { organizationId, status: "QUEUED" } });
 }
 
 function isFailedHresult(hresult: string) {
@@ -61,40 +59,14 @@ function isFailedHresult(hresult: string) {
   return value !== "0" && value !== "0x0" && value !== "0x00000000" && value !== "s_ok";
 }
 
-function isRetryableEstimateJob(job: { status: string; error: string | null; qbTxnId: string | null }) {
-  if (job.qbTxnId) return false;
-  if (job.status === "QUEUED" || job.status === "SENDING") return true;
-  if (job.status === "SENT") return true;
-  if (job.status !== "ERROR") return false;
-  if (!job.error) return true;
-  const error = job.error.toLowerCase();
-  return (
-    error.includes("0x80040400") ||
-    error.includes("parsing") ||
-    error.includes("did not return") ||
-    error.includes("xml text stream") ||
-    error.includes("invalid reference") ||
-    error.includes("does not exist in the list")
-  );
-}
-
 async function nextRequestXml(sessionId: string, organizationId: string, major: string, minor: string) {
   if (!(await orgQbwcIsOn(organizationId))) return "";
   const session = await prisma.qbwcSession.findFirst({ where: { id: sessionId } });
   if (!session) return "";
-  const candidates = await prisma.qbEstimateJob.findMany({
-    where: {
-      organizationId,
-      qbTxnId: null,
-      status: { in: ["QUEUED", "SENDING", "ERROR", "SENT"] },
-    },
+  const job = await prisma.qbEstimateJob.findFirst({
+    where: { organizationId, status: "QUEUED" },
     orderBy: { createdAt: "asc" },
-    take: 25,
   });
-  const preferredId = session?.jobId;
-  const job =
-    candidates.find((row) => row.id === preferredId && isRetryableEstimateJob(row)) ||
-    candidates.find((row) => isRetryableEstimateJob(row));
   if (!job) {
     await prisma.qbwcSession.update({ where: { id: sessionId }, data: { jobId: null } });
     return "";
@@ -106,7 +78,7 @@ async function nextRequestXml(sessionId: string, organizationId: string, major: 
     }),
     prisma.qbwcSession.update({
       where: { id: sessionId },
-      data: { jobId: job.id, lastError: null },
+      data: { jobId: job.id },
     }),
   ]);
   return (await estimateAddXml(job.id, major, minor)) || "";
@@ -201,9 +173,6 @@ export function qbwcFile(opts: {
   <FileID>${encodeXml(opts.fileId)}</FileID>
   <QBType>QBFS</QBType>
   <AuthFlags>0xF</AuthFlags>
-  <Scheduler>
-    <RunEveryNMinutes>15</RunEveryNMinutes>
-  </Scheduler>
 </QBWCXML>
 `;
 }
@@ -222,6 +191,10 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
       );
     }
     const session = await createQbwcSession(config.organizationId);
+    await prisma.qbEstimateJob.updateMany({
+      where: { organizationId: config.organizationId, status: "SENDING" },
+      data: { status: "QUEUED" },
+    });
     return soapEnvelope(
       `<authenticateResponse><authenticateResult><string>${session.id}</string><string></string></authenticateResult></authenticateResponse>`,
     );
@@ -250,6 +223,7 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
     const message = xmlText(xml, "message");
     const response = xmlText(xml, "response");
     const jobId = session.jobId;
+    let failed = false;
     if (jobId) {
       if (isFailedHresult(hresult)) {
         const error = message || hresult;
@@ -264,6 +238,7 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
             data: { lastError: error },
           }),
         ]);
+        failed = true;
       } else {
         const parsed = parseEstimateAddResponse(response);
         if (parsed.error) {
@@ -278,6 +253,7 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
               data: { lastError: parsed.error },
             }),
           ]);
+          failed = true;
         } else {
           await prisma.$transaction([
             prisma.qbEstimateJob.update({
@@ -298,6 +274,7 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
         }
       }
     }
+    if (failed) return intResult("receiveResponseXML", -1);
     const remaining = await queuedCount(session.organizationId);
     return intResult("receiveResponseXML", remaining > 0 ? 50 : 100);
   }
