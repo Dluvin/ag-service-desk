@@ -12,6 +12,7 @@ import { isShopStaff } from "@/lib/roles";
 import { getRequestLocale } from "@/lib/user-locale";
 import { I18nProvider } from "@/components/I18nProvider";
 import { loadOrgPlanFlagOverrides } from "@/lib/ocr-samples";
+import { assignCustomersToAmericusStore } from "@/lib/stores";
 
 export default async function DeskLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
@@ -32,6 +33,7 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
   const flags = await loadOrgPlanFlagOverrides(session.organizationId);
   const entitlements = resolveEntitlements({ ...org, ...flags });
   const assetTypes = await ensureAssetTypes(session.organizationId);
+  await assignCustomersToAmericusStore(session.organizationId);
   const locale = await getRequestLocale();
 
   return (
