@@ -102,6 +102,16 @@ export default async function FarmDetailPage({ params }: { params: Promise<{ id:
             Location
             <input name="location" defaultValue={farm.location ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
           </label>
+          <label className="block text-sm font-medium">
+            QuickBooks customer
+            <input
+              name="qbCustomerName"
+              maxLength={209}
+              defaultValue={farm.qbCustomerName ?? ""}
+              placeholder="Leave blank to use the customer name in AG Desk"
+              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+            />
+          </label>
           <FarmCustomerField customers={customers} defaultFarmerId={farm.farmerId} />
           <label className="block text-sm font-medium">
             Primary contact

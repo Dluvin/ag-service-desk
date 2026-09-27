@@ -205,6 +205,7 @@ model Farm {
   primaryContact   FarmerContact?   @relation(fields: [primaryContactId], references: [id], onDelete: SetNull)
   name             String
   location         String?
+  qbCustomerName   String?
   latitude         Float?
   longitude        Float?
   createdAt        DateTime         @default(now())

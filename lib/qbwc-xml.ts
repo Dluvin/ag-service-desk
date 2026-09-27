@@ -115,8 +115,8 @@ async function loadTicketLines(jobId: string) {
               user: { select: { name: true } },
             },
           },
-          pivot: true,
-          asset: { include: { assetType: { select: { name: true } } } },
+          pivot: { include: { farm: { select: { qbCustomerName: true } } } },
+          asset: { include: { assetType: { select: { name: true } }, farm: { select: { qbCustomerName: true } } } },
           parts: { include: { catalogPart: { select: { name: true, sku: true } } } },
           labor: { include: { catalogLabor: { select: { name: true, sku: true } } } },
           equipment: { include: { catalogEquipment: { select: { name: true, sku: true } } } },
@@ -387,6 +387,12 @@ function descriptionOnlyLineXml(description: string) {
   return [`<EstimateLineAdd>`, `      <Desc>${encodeXml(value)}</Desc>`, `    </EstimateLineAdd>`].join("\r\n");
 }
 
+export function quickBooksCustomerName(farmerName: string, farmQbCustomerName?: string | null) {
+  const mapped = qbText(farmQbCustomerName, 209);
+  if (mapped) return mapped;
+  return qbText(farmerName, 209) || "Customer";
+}
+
 export function descriptionOnlyEstimateLines(texts: string[]) {
   const blanks = Array.from({ length: DESCRIPTION_LEAD_IN }, () => descriptionOnlyLineXml(" "));
   const body = texts.map((text) => descriptionOnlyLineXml(text)).filter(Boolean);
@@ -400,7 +406,8 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   const { ticket } = loaded;
   const site = ticket.pivot?.name || ticket.asset?.name ? ticketSiteName(ticket) : "";
   const assignee = ticket.technician?.name || "";
-  const customer = qbText(ticket.farmer.name, 209) || "Customer";
+  const farmQbCustomerName = ticket.pivot ? ticket.pivot.farm?.qbCustomerName : ticket.asset?.farm?.qbCustomerName;
+  const customer = quickBooksCustomerName(ticket.farmer.name, farmQbCustomerName);
   const memo = qbText(
     `AG Desk WO ${ticket.number} - ${ticket.title}${assignee ? ` - ${assignee}` : ""}${site ? ` - ${site}` : ""}`,
     4095,

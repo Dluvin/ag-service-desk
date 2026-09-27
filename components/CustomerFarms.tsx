@@ -193,6 +193,15 @@ export function CustomerFarms({
                   className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
                 />
               </label>
+              <label className="block text-sm font-medium">
+                {t("farms.qbCustomer")}
+                <input
+                  name="qbCustomerName"
+                  maxLength={209}
+                  placeholder={t("farms.qbCustomerPlaceholder")}
+                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+                />
+              </label>
               <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">{t("farms.save")}</button>
             </ActionForm>
           ) : null}

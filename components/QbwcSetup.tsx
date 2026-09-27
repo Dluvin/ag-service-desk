@@ -24,8 +24,9 @@ export function QbwcSetup({
       <p className="mt-2 text-sm text-stone-600">
         Send a work order as a QuickBooks Desktop estimate using Intuit’s Web Connector. This is a
         separate application from any other Web Connector file you already run. In Web Connector the
-        application name is <span className="font-mono">AGDESKPRO</span>. Customer names must match
-        QuickBooks. The estimate description starts on line 10 with the work order number, title, site,
+        application name is <span className="font-mono">AGDESKPRO</span>. The QuickBooks customer is the
+        farm's QuickBooks customer name when that field is filled in, and the AG Desk customer name when
+        it is blank. The estimate description starts on line 10 with the work order number, title, site,
         assignee, opening description, parts, labor, equipment, and work notes typed on the work order. The estimate date
         is the day the repair was marked done. QuickBooks items are not used.
       </p>

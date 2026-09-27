@@ -124,6 +124,7 @@ export async function createFarmForCustomer(input: {
   farmerId: string;
   name: string;
   location?: string | null;
+  qbCustomerName?: string | null;
 }) {
   return prisma.farm.create({
     data: {
@@ -131,6 +132,7 @@ export async function createFarmForCustomer(input: {
       farmerId: input.farmerId,
       name: input.name,
       location: input.location || null,
+      qbCustomerName: input.qbCustomerName?.trim() || null,
       assignments: {
         create: {
           farmerId: input.farmerId,

@@ -96,6 +96,8 @@ export const REST_EN = {
   "farms.moveHint":
     "Changing the customer moves this farm and every asset currently on it. The farm is not deleted. Unassigned assets stay with the previous customer.",
   "farms.save": "Save farm",
+  "farms.qbCustomer": "QuickBooks customer",
+  "farms.qbCustomerPlaceholder": "Leave blank to use this customer's name",
   "farms.ownership": "Ownership: {text}",
   "farms.delete": "Delete farm",
   "farms.deleteConfirm": "Delete {name}? Assets on it stay with the customer and become Unassigned.",
@@ -475,6 +477,8 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "farms.moveHint":
     "Cambiar el cliente mueve esta finca y cada activo que esté en ella. La finca no se borra. Los activos sin asignar se quedan con el cliente anterior.",
   "farms.save": "Guardar finca",
+  "farms.qbCustomer": "Cliente de QuickBooks",
+  "farms.qbCustomerPlaceholder": "Dejar en blanco para usar el nombre de este cliente",
   "farms.ownership": "Propiedad: {text}",
   "farms.delete": "Borrar finca",
   "farms.deleteConfirm": "¿Borrar {name}? Los activos se quedan con el cliente y quedan Sin asignar.",

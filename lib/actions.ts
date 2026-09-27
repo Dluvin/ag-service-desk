@@ -479,6 +479,7 @@ export async function createFarmAction(formData: FormData) {
   const farmerId = formString(formData, "farmerId");
   const name = formString(formData, "name");
   const location = formString(formData, "location");
+  const qbCustomerName = formString(formData, "qbCustomerName").slice(0, 209);
   if (!name) return { error: "Farm name is required." };
 
   const farmer = await prisma.farmer.findFirst({
@@ -491,6 +492,7 @@ export async function createFarmAction(formData: FormData) {
     farmerId,
     name,
     location,
+    qbCustomerName,
   });
   redirect(`/farmers/${farmerId}`);
 }
@@ -538,6 +540,7 @@ export async function updateFarmAction(formData: FormData) {
   const location = formString(formData, "location");
   const farmerId = formString(formData, "farmerId");
   const primaryContactId = formString(formData, "primaryContactId");
+  const qbCustomerName = formString(formData, "qbCustomerName").slice(0, 209);
   if (!name) return { error: "Farm name is required." };
 
   const farm = await prisma.farm.findFirst({
@@ -561,6 +564,7 @@ export async function updateFarmAction(formData: FormData) {
     data: {
       name,
       location: location || null,
+      qbCustomerName: qbCustomerName || null,
     },
   });
   await prisma.$executeRaw`UPDATE Farm SET primaryContactId = ${nextContactId} WHERE id = ${farmId}`;
