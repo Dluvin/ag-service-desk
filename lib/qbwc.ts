@@ -57,3 +57,22 @@ export async function qbwcIsReady(organizationId: string) {
   });
   return Boolean(config?.passwordHash);
 }
+
+let jobMetaReady: Promise<void> | null = null;
+
+export async function ensureQbEstimateJobMeta() {
+  if (!jobMetaReady) {
+    jobMetaReady = addQbEstimateJobMetaColumn().catch((error) => {
+      jobMetaReady = null;
+      throw error;
+    });
+  }
+  await jobMetaReady;
+}
+
+async function addQbEstimateJobMetaColumn() {
+  const cols = await prisma.$queryRawUnsafe<Array<{ name: string }>>("PRAGMA table_info(QbEstimateJob)");
+  if (!cols.some((col) => col.name === "qbMeta")) {
+    await prisma.$executeRawUnsafe("ALTER TABLE QbEstimateJob ADD COLUMN qbMeta TEXT");
+  }
+}

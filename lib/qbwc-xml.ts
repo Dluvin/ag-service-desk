@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { ticketSiteName } from "./ticket-site";
+import { ensureQbEstimateJobMeta } from "./qbwc";
 
 function encodeXml(value: string) {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
@@ -25,27 +26,30 @@ function qbNumber(value: unknown, fallback: number) {
   return Math.round(amount * 1000) / 1000;
 }
 
-function qbxmlVersion(major: string, minor: string) {
+export function qbxmlVersion(major: string, minor: string) {
   const maj = Number.parseInt(major, 10);
   if (!Number.isFinite(maj) || maj < 8) return "13.0";
-  // EstimateAdd is stable; 13.0 avoids parser failures on newer PI versions.
   return "13.0";
 }
 
-function qbEnvelope(version: string, body: string) {
+function qbEnvelope(version: string, body: string, onError = "stopOnError") {
   return [
     `<?xml version="1.0" ?>`,
     `<?qbxml version="${version}"?>`,
     `<QBXML>`,
-    `<QBXMLMsgsRq onError="stopOnError">`,
+    `<QBXMLMsgsRq onError="${onError}">`,
     body,
     `</QBXMLMsgsRq>`,
     `</QBXML>`,
   ].join("\r\n");
 }
 
+export type QbItemRef = { listId: string; fullName: string; name: string };
+export type QbJobMeta = { itemQueryDone?: boolean; items?: Record<string, QbItemRef> };
+
 type EstimateLine = {
   itemName: string;
+  sku: string;
   description: string;
   quantity: number;
   rate: number | null;
@@ -59,18 +63,34 @@ function catalogItemName(
   return catalog?.name || lineName || catalog?.sku || lineSku || "Services";
 }
 
-function lineXml(line: EstimateLine) {
-  // Item Name is 31 chars; FullName allows parent:child up to 159. Never slice the leaf to 31.
-  const itemName = qbText(line.itemName, 159) || "Services";
+function itemKey(value: string) {
+  return qbText(value, 159).toLowerCase();
+}
+
+/** QuickBooks item Name is 31 characters. Subitems store the child there, and FullName as Parent:Child. */
+function itemLeaf(value: string) {
+  const text = qbText(value, 159);
+  const leaf = text.split(":").pop()?.trim() || text;
+  return qbText(leaf, 31);
+}
+
+export function matchQbItem(itemName: string, sku: string, items: Record<string, QbItemRef>) {
+  for (const value of [itemName, sku, itemLeaf(itemName), itemLeaf(sku)]) {
+    const hit = items[itemKey(value)];
+    if (hit?.listId) return hit;
+  }
+  return undefined;
+}
+
+export function estimateLineXml(line: EstimateLine, items: Record<string, QbItemRef>) {
   const description = qbText(line.description, 4095);
   const qty = qbNumber(line.quantity, 1);
   const rate = line.rate == null ? null : qbNumber(line.rate, 0);
-  const rows = [
-    `<EstimateLineAdd>`,
-    `      <ItemRef>`,
-    `        <FullName>${encodeXml(itemName)}</FullName>`,
-    `      </ItemRef>`,
-  ];
+  const matched = matchQbItem(line.itemName, line.sku, items);
+  const rows = [`<EstimateLineAdd>`];
+  if (matched?.listId) {
+    rows.push(`      <ItemRef>`, `        <ListID>${encodeXml(matched.listId)}</ListID>`, `      </ItemRef>`);
+  }
   if (description) rows.push(`      <Desc>${encodeXml(description)}</Desc>`);
   rows.push(`      <Quantity>${qty}</Quantity>`);
   if (rate != null) rows.push(`      <Rate>${rate.toFixed(2)}</Rate>`);
@@ -78,7 +98,7 @@ function lineXml(line: EstimateLine) {
   return rows.join("\r\n");
 }
 
-export async function estimateAddXml(jobId: string, major: string, minor: string) {
+async function loadTicketLines(jobId: string) {
   const job = await prisma.qbEstimateJob.findFirst({
     where: { id: jobId },
     include: {
@@ -95,13 +115,12 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
     },
   });
   if (!job) return null;
-
   const ticket = job.ticket;
-  const site = ticketSiteName(ticket);
   const lines: EstimateLine[] = [];
   for (const row of ticket.parts) {
     lines.push({
       itemName: catalogItemName(row.catalogPart, row.name, row.sku),
+      sku: row.catalogPart?.sku || row.sku || "",
       description: [row.name, row.sku].filter(Boolean).join(" - ") || row.name,
       quantity: row.quantity,
       rate: row.unitPrice,
@@ -110,6 +129,7 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   for (const row of ticket.labor) {
     lines.push({
       itemName: catalogItemName(row.catalogLabor, row.name, row.sku),
+      sku: row.catalogLabor?.sku || row.sku || "",
       description: [row.name, row.sku].filter(Boolean).join(" - ") || row.name,
       quantity: row.hours,
       rate: row.unitRate,
@@ -118,6 +138,7 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   for (const row of ticket.equipment) {
     lines.push({
       itemName: catalogItemName(row.catalogEquipment, row.name, row.sku),
+      sku: row.catalogEquipment?.sku || row.sku || "",
       description: [row.name, row.sku].filter(Boolean).join(" - ") || row.name,
       quantity: row.hours,
       rate: row.unitRate,
@@ -126,17 +147,138 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   if (lines.length === 0) {
     lines.push({
       itemName: "Field service",
+      sku: "",
       description: ticket.title,
       quantity: 1,
       rate: null,
     });
   }
+  return { job, ticket, lines };
+}
 
+export async function loadQbJobMeta(jobId: string): Promise<QbJobMeta> {
+  await ensureQbEstimateJobMeta();
+  const rows = await prisma.$queryRaw<Array<{ qbMeta: string | null }>>`
+    SELECT qbMeta FROM QbEstimateJob WHERE id = ${jobId}
+  `;
+  try {
+    const parsed = JSON.parse(rows[0]?.qbMeta || "{}") as QbJobMeta;
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+export async function saveQbJobMeta(jobId: string, meta: QbJobMeta) {
+  await ensureQbEstimateJobMeta();
+  const json = JSON.stringify(meta);
+  await prisma.$executeRaw`UPDATE QbEstimateJob SET qbMeta = ${json} WHERE id = ${jobId}`;
+}
+
+export async function clearQbJobMeta(jobId: string) {
+  await ensureQbEstimateJobMeta();
+  await prisma.$executeRaw`UPDATE QbEstimateJob SET qbMeta = NULL WHERE id = ${jobId}`;
+}
+
+export function lookupTokens(lines: Array<{ itemName: string; sku: string }>) {
+  const tokens = new Set<string>();
+  for (const line of lines) {
+    for (const value of [itemLeaf(line.itemName), itemLeaf(line.sku)]) {
+      if (value) tokens.add(value);
+    }
+  }
+  return [...tokens].slice(0, 20);
+}
+
+function itemQueryBlock(requestId: number, mode: "filter" | "range", name: string) {
+  const filter =
+    mode === "filter"
+      ? [
+          `  <NameFilter>`,
+          `    <MatchCriterion>Contains</MatchCriterion>`,
+          `    <Name>${encodeXml(name)}</Name>`,
+          `  </NameFilter>`,
+        ]
+      : [
+          `  <NameRangeFilter>`,
+          `    <FromName>${encodeXml(name)}</FromName>`,
+          `    <ToName>${encodeXml(name)}</ToName>`,
+          `  </NameRangeFilter>`,
+        ];
+  return [
+    `<ItemQueryRq requestID="${requestId}">`,
+    `  <MaxReturned>25</MaxReturned>`,
+    `  <ActiveStatus>All</ActiveStatus>`,
+    ...filter,
+    `  <IncludeRetElement>ListID</IncludeRetElement>`,
+    `  <IncludeRetElement>Name</IncludeRetElement>`,
+    `  <IncludeRetElement>FullName</IncludeRetElement>`,
+    `  <IncludeRetElement>ManufacturerPartNumber</IncludeRetElement>`,
+    `</ItemQueryRq>`,
+  ].join("\r\n");
+}
+
+export function buildItemQueryXml(names: string[], major: string, minor: string) {
+  const blocks: string[] = [];
+  let requestId = 1;
+  for (const name of names) {
+    blocks.push(itemQueryBlock(requestId++, "filter", name));
+    blocks.push(itemQueryBlock(requestId++, "range", name));
+  }
+  return qbEnvelope(qbxmlVersion(major, minor), blocks.join("\r\n"), "continueOnError");
+}
+
+export async function itemQueryXml(jobId: string, major: string, minor: string) {
+  const loaded = await loadTicketLines(jobId);
+  if (!loaded) return null;
+  const names = lookupTokens(loaded.lines);
+  if (names.length === 0) {
+    await saveQbJobMeta(jobId, { itemQueryDone: true, items: {} });
+    return "";
+  }
+  return buildItemQueryXml(names, major, minor);
+}
+
+function rememberItem(items: Record<string, QbItemRef>, key: string, ref: QbItemRef) {
+  const normalized = itemKey(key);
+  if (!normalized || !ref.listId) return;
+  const existing = items[normalized];
+  if (!existing) {
+    items[normalized] = ref;
+    return;
+  }
+  const exact = (item: QbItemRef) => itemKey(item.name) === normalized || itemKey(item.fullName) === normalized;
+  if (exact(ref) && !exact(existing)) items[normalized] = ref;
+}
+
+export function parseItemQueryResponse(xml: string): Record<string, QbItemRef> {
+  const items: Record<string, QbItemRef> = {};
+  const blocks = xml.match(/<Item[A-Za-z]+Ret\b[\s\S]*?<\/Item[A-Za-z]+Ret>/gi) || [];
+  for (const block of blocks) {
+    const listId = block.match(/<ListID>([^<]*)<\/ListID>/i)?.[1]?.trim() || "";
+    const name = decodeXml(block.match(/<Name>([^<]*)<\/Name>/i)?.[1]?.trim() || "");
+    const fullName = decodeXml(block.match(/<FullName>([^<]*)<\/FullName>/i)?.[1]?.trim() || name);
+    const sku = decodeXml(block.match(/<ManufacturerPartNumber>([^<]*)<\/ManufacturerPartNumber>/i)?.[1]?.trim() || "");
+    if (!listId || !name) continue;
+    const ref = { listId, fullName: fullName || name, name };
+    for (const key of [name, fullName, sku, fullName.split(":").pop() || ""]) rememberItem(items, key, ref);
+  }
+  return items;
+}
+
+export function isItemQueryResponse(xml: string) {
+  return /<ItemQueryRs\b/i.test(xml);
+}
+
+export async function estimateAddXml(jobId: string, major: string, minor: string, items: Record<string, QbItemRef> = {}) {
+  const loaded = await loadTicketLines(jobId);
+  if (!loaded) return null;
+  const { ticket, lines } = loaded;
+  const site = ticketSiteName(ticket);
   const customer = qbText(ticket.farmer.name, 209) || "Customer";
   const memo = qbText(`AG Desk WO ${ticket.number} - ${ticket.title} - ${site}`, 4095);
   const poNumber = qbText(`WO-${ticket.number}`, 25);
   const txnDate = (ticket.scheduledAt ?? ticket.createdAt).toISOString().slice(0, 10);
-  const version = qbxmlVersion(major, minor);
   const body = [
     `<EstimateAddRq requestID="${ticket.number}">`,
     `  <EstimateAdd>`,
@@ -146,13 +288,13 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
     `    <TxnDate>${txnDate}</TxnDate>`,
     `    <PONumber>${encodeXml(poNumber)}</PONumber>`,
     memo ? `    <Memo>${encodeXml(memo)}</Memo>` : "",
-    ...lines.map((line) => `    ${lineXml(line)}`),
+    ...lines.map((line) => `    ${estimateLineXml(line, items)}`),
     `  </EstimateAdd>`,
     `</EstimateAddRq>`,
   ]
     .filter(Boolean)
     .join("\r\n");
-  return qbEnvelope(version, body);
+  return qbEnvelope(qbxmlVersion(major, minor), body);
 }
 
 export function parseEstimateAddResponse(xml: string) {

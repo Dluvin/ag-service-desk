@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import { orgQbwcIsOn } from "./ocr-samples";
-import { createQbwcSession, getQbwcSession, verifyQbwcLogin } from "./qbwc";
-import { estimateAddXml, parseEstimateAddResponse } from "./qbwc-xml";
+import { createQbwcSession, ensureQbEstimateJobMeta, getQbwcSession, verifyQbwcLogin } from "./qbwc";
+import { estimateAddXml, itemQueryXml, isItemQueryResponse, loadQbJobMeta, parseEstimateAddResponse, parseItemQueryResponse, saveQbJobMeta } from "./qbwc-xml";
 
 function xmlText(xml: string, tag: string) {
   const match = xml.match(new RegExp(`<(?:[\\w-]+:)?${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</(?:[\\w-]+:)?${tag}>`, "i"));
@@ -63,6 +63,7 @@ async function nextRequestXml(sessionId: string, organizationId: string, major: 
   if (!(await orgQbwcIsOn(organizationId))) return "";
   const session = await prisma.qbwcSession.findFirst({ where: { id: sessionId } });
   if (!session) return "";
+  await ensureQbEstimateJobMeta();
   const job = await prisma.qbEstimateJob.findFirst({
     where: { organizationId, status: "QUEUED" },
     orderBy: { createdAt: "asc" },
@@ -81,7 +82,12 @@ async function nextRequestXml(sessionId: string, organizationId: string, major: 
       data: { jobId: job.id },
     }),
   ]);
-  return (await estimateAddXml(job.id, major, minor)) || "";
+  const meta = await loadQbJobMeta(job.id);
+  if (!meta.itemQueryDone) {
+    const query = await itemQueryXml(job.id, major, minor);
+    if (query) return query;
+  }
+  return (await estimateAddXml(job.id, major, minor, meta.items || {})) || "";
 }
 
 export function qbwcWsdl(location: string) {
@@ -179,9 +185,10 @@ export function qbwcFile(opts: {
 
 export async function handleQbwcSoap(xml: string, soapAction: string) {
   const op = operationName(xml, soapAction).toLowerCase();
-  if (op === "serverversion") return stringResult("serverVersion", "1.0");
+  if (op === "serverversion") return stringResult("serverVersion", "1.1");
   if (op === "clientversion") return stringResult("clientVersion", "");
   if (op === "authenticate") {
+    await ensureQbEstimateJobMeta();
     const username = xmlText(xml, "strUserName");
     const password = xmlText(xml, "strPassword");
     const config = await verifyQbwcLogin(username, password);
@@ -216,6 +223,7 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
     return request ? cdataResult("sendRequestXML", request) : stringResult("sendRequestXML", "");
   }
   if (op === "receiveresponsexml") {
+    await ensureQbEstimateJobMeta();
     const ticket = xmlText(xml, "ticket");
     const session = await getQbwcSession(ticket);
     if (!session) return intResult("receiveResponseXML", 100);
@@ -239,6 +247,14 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
           }),
         ]);
         failed = true;
+      } else if (isItemQueryResponse(response)) {
+        const found = parseItemQueryResponse(response);
+        await saveQbJobMeta(jobId, { itemQueryDone: true, items: found });
+        await prisma.qbEstimateJob.update({
+          where: { id: jobId },
+          data: { status: "QUEUED", error: null },
+        });
+        return intResult("receiveResponseXML", 50);
       } else {
         const parsed = parseEstimateAddResponse(response);
         if (parsed.error) {
@@ -279,6 +295,7 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
     return intResult("receiveResponseXML", remaining > 0 ? 50 : 100);
   }
   if (op === "connectionerror") {
+    await ensureQbEstimateJobMeta();
     const ticket = xmlText(xml, "ticket");
     const error = xmlText(xml, "message") || xmlText(xml, "hresult");
     const session = await getQbwcSession(ticket);

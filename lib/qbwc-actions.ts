@@ -5,7 +5,8 @@ import { getSession } from "./auth";
 import { prisma } from "./prisma";
 import { canAssignTickets, isAdmin } from "./roles";
 import { orgQbwcIsOn } from "./ocr-samples";
-import { qbwcIsReady, setQbwcPassword } from "./qbwc";
+import { ensureQbEstimateJobMeta, qbwcIsReady, setQbwcPassword } from "./qbwc";
+import { clearQbJobMeta } from "./qbwc-xml";
 
 export async function setQbwcPasswordAction(formData: FormData) {
   const session = await getSession();
@@ -37,6 +38,7 @@ export async function queueQbEstimateAction(formData: FormData) {
   if (!(await qbwcIsReady(session.organizationId))) {
     return { error: "Set a Web Connector password under Settings → Connectors first, then add the .qwc file in QuickBooks." };
   }
+  await ensureQbEstimateJobMeta();
   const latest = await prisma.qbEstimateJob.findFirst({
     where: { ticketId: ticket.id },
     orderBy: { createdAt: "desc" },
@@ -54,6 +56,7 @@ export async function queueQbEstimateAction(formData: FormData) {
       where: { id: latest.id },
       data: { status: "QUEUED", error: null, qbTxnId: null, qbRefNumber: null },
     });
+    await clearQbJobMeta(latest.id);
   } else {
     await prisma.qbEstimateJob.create({
       data: {
