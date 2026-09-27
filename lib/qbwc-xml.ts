@@ -105,6 +105,13 @@ async function loadTicketLines(jobId: string) {
       ticket: {
         include: {
           farmer: true,
+          technician: { select: { name: true } },
+          updates: {
+            where: { status: "REPAIR_DONE" },
+            orderBy: { createdAt: "asc" },
+            take: 1,
+            select: { createdAt: true },
+          },
           pivot: true,
           asset: { include: { assetType: { select: { name: true } } } },
           parts: { include: { catalogPart: { select: { name: true, sku: true } } } },
@@ -286,6 +293,7 @@ export function workOrderDescriptionLines(source: {
   title: string;
   description: string;
   site: string;
+  assignee: string;
   parts: WorkOrderCharge[];
   labor: WorkOrderCharge[];
   equipment: WorkOrderCharge[];
@@ -293,6 +301,8 @@ export function workOrderDescriptionLines(source: {
   const lines: string[] = [];
   const title = qbText(source.title, 4095);
   if (title) lines.push(title);
+  const assignee = qbText(source.assignee, 209);
+  if (assignee) lines.push(`Assigned to ${assignee}`);
   const site = qbText(source.site, 4095);
   if (site) lines.push(site);
   for (const paragraph of source.description.split(/\r\n|\r|\n/)) {
@@ -305,6 +315,25 @@ export function workOrderDescriptionLines(source: {
     ...source.equipment.map((row) => chargeText("Equipment", row)),
   );
   return lines.filter(Boolean);
+}
+
+/** Calendar day in Eastern time, so an evening finish stays on that day. */
+export function repairFinishedDate(input: {
+  repairDoneAt: Date | null;
+  closedAt: Date | null;
+  updatedAt: Date;
+  status: string;
+}) {
+  const when =
+    input.repairDoneAt ??
+    (input.status === "REPAIR_DONE" || input.status === "COMPLETED" ? (input.closedAt ?? input.updatedAt) : null);
+  if (!when) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(when);
 }
 
 function descriptionOnlyLineXml(description: string) {
@@ -325,15 +354,25 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   if (!loaded) return null;
   const { ticket } = loaded;
   const site = ticket.pivot?.name || ticket.asset?.name ? ticketSiteName(ticket) : "";
+  const assignee = ticket.technician?.name || "";
   const customer = qbText(ticket.farmer.name, 209) || "Customer";
-  const memo = qbText(`AG Desk WO ${ticket.number} - ${ticket.title}${site ? ` - ${site}` : ""}`, 4095);
+  const memo = qbText(
+    `AG Desk WO ${ticket.number} - ${ticket.title}${assignee ? ` - ${assignee}` : ""}${site ? ` - ${site}` : ""}`,
+    4095,
+  );
   const poNumber = qbText(`WO-${ticket.number}`, 25);
-  const txnDate = (ticket.scheduledAt ?? ticket.createdAt).toISOString().slice(0, 10);
+  const txnDate = repairFinishedDate({
+    repairDoneAt: ticket.updates[0]?.createdAt ?? null,
+    closedAt: ticket.closedAt,
+    updatedAt: ticket.updatedAt,
+    status: ticket.status,
+  });
   const descriptions = descriptionOnlyEstimateLines(
     workOrderDescriptionLines({
       title: ticket.title,
       description: ticket.description,
       site,
+      assignee,
       parts: ticket.parts.map((row) => ({
         name: row.name,
         sku: row.sku || row.catalogPart?.sku || "",
@@ -360,7 +399,7 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
     `    <CustomerRef>`,
     `      <FullName>${encodeXml(customer)}</FullName>`,
     `    </CustomerRef>`,
-    `    <TxnDate>${txnDate}</TxnDate>`,
+    txnDate ? `    <TxnDate>${txnDate}</TxnDate>` : "",
     `    <PONumber>${encodeXml(poNumber)}</PONumber>`,
     memo ? `    <Memo>${encodeXml(memo)}</Memo>` : "",
     ...descriptions.map((line) => `    ${line}`),
