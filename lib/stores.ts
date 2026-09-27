@@ -85,10 +85,17 @@ export async function assignCustomersToAmericusStore(organizationId: string) {
     where: { organizationId },
     select: { id: true, name: true },
   });
-  const storeId = americusStoreId(stores);
-  if (!storeId) return 0;
+  let storeId = americusStoreId(stores);
+  if (!storeId && stores.length === 1) storeId = stores[0].id;
+  if (!storeId) {
+    const created = await prisma.store.create({
+      data: { organizationId, name: "Americus" },
+      select: { id: true },
+    });
+    storeId = created.id;
+  }
   const result = await prisma.farmer.updateMany({
-    where: { organizationId, NOT: { storeId } },
+    where: { organizationId },
     data: { storeId },
   });
   return result.count;

@@ -8,19 +8,26 @@ function americusStoreId(stores) {
 }
 
 async function main() {
-  const stores = await prisma.store.findMany({ select: { id: true, name: true, organizationId: true } });
-  const byOrg = new Map();
-  for (const store of stores) {
-    const list = byOrg.get(store.organizationId) || [];
-    list.push(store);
-    byOrg.set(store.organizationId, list);
-  }
+  const orgs = await prisma.organization.findMany({ select: { id: true, name: true, slug: true } });
   let updated = 0;
-  for (const [organizationId, list] of byOrg) {
-    const storeId = americusStoreId(list);
+  for (const org of orgs) {
+    const stores = await prisma.store.findMany({
+      where: { organizationId: org.id },
+      select: { id: true, name: true },
+    });
+    let storeId = americusStoreId(stores);
+    if (!storeId && stores.length === 1) storeId = stores[0].id;
+    const isAmericusCompany = /americus|american irrigation|heartland|demo-irrigation/i.test(`${org.name} ${org.slug}`);
+    if (!storeId && isAmericusCompany) {
+      const created = await prisma.store.create({
+        data: { organizationId: org.id, name: "Americus" },
+        select: { id: true },
+      });
+      storeId = created.id;
+    }
     if (!storeId) continue;
     const result = await prisma.farmer.updateMany({
-      where: { organizationId, NOT: { storeId } },
+      where: { organizationId: org.id },
       data: { storeId },
     });
     updated += result.count;

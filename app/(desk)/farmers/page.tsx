@@ -54,7 +54,7 @@ export default async function FarmersPage({
             id: farmer.id,
             name: farmer.name,
             address: farmer.address,
-            store: farmer.store?.name ?? null,
+            store: farmer.store?.name ?? stores.find((store) => store.id === farmer.storeId)?.name ?? null,
             pivotCount: farmer._count.pivots,
             ticketCount: farmer._count.tickets,
             contacts: farmer.contacts.map((contact) => contact.name).join(", "),
