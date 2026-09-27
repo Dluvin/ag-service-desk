@@ -19,4 +19,4 @@ RUN mkdir -p /data /data/uploads
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["sh", "-c", "export DATABASE_URL=file:/data/prod.db && npx prisma db push && npx next start -p ${PORT:-3000}"]
+CMD ["sh", "-c", "export DATABASE_URL=file:/data/prod.db && npx prisma db push && node scripts/assign-americus.cjs && npx next start -p ${PORT:-3000}"]

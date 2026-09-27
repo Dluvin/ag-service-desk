@@ -75,20 +75,21 @@ export function storeQuery(selected: string) {
   return selected === STORE_ALL ? "" : `?store=${encodeURIComponent(selected)}`;
 }
 
-const americusAssignedOrgs = new Set<string>();
+function americusStoreId(stores: { id: string; name: string }[]) {
+  const named = stores.filter((store) => store.name.trim().toLowerCase().includes("americus"));
+  return named.find((store) => store.name.trim().toLowerCase() === "americus")?.id ?? named[0]?.id ?? null;
+}
 
 export async function assignCustomersToAmericusStore(organizationId: string) {
-  if (americusAssignedOrgs.has(organizationId)) return 0;
   const stores = await prisma.store.findMany({
     where: { organizationId },
     select: { id: true, name: true },
   });
-  const americus = stores.find((store) => store.name.trim().toLowerCase() === "americus");
-  americusAssignedOrgs.add(organizationId);
-  if (!americus) return 0;
+  const storeId = americusStoreId(stores);
+  if (!storeId) return 0;
   const result = await prisma.farmer.updateMany({
-    where: { organizationId, NOT: { storeId: americus.id } },
-    data: { storeId: americus.id },
+    where: { organizationId, NOT: { storeId } },
+    data: { storeId },
   });
   return result.count;
 }
