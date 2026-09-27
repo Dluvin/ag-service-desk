@@ -9,6 +9,7 @@ import { PRINTABLE_STATUSES, STATUS_LABELS, ROLES, canAssignTickets, type Ticket
 import { orgQbwcIsOn } from "@/lib/ocr-samples";
 import { parseStoreParam, storeTicketWhere } from "@/lib/stores";
 import { printListStatus, printSelectHref } from "@/lib/ticket-print";
+import { ticketQuickBooksCustomer } from "@/lib/qbwc-xml";
 
 const STATUS_FILTERS: { id: TicketStatus | "ALL"; name: string }[] = [
   { id: "REPAIR_DONE", name: "Repair done" },
@@ -45,7 +46,11 @@ export default async function BatchPrintSelectPage({
       ...storeTickets,
       status: status ? status : { in: PRINTABLE_STATUSES },
     },
-    include: { farmer: true },
+    include: {
+      farmer: { include: { farms: { select: { qbCustomerName: true, name: true } } } },
+      pivot: { include: { farm: { select: { qbCustomerName: true, name: true } } } },
+      asset: { include: { farm: { select: { qbCustomerName: true, name: true } } } },
+    },
     orderBy: [{ closedAt: "desc" }, { number: "desc" }],
   });
 
@@ -115,6 +120,7 @@ export default async function BatchPrintSelectPage({
             number: ticket.number,
             title: ticket.title,
             farmerName: ticket.farmer.name,
+            qbCustomerName: ticketQuickBooksCustomer(ticket),
             status: ticket.status,
             statusLabel: STATUS_LABELS[ticket.status as TicketStatus] ?? ticket.status,
             invoiceNumber: ticket.invoiceNumber,

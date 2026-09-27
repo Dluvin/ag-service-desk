@@ -31,6 +31,7 @@ import { statusLabel, t, type Locale } from "@/lib/i18n";
 import { visionOcrConfigured } from "@/lib/ticket-ocr";
 import { orgOcrIsOn, orgQbwcIsOn } from "@/lib/ocr-samples";
 import { ticketSite } from "@/lib/ticket-site";
+import { ticketQuickBooksCustomer } from "@/lib/qbwc-xml";
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -41,9 +42,15 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   const ticket = await prisma.ticket.findFirst({
     where: { id, ...ticketWhere(session) },
     include: {
-      farmer: { include: { contacts: { orderBy: { name: "asc" } }, store: true } },
-      pivot: true,
-      asset: { include: { assetType: true } },
+      farmer: {
+        include: {
+          contacts: { orderBy: { name: "asc" } },
+          store: true,
+          farms: { select: { qbCustomerName: true, name: true } },
+        },
+      },
+      pivot: { include: { farm: { select: { qbCustomerName: true, name: true } } } },
+      asset: { include: { assetType: true, farm: { select: { qbCustomerName: true, name: true } } } },
       technician: true,
       store: true,
         updates: { include: { user: true, photos: true }, orderBy: { createdAt: "desc" } },
@@ -58,6 +65,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   });
   if (!ticket) notFound();
   const site = ticketSite(ticket);
+  const qbCustomer = ticketQuickBooksCustomer(ticket);
 
   const technicians = canAssignTickets(session.role) ? await loadTechnicians(session.organizationId) : [];
   const canDispatch = isShopStaff(session.role);
@@ -176,6 +184,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           {ticket.technician ? t(locale, "ticket.assignedTo", { name: ticket.technician.name }) : t(locale, "common.unassigned")}
           {shopName ? ` · ${shopName}` : ""}
           {ticket.scheduledAt ? ` · ${t(locale, "ticket.scheduled", { when: formatSchedule(ticket.scheduledAt) ?? "" })}` : ""}
+          {qbwcEnabled ? ` · QuickBooks customer: ${qbCustomer}` : ""}
         </p>
 
         {ticket.siteVisits.length > 0 ? (

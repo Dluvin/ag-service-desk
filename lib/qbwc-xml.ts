@@ -104,7 +104,7 @@ async function loadTicketLines(jobId: string) {
     include: {
       ticket: {
         include: {
-          farmer: true,
+          farmer: { include: { farms: { select: { qbCustomerName: true, name: true } } } },
           technician: { select: { name: true } },
           updates: {
             orderBy: { createdAt: "asc" },
@@ -115,8 +115,8 @@ async function loadTicketLines(jobId: string) {
               user: { select: { name: true } },
             },
           },
-          pivot: { include: { farm: { select: { qbCustomerName: true } } } },
-          asset: { include: { assetType: { select: { name: true } }, farm: { select: { qbCustomerName: true } } } },
+          pivot: { include: { farm: { select: { qbCustomerName: true, name: true } } } },
+          asset: { include: { assetType: { select: { name: true } }, farm: { select: { qbCustomerName: true, name: true } } } },
           parts: { include: { catalogPart: { select: { name: true, sku: true } } } },
           labor: { include: { catalogLabor: { select: { name: true, sku: true } } } },
           equipment: { include: { catalogEquipment: { select: { name: true, sku: true } } } },
@@ -387,10 +387,32 @@ function descriptionOnlyLineXml(description: string) {
   return [`<EstimateLineAdd>`, `      <Desc>${encodeXml(value)}</Desc>`, `    </EstimateLineAdd>`].join("\r\n");
 }
 
+export type QbFarmCustomer = { qbCustomerName?: string | null; name?: string | null };
+export type QbTicketCustomerSource = {
+  farmer: { name: string; farms?: QbFarmCustomer[] };
+  pivot?: { farm?: QbFarmCustomer | null } | null;
+  asset?: { farm?: QbFarmCustomer | null } | null;
+};
+
 export function quickBooksCustomerName(farmerName: string, farmQbCustomerName?: string | null) {
   const mapped = qbText(farmQbCustomerName, 209);
   if (mapped) return mapped;
   return qbText(farmerName, 209) || "Customer";
+}
+
+export function ticketFarm(ticket: QbTicketCustomerSource) {
+  return ticket.pivot?.farm ?? ticket.asset?.farm ?? null;
+}
+
+export function ticketQuickBooksCustomer(ticket: QbTicketCustomerSource) {
+  const siteFarm = ticketFarm(ticket);
+  const fromSite = qbText(siteFarm?.qbCustomerName, 209);
+  if (fromSite) return fromSite;
+  if (!siteFarm) {
+    const mapped = [...new Set((ticket.farmer.farms ?? []).map((farm) => qbText(farm.qbCustomerName, 209)).filter(Boolean))];
+    if (mapped.length === 1) return mapped[0];
+  }
+  return quickBooksCustomerName(ticket.farmer.name);
 }
 
 export function descriptionOnlyEstimateLines(texts: string[]) {
@@ -406,8 +428,7 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   const { ticket } = loaded;
   const site = ticket.pivot?.name || ticket.asset?.name ? ticketSiteName(ticket) : "";
   const assignee = ticket.technician?.name || "";
-  const farmQbCustomerName = ticket.pivot ? ticket.pivot.farm?.qbCustomerName : ticket.asset?.farm?.qbCustomerName;
-  const customer = quickBooksCustomerName(ticket.farmer.name, farmQbCustomerName);
+  const customer = ticketQuickBooksCustomer(ticket);
   const memo = qbText(
     `AG Desk WO ${ticket.number} - ${ticket.title}${assignee ? ` - ${assignee}` : ""}${site ? ` - ${site}` : ""}`,
     4095,

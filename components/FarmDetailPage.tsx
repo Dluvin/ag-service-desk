@@ -111,6 +111,11 @@ export default async function FarmDetailPage({ params }: { params: Promise<{ id:
               placeholder="Leave blank to use the customer name in AG Desk"
               className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
             />
+            <span className="mt-1 block text-xs font-normal text-stone-500">
+              Type the name exactly as it appears in QuickBooks. Estimates use this name when the work
+              order's pivot or other asset is on this farm. If this is the only farm with a QuickBooks
+              customer on this customer, that name is used even when the asset is unassigned.
+            </span>
           </label>
           <FarmCustomerField customers={customers} defaultFarmerId={farm.farmerId} />
           <label className="block text-sm font-medium">

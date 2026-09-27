@@ -12,6 +12,7 @@ type ClosedRow = {
   number: number;
   title: string;
   farmerName: string;
+  qbCustomerName?: string;
   status: string;
   statusLabel: string;
   invoiceNumber: string | null;
@@ -40,7 +41,7 @@ export function ClosedTicketPrintSelect({
     const q = query.trim().toLowerCase();
     if (!q) return tickets;
     return tickets.filter((ticket) => {
-      const hay = `#${ticket.number} ${ticket.title} ${ticket.farmerName} ${ticket.statusLabel} ${ticket.invoiceNumber ?? ""}`.toLowerCase();
+      const hay = `#${ticket.number} ${ticket.title} ${ticket.farmerName} ${ticket.qbCustomerName ?? ""} ${ticket.statusLabel} ${ticket.invoiceNumber ?? ""}`.toLowerCase();
       return hay.includes(q);
     });
   }, [query, tickets]);
@@ -149,7 +150,9 @@ export function ClosedTicketPrintSelect({
                     #{ticket.number} {ticket.title}
                   </span>
                   <span className="mt-0.5 block text-sm text-stone-600">
-                    {ticket.farmerName}
+                    {ticket.qbCustomerName && ticket.qbCustomerName !== ticket.farmerName
+                      ? `${ticket.farmerName} · QuickBooks ${ticket.qbCustomerName}`
+                      : ticket.farmerName}
                     {` · ${ticket.statusLabel}`}
                     {ticket.invoiceNumber ? ` · Invoice ${ticket.invoiceNumber}` : ""}
                     {ticket.datedAt
