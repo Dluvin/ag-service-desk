@@ -5,14 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { ticketWhere } from "@/lib/scope";
 import { ClosedTicketPrintSelect } from "@/components/ClosedTicketPrintSelect";
 import { StoreFilter } from "@/components/StoreFilter";
-import { PRINTABLE_STATUSES, STATUS_LABELS, ROLES, type TicketStatus } from "@/lib/roles";
+import { PRINTABLE_STATUSES, STATUS_LABELS, ROLES, canAssignTickets, type TicketStatus } from "@/lib/roles";
+import { orgQbwcIsOn } from "@/lib/ocr-samples";
 import { parseStoreParam, storeTicketWhere } from "@/lib/stores";
-import { parsePrintableStatusParam, printSelectHref } from "@/lib/ticket-print";
+import { printListStatus, printSelectHref } from "@/lib/ticket-print";
 
-const STATUS_FILTERS: { id?: TicketStatus; name: string }[] = [
-  { name: "All printable" },
+const STATUS_FILTERS: { id: TicketStatus | "ALL"; name: string }[] = [
   { id: "REPAIR_DONE", name: "Repair done" },
   { id: "COMPLETED", name: "Completed" },
+  { id: "ALL", name: "All printable" },
 ];
 
 export default async function BatchPrintSelectPage({
@@ -24,7 +25,8 @@ export default async function BatchPrintSelectPage({
   if (!session) redirect("/login");
 
   const query = await searchParams;
-  const status = parsePrintableStatusParam(query.status);
+  const listStatus = printListStatus(query.status);
+  const status = listStatus === "ALL" ? undefined : listStatus;
   const stores =
     session.role === ROLES.FARMER
       ? []
@@ -35,6 +37,7 @@ export default async function BatchPrintSelectPage({
         });
   const selectedStore = parseStoreParam(Array.isArray(query.store) ? query.store[0] : query.store, stores);
   const storeTickets = session.role === ROLES.FARMER ? {} : storeTicketWhere(selectedStore);
+  const canSendQuickBooks = canAssignTickets(session.role) && (await orgQbwcIsOn(session.organizationId));
 
   const tickets = await prisma.ticket.findMany({
     where: {
@@ -54,7 +57,9 @@ export default async function BatchPrintSelectPage({
         : "Batch print work orders";
   const blurb =
     status === "REPAIR_DONE"
-      ? "Select repair-done work orders to print. Each printout includes repair notes, parts, equipment, and labor."
+      ? canSendQuickBooks
+        ? "Select repair-done work orders to print, or send the checked ones to QuickBooks."
+        : "Select repair-done work orders to print. Each printout includes repair notes, parts, equipment, and labor."
       : status === "COMPLETED"
         ? "Select completed work orders to print. They open together so you can print or save one PDF."
         : "Select completed or repair-done work orders to print. They open together so you can print or save one PDF.";
@@ -77,10 +82,10 @@ export default async function BatchPrintSelectPage({
       <div className="mt-4 flex flex-wrap gap-2">
         {STATUS_FILTERS.map((filter) => {
           const href = printSelectHref({ status: filter.id, store: selectedStore });
-          const active = filter.id === status;
+          const active = filter.id === listStatus;
           return (
             <Link
-              key={filter.id ?? "all"}
+              key={filter.id}
               href={href}
               className={
                 active
@@ -98,7 +103,7 @@ export default async function BatchPrintSelectPage({
           stores={stores}
           selected={selectedStore}
           pathname="/tickets/print"
-          extra={status ? { status } : undefined}
+          extra={{ status: listStatus }}
         />
       ) : null}
       {tickets.length === 0 ? (
@@ -115,8 +120,9 @@ export default async function BatchPrintSelectPage({
             invoiceNumber: ticket.invoiceNumber,
             datedAt: (ticket.closedAt ?? ticket.updatedAt).toISOString(),
           }))}
-          status={status}
+          status={listStatus}
           store={selectedStore}
+          canSendQuickBooks={canSendQuickBooks}
         />
       )}
     </div>

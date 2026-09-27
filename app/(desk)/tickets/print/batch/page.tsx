@@ -6,7 +6,7 @@ import { ticketWhere } from "@/lib/scope";
 import { ClosedTicketDocument } from "@/components/ClosedTicketDocument";
 import { PrintButton } from "@/components/PrintButton";
 import { PRINTABLE_STATUSES } from "@/lib/roles";
-import { closedTicketPrintInclude, firstQueryValue, parsePrintableStatusParam, parseTicketIdList, printSelectHref } from "@/lib/ticket-print";
+import { closedTicketPrintInclude, firstQueryValue, parseTicketIdList, printListStatus, printSelectHref } from "@/lib/ticket-print";
 
 export default async function BatchPrintTicketsPage({
   searchParams,
@@ -17,9 +17,9 @@ export default async function BatchPrintTicketsPage({
   if (!session) redirect("/login");
 
   const query = await searchParams;
-  const status = parsePrintableStatusParam(query.status);
+  const listStatus = printListStatus(query.status);
   const store = firstQueryValue(query.store);
-  const backHref = printSelectHref({ status, store });
+  const backHref = printSelectHref({ status: listStatus, store });
   const ids = parseTicketIdList(query.ids);
   if (ids.length === 0) redirect(backHref);
 

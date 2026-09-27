@@ -33,12 +33,19 @@ export function parsePrintableStatusParam(value: string | string[] | undefined):
   return undefined;
 }
 
+/** Repair done is the print-page default. `ALL` is the explicit all-printable filter. */
+export function printListStatus(value: string | string[] | undefined): TicketStatus | "ALL" {
+  const raw = (Array.isArray(value) ? value[0] : value)?.trim().toUpperCase();
+  if (raw === "ALL") return "ALL";
+  return parsePrintableStatusParam(value) ?? "REPAIR_DONE";
+}
+
 export function firstQueryValue(value: string | string[] | undefined) {
   const raw = Array.isArray(value) ? value[0] : value;
   return raw?.trim() || undefined;
 }
 
-export function printSelectHref(opts?: { status?: TicketStatus; store?: string }) {
+export function printSelectHref(opts?: { status?: TicketStatus | "ALL"; store?: string }) {
   const params = new URLSearchParams();
   if (opts?.status) params.set("status", opts.status);
   if (opts?.store && opts.store !== STORE_ALL) params.set("store", opts.store);
@@ -46,7 +53,7 @@ export function printSelectHref(opts?: { status?: TicketStatus; store?: string }
   return query ? `/tickets/print?${query}` : "/tickets/print";
 }
 
-export function printBatchHref(ids: string[], opts?: { status?: TicketStatus; store?: string }) {
+export function printBatchHref(ids: string[], opts?: { status?: TicketStatus | "ALL"; store?: string }) {
   const params = new URLSearchParams();
   params.set("ids", ids.join(","));
   if (opts?.status) params.set("status", opts.status);

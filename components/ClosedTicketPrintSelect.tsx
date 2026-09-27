@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ListSearch } from "@/components/ListSearch";
 import { MAX_BATCH_PRINT, printBatchHref } from "@/lib/ticket-print";
+import { queueQbEstimatesAction } from "@/lib/qbwc-actions";
 import type { TicketStatus } from "@/lib/roles";
 
 type ClosedRow = {
@@ -21,14 +22,19 @@ export function ClosedTicketPrintSelect({
   tickets,
   status,
   store,
+  canSendQuickBooks = false,
 }: {
   tickets: ClosedRow[];
-  status?: TicketStatus;
+  status?: TicketStatus | "ALL";
   store?: string;
+  canSendQuickBooks?: boolean;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [pending, setPending] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -75,6 +81,18 @@ export function ClosedTicketPrintSelect({
     printIds(tickets.map((ticket) => ticket.id));
   }
 
+  async function sendSelected() {
+    const ids = tickets.map((ticket) => ticket.id).filter((id) => selected.has(id));
+    if (ids.length === 0) return;
+    setPending(true);
+    setNotice(null);
+    setSendError(null);
+    const result = await queueQbEstimatesAction(ids.slice(0, MAX_BATCH_PRINT));
+    setPending(false);
+    if (result?.error) setSendError(result.error);
+    else setNotice(result?.success ?? "Queued.");
+  }
+
   return (
     <div>
       <ListSearch value={query} onChange={setQuery} label="Search work orders" placeholder="Work order #, customer, invoice" />
@@ -99,8 +117,20 @@ export function ClosedTicketPrintSelect({
           >
             Print selected ({selected.size})
           </button>
+          {canSendQuickBooks ? (
+            <button
+              type="button"
+              disabled={selected.size === 0 || pending}
+              onClick={sendSelected}
+              className="rounded-lg border border-emerald-800 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 disabled:opacity-50"
+            >
+              {pending ? "Queuing…" : `Send selected to QuickBooks (${selected.size})`}
+            </button>
+          ) : null}
         </div>
       </div>
+      {notice ? <p className="mt-3 text-sm text-emerald-800">{notice}</p> : null}
+      {sendError ? <p className="mt-3 text-sm text-red-700">{sendError}</p> : null}
       <ul className="mt-4 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
         {shown.length === 0 ? (
           <li className="px-4 py-6 text-sm text-stone-600">No work orders match that search.</li>
