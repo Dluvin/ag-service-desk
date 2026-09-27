@@ -99,6 +99,6 @@ export async function queueQbEstimatesAction(ticketIds: string[]) {
   revalidatePath("/tickets/print");
   const count = tickets.length;
   return {
-    success: `Queued ${count} estimate${count === 1 ? "" : "s"}. Run Update Selected once in QuickBooks Web Connector. Leave Auto-Run off.`,
+    success: `Queued ${count} estimate${count === 1 ? "" : "s"}. Auto updates are every 15 minutes on the QuickBooks Web Connector.`,
   };
 }

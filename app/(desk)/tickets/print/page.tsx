@@ -83,7 +83,10 @@ export default async function BatchPrintSelectPage({
         </Link>
       </p>
       <h1 className="font-display mt-2 text-3xl">{heading}</h1>
-      <p className="mt-1 text-stone-600">{blurb}</p>
+      <p className="mt-1 text-stone-600">
+        {blurb}
+        {canSendQuickBooks ? " Auto updates are every 15 minutes on the QuickBooks Web Connector." : ""}
+      </p>
       <div className="mt-4 flex flex-wrap gap-2">
         {STATUS_FILTERS.map((filter) => {
           const href = printSelectHref({ status: filter.id, store: selectedStore });
