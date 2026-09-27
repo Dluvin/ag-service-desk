@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { STATUS_LABELS, type TicketStatus } from "./roles";
+import { ticketSiteName } from "./ticket-site";
 import { ensureQbEstimateJobMeta } from "./qbwc";
 
 function encodeXml(value: string) {
@@ -105,6 +106,7 @@ async function loadTicketLines(jobId: string) {
       ticket: {
         include: {
           farmer: true,
+          technician: { select: { name: true } },
           updates: {
             orderBy: { createdAt: "asc" },
             select: {
@@ -279,10 +281,18 @@ export function isItemQueryResponse(xml: string) {
   return /<ItemQueryRs\b/i.test(xml);
 }
 
-/** Blank description rows so the work notes start on line 10 of the estimate. */
+/** Blank description rows so the work order starts on line 10 of the estimate. */
 const DESCRIPTION_LEAD_IN = 9;
 
+type WorkOrderCharge = { name: string; sku: string; quantity: number; rate: number | null };
 type WorkOrderNote = { status: string; author: string; message: string };
+
+function chargeText(kind: string, row: WorkOrderCharge) {
+  const label = [qbText(row.name, 200), qbText(row.sku, 40)].filter(Boolean).join(" ");
+  const qty = Number.isFinite(row.quantity) && row.quantity > 0 ? `x ${row.quantity}` : "";
+  const rate = row.rate != null && Number.isFinite(row.rate) ? `@ $${row.rate.toFixed(2)}` : "";
+  return [kind, label, qty, rate].filter(Boolean).join(" ");
+}
 
 function statusName(status: string) {
   if (status in STATUS_LABELS) return STATUS_LABELS[status as TicketStatus];
@@ -304,8 +314,36 @@ export function workOrderNoteLines(notes: WorkOrderNote[]) {
   return lines;
 }
 
-export function workOrderDescriptionLines(notes: WorkOrderNote[]) {
-  return workOrderNoteLines(notes);
+export function workOrderDescriptionLines(source: {
+  number: number;
+  title: string;
+  description: string;
+  site: string;
+  assignee: string;
+  notes: WorkOrderNote[];
+  parts: WorkOrderCharge[];
+  labor: WorkOrderCharge[];
+  equipment: WorkOrderCharge[];
+}) {
+  const lines: string[] = [];
+  if (source.number) lines.push(`WO ${source.number}`);
+  const title = qbText(source.title, 4095);
+  if (title) lines.push(title);
+  const site = qbText(source.site, 4095);
+  if (site) lines.push(site);
+  const assignee = qbText(source.assignee, 209);
+  if (assignee) lines.push(`Assigned to ${assignee}`);
+  for (const paragraph of source.description.split(/\r\n|\r|\n/)) {
+    const text = qbText(paragraph, 4095);
+    if (text) lines.push(text);
+  }
+  lines.push(
+    ...source.parts.map((row) => chargeText("Part", row)),
+    ...source.labor.map((row) => chargeText("Labor", row)),
+    ...source.equipment.map((row) => chargeText("Equipment", row)),
+  );
+  lines.push(...workOrderNoteLines(source.notes));
+  return lines.filter(Boolean);
 }
 
 /** Calendar day in Eastern time, so an evening finish stays on that day. */
@@ -344,8 +382,13 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   const loaded = await loadTicketLines(jobId);
   if (!loaded) return null;
   const { ticket } = loaded;
+  const site = ticket.pivot?.name || ticket.asset?.name ? ticketSiteName(ticket) : "";
+  const assignee = ticket.technician?.name || "";
   const customer = qbText(ticket.farmer.name, 209) || "Customer";
-  const memo = qbText(`AG Desk WO ${ticket.number}`, 4095);
+  const memo = qbText(
+    `AG Desk WO ${ticket.number} - ${ticket.title}${assignee ? ` - ${assignee}` : ""}${site ? ` - ${site}` : ""}`,
+    4095,
+  );
   const poNumber = qbText(`WO-${ticket.number}`, 25);
   const txnDate = repairFinishedDate({
     repairDoneAt: ticket.updates.find((update) => update.status === "REPAIR_DONE")?.createdAt ?? null,
@@ -354,13 +397,36 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
     status: ticket.status,
   });
   const descriptions = descriptionOnlyEstimateLines(
-    workOrderDescriptionLines(
-      ticket.updates.map((update) => ({
+    workOrderDescriptionLines({
+      number: ticket.number,
+      title: ticket.title,
+      description: ticket.description,
+      site,
+      assignee,
+      notes: ticket.updates.map((update) => ({
         status: update.status || "",
         author: update.user?.name || "",
         message: update.message,
       })),
-    ),
+      parts: ticket.parts.map((row) => ({
+        name: row.name,
+        sku: row.sku || row.catalogPart?.sku || "",
+        quantity: row.quantity,
+        rate: row.unitPrice,
+      })),
+      labor: ticket.labor.map((row) => ({
+        name: row.name,
+        sku: row.sku || row.catalogLabor?.sku || "",
+        quantity: row.hours,
+        rate: row.unitRate,
+      })),
+      equipment: ticket.equipment.map((row) => ({
+        name: row.name,
+        sku: row.sku || row.catalogEquipment?.sku || "",
+        quantity: row.hours,
+        rate: row.unitRate,
+      })),
+    }),
   );
   const body = [
     `<EstimateAddRq requestID="${ticket.number}">`,
