@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="app" type="AndroidRunConfigurationType" factoryName="Android App">
+    <module name="app" />
+    <option name="DEPLOY" value="true" />
+    <option name="MODE" value="specific_activity" />
+    <option name="ACTIVITY_CLASS" value="com.agdeskpro.app.MainActivity" />
+    <method v="2">
+      <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>
