@@ -283,8 +283,8 @@ export function isItemQueryResponse(xml: string) {
 
 type WorkOrderCharge = { name: string; sku: string; quantity: number; rate: number | null };
 
-/** Blank description rows so the write-up starts on line 5 of the estimate. */
-const DESCRIPTION_LEAD_IN = 4;
+/** Blank description rows so the write-up starts on line 10 of the estimate. */
+const DESCRIPTION_LEAD_IN = 9;
 
 function chargeText(kind: string, row: WorkOrderCharge) {
   const label = [qbText(row.name, 200), qbText(row.sku, 40)].filter(Boolean).join(" ");
