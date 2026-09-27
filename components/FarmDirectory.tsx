@@ -43,8 +43,11 @@ export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
               <Link href={`/farmers/${farmer.id}`} className="font-semibold text-emerald-900 hover:underline">
                 {farmer.name}
               </Link>
+              <p className="mt-1 text-sm text-stone-600">
+                <span className="font-medium text-stone-700">{t("common.store")}: </span>
+                {farmer.store || t("common.noStore")}
+              </p>
               <p className="text-sm text-stone-600">
-                {farmer.store ? `${farmer.store} · ` : ""}
                 {t("customers.counts", { pivots: farmer.pivotCount, tickets: farmer.ticketCount })}
                 {farmer.contacts ? ` · ${farmer.contacts}` : ""}
               </p>
