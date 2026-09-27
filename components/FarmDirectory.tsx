@@ -23,7 +23,7 @@ export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
     const q = query.trim().toLowerCase();
     if (!q) return farms;
     return farms.filter((farm) =>
-      [farm.name, farm.address, farm.store, farm.contacts, ...farm.farms]
+      [farm.name, farm.address, farm.store ?? "unassigned", farm.contacts, ...farm.farms]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
@@ -43,9 +43,13 @@ export function FarmDirectory({ farms }: { farms: FarmRow[] }) {
               <Link href={`/farmers/${farmer.id}`} className="font-semibold text-emerald-900 hover:underline">
                 {farmer.name}
               </Link>
-              <p className="mt-1 text-sm text-stone-600">
+              <p className="mt-1 text-sm">
                 <span className="font-medium text-stone-700">{t("common.store")}: </span>
-                {farmer.store || t("common.noStore")}
+                {farmer.store ? (
+                  <span className="text-stone-800">{farmer.store}</span>
+                ) : (
+                  <span className="font-medium text-amber-800">{t("common.unassigned")}</span>
+                )}
               </p>
               <p className="text-sm text-stone-600">
                 {t("customers.counts", { pivots: farmer.pivotCount, tickets: farmer.ticketCount })}
