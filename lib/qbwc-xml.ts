@@ -270,15 +270,90 @@ export function isItemQueryResponse(xml: string) {
   return /<ItemQueryRs\b/i.test(xml);
 }
 
-export async function estimateAddXml(jobId: string, major: string, minor: string, items: Record<string, QbItemRef> = {}) {
+type WorkOrderCharge = { name: string; sku: string; quantity: number; rate: number | null };
+
+/** Blank description rows so the write-up starts on line 5 of the estimate. */
+const DESCRIPTION_LEAD_IN = 4;
+
+function chargeText(kind: string, row: WorkOrderCharge) {
+  const label = [qbText(row.name, 200), qbText(row.sku, 40)].filter(Boolean).join(" ");
+  const qty = Number.isFinite(row.quantity) && row.quantity > 0 ? `x ${row.quantity}` : "";
+  const rate = row.rate != null && Number.isFinite(row.rate) ? `@ $${row.rate.toFixed(2)}` : "";
+  return [kind, label, qty, rate].filter(Boolean).join(" ");
+}
+
+export function workOrderDescriptionLines(source: {
+  title: string;
+  description: string;
+  site: string;
+  parts: WorkOrderCharge[];
+  labor: WorkOrderCharge[];
+  equipment: WorkOrderCharge[];
+}) {
+  const lines: string[] = [];
+  const title = qbText(source.title, 4095);
+  if (title) lines.push(title);
+  const site = qbText(source.site, 4095);
+  if (site) lines.push(site);
+  for (const paragraph of source.description.split(/\r\n|\r|\n/)) {
+    const text = qbText(paragraph, 4095);
+    if (text) lines.push(text);
+  }
+  lines.push(
+    ...source.parts.map((row) => chargeText("Part", row)),
+    ...source.labor.map((row) => chargeText("Labor", row)),
+    ...source.equipment.map((row) => chargeText("Equipment", row)),
+  );
+  return lines.filter(Boolean);
+}
+
+function descriptionOnlyLineXml(description: string) {
+  const value = description === " " ? " " : qbText(description, 4095);
+  if (!value) return "";
+  return [`<EstimateLineAdd>`, `      <Desc>${encodeXml(value)}</Desc>`, `    </EstimateLineAdd>`].join("\r\n");
+}
+
+export function descriptionOnlyEstimateLines(texts: string[]) {
+  const blanks = Array.from({ length: DESCRIPTION_LEAD_IN }, () => descriptionOnlyLineXml(" "));
+  const body = texts.map((text) => descriptionOnlyLineXml(text)).filter(Boolean);
+  const lines = body.length > 0 ? [...blanks, ...body] : [descriptionOnlyLineXml("Field service")];
+  return lines.filter(Boolean);
+}
+
+export async function estimateAddXml(jobId: string, major: string, minor: string) {
   const loaded = await loadTicketLines(jobId);
   if (!loaded) return null;
-  const { ticket, lines } = loaded;
-  const site = ticketSiteName(ticket);
+  const { ticket } = loaded;
+  const site = ticket.pivot?.name || ticket.asset?.name ? ticketSiteName(ticket) : "";
   const customer = qbText(ticket.farmer.name, 209) || "Customer";
-  const memo = qbText(`AG Desk WO ${ticket.number} - ${ticket.title} - ${site}`, 4095);
+  const memo = qbText(`AG Desk WO ${ticket.number} - ${ticket.title}${site ? ` - ${site}` : ""}`, 4095);
   const poNumber = qbText(`WO-${ticket.number}`, 25);
   const txnDate = (ticket.scheduledAt ?? ticket.createdAt).toISOString().slice(0, 10);
+  const descriptions = descriptionOnlyEstimateLines(
+    workOrderDescriptionLines({
+      title: ticket.title,
+      description: ticket.description,
+      site,
+      parts: ticket.parts.map((row) => ({
+        name: row.name,
+        sku: row.sku || row.catalogPart?.sku || "",
+        quantity: row.quantity,
+        rate: row.unitPrice,
+      })),
+      labor: ticket.labor.map((row) => ({
+        name: row.name,
+        sku: row.sku || row.catalogLabor?.sku || "",
+        quantity: row.hours,
+        rate: row.unitRate,
+      })),
+      equipment: ticket.equipment.map((row) => ({
+        name: row.name,
+        sku: row.sku || row.catalogEquipment?.sku || "",
+        quantity: row.hours,
+        rate: row.unitRate,
+      })),
+    }),
+  );
   const body = [
     `<EstimateAddRq requestID="${ticket.number}">`,
     `  <EstimateAdd>`,
@@ -288,7 +363,7 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
     `    <TxnDate>${txnDate}</TxnDate>`,
     `    <PONumber>${encodeXml(poNumber)}</PONumber>`,
     memo ? `    <Memo>${encodeXml(memo)}</Memo>` : "",
-    ...lines.map((line) => `    ${estimateLineXml(line, items)}`),
+    ...descriptions.map((line) => `    ${line}`),
     `  </EstimateAdd>`,
     `</EstimateAddRq>`,
   ]

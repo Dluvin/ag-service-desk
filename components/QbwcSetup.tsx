@@ -25,8 +25,8 @@ export function QbwcSetup({
         Send a work order as a QuickBooks Desktop estimate using Intuit’s Web Connector. This is a
         separate application from any other Web Connector file you already run. In Web Connector the
         application name is <span className="font-mono">AGDESKPRO</span>. Customer names must match
-        QuickBooks. Item lines link when the name matches, including a subitem such as #10 WIRE.
-        A line that does not match is sent with its description and price, and no QuickBooks item.
+        QuickBooks. The work order is written into the estimate description, starting on line 5.
+        QuickBooks items are not used.
       </p>
       <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-stone-700">
         <li>

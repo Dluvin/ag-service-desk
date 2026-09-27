@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import { orgQbwcIsOn } from "./ocr-samples";
 import { createQbwcSession, ensureQbEstimateJobMeta, getQbwcSession, verifyQbwcLogin } from "./qbwc";
-import { estimateAddXml, itemQueryXml, isItemQueryResponse, loadQbJobMeta, parseEstimateAddResponse, parseItemQueryResponse, saveQbJobMeta } from "./qbwc-xml";
+import { estimateAddXml, isItemQueryResponse, parseEstimateAddResponse, parseItemQueryResponse, saveQbJobMeta } from "./qbwc-xml";
 
 function xmlText(xml: string, tag: string) {
   const match = xml.match(new RegExp(`<(?:[\\w-]+:)?${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</(?:[\\w-]+:)?${tag}>`, "i"));
@@ -82,12 +82,7 @@ async function nextRequestXml(sessionId: string, organizationId: string, major: 
       data: { jobId: job.id },
     }),
   ]);
-  const meta = await loadQbJobMeta(job.id);
-  if (!meta.itemQueryDone) {
-    const query = await itemQueryXml(job.id, major, minor);
-    if (query) return query;
-  }
-  return (await estimateAddXml(job.id, major, minor, meta.items || {})) || "";
+  return (await estimateAddXml(job.id, major, minor)) || "";
 }
 
 export function qbwcWsdl(location: string) {
@@ -185,7 +180,7 @@ export function qbwcFile(opts: {
 
 export async function handleQbwcSoap(xml: string, soapAction: string) {
   const op = operationName(xml, soapAction).toLowerCase();
-  if (op === "serverversion") return stringResult("serverVersion", "1.1");
+  if (op === "serverversion") return stringResult("serverVersion", "1.2");
   if (op === "clientversion") return stringResult("clientVersion", "");
   if (op === "authenticate") {
     await ensureQbEstimateJobMeta();
