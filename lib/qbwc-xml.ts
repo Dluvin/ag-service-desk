@@ -1,5 +1,4 @@
 import { prisma } from "./prisma";
-import { STATUS_LABELS, type TicketStatus } from "./roles";
 import { ticketSiteName } from "./ticket-site";
 import { ensureQbEstimateJobMeta } from "./qbwc";
 
@@ -294,22 +293,39 @@ function chargeText(kind: string, row: WorkOrderCharge) {
   return [kind, label, qty, rate].filter(Boolean).join(" ");
 }
 
-function statusName(status: string) {
-  if (status in STATUS_LABELS) return STATUS_LABELS[status as TicketStatus];
-  return qbText(status.replaceAll("_", " "), 40);
+const GENERATED_WORK_NOTE = [
+  /^Status set to .+\.$/i,
+  /^Updated from the dispatch board\.$/,
+  /^Edited work order\.$/,
+  /^Edited work order: /,
+  /^Parts logged: /,
+  /^Labor logged: /,
+  /^Equipment used: /,
+  /^Parts updated: /,
+  /^Parts removed: /,
+  /^Labor updated: /,
+  /^Labor removed: /,
+  /^Equipment updated: /,
+  /^Equipment removed: /,
+  /^Removed photo: /,
+  /^Added \d+ photos?\.$/,
+  /^Imported from a handwritten ticket\.$/,
+];
+
+export function isTypedWorkNote(message: string) {
+  const text = message.trim();
+  if (!text) return false;
+  return !GENERATED_WORK_NOTE.some((pattern) => pattern.test(text));
 }
 
 export function workOrderNoteLines(notes: WorkOrderNote[]) {
   const lines: string[] = [];
   for (const note of notes) {
-    const paragraphs = note.message
-      .split(/\r\n|\r|\n/)
-      .map((paragraph) => qbText(paragraph, 4095))
-      .filter(Boolean);
-    if (paragraphs.length === 0) continue;
-    const prefix = [statusName(note.status), qbText(note.author, 80)].filter(Boolean).join(" - ");
-    lines.push(qbText(prefix ? `${prefix}: ${paragraphs[0]}` : paragraphs[0], 4095));
-    lines.push(...paragraphs.slice(1));
+    if (!isTypedWorkNote(note.message)) continue;
+    for (const paragraph of note.message.split(/\r\n|\r|\n/)) {
+      const text = qbText(paragraph, 4095);
+      if (text) lines.push(text);
+    }
   }
   return lines;
 }

@@ -180,7 +180,7 @@ export function qbwcFile(opts: {
 
 export async function handleQbwcSoap(xml: string, soapAction: string) {
   const op = operationName(xml, soapAction).toLowerCase();
-  if (op === "serverversion") return stringResult("serverVersion", "1.7");
+  if (op === "serverversion") return stringResult("serverVersion", "1.8");
   if (op === "clientversion") return stringResult("clientVersion", "");
   if (op === "authenticate") {
     await ensureQbEstimateJobMeta();

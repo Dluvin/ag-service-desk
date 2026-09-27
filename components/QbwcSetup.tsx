@@ -26,7 +26,7 @@ export function QbwcSetup({
         separate application from any other Web Connector file you already run. In Web Connector the
         application name is <span className="font-mono">AGDESKPRO</span>. Customer names must match
         QuickBooks. The estimate description starts on line 10 with the work order number, title, site,
-        assignee, opening description, parts, labor, equipment, and every work note. The estimate date
+        assignee, opening description, parts, labor, equipment, and work notes typed on the work order. The estimate date
         is the day the repair was marked done. QuickBooks items are not used.
       </p>
       <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-stone-700">
