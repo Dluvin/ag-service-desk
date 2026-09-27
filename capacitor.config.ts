@@ -3,7 +3,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.agdeskpro.app",
   appName: "AG Desk Pro",
-  webDir: "native-www",
+  webDir: "www",
   server: {
     url: "https://agdeskpro.com",
     androidScheme: "https",
