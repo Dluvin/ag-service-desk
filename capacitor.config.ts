@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "AG Desk Pro",
   webDir: "www",
   server: {
-    url: "https://agdeskpro.com",
+    url: "https://agdeskpro.com/login",
     androidScheme: "https",
     allowNavigation: ["agdeskpro.com", "*.agdeskpro.com"],
   },
