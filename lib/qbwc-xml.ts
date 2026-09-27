@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { STATUS_LABELS, type TicketStatus } from "./roles";
 import { ticketSiteName } from "./ticket-site";
 import { ensureQbEstimateJobMeta } from "./qbwc";
 
@@ -107,10 +108,13 @@ async function loadTicketLines(jobId: string) {
           farmer: true,
           technician: { select: { name: true } },
           updates: {
-            where: { status: "REPAIR_DONE" },
             orderBy: { createdAt: "asc" },
-            take: 1,
-            select: { createdAt: true },
+            select: {
+              message: true,
+              status: true,
+              createdAt: true,
+              user: { select: { name: true } },
+            },
           },
           pivot: true,
           asset: { include: { assetType: { select: { name: true } } } },
@@ -289,11 +293,34 @@ function chargeText(kind: string, row: WorkOrderCharge) {
   return [kind, label, qty, rate].filter(Boolean).join(" ");
 }
 
+type WorkOrderNote = { status: string; author: string; message: string };
+
+function statusName(status: string) {
+  if (status in STATUS_LABELS) return STATUS_LABELS[status as TicketStatus];
+  return qbText(status.replaceAll("_", " "), 40);
+}
+
+export function workOrderNoteLines(notes: WorkOrderNote[]) {
+  const lines: string[] = [];
+  for (const note of notes) {
+    const paragraphs = note.message
+      .split(/\r\n|\r|\n/)
+      .map((paragraph) => qbText(paragraph, 4095))
+      .filter(Boolean);
+    if (paragraphs.length === 0) continue;
+    const prefix = [statusName(note.status), qbText(note.author, 80)].filter(Boolean).join(" - ");
+    lines.push(qbText(prefix ? `${prefix}: ${paragraphs[0]}` : paragraphs[0], 4095));
+    lines.push(...paragraphs.slice(1));
+  }
+  return lines;
+}
+
 export function workOrderDescriptionLines(source: {
   title: string;
   description: string;
   site: string;
   assignee: string;
+  notes: WorkOrderNote[];
   parts: WorkOrderCharge[];
   labor: WorkOrderCharge[];
   equipment: WorkOrderCharge[];
@@ -309,6 +336,7 @@ export function workOrderDescriptionLines(source: {
     const text = qbText(paragraph, 4095);
     if (text) lines.push(text);
   }
+  lines.push(...workOrderNoteLines(source.notes));
   lines.push(
     ...source.parts.map((row) => chargeText("Part", row)),
     ...source.labor.map((row) => chargeText("Labor", row)),
@@ -362,7 +390,7 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
   );
   const poNumber = qbText(`WO-${ticket.number}`, 25);
   const txnDate = repairFinishedDate({
-    repairDoneAt: ticket.updates[0]?.createdAt ?? null,
+    repairDoneAt: ticket.updates.find((update) => update.status === "REPAIR_DONE")?.createdAt ?? null,
     closedAt: ticket.closedAt,
     updatedAt: ticket.updatedAt,
     status: ticket.status,
@@ -373,6 +401,11 @@ export async function estimateAddXml(jobId: string, major: string, minor: string
       description: ticket.description,
       site,
       assignee,
+      notes: ticket.updates.map((update) => ({
+        status: update.status || "",
+        author: update.user?.name || "",
+        message: update.message,
+      })),
       parts: ticket.parts.map((row) => ({
         name: row.name,
         sku: row.sku || row.catalogPart?.sku || "",
