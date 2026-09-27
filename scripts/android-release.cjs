@@ -73,12 +73,25 @@ if (!fs.existsSync(propsPath) || !fs.existsSync(storePath)) {
   );
 }
 
-const gradlew = process.platform === "win32" ? "gradlew.bat" : "./gradlew";
-execFileSync(gradlew, ["assembleRelease", "bundleRelease"], {
-  cwd: androidRoot,
-  stdio: "inherit",
-  shell: process.platform === "win32",
-});
+const gradleArgs = ["assembleRelease", "bundleRelease"];
+if (process.platform === "win32") {
+  execFileSync("gradlew.bat", gradleArgs, {
+    cwd: androidRoot,
+    stdio: "inherit",
+    shell: true,
+  });
+} else {
+  const gradlewPath = path.join(androidRoot, "gradlew");
+  try {
+    fs.chmodSync(gradlewPath, 0o755);
+  } catch {
+    // Windows checkouts often lose the executable bit; run through sh instead.
+  }
+  execFileSync("sh", [gradlewPath, ...gradleArgs], {
+    cwd: androidRoot,
+    stdio: "inherit",
+  });
+}
 
 const apk = path.join(androidRoot, "app/build/outputs/apk/release/app-release.apk");
 const aab = path.join(androidRoot, "app/build/outputs/bundle/release/app-release.aab");
