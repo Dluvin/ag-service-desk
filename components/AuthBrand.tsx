@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type FocusEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type FocusEvent, type ReactNode } from "react";
+import { useT } from "@/components/I18nProvider";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -56,26 +57,136 @@ export function AuthScreenLogos() {
   );
 }
 
+const REMEMBERED_EMAIL_KEY = "agdesk.loginEmail";
+
+async function lookupDealer(email: string, setDealer: (dealer: DealerBrand | null) => void) {
+  const trimmed = email.trim();
+  if (!trimmed.includes("@")) return;
+  try {
+    const response = await fetch(`/api/login-brand?email=${encodeURIComponent(trimmed)}`);
+    if (!response.ok) return;
+    const data = (await response.json()) as DealerBrand | Record<string, never>;
+    if ("organizationId" in data && data.organizationId && data.name) {
+      setDealer({
+        organizationId: data.organizationId,
+        name: data.name,
+        hasLogo: Boolean(data.hasLogo),
+      });
+    }
+  } catch {
+    // keep the last known dealer mark
+  }
+}
+
+export function LoginFields() {
+  const t = useT();
+  const { setDealer } = useContext(DealerBrandContext);
+  const [email, setEmail] = useState("");
+  const [remember, setRemember] = useState(true);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? "";
+      if (!saved) return;
+      setEmail(saved);
+      setRemember(true);
+      void lookupDealer(saved, setDealer);
+    } catch {
+      // storage can be blocked; the fields still work
+    }
+  }, [setDealer]);
+
+  const persistEmail = useCallback((nextEmail: string, nextRemember: boolean) => {
+    try {
+      if (nextRemember && nextEmail.trim()) localStorage.setItem(REMEMBERED_EMAIL_KEY, nextEmail.trim());
+      else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    } catch {
+      // ignore storage failures
+    }
+  }, []);
+
+  useEffect(() => {
+    const form = document.getElementById("login-email")?.closest("form");
+    if (!form) return;
+    const onSubmit = () => {
+      const currentEmail = (form.elements.namedItem("email") as HTMLInputElement | null)?.value ?? "";
+      const rememberBox = form.querySelector<HTMLInputElement>("#login-remember");
+      persistEmail(currentEmail, rememberBox?.checked ?? false);
+    };
+    form.addEventListener("submit", onSubmit);
+    return () => form.removeEventListener("submit", onSubmit);
+  }, [persistEmail]);
+
+  return (
+    <>
+      <label className="block text-sm font-medium" htmlFor="login-email">
+        {t("login.email")}
+        <input
+          id="login-email"
+          name="email"
+          type="email"
+          required
+          autoComplete="username"
+          value={email}
+          onChange={(event) => {
+            const next = event.target.value;
+            setEmail(next);
+            if (remember) persistEmail(next, true);
+          }}
+          onBlur={(event) => {
+            void lookupDealer(event.target.value, setDealer);
+          }}
+          className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+        />
+      </label>
+      <label className="flex items-center gap-2 text-sm font-medium" htmlFor="login-remember">
+        <input
+          id="login-remember"
+          type="checkbox"
+          checked={remember}
+          onChange={(event) => {
+            const next = event.target.checked;
+            setRemember(next);
+            persistEmail(email, next);
+          }}
+          className="h-4 w-4 rounded border-stone-300"
+        />
+        {t("login.rememberEmail")}
+      </label>
+      <div>
+        <label className="block text-sm font-medium" htmlFor="login-password">
+          {t("login.password")}
+        </label>
+        <div className="relative mt-1">
+          <input
+            id="login-password"
+            name="password"
+            type={passwordVisible ? "text" : "password"}
+            required
+            autoComplete="current-password"
+            className="w-full rounded-lg border border-stone-300 px-3 py-2 pr-20"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 px-3 text-sm font-semibold text-emerald-800"
+            aria-pressed={passwordVisible}
+            aria-label={passwordVisible ? t("login.hidePasswordLabel") : t("login.showPasswordLabel")}
+            onClick={() => setPasswordVisible((visible) => !visible)}
+          >
+            {passwordVisible ? t("login.hidePassword") : t("login.showPassword")}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function AuthEmailInput({ defaultValue }: { defaultValue?: string }) {
   const { setDealer } = useContext(DealerBrandContext);
   const onBlur = useCallback(
-    async (event: FocusEvent<HTMLInputElement>) => {
-      const email = event.target.value.trim();
-      if (!email.includes("@")) return;
-      try {
-        const response = await fetch(`/api/login-brand?email=${encodeURIComponent(email)}`);
-        if (!response.ok) return;
-        const data = (await response.json()) as DealerBrand | Record<string, never>;
-        if ("organizationId" in data && data.organizationId && data.name) {
-          setDealer({
-            organizationId: data.organizationId,
-            name: data.name,
-            hasLogo: Boolean(data.hasLogo),
-          });
-        }
-      } catch {
-        // keep the last known dealer mark
-      }
+    (event: FocusEvent<HTMLInputElement>) => {
+      void lookupDealer(event.target.value, setDealer);
     },
     [setDealer],
   );
