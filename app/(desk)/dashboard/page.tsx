@@ -56,11 +56,11 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div>
+    <div className="flex flex-col">
       <h1 className="font-display text-3xl">Dashboard</h1>
       <p className="mt-1 text-stone-600">Open a work order or add information on an existing call.</p>
       {farmer ? (
-        <ActionForm action={updateFarmerStoreAction} className="mt-4 max-w-md space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+        <ActionForm action={updateFarmerStoreAction} className="order-last mt-10 max-w-md space-y-3 rounded-xl border border-stone-200 bg-white p-4">
           <input type="hidden" name="farmerId" value={farmer.id} />
           <p className="text-sm text-stone-600">
             {farmer.store ? `Your default store is ${farmer.store.name}.` : "No default store yet."} Dispatch uses this so the right shop sees your calls.
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
         </ActionForm>
       ) : null}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-4">
         <Stat label="Active work orders" value={String(openTickets.length)} />
         <Stat label="Pivots" value={String(pivots)} />
         <Stat label="Your role" value="Customer portal" />
@@ -98,12 +98,6 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <h2 className="font-display mt-10 text-xl">Open work orders map</h2>
-      <p className="mt-1 text-sm text-stone-600">Every active call at the pivot location.</p>
-      <div className="mt-4">
-        <AllTicketsMap pins={ticketPins(openTickets)} />
-      </div>
-
       <h2 className="font-display mt-10 text-xl">Recent work orders</h2>
       <div className="mt-3 overflow-hidden rounded-xl border border-stone-200 bg-white">
         {openTickets.length === 0 ? (
@@ -128,15 +122,21 @@ export default async function DashboardPage() {
           </ul>
         )}
       </div>
+
+      <h2 className="font-display mt-10 text-xl">Open work orders map</h2>
+      <p className="mt-1 text-sm text-stone-600">Every active call at the pivot location.</p>
+      <div className="mt-4">
+        <AllTicketsMap pins={ticketPins(openTickets)} />
+      </div>
     </div>
   );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
-      <p className="text-xs uppercase tracking-wide text-stone-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold">{value}</p>
+    <div className="rounded-lg border border-stone-200 bg-white p-2 text-center sm:rounded-xl sm:p-4 sm:text-left">
+      <p className="text-[10px] font-medium uppercase leading-tight tracking-wide text-stone-500 sm:text-xs">{label}</p>
+      <p className="mt-1 text-sm font-semibold leading-tight sm:text-2xl">{value}</p>
     </div>
   );
 }
