@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+import { homePath } from "@/lib/home";
 import { prisma } from "@/lib/prisma";
 import { PRIORITIES, ROLES, canAssignTickets, isShopStaff } from "@/lib/roles";
 import { createTicketAction } from "@/lib/actions";
@@ -16,6 +17,7 @@ import { visionOcrConfigured } from "@/lib/ticket-ocr";
 import { orgOcrIsOn } from "@/lib/ocr-samples";
 import { assetWhere, pivotWhere, loadTechnicians } from "@/lib/scope";
 import { ensureAssetTypes } from "@/lib/assets";
+import { CancelBackButton } from "@/components/CancelBackButton";
 
 export default async function NewTicketPage({
   searchParams,
@@ -151,9 +153,12 @@ export default async function NewTicketPage({
         <ScheduleDateTimeField label={t(locale, "ticket.scheduledFor")} />
         {showOcr ? <NewTicketOcrPartsFields /> : null}
         <TicketPhotoFields />
-        <button className="rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white">
-          {session.role === ROLES.FARMER ? t(locale, "tickets.request") : t(locale, "dispatch.create")}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button className="rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white">
+            {session.role === ROLES.FARMER ? t(locale, "tickets.request") : t(locale, "dispatch.create")}
+          </button>
+          <CancelBackButton fallbackHref={homePath(session.role)} />
+        </div>
       </ActionForm>
       </div>
     </div>
