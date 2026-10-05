@@ -274,12 +274,18 @@ export const REST_EN = {
 
   "forms.title": "Forms",
   "forms.help":
-    "Fill these office tickets, print them, or download a copy. Save onto an open work order by choosing the job first. The dealer logo is used except on AgSense, which keeps the AgSense mark from that sheet.",
+    "Fill these office tickets, print them, or download a copy. Save onto an open work order by choosing the job first. On the service order you can create a new work order instead. The dealer logo is used except on AgSense, which keeps the AgSense mark from that sheet.",
   "forms.notEnabled":
     "Office forms are not on for this company yet. Enterprise includes them. Platform can turn the plan flag on for Starter or Shop.",
   "forms.back": "All forms",
   "forms.download": "Download",
   "forms.saveToWorkOrder": "Save to work order",
+  "forms.attachExisting": "Add to an existing work order",
+  "forms.createNew": "Create a new work order",
+  "forms.createWorkOrder": "Create work order",
+  "forms.workOrderTitle": "Work order title",
+  "forms.workOrderTitlePlaceholder": "Uses the problem if left blank",
+  "forms.newWorkOrderHelp": "Pick the customer and equipment. This form becomes the new work order.",
   "forms.chooseWorkOrder": "Open work order",
   "forms.findWorkOrder": "Search number, customer, or title",
   "forms.noneOpen": "There are no open work orders to attach this to.",
@@ -656,12 +662,18 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
 
   "forms.title": "Formularios",
   "forms.help":
-    "Llene estos tickets de oficina, imprímalos o descargue una copia. Para guardarlos en una orden abierta, elija el trabajo primero. Se usa el logotipo del dealer, salvo AgSense, que conserva la marca de esa hoja.",
+    "Llene estos tickets de oficina, imprímalos o descargue una copia. Para guardarlos en una orden abierta, elija el trabajo primero. En la orden de servicio también puede crear una orden nueva. Se usa el logotipo del dealer, salvo AgSense, que conserva la marca de esa hoja.",
   "forms.notEnabled":
     "Los formularios de oficina aún no están activos en esta empresa. Enterprise los incluye. La plataforma puede encender el flag del plan en Starter o Shop.",
   "forms.back": "Todos los formularios",
   "forms.download": "Descargar",
   "forms.saveToWorkOrder": "Guardar en la orden",
+  "forms.attachExisting": "Agregar a una orden existente",
+  "forms.createNew": "Crear una orden nueva",
+  "forms.createWorkOrder": "Crear orden",
+  "forms.workOrderTitle": "Título de la orden",
+  "forms.workOrderTitlePlaceholder": "Si lo deja vacío, se usa el problema",
+  "forms.newWorkOrderHelp": "Elija el cliente y el equipo. Este formulario se convierte en la orden nueva.",
   "forms.chooseWorkOrder": "Orden abierta",
   "forms.findWorkOrder": "Busque número, cliente o título",
   "forms.noneOpen": "No hay órdenes abiertas para adjuntar esto.",

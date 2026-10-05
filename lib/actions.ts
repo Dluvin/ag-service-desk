@@ -72,7 +72,7 @@ import {
   resolveFarmIdForCustomer,
 } from "./farms";
 import { ticketWhere } from "./scope";
-import { officeFormBySlug, officeFormMessage } from "./office-forms";
+import { officeFormBySlug, officeFormMessage, serviceOrderTitle } from "./office-forms";
 import {
   ocrImageFromForm,
   readHandwrittenTicket,
@@ -3337,10 +3337,55 @@ export async function attachOfficeFormToTicketAction(formData: FormData) {
     return { error: "Office forms are not on for this company yet." };
   }
 
-  const ticketId = formString(formData, "ticketId");
   const slug = formString(formData, "formSlug");
   const form = officeFormBySlug(slug);
   if (!form) return { error: "Form not found." };
+
+  const locale = await getRequestLocale();
+  const formTitle = t(locale, form.titleKey);
+  const message = officeFormMessage(formTitle, formData);
+  const mode = formString(formData, "workOrderMode") || "existing";
+
+  if (mode === "new") {
+    if (slug !== "service-ticket") return { error: "Choose an open work order." };
+    const site = await resolveWorkOrderSite(session, formData);
+    if ("error" in site) return site;
+    const { pivot, asset } = site;
+    const farmerId = pivot?.farmerId ?? asset!.farmerId;
+    const [actor, farmer] = await Promise.all([
+      prisma.user.findFirst({
+        where: { id: session.userId, organizationId: session.organizationId },
+        select: { storeId: true },
+      }),
+      prisma.farmer.findFirst({
+        where: { id: farmerId, organizationId: session.organizationId },
+        select: { storeId: true },
+      }),
+    ]);
+    const assigned = session.role === ROLES.TECHNICIAN ? session.userId : null;
+    const ticket = await openServiceTicket({
+      organizationId: session.organizationId,
+      farmerId,
+      pivotId: pivot?.id ?? null,
+      assetId: asset?.id ?? null,
+      technicianId: assigned,
+      storeId: actor?.storeId ?? farmer?.storeId ?? null,
+      userId: session.userId,
+      title: serviceOrderTitle(formData, formTitle),
+      description: message,
+    });
+    if (assigned) {
+      await notifyTicketSms({
+        organizationId: session.organizationId,
+        ticketId: ticket.id,
+        kind: "assigned",
+        actorUserId: session.userId,
+      });
+    }
+    redirect(`/tickets/${ticket.id}`);
+  }
+
+  const ticketId = formString(formData, "ticketId");
   if (!ticketId) return { error: "Choose an open work order." };
 
   const ticket = await prisma.ticket.findFirst({
@@ -3348,10 +3393,6 @@ export async function attachOfficeFormToTicketAction(formData: FormData) {
   });
   if (!ticket) return { error: "Work order not found." };
   if (isFinishedStatus(ticket.status)) return { error: "That work order is already closed." };
-
-  const locale = await getRequestLocale();
-  const title = t(locale, form.titleKey);
-  const message = officeFormMessage(title, formData);
 
   await prisma.ticketUpdate.create({
     data: { ticketId: ticket.id, userId: session.userId, message },

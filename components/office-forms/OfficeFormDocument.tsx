@@ -11,11 +11,37 @@ import {
   OfficeFormHeader,
   YesNo,
 } from "@/components/office-forms/OfficeFormKit";
+import { NewTicketSiteFields } from "@/components/NewTicketSiteFields";
 import { attachOfficeFormToTicketAction } from "@/lib/actions";
 import { ELECTRICAL_PART_COLUMNS } from "@/lib/electrical-parts";
 import type { OpenWorkOrderOption } from "@/lib/office-forms";
 import { useT } from "@/components/I18nProvider";
 import { useMemo, useState, type ReactNode } from "react";
+
+type CreateWorkOrderSite = {
+  pivots: {
+    id: string;
+    name: string;
+    farmerName: string;
+    farmerId: string;
+    latitude: number;
+    longitude: number;
+    locationNote: string | null;
+  }[];
+  assets: {
+    id: string;
+    name: string;
+    farmerName: string;
+    farmerId: string;
+    latitude: number;
+    longitude: number;
+    locationNote: string | null;
+    typeSlug: string;
+  }[];
+  types: { id: string; name: string; slug: string; kind: string }[];
+  farmers: { id: string; name: string }[];
+  mapsApiKey?: string;
+};
 
 export function OfficeFormDocument({
   slug,
@@ -24,6 +50,7 @@ export function OfficeFormDocument({
   logoSrc,
   logoAlt,
   openTickets,
+  createSite,
 }: {
   slug: string;
   title: string;
@@ -31,23 +58,77 @@ export function OfficeFormDocument({
   logoSrc: string | null;
   logoAlt: string;
   openTickets: OpenWorkOrderOption[];
+  createSite?: CreateWorkOrderSite;
 }) {
   const t = useT();
   const [ticketId, setTicketId] = useState("");
+  const [mode, setMode] = useState<"existing" | "new">("existing");
+  const creating = Boolean(createSite) && mode === "new";
 
   return (
     <div>
       <OfficeFormActions fileBase={slug} />
       <ActionForm action={attachOfficeFormToTicketAction} className="space-y-4">
         <input type="hidden" name="formSlug" value={slug} />
-        <div className="no-print flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4">
-          <AttachWorkOrderPicker tickets={openTickets} onSelect={setTicketId} />
-          <button
-            className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-            disabled={openTickets.length === 0 || !ticketId}
-          >
-            {t("forms.saveToWorkOrder")}
-          </button>
+        <div className="no-print space-y-4 rounded-xl border border-stone-200 bg-white p-4">
+          {createSite ? (
+            <fieldset className="flex flex-wrap gap-4 text-sm">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="workOrderMode"
+                  value="existing"
+                  checked={mode === "existing"}
+                  onChange={() => setMode("existing")}
+                />
+                {t("forms.attachExisting")}
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="workOrderMode"
+                  value="new"
+                  checked={mode === "new"}
+                  onChange={() => setMode("new")}
+                />
+                {t("forms.createNew")}
+              </label>
+            </fieldset>
+          ) : null}
+          {creating && createSite ? (
+            <div className="space-y-4">
+              <p className="text-sm text-stone-600">{t("forms.newWorkOrderHelp")}</p>
+              <NewTicketSiteFields
+                pivots={createSite.pivots}
+                assets={createSite.assets}
+                types={createSite.types}
+                farmers={createSite.farmers}
+                canAddFarmer
+                mapsApiKey={createSite.mapsApiKey}
+              />
+              <label className="block text-sm font-medium">
+                {t("forms.workOrderTitle")}
+                <input
+                  name="workOrderTitle"
+                  placeholder={t("forms.workOrderTitlePlaceholder")}
+                  className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+                />
+              </label>
+              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
+                {t("forms.createWorkOrder")}
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-end gap-3">
+              <AttachWorkOrderPicker tickets={openTickets} onSelect={setTicketId} />
+              <button
+                className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={openTickets.length === 0 || !ticketId}
+              >
+                {t("forms.saveToWorkOrder")}
+              </button>
+            </div>
+          )}
         </div>
         <article
           id="office-form-print"

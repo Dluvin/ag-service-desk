@@ -69,7 +69,44 @@ export type OpenWorkOrderOption = {
   status: string;
 };
 
-const SKIP_FORM_KEYS = new Set(["ticketId", "formSlug"]);
+const SKIP_FORM_KEYS = new Set([
+  "ticketId",
+  "formSlug",
+  "workOrderMode",
+  "workOrderTitle",
+  "assetTypeSlug",
+  "siteMode",
+  "farmerMode",
+  "farmerId",
+  "pivotId",
+  "assetId",
+  "farmId",
+  "farmerName",
+  "farmerAddress",
+  "farmerContactName",
+  "farmerPhone",
+  "farmerEmail",
+  "assetName",
+  "pivotName",
+  "serialNumber",
+  "mapsInput",
+  "latitude",
+  "longitude",
+]);
+
+export function serviceOrderTitle(formData: FormData, fallback: string) {
+  const explicit = String(formData.get("workOrderTitle") ?? "").trim();
+  if (explicit) return explicit.slice(0, 120);
+  const problem = String(formData.get("problem") ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
+  if (problem) return problem.slice(0, 120);
+  const farm = String(formData.get("farm_name") ?? "").trim();
+  const unit = String(formData.get("unit_id") ?? "").trim();
+  const fromSite = [farm, unit].filter(Boolean).join(" — ");
+  if (fromSite) return fromSite.slice(0, 120);
+  return fallback;
+}
 
 export function officeFormMessage(title: string, formData: FormData) {
   const lines = [`Office form: ${title}`];
