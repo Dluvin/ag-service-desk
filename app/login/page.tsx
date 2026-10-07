@@ -71,8 +71,11 @@ export default async function LoginPage({
                 {t(locale, "login.signIn")}
               </button>
             </ActionForm>
-            <p className="mt-3 text-sm">
-              <Link href="/forgot" className="font-medium text-emerald-800 hover:underline">
+            <p className="mt-3">
+              <Link
+                href="/forgot"
+                className="inline-flex w-full items-center justify-center rounded-lg border border-emerald-800 px-4 py-2.5 text-sm font-semibold text-emerald-800 hover:bg-emerald-50"
+              >
                 {t(locale, "login.forgot")}
               </Link>
             </p>

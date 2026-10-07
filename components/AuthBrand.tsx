@@ -155,9 +155,14 @@ export function LoginFields() {
         {t("login.rememberEmail")}
       </label>
       <div>
-        <label className="block text-sm font-medium" htmlFor="login-password">
-          {t("login.password")}
-        </label>
+        <div className="flex items-baseline justify-between gap-3">
+          <label className="block text-sm font-medium" htmlFor="login-password">
+            {t("login.password")}
+          </label>
+          <a href="/forgot" className="text-sm font-semibold text-emerald-800 hover:underline">
+            {t("login.forgot")}
+          </a>
+        </div>
         <div className="relative mt-1">
           <input
             id="login-password"
