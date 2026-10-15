@@ -124,6 +124,10 @@ export default function PrivacyPage() {
               <a href="/terms">Terms and Conditions</a>.
             </p>
             <p>
+              We do not sell or share mobile phone numbers or text messaging opt-in consent with
+              third parties or affiliates for marketing purposes.
+            </p>
+            <p>
               No mobile information will be shared with third parties or affiliates for marketing or
               promotional purposes. Information sharing to subcontractors in support services, such
               as customer service, is permitted. All the above categories exclude text messaging
@@ -171,7 +175,7 @@ export default function PrivacyPage() {
               {" or "}
               <a href="mailto:info@agdeskpro.com">info@agdeskpro.com</a>
               {" · "}
-              <a href="tel:+12299389000">229-938-9000</a>
+              <a href="tel:+12293046901">(229) 304-6901</a>
             </p>
           </div>
         </div>

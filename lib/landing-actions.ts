@@ -27,7 +27,7 @@ export async function landingDemoAction(formData: FormData) {
     return { error: "Choose which version you want: Starter, Shop, or Enterprise." };
   }
   if (!mailIsConfigured()) {
-    return { error: "Demo requests are not configured yet. Call 229-938-9000 or email info@agdeskpro.com." };
+    return { error: "Demo requests are not configured yet. Call (229) 304-6901 or email info@agdeskpro.com." };
   }
   const version = PLANS[plan].label;
   const text = [
@@ -46,7 +46,7 @@ export async function landingDemoAction(formData: FormData) {
     text,
     html: `<p>Demo request from the landing page.</p><pre>${escapeMailHtml(text)}</pre>`,
   });
-  if (!result.ok) return { error: "Could not send that request. Call 229-938-9000." };
+  if (!result.ok) return { error: "Could not send that request. Call (229) 304-6901." };
   redirect("/?demo=1#contact");
 }
 
@@ -59,7 +59,7 @@ export async function landingSupportAction(formData: FormData) {
     return { error: "Name, email, and message are required." };
   }
   if (!mailIsConfigured()) {
-    return { error: "Support messages are not configured yet. Call 229-938-9000 or email info@agdeskpro.com." };
+    return { error: "Support messages are not configured yet. Call (229) 304-6901 or email info@agdeskpro.com." };
   }
   const text = [
     `Name: ${name}`,
@@ -77,6 +77,6 @@ export async function landingSupportAction(formData: FormData) {
       text,
     )}</pre>`,
   });
-  if (!result.ok) return { error: "Could not send that message. Call 229-938-9000." };
+  if (!result.ok) return { error: "Could not send that message. Call (229) 304-6901." };
   redirect("/support?sent=1");
 }

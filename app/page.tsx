@@ -65,7 +65,7 @@ export default async function HomePage({
                       <span>David Luvin in information technology</span>
                     </div>
                     <div className="landing-card">
-                      <strong>229-938-9000</strong>
+                      <strong>(229) 304-6901</strong>
                       <span>Direct line for demo requests</span>
                     </div>
                   </div>
@@ -335,8 +335,14 @@ export default async function HomePage({
                 </li>
                 <li>
                   Phone:{" "}
-                  <a href="tel:+12299389000">
-                    <strong>229-938-9000</strong>
+                  <a href="tel:+12293046901">
+                    <strong>(229) 304-6901</strong>
+                  </a>
+                </li>
+                <li>
+                  Text <strong>DEMO</strong> to{" "}
+                  <a href="sms:+12293046901?body=DEMO">
+                    <strong>(229) 304-6901</strong>
                   </a>
                 </li>
                 <li>
@@ -346,6 +352,17 @@ export default async function HomePage({
                   </Link>
                 </li>
               </ul>
+              <p className="landing-muted">
+                Request a demo: call or text DEMO to{" "}
+                <a href="sms:+12293046901?body=DEMO">(229) 304-6901</a>. By texting DEMO to (229)
+                304-6901, or by agreeing on a call to that number, you agree to receive up to 3 text
+                messages from Ag Desk Pro about your demo request (call summary, welcome packet
+                link, and demo scheduling). Message and data rates may apply. Reply STOP to opt out,
+                HELP for help. Consent is not a condition of purchase.{" "}
+                <Link href="/privacy">Privacy Policy</Link>
+                {" · "}
+                <Link href="/terms#sms">SMS Terms</Link>
+              </p>
               <div className="landing-pills">
                 <span className="landing-chip">Irrigation-specific</span>
                 <span className="landing-chip">Dealer + field + customer</span>
@@ -371,7 +388,7 @@ export default async function HomePage({
                 </div>
                 <div className="landing-field">
                   <label htmlFor="phone">Phone</label>
-                  <input id="phone" name="phone" type="tel" placeholder="229-938-9000" />
+                  <input id="phone" name="phone" type="tel" placeholder="(229) 304-6901" />
                 </div>
                 <LandingDemoPlanField initialPlan={selectedPlan} />
                 <div className="landing-field">

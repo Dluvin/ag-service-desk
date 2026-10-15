@@ -51,7 +51,7 @@ export function LandingFooter() {
           {" · "}
           <a href="mailto:info@agdeskpro.com">info@agdeskpro.com</a>
           {" · "}
-          <a href="tel:+12299389000">229-938-9000</a>
+          <a href="tel:+12293046901">(229) 304-6901</a>
         </div>
       </div>
     </footer>

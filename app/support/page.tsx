@@ -77,7 +77,7 @@ export default async function SupportPage({
             <h2>Reach us</h2>
             <ul>
               <li>
-                Phone: <a href="tel:+12299389000">229-938-9000</a>
+                Phone: <a href="tel:+12293046901">(229) 304-6901</a>
               </li>
               <li>
                 Email: <a href="mailto:info@agdeskpro.com">info@agdeskpro.com</a>

@@ -39,7 +39,7 @@ export default function TermsPage() {
               or comply with carrier rules.
             </p>
 
-            <h2>Text message program</h2>
+            <h2 id="sms">Text message program</h2>
             <p>
               Program name: <strong>Ag Desk Pro work order alerts</strong>. This is a transactional
               text program. It is not a marketing list.
@@ -80,7 +80,7 @@ export default function TermsPage() {
               Reply <strong>HELP</strong> for help, or contact{" "}
               <a href="mailto:david@agdeskpro.com">david@agdeskpro.com</a>
               {" or "}
-              <a href="tel:+12299389000">229-938-9000</a>.
+              <a href="tel:+12293046901">(229) 304-6901</a>.
             </p>
 
             <h2>Privacy and carriers</h2>
@@ -108,7 +108,7 @@ export default function TermsPage() {
               {" or "}
               <a href="mailto:info@agdeskpro.com">info@agdeskpro.com</a>
               {" · "}
-              <a href="tel:+12299389000">229-938-9000</a>
+              <a href="tel:+12293046901">(229) 304-6901</a>
             </p>
           </div>
         </div>
