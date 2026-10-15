@@ -326,6 +326,14 @@ export default async function HomePage({
                 Tell us how you run service today. We will walk you through the desk, then you can
                 start a company for approval and a {PLAN.trialDays}-day trial.
               </p>
+              <div className="landing-cta">
+                <a className="landing-btn" href="tel:+12293046901">
+                  Call (229) 304-6901
+                </a>
+                <a className="landing-btn-secondary" href="sms:+12293046901?&body=DEMO">
+                  Text DEMO
+                </a>
+              </div>
               <ul className="landing-list">
                 <li>
                   Email:{" "}
@@ -341,7 +349,7 @@ export default async function HomePage({
                 </li>
                 <li>
                   Text <strong>DEMO</strong> to{" "}
-                  <a href="sms:+12293046901?body=DEMO">
+                  <a href="sms:+12293046901?&body=DEMO">
                     <strong>(229) 304-6901</strong>
                   </a>
                 </li>
@@ -354,7 +362,7 @@ export default async function HomePage({
               </ul>
               <p className="landing-muted">
                 Request a demo: call or text DEMO to{" "}
-                <a href="sms:+12293046901?body=DEMO">(229) 304-6901</a>. By texting DEMO to (229)
+                <a href="sms:+12293046901?&body=DEMO">(229) 304-6901</a>. By texting DEMO to (229)
                 304-6901, or by agreeing on a call to that number, you agree to receive up to 3 text
                 messages from Ag Desk Pro about your demo request (call summary, welcome packet
                 link, and demo scheduling). Message and data rates may apply. Reply STOP to opt out,
