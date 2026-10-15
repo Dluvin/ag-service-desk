@@ -213,6 +213,20 @@ html:has(.landing) {
   border-color: transparent;
 }
 
+.landing a.landing-btn {
+  color: #fff;
+}
+
+html[data-landing-theme="dark"] .landing .landing-btn {
+  color: #022c22;
+}
+
+.landing .landing-header a.landing-btn {
+  background: #fbbf24;
+  color: #022c22;
+  border-color: transparent;
+}
+
 .landing-hero {
   padding: clamp(1.75rem, 4vw, 3.25rem) 0 clamp(2.25rem, 5vw, 4rem);
 }
