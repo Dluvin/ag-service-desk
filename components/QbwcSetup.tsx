@@ -60,7 +60,7 @@ export function QbwcSetup({
         <li>
           The PC must reach this site over HTTPS (or HTTP on localhost). If the company file is on a
           different computer, run Web Connector on the QuickBooks machine, not on a laptop that cannot
-          talk to AG Desk Pro.
+          talk to Ag Desk Pro.
         </li>
       </ol>
       {hasPassword ? (

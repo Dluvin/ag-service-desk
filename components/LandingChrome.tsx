@@ -18,6 +18,7 @@ export function LandingHeader() {
             <summary className="landing-nav-trigger">Support</summary>
             <div className="landing-submenu">
               <Link href="/support">Support</Link>
+              <Link href="/terms">Terms and Conditions</Link>
               <Link href="/privacy">Privacy Policy</Link>
             </div>
           </details>
@@ -40,9 +41,11 @@ export function LandingFooter() {
   return (
     <footer className="landing-footer">
       <div className="container landing-footer-inner">
-        <div>AG Desk Pro — irrigation service software for dealers.</div>
+        <div>Ag Desk Pro — irrigation service software for dealers.</div>
         <div>
           <Link href="/privacy">Privacy</Link>
+          {" · "}
+          <Link href="/terms">Terms</Link>
           {" · "}
           <Link href="/support">Support</Link>
           {" · "}

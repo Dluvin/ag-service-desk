@@ -100,7 +100,7 @@ export function Nav({
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <Link href={homePath(session.role)} className="flex items-center gap-2 font-display text-lg tracking-tight">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand-logo-on-dark.png" alt="AG Desk Pro" className="h-9 max-w-52 bg-transparent object-contain object-left" />
+          <img src="/brand-logo-on-dark.png" alt="Ag Desk Pro" className="h-9 max-w-52 bg-transparent object-contain object-left" />
           {hasLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src="/api/company-logo" alt="" className="h-8 max-w-32 object-contain" />
@@ -132,6 +132,7 @@ export function Nav({
             links={[
               { href: "/help", label: t(locale, "nav.support") },
               { href: "/help/faq", label: t(locale, "nav.faq") },
+              { href: "/terms", label: t(locale, "nav.terms") },
             ]}
           />
         </nav>

@@ -118,7 +118,7 @@ async function sendPasswordLinkEmail(input: {
     "",
     "If you did not expect this, tell your dealer.",
     "",
-    "Powered by AG Desk Pro",
+    "Powered by Ag Desk Pro",
   ]
     .filter(Boolean)
     .join("\n");
@@ -138,7 +138,7 @@ async function sendPasswordLinkEmail(input: {
         : ""
     }
     <p>If you did not expect this, tell your dealer.</p>
-    <p>Powered by AG Desk Pro</p>
+    <p>Powered by Ag Desk Pro</p>
     ${brandLogoEmailHtml()}
   `;
 

@@ -167,7 +167,7 @@ export function qbwcFile(opts: {
   <AppName>${encodeXml(opts.appName)}</AppName>
   <AppID></AppID>
   <AppURL>${encodeXml(opts.appUrl)}</AppURL>
-  <AppDescription>Create QuickBooks Desktop estimates from AG Desk Pro work orders.</AppDescription>
+  <AppDescription>Create QuickBooks Desktop estimates from Ag Desk Pro work orders.</AppDescription>
   <AppSupport>${encodeXml(opts.supportUrl)}</AppSupport>
   <UserName>${encodeXml(opts.username)}</UserName>
   <OwnerID>${encodeXml(opts.ownerId)}</OwnerID>

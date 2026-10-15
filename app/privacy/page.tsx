@@ -3,8 +3,8 @@ import { LandingFooter, LandingHeader } from "@/components/LandingChrome";
 import "../landing.css";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | AG Desk Pro",
-  description: "How AG Desk Pro collects, uses, and shares information for irrigation dealers and their users.",
+  title: "Privacy Policy | Ag Desk Pro",
+  description: "How Ag Desk Pro collects, uses, and shares information for irrigation dealers and their users.",
 };
 
 export default function PrivacyPage() {
@@ -18,11 +18,11 @@ export default function PrivacyPage() {
         <div className="container landing-legal">
           <span className="landing-eyebrow">Legal</span>
           <h1>Privacy Policy</h1>
-          <p className="landing-muted">Last updated September 20, 2026</p>
+          <p className="landing-muted">Last updated October 15, 2026</p>
 
           <div className="landing-card landing-legal-body">
             <p>
-              AG Desk Pro (“we,” “us”) is irrigation service software operated by David Luvin. This
+              Ag Desk Pro (“we,” “us”) is irrigation service software operated by David Luvin. This
               policy explains what we collect when you use{" "}
               <a href="https://agdeskpro.com">agdeskpro.com</a>, request a demo, start a company, or
               log in as a dealer, technician, manager, or customer.
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
 
             <h2>Who this covers</h2>
             <p>
-              If you work for an irrigation company that uses AG Desk Pro, that company is
+              If you work for an irrigation company that uses Ag Desk Pro, that company is
               responsible for the customer, work order, and other records it puts in the desk. We host
               that data so their staff and customers can use the product. If you are visiting the
               public website or requesting a demo, we handle that information ourselves.
@@ -67,6 +67,11 @@ export default function PrivacyPage() {
                 choose that link.
               </li>
               <li>
+                <strong>Text messages:</strong> the mobile number a dealer saves for a staff member
+                or customer, and the consent to send work-order texts to that number. Message
+                content is the work-order alert itself.
+              </li>
+              <li>
                 <strong>Cookies:</strong> signed session cookies (<code>ag_session</code> for company
                 users and <code>ag_platform</code> for the operator portal) so you stay logged in.
                 We do not use advertising cookies on the public site.
@@ -77,6 +82,10 @@ export default function PrivacyPage() {
             <ul>
               <li>To run the service desk, demos, trials, and paid subscriptions.</li>
               <li>To email you about signup, approval, billing, and password reset.</li>
+              <li>
+                To send transactional work-order texts when a dealer turns texting on. We do not use
+                mobile numbers for marketing texts.
+              </li>
               <li>To operate GPS and maps when a dealer turns those connectors on.</li>
               <li>To keep the product secure, debug problems, and meet the law.</li>
             </ul>
@@ -95,12 +104,32 @@ export default function PrivacyPage() {
                 <strong>Resend</strong> (or SMTP if configured) to send email.
               </li>
               <li>
+                <strong>Bird</strong> to deliver text messages when a dealer turns SMS on. Bird is a
+                messaging provider acting for us, not a buyer of your number.
+              </li>
+              <li>
                 <strong>Verizon Connect Reveal</strong> when a dealer connects it, using that
                 dealer’s credentials.
               </li>
               <li>Hosting and infrastructure we use to run agdeskpro.com.</li>
               <li>If the law requires it, or to protect the service and our users.</li>
             </ul>
+
+            <h2>Text messages and mobile numbers</h2>
+            <p>
+              Ag Desk Pro work order alerts are transactional texts about irrigation service. A
+              dealer opts a person in by saving their mobile number for SMS. Message frequency
+              varies with shop activity. Message and data rates may apply. Reply STOP to cancel.
+              Reply HELP for help, or contact us below. The full program is in the{" "}
+              <a href="/terms">Terms and Conditions</a>.
+            </p>
+            <p>
+              No mobile information will be shared with third parties or affiliates for marketing or
+              promotional purposes. Information sharing to subcontractors in support services, such
+              as customer service, is permitted. All the above categories exclude text messaging
+              originator opt-in data and consent; this information will not be shared with any third
+              parties.
+            </p>
 
             <h2>How long we keep it</h2>
             <p>
@@ -119,7 +148,7 @@ export default function PrivacyPage() {
 
             <h2>Children</h2>
             <p>
-              AG Desk Pro is for irrigation businesses. It is not directed at children under 13,
+              Ag Desk Pro is for irrigation businesses. It is not directed at children under 13,
               and we do not knowingly collect their information.
             </p>
 

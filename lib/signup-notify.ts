@@ -39,9 +39,9 @@ export async function emailSignupToOwner(details: SignupDetails) {
 
   const result = await sendEmail({
     to: signupNotifyEmail(),
-    subject: `New AG Desk Pro signup: ${details.company}`,
+    subject: `New Ag Desk Pro signup: ${details.company}`,
     text: lines.join("\n"),
-    html: `<p>A company requested an AG Desk Pro tenant.</p><pre>${escapeHtml(lines.join("\n"))}</pre>`,
+    html: `<p>A company requested an Ag Desk Pro tenant.</p><pre>${escapeHtml(lines.join("\n"))}</pre>`,
   });
   return result.ok ? ("sent" as const) : ("failed" as const);
 }
@@ -58,7 +58,7 @@ export async function emailTenantApproved(input: {
   const text = [
     `Hi ${input.name.split(" ")[0] || "there"},`,
     "",
-    `${input.company} is approved on AG Desk Pro. Sign in and use the demo customer/work order we loaded for your ${trial}.`,
+    `${input.company} is approved on Ag Desk Pro. Sign in and use the demo customer/work order we loaded for your ${trial}.`,
     `After ${PLAN.trialDays} days the plan is $${PLAN.monthlyDollars}/month for ${PLAN.includedSeats} staff seats. Extra seats are $${PLAN.extraSeatDollars}/month.`,
     `Sign in: ${login}`,
     input.checkoutUrl ? `Set up billing (card, ${trial} before the first charge): ${input.checkoutUrl}` : "",
@@ -67,7 +67,7 @@ export async function emailTenantApproved(input: {
     .join("\n");
   const result = await sendEmail({
     to: input.to,
-    subject: `${input.company} is approved on AG Desk Pro`,
+    subject: `${input.company} is approved on Ag Desk Pro`,
     text,
     html: `${brandLogoEmailHtml()}<p>${escapeHtml(text).replaceAll("\n", "<br/>")}</p>`,
   });

@@ -9,7 +9,7 @@ import { isPlanId, PLANS, formatPlanCents } from "@/lib/plans";
 import "./landing.css";
 
 export const metadata = {
-  title: "AG Desk Pro",
+  title: "Ag Desk Pro",
   description:
     "Irrigation-specific work-order software for dealers, field technicians, and office teams.",
 };
@@ -38,7 +38,7 @@ export default async function HomePage({
                 Keep irrigation work orders, assets, and technician updates in one place.
               </h1>
               <p className="landing-lead">
-                AG Desk Pro is built for irrigation dealers and service teams that need a simple way
+                Ag Desk Pro is built for irrigation dealers and service teams that need a simple way
                 to manage repair work orders, track pivots, organize departments, and keep customers
                 informed without forcing their workflow into generic help desk software.
               </p>
@@ -76,7 +76,7 @@ export default async function HomePage({
                       calls the same way they did 15 years ago.
                     </p>
                     <p>
-                      We built AG Desk Pro to change that. Simple work-order management, built
+                      We built Ag Desk Pro to change that. Simple work-order management, built
                       specifically for irrigation service teams.
                     </p>
                   </div>
@@ -110,7 +110,7 @@ export default async function HomePage({
               <figure className="landing-shot">
                 <img
                   src="/landing/dashboard.png"
-                  alt="AG Desk Pro dashboard with open work orders map and Verizon trucks"
+                  alt="Ag Desk Pro dashboard with open work orders map and Verizon trucks"
                 />
               </figure>
               <div className="landing-mini">
@@ -144,7 +144,7 @@ export default async function HomePage({
               <article className="landing-card">
                 <h3>Built around real irrigation service work</h3>
                 <p className="landing-muted">
-                  Instead of asking your team to adapt to a generic IT tool, AG Desk Pro gives you
+                  Instead of asking your team to adapt to a generic IT tool, Ag Desk Pro gives you
                   one workflow for incoming service requests, field troubleshooting, asset history,
                   and internal follow-up.
                 </p>
@@ -207,7 +207,7 @@ export default async function HomePage({
               <span className="landing-eyebrow">Built for the field</span>
               <h2>One of the biggest time-wasters in irrigation service? Getting techs to the right pivot.</h2>
               <p className="landing-muted">
-                Directions to a customer address only get you so far. AG Desk Pro lets you import
+                Directions to a customer address only get you so far. Ag Desk Pro lets you import
                 customer pivot locations so technicians navigate to the equipment — not just the
                 front gate.
               </p>
@@ -215,7 +215,7 @@ export default async function HomePage({
                 <strong>Less time lost. More service calls completed per day.</strong>
               </p>
               <figure className="landing-shot" style={{ marginTop: "1rem" }}>
-                <img src="/landing/gps-trucks.png" alt="Verizon truck list synced into AG Desk Pro" />
+                <img src="/landing/gps-trucks.png" alt="Verizon truck list synced into Ag Desk Pro" />
               </figure>
             </article>
             <figure className="landing-shot landing-shot-tall">
@@ -297,7 +297,7 @@ export default async function HomePage({
                 for an easy-to-use work order system that is specific to irrigation.
               </p>
               <div className="landing-quote">
-                AG Desk Pro is a practical tool built from experience in the field, not another
+                Ag Desk Pro is a practical tool built from experience in the field, not another
                 generic software platform trying to fit agriculture after the fact.
               </div>
             </article>

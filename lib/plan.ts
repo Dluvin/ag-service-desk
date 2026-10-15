@@ -3,7 +3,7 @@ import { PLANS, TRIAL_DAYS, extraStaffSeatsFor, formatPlanCents } from "./plans"
 const shop = PLANS.SHOP;
 
 export const PLAN = {
-  name: "AG Desk Pro",
+  name: "Ag Desk Pro",
   monthlyDollars: shop.monthlyCents / 100,
   includedSeats: shop.includedUsers ?? 10,
   extraSeatDollars: shop.extraSeatCents / 100,

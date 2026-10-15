@@ -14,11 +14,11 @@ export function BrandLogo({
   themeAware?: boolean;
 }) {
   return (
-    <Link href={href} className={className} aria-label="AG Desk Pro home">
+    <Link href={href} className={className} aria-label="Ag Desk Pro home">
       {themeAware && !onDark ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand-logo.png" alt="AG Desk Pro" className={`desk-logo-light bg-transparent ${imageClassName}`} />
+          <img src="/brand-logo.png" alt="Ag Desk Pro" className={`desk-logo-light bg-transparent ${imageClassName}`} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand-logo-on-dark.png" alt="" className={`desk-logo-dark bg-transparent ${imageClassName}`} />
         </>
@@ -26,7 +26,7 @@ export function BrandLogo({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={onDark ? "/brand-logo-on-dark.png" : "/brand-logo.png"}
-          alt="AG Desk Pro"
+          alt="Ag Desk Pro"
           className={`bg-transparent ${imageClassName}`}
         />
       )}

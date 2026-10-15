@@ -42,7 +42,7 @@ export async function landingDemoAction(formData: FormData) {
     .join("\n");
   const result = await sendEmail({
     to: signupNotifyEmail(),
-    subject: `AG Desk Pro demo request: ${company || name}`,
+    subject: `Ag Desk Pro demo request: ${company || name}`,
     text,
     html: `<p>Demo request from the landing page.</p><pre>${escapeMailHtml(text)}</pre>`,
   });
@@ -71,7 +71,7 @@ export async function landingSupportAction(formData: FormData) {
     .join("\n");
   const result = await sendEmail({
     to: signupNotifyEmail(),
-    subject: `AG Desk Pro support: ${company || name}`,
+    subject: `Ag Desk Pro support: ${company || name}`,
     text,
     html: `<p>Support message from the public Support page. No company was created.</p><pre>${escapeMailHtml(
       text,

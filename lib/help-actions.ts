@@ -39,7 +39,7 @@ export async function deskSupportAction(formData: FormData) {
 
   const result = await sendEmail({
     to: signupNotifyEmail(),
-    subject: `AG Desk Pro feature request: ${company}`,
+    subject: `Ag Desk Pro feature request: ${company}`,
     text,
     html: `<p>Feature request from the desk Support page.</p><pre>${escapeMailHtml(text)}</pre>`,
   });

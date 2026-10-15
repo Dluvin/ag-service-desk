@@ -13,5 +13,5 @@ export function brandLogoUrl() {
 export function brandLogoEmailHtml() {
   const src = brandLogoUrl();
   if (!src) return "";
-  return `<p><img src="${src}" alt="AG Desk Pro" width="280" style="max-width:100%;height:auto" /></p>`;
+  return `<p><img src="${src}" alt="Ag Desk Pro" width="280" style="max-width:100%;height:auto" /></p>`;
 }

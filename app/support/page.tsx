@@ -6,8 +6,8 @@ import { landingSupportAction } from "@/lib/landing-actions";
 import "../landing.css";
 
 export const metadata: Metadata = {
-  title: "Support | AG Desk Pro",
-  description: "Get help with AG Desk Pro: login, billing, GPS, work orders, and demo requests.",
+  title: "Support | Ag Desk Pro",
+  description: "Get help with Ag Desk Pro: login, billing, GPS, work orders, and demo requests.",
 };
 
 export default async function SupportPage({
@@ -27,7 +27,7 @@ export default async function SupportPage({
           <span className="landing-eyebrow">Help</span>
           <h1>Support</h1>
           <p className="landing-muted">
-            We are here for irrigation dealers using AG Desk Pro, and for people who want a demo.
+            We are here for irrigation dealers using Ag Desk Pro, and for people who want a demo.
           </p>
 
           <div className="landing-card landing-legal-body">
@@ -131,7 +131,8 @@ export default async function SupportPage({
 
             <h2>Privacy</h2>
             <p>
-              How we handle data is in the <Link href="/privacy">Privacy Policy</Link>.
+              How we handle data is in the <Link href="/privacy">Privacy Policy</Link>. Text-message
+              terms are in the <Link href="/terms">Terms and Conditions</Link>.
             </p>
           </div>
         </div>
