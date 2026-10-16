@@ -46,9 +46,6 @@ export default async function HomePage({
                 <a className="landing-btn" href="#contact">
                   Request demo
                 </a>
-                <Link className="landing-btn-secondary" href="/signup">
-                  Start a company
-                </Link>
                 <a className="landing-btn-secondary" href="#pricing">
                   See pricing
                 </a>
@@ -323,8 +320,7 @@ export default async function HomePage({
               <span className="landing-eyebrow">Request a demo</span>
               <h2>Talk with us about your irrigation service workflow.</h2>
               <p className="landing-muted">
-                Tell us how you run service today. We will walk you through the desk, then you can
-                start a company for approval and a {PLAN.trialDays}-day trial.
+                Tell us how you run service today. We will walk you through the desk.
               </p>
               <div className="landing-cta">
                 <a className="landing-btn" href="tel:+12293046901">
@@ -352,12 +348,6 @@ export default async function HomePage({
                   <a href="sms:+12293046901?&body=DEMO">
                     <strong>(229) 304-6901</strong>
                   </a>
-                </li>
-                <li>
-                  Ready to begin?{" "}
-                  <Link href="/signup">
-                    <strong>Start a company</strong>
-                  </Link>
                 </li>
               </ul>
               <p className="landing-muted">

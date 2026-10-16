@@ -99,8 +99,8 @@ export default async function SupportPage({
               system. Check spam if you do not see it.
             </p>
             <p>
-              New companies start at <Link href="/signup">Start a company</Link>. You cannot log in
-              until we approve the signup and you finish billing if we send a Stripe link.
+              You cannot log in until we approve your company and you finish billing if we send a
+              Stripe link.
             </p>
 
             <h2>Work orders, customers, and pivots</h2>

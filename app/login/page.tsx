@@ -79,13 +79,7 @@ export default async function LoginPage({
                 {t(locale, "login.forgot")}
               </Link>
             </p>
-            <p className="mt-4 text-sm text-stone-600">
-              {t(locale, "login.newCompany")}{" "}
-              <Link href="/signup" className="font-medium text-emerald-800 hover:underline">
-                {t(locale, "login.createAccount")}
-              </Link>
-            </p>
-            <p className="mt-2 text-sm text-stone-600">{t(locale, "login.inviteHint")}</p>
+            <p className="mt-4 text-sm text-stone-600">{t(locale, "login.inviteHint")}</p>
             {showDemo ? (
               <div className="mt-6 rounded-lg bg-stone-50 p-3 text-xs text-stone-600">
                 <p className="font-semibold text-stone-800">Demo (password: demo1234)</p>
