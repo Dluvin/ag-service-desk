@@ -815,9 +815,40 @@ html[data-landing-theme="dark"] .landing-price-badge {
   }
 }
 
+@media (max-width: 1100px) {
+  .landing-nav {
+    flex-wrap: wrap;
+    row-gap: 0.65rem;
+    min-height: 0;
+    padding-block: 0.7rem;
+  }
+
+  .landing-actions {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+
+  .landing .landing-header a.landing-btn {
+    background: #fbbf24;
+    color: #022c22;
+  }
+}
+
 @media (max-width: 800px) {
   .landing-links {
     display: none;
+  }
+
+  .landing-actions {
+    flex: 1 1 100%;
+    gap: 0.5rem;
+  }
+
+  .landing-header .landing-btn,
+  .landing-header .landing-btn-secondary,
+  .landing-header .landing-toggle {
+    padding-inline: 0.75rem;
   }
   .landing-hero-grid,
   .landing-split,

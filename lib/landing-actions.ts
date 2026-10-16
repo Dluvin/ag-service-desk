@@ -27,7 +27,7 @@ export async function landingDemoAction(formData: FormData) {
     return { error: "Choose which version you want: Starter, Shop, or Enterprise." };
   }
   if (!mailIsConfigured()) {
-    return { error: "Demo requests are not configured yet. Call (229) 304-6901 or email info@agdeskpro.com." };
+    return { error: "Demo requests are not configured yet. Call (229) 304-6901 or email david@agdeskpro.com." };
   }
   const version = PLANS[plan].label;
   const text = [
@@ -59,7 +59,7 @@ export async function landingSupportAction(formData: FormData) {
     return { error: "Name, email, and message are required." };
   }
   if (!mailIsConfigured()) {
-    return { error: "Support messages are not configured yet. Call (229) 304-6901 or email info@agdeskpro.com." };
+    return { error: "Support messages are not configured yet. Call (229) 304-6901 or email david@agdeskpro.com." };
   }
   const text = [
     `Name: ${name}`,

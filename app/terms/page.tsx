@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LandingFooter, LandingHeader } from "@/components/LandingChrome";
+import { TRIAL_DAYS } from "@/lib/plans";
 import "../landing.css";
 
 export const metadata: Metadata = {
@@ -101,12 +102,30 @@ export default function TermsPage() {
               suspend access that breaks these terms or puts the service at risk.
             </p>
 
+            <h2 id="cancellation">Cancellation</h2>
+            <p>
+              A company admin can cancel the Ag Desk Pro subscription by emailing{" "}
+              <a href="mailto:david@agdeskpro.com">david@agdeskpro.com</a>
+              {" or calling "}
+              <a href="tel:+12293046901">(229) 304-6901</a>. Include the company name and the email
+              on the account.
+            </p>
+            <p>
+              Approved companies start with a {TRIAL_DAYS}-day trial. Cancel during the trial,
+              before the first charge, and there is no fee. If card setup is not finished, the trial
+              runs until it ends, and logins stop unless billing is set up.
+            </p>
+            <p>
+              After the trial, the plan on the account is billed monthly through Stripe. Cancellation
+              stops future charges. When the subscription ends, company logins are paused. Fees
+              already charged for the current period are not refunded. Reply STOP only stops text
+              messages. It does not cancel the subscription.
+            </p>
+
             <h2>Contact</h2>
             <p>
               Questions about these terms or the text program:{" "}
               <a href="mailto:david@agdeskpro.com">david@agdeskpro.com</a>
-              {" or "}
-              <a href="mailto:info@agdeskpro.com">info@agdeskpro.com</a>
               {" · "}
               <a href="tel:+12293046901">(229) 304-6901</a>
             </p>

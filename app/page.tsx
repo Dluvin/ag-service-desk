@@ -337,8 +337,8 @@ export default async function HomePage({
               <ul className="landing-list">
                 <li>
                   Email:{" "}
-                  <a href="mailto:info@agdeskpro.com">
-                    <strong>info@agdeskpro.com</strong>
+                  <a href="mailto:david@agdeskpro.com">
+                    <strong>david@agdeskpro.com</strong>
                   </a>
                 </li>
                 <li>

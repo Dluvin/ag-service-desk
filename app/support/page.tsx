@@ -80,9 +80,7 @@ export default async function SupportPage({
                 Phone: <a href="tel:+12293046901">(229) 304-6901</a>
               </li>
               <li>
-                Email: <a href="mailto:info@agdeskpro.com">info@agdeskpro.com</a>
-                {" or "}
-                <a href="mailto:david@agdeskpro.com">david@agdeskpro.com</a>
+                Email: <a href="mailto:david@agdeskpro.com">david@agdeskpro.com</a>
               </li>
               <li>
                 Demo form: <Link href="/#contact">Request a demo</Link> on the homepage

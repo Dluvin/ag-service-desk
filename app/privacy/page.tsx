@@ -172,8 +172,6 @@ export default function PrivacyPage() {
             <p>
               Questions:{" "}
               <a href="mailto:david@agdeskpro.com">david@agdeskpro.com</a>
-              {" or "}
-              <a href="mailto:info@agdeskpro.com">info@agdeskpro.com</a>
               {" · "}
               <a href="tel:+12293046901">(229) 304-6901</a>
             </p>

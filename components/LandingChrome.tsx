@@ -49,7 +49,7 @@ export function LandingFooter() {
           {" · "}
           <Link href="/support">Support</Link>
           {" · "}
-          <a href="mailto:info@agdeskpro.com">info@agdeskpro.com</a>
+          <a href="mailto:david@agdeskpro.com">david@agdeskpro.com</a>
           {" · "}
           <a href="tel:+12293046901">(229) 304-6901</a>
         </div>
