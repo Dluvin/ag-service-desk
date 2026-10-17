@@ -320,6 +320,17 @@ html[data-landing-theme="dark"] .landing .landing-btn {
   color: var(--ld-muted);
 }
 
+.landing-sms-note {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.85rem;
+  color: var(--ld-muted);
+}
+
+.landing-sms-note p {
+  margin: 0;
+}
+
 .landing-list {
   list-style: none;
   display: grid;

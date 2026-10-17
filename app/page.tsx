@@ -350,17 +350,25 @@ export default async function HomePage({
                   </a>
                 </li>
               </ul>
-              <p className="landing-muted">
-                Request a demo: call or text DEMO to{" "}
-                <a href="sms:+12293046901?&body=DEMO">(229) 304-6901</a>. By texting DEMO to (229)
-                304-6901, or by agreeing on a call to that number, you agree to receive up to 3 text
-                messages from Ag Desk Pro about your demo request (call summary, welcome packet
-                link, and demo scheduling). Message and data rates may apply. Reply STOP to opt out,
-                HELP for help. Consent is not a condition of purchase.{" "}
-                <Link href="/privacy">Privacy Policy</Link>
-                {" · "}
-                <Link href="/terms#sms">SMS Terms</Link>
-              </p>
+              <div className="landing-sms-note">
+                <p>
+                  Request a demo: call or text DEMO to{" "}
+                  <a href="sms:+12293046901?&body=DEMO">(229) 304-6901</a>.
+                </p>
+                <p>
+                  By texting DEMO to (229) 304-6901, or by agreeing on a call to that number, you
+                  agree to receive up to 3 text messages from Ag Desk Pro about your demo request.
+                </p>
+                <p>Book a demo</p>
+                <p>Welcome packet</p>
+                <p>Call summary</p>
+                <p>
+                  Message and data rates may apply. Reply STOP to opt out, HELP for help. Consent is
+                  not a condition of purchase. <Link href="/privacy">Privacy Policy</Link>
+                  {" · "}
+                  <Link href="/terms#sms">SMS Terms</Link>
+                </p>
+              </div>
               <div className="landing-pills">
                 <span className="landing-chip">Irrigation-specific</span>
                 <span className="landing-chip">Dealer + field + customer</span>
