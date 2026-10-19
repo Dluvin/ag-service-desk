@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { homePath } from "@/lib/home";
 
-const PUBLIC = new Set(["/", "/login", "/signup", "/signup/thanks", "/welcome", "/forgot", "/contact", "/privacy", "/terms", "/support", "/platform/login", "/qbwc"]);
+const PUBLIC = new Set(["/", "/login", "/signup", "/signup/thanks", "/welcome", "/forgot", "/contact", "/privacy", "/terms", "/support", "/demo-packet", "/platform/login", "/qbwc"]);
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

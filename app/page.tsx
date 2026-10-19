@@ -396,6 +396,20 @@ export default async function HomePage({
                   <label htmlFor="phone">Phone</label>
                   <input id="phone" name="phone" type="tel" placeholder="(229) 304-6901" />
                 </div>
+                <div className="landing-field">
+                  <label htmlFor="zip">ZIP code</label>
+                  <input
+                    id="zip"
+                    name="zip"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    required
+                    pattern="[0-9]{5}"
+                    maxLength={5}
+                    placeholder="31721"
+                  />
+                </div>
                 <LandingDemoPlanField initialPlan={selectedPlan} />
                 <div className="landing-field">
                   <label htmlFor="message">How can we help?</label>
