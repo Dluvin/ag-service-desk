@@ -326,7 +326,7 @@ export default async function HomePage({
                 <a className="landing-btn" href="tel:+12293046901">
                   Call (229) 304-6901
                 </a>
-                <a className="landing-btn-secondary" href="sms:+12293046901?&body=DEMO">
+                <a className="landing-btn-secondary" href="sms:+12293046901?body=DEMO">
                   Text DEMO
                 </a>
               </div>
@@ -345,7 +345,7 @@ export default async function HomePage({
                 </li>
                 <li>
                   Text <strong>DEMO</strong> to{" "}
-                  <a href="sms:+12293046901?&body=DEMO">
+                  <a href="sms:+12293046901?body=DEMO">
                     <strong>(229) 304-6901</strong>
                   </a>
                 </li>
@@ -353,7 +353,7 @@ export default async function HomePage({
               <div className="landing-sms-note">
                 <p>
                   Request a demo: call or text DEMO to{" "}
-                  <a href="sms:+12293046901?&body=DEMO">(229) 304-6901</a>.
+                  <a href="sms:+12293046901?body=DEMO">(229) 304-6901</a>.
                 </p>
                 <p>
                   By texting DEMO to (229) 304-6901, or by agreeing on a call to that number, you
