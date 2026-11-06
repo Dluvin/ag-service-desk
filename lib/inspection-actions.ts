@@ -120,6 +120,7 @@ export async function saveVisitAction(
     modelNumber: cleanLine(input.modelNumber, 80),
     fuseSize: cleanLine(input.fuseSize, 80),
     hours: cleanLine(input.hours, 80),
+    qbListId,
   };
   const inspectedOn = cleanLine(input.inspectedOn, 10);
   const checksJson = JSON.stringify({ point: pointChecks, towers });

@@ -74,8 +74,9 @@ export function InspectionWizard({
 
   const farmer = useMemo(() => customers.find((row) => row.id === farmerId) ?? null, [customers, farmerId]);
   const selectedLabel = useMemo(() => {
+    if (farmer?.label) return farmer.label;
     if (customerSource === "quickbooks") return qbListId ? "QuickBooks customer" : "";
-    return farmer?.label ?? "";
+    return "";
   }, [customerSource, farmer?.label, qbListId]);
   const count = parseTowerCount(towerCount) ?? visit.towerCount;
   const towerIndex = step - 2;
@@ -147,7 +148,9 @@ export function InspectionWizard({
   }
 
   function go(target: number | "done") {
-    if (customerSource === "quickbooks" ? !qbListId : !farmerId) {
+    // After the first save, farmerId is restored from the work order even if qbListId
+    // was cleared on remount — either is enough to keep going.
+    if (customerSource === "quickbooks" ? !qbListId && !farmerId : !farmerId) {
       return setError(customerSource === "quickbooks" ? "Choose a QuickBooks customer." : "Choose a customer.");
     }
     if (!brand.trim()) return setError("Enter the brand.");

@@ -305,7 +305,7 @@ export function readVisit(headerJson: string, checksJson: string): VisitDraft {
   }
   return {
     farmerId: "",
-    qbListId: "",
+    qbListId: header.qbListId ?? "",
     deskPivotId: "",
     inspectedOn: "",
     inspectedBy: "",

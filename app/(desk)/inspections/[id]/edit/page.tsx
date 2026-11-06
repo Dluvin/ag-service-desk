@@ -25,7 +25,6 @@ export default async function EditInspectionPage({
   const customers = await loadInspectionCustomers(session);
   const visit = readVisit(item.headerJson, item.checksJson);
   visit.farmerId = item.farmerId;
-  visit.qbListId = "";
   visit.deskPivotId = item.pivotId ?? "";
   visit.inspectedOn = item.inspectedOn;
   visit.inspectedBy = item.inspectedBy;

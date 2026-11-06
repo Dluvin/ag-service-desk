@@ -143,7 +143,12 @@ export function InspectionCustomerFields({
     };
   }, [organizationId, customerSource]);
 
-  const selectedKey = source === "quickbooks" ? qbListId : farmerId;
+  const selectedKey =
+    source === "quickbooks"
+      ? qbListId ||
+        options.find((row) => row.farmerId && row.farmerId === farmerId)?.key ||
+        ""
+      : farmerId;
   const selectedOption = options.find((row) => row.key === selectedKey) ?? null;
   const matchedFarmerId =
     source === "quickbooks"
@@ -182,7 +187,7 @@ export function InspectionCustomerFields({
         }}
         placeholder={source === "quickbooks" ? "Search QuickBooks customers" : "Search Ag Desk customers"}
       />
-      {(source === "static" ? farmerId : qbListId) ? (
+      {(source === "static" ? farmerId : selectedKey) ? (
         <div className="grid gap-2">
           {source === "quickbooks" && !matchedFarmerId ? (
             <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
