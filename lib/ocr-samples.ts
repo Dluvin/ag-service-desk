@@ -34,8 +34,8 @@ function asNullableBool(value: unknown): boolean | null {
     if (value === BigInt(0)) return false;
     return null;
   }
-  if (value === true || value === 1 || value === "1") return true;
-  if (value === false || value === 0 || value === "0") return false;
+  if (value === true || value === 1 || value === "1" || value === "true") return true;
+  if (value === false || value === 0 || value === "0" || value === "false") return false;
   return null;
 }
 
@@ -46,57 +46,67 @@ function asIso(value: unknown): string | null {
   return text || null;
 }
 
+/** Bump when Organization flag columns are added so live DBs re-run ALTER after deploy. */
+const ORG_OCR_SCHEMA_VERSION = 2;
+let ensuredVersion = 0;
 let ensured: Promise<void> | null = null;
 
 export async function ensureOrgOcrSchema() {
-  if (!ensured) {
-    ensured = (async () => {
-      const cols = await prisma.$queryRawUnsafe<ColumnInfo[]>("PRAGMA table_info(Organization)");
-      const names = new Set(cols.map((col) => col.name));
-      if (!names.has("ocrTemplateKey")) {
-        await prisma.$executeRawUnsafe(
-          "ALTER TABLE Organization ADD COLUMN ocrTemplateKey TEXT NOT NULL DEFAULT 'irrigation-service-order'",
-        );
-      }
-      if (!names.has("ocrFieldNotes")) {
-        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrFieldNotes TEXT");
-      }
-      if (!names.has("ocrEnabled")) {
-        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrEnabled INTEGER");
-      }
-      if (!names.has("formsEnabled")) {
-        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN formsEnabled INTEGER");
-      }
-      if (!names.has("qbwcEnabled")) {
-        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN qbwcEnabled INTEGER");
-      }
-      if (!names.has("inspectionsEnabled")) {
-        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN inspectionsEnabled INTEGER");
-      }
-      if (!names.has("qbCustomerListEnabled")) {
-        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN qbCustomerListEnabled INTEGER");
-      }
-      if (!names.has("ocrBoxesConfirmedAt")) {
-        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrBoxesConfirmedAt DATETIME");
-      }
-      if (!names.has("ocrFirstScanAt")) {
-        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrFirstScanAt DATETIME");
-      }
-      if (!names.has("ocrFieldListReviewedAt")) {
-        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrFieldListReviewedAt DATETIME");
-      }
-      await prisma.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS OrgOcrSample (
-          id TEXT PRIMARY KEY,
-          organizationId TEXT NOT NULL,
-          fileName TEXT NOT NULL,
-          mimeType TEXT NOT NULL,
-          createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (organizationId) REFERENCES Organization(id) ON DELETE CASCADE
-        )
-      `);
-    })();
+  if (ensuredVersion >= ORG_OCR_SCHEMA_VERSION && ensured) {
+    await ensured;
+    return;
   }
+  ensured = (async () => {
+    const cols = await prisma.$queryRawUnsafe<ColumnInfo[]>("PRAGMA table_info(Organization)");
+    const names = new Set(cols.map((col) => col.name));
+    if (!names.has("ocrTemplateKey")) {
+      await prisma.$executeRawUnsafe(
+        "ALTER TABLE Organization ADD COLUMN ocrTemplateKey TEXT NOT NULL DEFAULT 'irrigation-service-order'",
+      );
+    }
+    if (!names.has("ocrFieldNotes")) {
+      await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrFieldNotes TEXT");
+    }
+    if (!names.has("ocrEnabled")) {
+      await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrEnabled INTEGER");
+    }
+    if (!names.has("formsEnabled")) {
+      await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN formsEnabled INTEGER");
+    }
+    if (!names.has("qbwcEnabled")) {
+      await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN qbwcEnabled INTEGER");
+    }
+    if (!names.has("inspectionsEnabled")) {
+      await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN inspectionsEnabled INTEGER");
+    }
+    if (!names.has("qbCustomerListEnabled")) {
+      await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN qbCustomerListEnabled INTEGER");
+    }
+    if (!names.has("ocrBoxesConfirmedAt")) {
+      await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrBoxesConfirmedAt DATETIME");
+    }
+    if (!names.has("ocrFirstScanAt")) {
+      await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrFirstScanAt DATETIME");
+    }
+    if (!names.has("ocrFieldListReviewedAt")) {
+      await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrFieldListReviewedAt DATETIME");
+    }
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS OrgOcrSample (
+        id TEXT PRIMARY KEY,
+        organizationId TEXT NOT NULL,
+        fileName TEXT NOT NULL,
+        mimeType TEXT NOT NULL,
+        createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (organizationId) REFERENCES Organization(id) ON DELETE CASCADE
+      )
+    `);
+    ensuredVersion = ORG_OCR_SCHEMA_VERSION;
+  })().catch((error) => {
+    ensured = null;
+    ensuredVersion = 0;
+    throw error;
+  });
   await ensured;
 }
 
@@ -269,37 +279,42 @@ export async function orgQbCustomerListIsOn(organizationId: string) {
 
 export async function setOrgFormsEnabled(organizationId: string, value: boolean | null) {
   await ensureOrgOcrSchema();
-  await prisma.$executeRaw`
-    UPDATE Organization SET formsEnabled = ${value} WHERE id = ${organizationId}
-  `;
+  await prisma.organization.update({
+    where: { id: organizationId },
+    data: { formsEnabled: value },
+  });
 }
 
 export async function setOrgQbwcEnabled(organizationId: string, value: boolean | null) {
   await ensureOrgOcrSchema();
-  await prisma.$executeRaw`
-    UPDATE Organization SET qbwcEnabled = ${value} WHERE id = ${organizationId}
-  `;
+  await prisma.organization.update({
+    where: { id: organizationId },
+    data: { qbwcEnabled: value },
+  });
 }
 
 export async function setOrgInspectionsEnabled(organizationId: string, value: boolean | null) {
   await ensureOrgOcrSchema();
-  await prisma.$executeRaw`
-    UPDATE Organization SET inspectionsEnabled = ${value} WHERE id = ${organizationId}
-  `;
+  await prisma.organization.update({
+    where: { id: organizationId },
+    data: { inspectionsEnabled: value },
+  });
 }
 
 export async function setOrgQbCustomerListEnabled(organizationId: string, value: boolean | null) {
   await ensureOrgOcrSchema();
-  await prisma.$executeRaw`
-    UPDATE Organization SET qbCustomerListEnabled = ${value} WHERE id = ${organizationId}
-  `;
+  await prisma.organization.update({
+    where: { id: organizationId },
+    data: { qbCustomerListEnabled: value },
+  });
 }
 
 export async function setOrgOcrEnabled(organizationId: string, value: boolean | null) {
   await ensureOrgOcrSchema();
-  await prisma.$executeRaw`
-    UPDATE Organization SET ocrEnabled = ${value} WHERE id = ${organizationId}
-  `;
+  await prisma.organization.update({
+    where: { id: organizationId },
+    data: { ocrEnabled: value },
+  });
 }
 
 export async function confirmOrgOcrBoxes(organizationId: string) {

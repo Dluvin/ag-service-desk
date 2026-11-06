@@ -11,8 +11,26 @@ import {
 
 export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
   const entitlements = resolveEntitlements(org);
+  // Remount after save so selects pick up the values that actually persisted.
+  const formKey = [
+    org.id,
+    entitlements.plan,
+    org.ocrEnabled,
+    org.formsEnabled,
+    org.qbwcEnabled,
+    org.inspectionsEnabled,
+    org.qbCustomerListEnabled,
+    org.revealGps,
+    org.maxStores,
+    org.includedUsers,
+    org.gpsProvider,
+  ].join(":");
   return (
-    <ActionForm action={updateTenantPlanAction} className="mt-3 rounded-lg border border-stone-200 bg-stone-50 px-3 py-3">
+    <ActionForm
+      key={formKey}
+      action={updateTenantPlanAction}
+      className="mt-3 rounded-lg border border-stone-200 bg-stone-50 px-3 py-3"
+    >
       <input type="hidden" name="organizationId" value={org.id} />
       <p className="text-sm font-semibold text-stone-800">
         Plan: {entitlements.label}

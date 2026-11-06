@@ -16,13 +16,7 @@ import {
 import { removeCompanyLogoFile } from "./company-logo";
 import { PLAN } from "./plan";
 import { isGpsProvider, isPlanId, orgFieldsForPlan } from "./plans";
-import {
-  setOrgFormsEnabled,
-  setOrgInspectionsEnabled,
-  setOrgOcrEnabled,
-  setOrgQbCustomerListEnabled,
-  setOrgQbwcEnabled,
-} from "./ocr-samples";
+import { ensureOrgOcrSchema } from "./ocr-samples";
 import { seedApprovedDemo } from "./demo-tenant";
 import { startTenantBilling, stripeIsConfigured } from "./stripe";
 import { emailTenantApproved } from "./signup-notify";
@@ -216,29 +210,33 @@ export async function updateTenantPlanAction(formData: FormData) {
       return { error: "Included seats must be a whole number, or leave blank for the plan default." };
     }
 
+    await ensureOrgOcrSchema();
     const org = await prisma.organization.findUnique({ where: { id: organizationId } });
     if (!org) return { error: "Company not found." };
 
+    const ocrRaw = formString(formData, "ocrEnabled");
+    const formsRaw = formString(formData, "formsEnabled");
+    const qbwcRaw = formString(formData, "qbwcEnabled");
+    const inspectionsRaw = formString(formData, "inspectionsEnabled");
+    const qbCustomersRaw = formString(formData, "qbCustomerListEnabled");
+
     await prisma.organization.update({
       where: { id: org.id },
-      data: orgFieldsForPlan({
-        plan,
-        revealGps: formString(formData, "revealGps") === "1",
-        gpsProvider,
-        maxStoresOverride,
-        includedUsersOverride,
-      }),
+      data: {
+        ...orgFieldsForPlan({
+          plan,
+          revealGps: formString(formData, "revealGps") === "1",
+          gpsProvider,
+          maxStoresOverride,
+          includedUsersOverride,
+        }),
+        ocrEnabled: ocrRaw === "" ? null : ocrRaw === "1",
+        formsEnabled: formsRaw === "" ? null : formsRaw === "1",
+        qbwcEnabled: qbwcRaw === "" ? null : qbwcRaw === "1",
+        inspectionsEnabled: inspectionsRaw === "" ? null : inspectionsRaw === "1",
+        qbCustomerListEnabled: qbCustomersRaw === "" ? null : qbCustomersRaw === "1",
+      },
     });
-    const ocrRaw = formString(formData, "ocrEnabled");
-    await setOrgOcrEnabled(org.id, ocrRaw === "" ? null : ocrRaw === "1");
-    const formsRaw = formString(formData, "formsEnabled");
-    await setOrgFormsEnabled(org.id, formsRaw === "" ? null : formsRaw === "1");
-    const qbwcRaw = formString(formData, "qbwcEnabled");
-    await setOrgQbwcEnabled(org.id, qbwcRaw === "" ? null : qbwcRaw === "1");
-    const inspectionsRaw = formString(formData, "inspectionsEnabled");
-    await setOrgInspectionsEnabled(org.id, inspectionsRaw === "" ? null : inspectionsRaw === "1");
-    const qbCustomersRaw = formString(formData, "qbCustomerListEnabled");
-    await setOrgQbCustomerListEnabled(org.id, qbCustomersRaw === "" ? null : qbCustomersRaw === "1");
     revalidatePath("/platform");
     return { success: "Plan saved." };
   } catch (error) {
