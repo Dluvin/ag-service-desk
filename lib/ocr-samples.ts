@@ -70,6 +70,12 @@ export async function ensureOrgOcrSchema() {
       if (!names.has("qbwcEnabled")) {
         await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN qbwcEnabled INTEGER");
       }
+      if (!names.has("inspectionsEnabled")) {
+        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN inspectionsEnabled INTEGER");
+      }
+      if (!names.has("qbCustomerListEnabled")) {
+        await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN qbCustomerListEnabled INTEGER");
+      }
       if (!names.has("ocrBoxesConfirmedAt")) {
         await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrBoxesConfirmedAt DATETIME");
       }
@@ -177,8 +183,17 @@ export async function orgOcrIsOn(organizationId: string) {
 
 export async function loadOrgOcrOverrides() {
   await ensureOrgOcrSchema();
-  const rows = await prisma.$queryRaw<Array<{ id: string; ocrEnabled: unknown; formsEnabled: unknown; qbwcEnabled: unknown }>>`
-    SELECT id, ocrEnabled, formsEnabled, qbwcEnabled FROM Organization
+  const rows = await prisma.$queryRaw<
+    Array<{
+      id: string;
+      ocrEnabled: unknown;
+      formsEnabled: unknown;
+      qbwcEnabled: unknown;
+      inspectionsEnabled: unknown;
+      qbCustomerListEnabled: unknown;
+    }>
+  >`
+    SELECT id, ocrEnabled, formsEnabled, qbwcEnabled, inspectionsEnabled, qbCustomerListEnabled FROM Organization
   `;
   return new Map(
     rows.map((row) => [
@@ -187,6 +202,8 @@ export async function loadOrgOcrOverrides() {
         ocrEnabled: asNullableBool(row.ocrEnabled),
         formsEnabled: asNullableBool(row.formsEnabled),
         qbwcEnabled: asNullableBool(row.qbwcEnabled),
+        inspectionsEnabled: asNullableBool(row.inspectionsEnabled),
+        qbCustomerListEnabled: asNullableBool(row.qbCustomerListEnabled),
       },
     ]),
   );
@@ -194,13 +211,23 @@ export async function loadOrgOcrOverrides() {
 
 export async function loadOrgPlanFlagOverrides(organizationId: string) {
   await ensureOrgOcrSchema();
-  const rows = await prisma.$queryRaw<Array<{ ocrEnabled: unknown; formsEnabled: unknown; qbwcEnabled: unknown }>>`
-    SELECT ocrEnabled, formsEnabled, qbwcEnabled FROM Organization WHERE id = ${organizationId}
+  const rows = await prisma.$queryRaw<
+    Array<{
+      ocrEnabled: unknown;
+      formsEnabled: unknown;
+      qbwcEnabled: unknown;
+      inspectionsEnabled: unknown;
+      qbCustomerListEnabled: unknown;
+    }>
+  >`
+    SELECT ocrEnabled, formsEnabled, qbwcEnabled, inspectionsEnabled, qbCustomerListEnabled FROM Organization WHERE id = ${organizationId}
   `;
   return {
     ocrEnabled: asNullableBool(rows[0]?.ocrEnabled),
     formsEnabled: asNullableBool(rows[0]?.formsEnabled),
     qbwcEnabled: asNullableBool(rows[0]?.qbwcEnabled),
+    inspectionsEnabled: asNullableBool(rows[0]?.inspectionsEnabled),
+    qbCustomerListEnabled: asNullableBool(rows[0]?.qbCustomerListEnabled),
   };
 }
 
@@ -222,6 +249,24 @@ export async function orgQbwcIsOn(organizationId: string) {
   return resolveEntitlements({ plan: org?.plan, ...flags }).qbwcEnabled;
 }
 
+export async function orgInspectionsIsOn(organizationId: string) {
+  const flags = await loadOrgPlanFlagOverrides(organizationId);
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { plan: true },
+  });
+  return resolveEntitlements({ plan: org?.plan, ...flags }).inspectionsEnabled;
+}
+
+export async function orgQbCustomerListIsOn(organizationId: string) {
+  const flags = await loadOrgPlanFlagOverrides(organizationId);
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { plan: true },
+  });
+  return resolveEntitlements({ plan: org?.plan, ...flags }).qbCustomerListEnabled;
+}
+
 export async function setOrgFormsEnabled(organizationId: string, value: boolean | null) {
   await ensureOrgOcrSchema();
   await prisma.$executeRaw`
@@ -233,6 +278,20 @@ export async function setOrgQbwcEnabled(organizationId: string, value: boolean |
   await ensureOrgOcrSchema();
   await prisma.$executeRaw`
     UPDATE Organization SET qbwcEnabled = ${value} WHERE id = ${organizationId}
+  `;
+}
+
+export async function setOrgInspectionsEnabled(organizationId: string, value: boolean | null) {
+  await ensureOrgOcrSchema();
+  await prisma.$executeRaw`
+    UPDATE Organization SET inspectionsEnabled = ${value} WHERE id = ${organizationId}
+  `;
+}
+
+export async function setOrgQbCustomerListEnabled(organizationId: string, value: boolean | null) {
+  await ensureOrgOcrSchema();
+  await prisma.$executeRaw`
+    UPDATE Organization SET qbCustomerListEnabled = ${value} WHERE id = ${organizationId}
   `;
 }
 

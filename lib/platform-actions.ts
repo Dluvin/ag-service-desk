@@ -16,7 +16,13 @@ import {
 import { removeCompanyLogoFile } from "./company-logo";
 import { PLAN } from "./plan";
 import { isGpsProvider, isPlanId, orgFieldsForPlan } from "./plans";
-import { setOrgFormsEnabled, setOrgOcrEnabled, setOrgQbwcEnabled } from "./ocr-samples";
+import {
+  setOrgFormsEnabled,
+  setOrgInspectionsEnabled,
+  setOrgOcrEnabled,
+  setOrgQbCustomerListEnabled,
+  setOrgQbwcEnabled,
+} from "./ocr-samples";
 import { seedApprovedDemo } from "./demo-tenant";
 import { startTenantBilling, stripeIsConfigured } from "./stripe";
 import { emailTenantApproved } from "./signup-notify";
@@ -229,6 +235,10 @@ export async function updateTenantPlanAction(formData: FormData) {
     await setOrgFormsEnabled(org.id, formsRaw === "" ? null : formsRaw === "1");
     const qbwcRaw = formString(formData, "qbwcEnabled");
     await setOrgQbwcEnabled(org.id, qbwcRaw === "" ? null : qbwcRaw === "1");
+    const inspectionsRaw = formString(formData, "inspectionsEnabled");
+    await setOrgInspectionsEnabled(org.id, inspectionsRaw === "" ? null : inspectionsRaw === "1");
+    const qbCustomersRaw = formString(formData, "qbCustomerListEnabled");
+    await setOrgQbCustomerListEnabled(org.id, qbCustomersRaw === "" ? null : qbCustomersRaw === "1");
     revalidatePath("/platform");
     return { success: "Plan saved." };
   } catch (error) {

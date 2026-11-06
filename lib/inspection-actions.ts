@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireSession } from "./auth";
+import { requireInspectionsAccess } from "./inspection-access";
 import {
   cleanLine,
   isIsoDate,
@@ -13,6 +14,8 @@ import {
   type VisitDraft,
 } from "./inspection-form";
 import { getInspection, scheduleFromInspectedOn } from "./inspections";
+import { orgQbCustomerListIsOn } from "./ocr-samples";
+import { linkQbCustomerToFarmer, resolveFarmerFromQbCustomer } from "./qb-customers";
 import { prisma } from "./prisma";
 import { ROLES } from "./roles";
 import { farmerWhere, pivotWhere } from "./scope";
@@ -20,7 +23,7 @@ import { openServiceTicket } from "./tickets";
 
 async function requireInspectionUser() {
   const session = await requireSession();
-  if (session.role === ROLES.FARMER) redirect("/dashboard");
+  await requireInspectionsAccess(session);
   return session;
 }
 
@@ -46,21 +49,51 @@ export async function saveVisitAction(
   const inspectedBy = cleanLine(input.inspectedBy, 80);
   if (!inspectedBy) return { error: "Enter who did the inspection." };
 
+  const qbListId = cleanLine(input.qbListId, 80);
   const farmerId = cleanLine(input.farmerId, 40);
-  if (!farmerId) return { error: "Choose a customer." };
-  const farmer = await prisma.farmer.findFirst({
-    where: { ...farmerWhere(session), id: farmerId },
-  });
-  if (!farmer) return { error: "That customer is not on file." };
-
+  const useQbCustomers = await orgQbCustomerListIsOn(session.organizationId);
   const deskPivotId = cleanLine(input.deskPivotId, 40);
-  let pivot =
-    deskPivotId
-      ? await prisma.pivot.findFirst({
-          where: { ...pivotWhere(session), id: deskPivotId, farmerId: farmer.id },
+
+  // Assets keep their Ag Desk customer. A selected pivot/asset owns the farmer.
+  const pivot = deskPivotId
+    ? await prisma.pivot.findFirst({
+        where: { ...pivotWhere(session), id: deskPivotId },
+      })
+    : null;
+  if (deskPivotId && !pivot) return { error: "That pivot is not on file." };
+
+  let farmer =
+    pivot
+      ? await prisma.farmer.findFirst({
+          where: { ...farmerWhere(session), id: pivot.farmerId },
         })
       : null;
-  if (deskPivotId && !pivot) return { error: "That pivot is not on file for this customer." };
+  if (!farmer && farmerId) {
+    farmer = await prisma.farmer.findFirst({
+      where: { ...farmerWhere(session), id: farmerId },
+    });
+  }
+  if (!farmer && useQbCustomers && qbListId) {
+    const resolved = await resolveFarmerFromQbCustomer(session.organizationId, qbListId, {
+      createIfMissing: !deskPivotId,
+    });
+    farmer = resolved
+      ? await prisma.farmer.findFirst({
+          where: { ...farmerWhere(session), id: resolved.id },
+        })
+      : null;
+  }
+  if (!farmer) {
+    return {
+      error: useQbCustomers
+        ? "Choose a QuickBooks customer that already matches an Ag Desk customer, or pick one of that customer's pivots."
+        : "Choose a customer.",
+    };
+  }
+
+  if (useQbCustomers && qbListId) {
+    await linkQbCustomerToFarmer(session.organizationId, qbListId, farmer.id);
+  }
 
   const towerCount = parseTowerCount(String(input.towerCount ?? ""));
   if (!towerCount) return { error: "Enter the number of towers, from 1 to 20." };

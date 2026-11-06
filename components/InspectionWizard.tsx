@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { InspectionCustomerFields } from "@/components/InspectionCustomerFields";
 import { saveVisitAction } from "@/lib/inspection-actions";
 import {
   PIVOT_BRANDS,
@@ -30,11 +31,15 @@ type SerialMatch = {
 };
 
 export function InspectionWizard({
+  organizationId,
+  customerSource = "static",
   customers,
   visit,
   id,
   initialStep = 0,
 }: {
+  organizationId: string;
+  customerSource?: "static" | "quickbooks";
   customers: InspectionCustomerOption[];
   visit: VisitDraft;
   id?: string;
@@ -46,6 +51,7 @@ export function InspectionWizard({
   const [savedId, setSavedId] = useState(id);
   const [error, setError] = useState("");
   const [farmerId, setFarmerId] = useState(visit.farmerId);
+  const [qbListId, setQbListId] = useState(visit.qbListId);
   const [deskPivotId, setDeskPivotId] = useState(visit.deskPivotId);
   const [inspectedOn, setInspectedOn] = useState(visit.inspectedOn);
   const [inspectedBy, setInspectedBy] = useState(visit.inspectedBy);
@@ -67,7 +73,10 @@ export function InspectionWizard({
   towerCountRef.current = towerCount;
 
   const farmer = useMemo(() => customers.find((row) => row.id === farmerId) ?? null, [customers, farmerId]);
-  const pivots = farmer?.pivots ?? [];
+  const selectedLabel = useMemo(() => {
+    if (customerSource === "quickbooks") return qbListId ? "QuickBooks customer" : "";
+    return farmer?.label ?? "";
+  }, [customerSource, farmer?.label, qbListId]);
   const count = parseTowerCount(towerCount) ?? visit.towerCount;
   const towerIndex = step - 2;
 
@@ -115,36 +124,11 @@ export function InspectionWizard({
     if (force || !parseTowerCount(towerCount)) setTowerCount(match.towerCount || towerCount);
   }
 
-  function onFarmer(nextId: string) {
-    setFarmerId(nextId);
-    setDeskPivotId("");
-    setSerialNumber("");
-    setPivotId("");
-    setPackageItem("");
-    setPackageDescription("");
-    if (nextId) setError("");
-  }
-
-  function onPivot(nextId: string) {
-    setDeskPivotId(nextId);
-    const pivot = pivots.find((row) => row.id === nextId);
-    if (!pivot) return;
-    setPivotId(pivot.name);
-    if (pivot.serialNumber) setSerialNumber(pivot.serialNumber);
-    if (pivot.packageItem) {
-      setPackageItem(pivot.packageItem);
-      setPackageDescription(pivot.packageDescription ?? "");
-      if (pivot.packageBrand && !brandTouched.current) setBrand(pivot.packageBrand);
-      if (pivot.packageTowerCount != null && !parseTowerCount(towerCountRef.current)) {
-        setTowerCount(String(pivot.packageTowerCount));
-      }
-    }
-  }
-
   function payload(nextCount: number, nextTowers: TowerDraft[]): VisitDraft & { id?: string } {
     return {
       id: savedId,
       farmerId,
+      qbListId,
       deskPivotId,
       inspectedOn,
       inspectedBy,
@@ -163,7 +147,9 @@ export function InspectionWizard({
   }
 
   function go(target: number | "done") {
-    if (!farmerId) return setError("Choose a customer.");
+    if (customerSource === "quickbooks" ? !qbListId : !farmerId) {
+      return setError(customerSource === "quickbooks" ? "Choose a QuickBooks customer." : "Choose a customer.");
+    }
     if (!brand.trim()) return setError("Enter the brand.");
     const nextCount = parseTowerCount(towerCount);
     if (!nextCount) return setError("Enter the number of towers, from 1 to 20.");
@@ -209,23 +195,48 @@ export function InspectionWizard({
         </h1>
         {step > 0 ? (
           <p className="mt-1 text-sm text-stone-600">
-            {[farmer?.label, brand, serialNumber].filter(Boolean).join(" · ")}
+            {[selectedLabel, brand, serialNumber].filter(Boolean).join(" · ")}
           </p>
         ) : (
           <p className="mt-1 text-sm text-stone-600">
             Pick the customer and pivot. Saving the first step opens a scheduled work order on Dispatch.
+            {customerSource === "quickbooks"
+              ? " Customer names come from QuickBooks and stay cached on this device for offline field use."
+              : ""}
           </p>
         )}
       </div>
       {error ? <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p> : null}
       {step === 0 ? (
         <Setup
+          organizationId={organizationId}
+          customerSource={customerSource}
           customers={customers}
           farmerId={farmerId}
-          onFarmer={onFarmer}
-          pivots={pivots}
+          qbListId={qbListId}
           deskPivotId={deskPivotId}
-          onPivot={onPivot}
+          onFarmer={(value) => {
+            setFarmerId(value);
+            if (value) setError("");
+          }}
+          onQbCustomer={(value) => {
+            setQbListId(value);
+            if (value) setError("");
+          }}
+          onPivot={(pivot) => {
+            setDeskPivotId(pivot?.id ?? "");
+            if (!pivot) return;
+            setPivotId(pivot.name);
+            if (pivot.serialNumber) setSerialNumber(pivot.serialNumber);
+            if (pivot.packageItem) {
+              setPackageItem(pivot.packageItem);
+              setPackageDescription(pivot.packageDescription ?? "");
+              if (pivot.packageBrand && !brandTouched.current) setBrand(pivot.packageBrand);
+              if (pivot.packageTowerCount != null && !parseTowerCount(towerCountRef.current)) {
+                setTowerCount(String(pivot.packageTowerCount));
+              }
+            }
+          }}
           serialNumber={serialNumber}
           onSerial={(value) => {
             setSerialNumber(value);
@@ -355,11 +366,14 @@ function BrandField({ brand, onBrand }: { brand: string; onBrand: (value: string
 }
 
 function Setup({
+  organizationId,
+  customerSource,
   customers,
   farmerId,
-  onFarmer,
-  pivots,
+  qbListId,
   deskPivotId,
+  onFarmer,
+  onQbCustomer,
   onPivot,
   serialNumber,
   onSerial,
@@ -376,12 +390,25 @@ function Setup({
   inspectedBy,
   onBy,
 }: {
+  organizationId: string;
+  customerSource: "static" | "quickbooks";
   customers: InspectionCustomerOption[];
   farmerId: string;
-  onFarmer: (value: string) => void;
-  pivots: InspectionCustomerOption["pivots"];
+  qbListId: string;
   deskPivotId: string;
-  onPivot: (value: string) => void;
+  onFarmer: (value: string) => void;
+  onQbCustomer: (value: string) => void;
+  onPivot: (
+    pivot: {
+      id: string;
+      name: string;
+      serialNumber: string | null;
+      packageItem: string | null;
+      packageDescription: string | null;
+      packageBrand: string | null;
+      packageTowerCount: number | null;
+    } | null,
+  ) => void;
   serialNumber: string;
   onSerial: (value: string) => void;
   matches: SerialMatch[];
@@ -399,38 +426,22 @@ function Setup({
 }) {
   return (
     <div className="grid gap-4">
-      {customers.length === 0 ? (
+      {customerSource === "static" && customers.length === 0 ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
           No customers on file yet. Add a customer under Customers, then come back.
         </p>
-      ) : (
-        <label className="grid gap-1 text-sm text-stone-700">
-          Customer
-          <select value={farmerId} onChange={(event) => onFarmer(event.target.value)} className={fieldClass}>
-            <option value="">Select customer</option>
-            {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-      {farmerId ? (
-        <label className="grid gap-1 text-sm text-stone-700">
-          Pivot (optional)
-          <select value={deskPivotId} onChange={(event) => onPivot(event.target.value)} className={fieldClass}>
-            <option value="">No linked pivot yet</option>
-            {pivots.map((pivot) => (
-              <option key={pivot.id} value={pivot.id}>
-                {pivot.name}
-                {pivot.serialNumber ? ` · ${pivot.serialNumber}` : ""}
-                {pivot.packageItem ? ` · pkg ${pivot.packageItem}` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
       ) : null}
+      <InspectionCustomerFields
+        organizationId={organizationId}
+        customerSource={customerSource}
+        staticCustomers={customers}
+        farmerId={farmerId}
+        qbListId={qbListId}
+        deskPivotId={deskPivotId}
+        onFarmer={onFarmer}
+        onQbCustomer={onQbCustomer}
+        onPivot={onPivot}
+      />
       <label className="grid gap-1 text-sm text-stone-700">
         Serial number, if known
         <input value={serialNumber} onChange={(event) => onSerial(event.target.value)} autoComplete="off" className={fieldClass} />

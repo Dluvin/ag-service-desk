@@ -51,8 +51,8 @@ export default async function PlatformHomePage() {
           {" "}
           (<span className="font-mono text-xs">/signup</span>). New companies stay pending until you
           approve. Approve opens their tenant, loads a demo customer/work order, and starts a {PLAN.trialDays}-day
-          trial. Existing companies stay on Shop so live dealers keep in-app maps. Set plan, Reveal add-on, GPS
-          provider, and store cap below — Stripe checkout is not wired to these prices yet.
+          trial. Existing companies stay on Shop so live dealers keep in-app maps. Set plan, Reveal add-on, pivot
+          inspections, GPS provider, and store cap below — Stripe checkout is not wired to these prices yet.
         </p>
         <ul className="mt-6 space-y-4">
           {tenants.length === 0 ? (
@@ -142,6 +142,8 @@ export default async function PlatformHomePage() {
                       ocrEnabled: ocrFlags.get(org.id)?.ocrEnabled ?? null,
                       formsEnabled: ocrFlags.get(org.id)?.formsEnabled ?? null,
                       qbwcEnabled: ocrFlags.get(org.id)?.qbwcEnabled ?? null,
+                      inspectionsEnabled: ocrFlags.get(org.id)?.inspectionsEnabled ?? null,
+                      qbCustomerListEnabled: ocrFlags.get(org.id)?.qbCustomerListEnabled ?? null,
                     }}
                   />
                   {org.stripeSubscriptionId ? (

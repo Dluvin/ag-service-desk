@@ -1,7 +1,16 @@
 import { prisma } from "./prisma";
-import { orgQbwcIsOn } from "./ocr-samples";
+import { orgQbCustomerListIsOn, orgQbwcIsOn } from "./ocr-samples";
+import {
+  customerQueryXml,
+  ensureQbCustomerSchema,
+  isCustomerQueryResponse,
+  parseCustomerQuery,
+  saveQbCustomerPage,
+} from "./qb-customers";
 import { createQbwcSession, ensureQbEstimateJobMeta, getQbwcSession, verifyQbwcLogin } from "./qbwc";
 import { estimateAddXml, isItemQueryResponse, parseEstimateAddResponse, parseItemQueryResponse, saveQbJobMeta } from "./qbwc-xml";
+
+const CUSTOMERS_JOB = "CUSTOMERS";
 
 function xmlText(xml: string, tag: string) {
   const match = xml.match(new RegExp(`<(?:[\\w-]+:)?${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</(?:[\\w-]+:)?${tag}>`, "i"));
@@ -60,9 +69,29 @@ function isFailedHresult(hresult: string) {
 }
 
 async function nextRequestXml(sessionId: string, organizationId: string, major: string, minor: string) {
-  if (!(await orgQbwcIsOn(organizationId))) return "";
+  const qbOn = await orgQbwcIsOn(organizationId);
+  const customersOn = await orgQbCustomerListIsOn(organizationId);
+  if (!qbOn && !customersOn) return "";
   const session = await prisma.qbwcSession.findFirst({ where: { id: sessionId } });
   if (!session) return "";
+
+  if (customersOn) {
+    await ensureQbCustomerSchema();
+    const config = await prisma.qbwcConfig.findFirst({ where: { organizationId } });
+    if (config && (config.customersSyncRequested || config.customersIteratorId)) {
+      await prisma.qbwcSession.update({
+        where: { id: sessionId },
+        data: { jobId: CUSTOMERS_JOB },
+      });
+      return customerQueryXml(config.customersIteratorId ?? "", major, minor);
+    }
+  }
+
+  if (!qbOn) {
+    await prisma.qbwcSession.update({ where: { id: sessionId }, data: { jobId: null } });
+    return "";
+  }
+
   await ensureQbEstimateJobMeta();
   const job = await prisma.qbEstimateJob.findFirst({
     where: { organizationId, status: "QUEUED" },
@@ -187,7 +216,10 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
     const username = xmlText(xml, "strUserName");
     const password = xmlText(xml, "strPassword");
     const config = await verifyQbwcLogin(username, password);
-    if (!config || !(await orgQbwcIsOn(config.organizationId))) {
+    const allowed =
+      config &&
+      ((await orgQbwcIsOn(config.organizationId)) || (await orgQbCustomerListIsOn(config.organizationId)));
+    if (!allowed || !config) {
       return soapEnvelope(
         `<authenticateResponse><authenticateResult><string></string><string>nvu</string></authenticateResult></authenticateResponse>`,
       );
@@ -227,6 +259,72 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
     const response = xmlText(xml, "response");
     const jobId = session.jobId;
     let failed = false;
+    if (jobId === CUSTOMERS_JOB || isCustomerQueryResponse(response)) {
+      await ensureQbCustomerSchema();
+      if (isFailedHresult(hresult)) {
+        const error = message || hresult;
+        await prisma.$transaction([
+          prisma.qbwcSession.update({ where: { id: ticket }, data: { jobId: null, lastError: error } }),
+          prisma.qbwcConfig.update({
+            where: { organizationId: session.organizationId },
+            data: {
+              lastError: error,
+              customersSyncRequested: false,
+              customersIteratorId: null,
+            },
+          }),
+        ]);
+        return intResult("receiveResponseXML", -1);
+      }
+      const config = await prisma.qbwcConfig.findFirst({ where: { organizationId: session.organizationId } });
+      const parsed = parseCustomerQuery(response);
+      if (parsed.code !== "0" && parsed.code !== "1") {
+        const error = parsed.message || `CustomerQuery status ${parsed.code || "unknown"}`;
+        await prisma.$transaction([
+          prisma.qbwcSession.update({ where: { id: ticket }, data: { jobId: null, lastError: error } }),
+          prisma.qbwcConfig.update({
+            where: { organizationId: session.organizationId },
+            data: {
+              lastError: error,
+              customersSyncRequested: false,
+              customersIteratorId: null,
+            },
+          }),
+        ]);
+        return intResult("receiveResponseXML", -1);
+      }
+      const firstPage = !config?.customersIteratorId;
+      await saveQbCustomerPage(session.organizationId, parsed.rows, firstPage);
+      if (parsed.remaining > 0 && parsed.iteratorId) {
+        await prisma.qbwcConfig.update({
+          where: { organizationId: session.organizationId },
+          data: {
+            customersIteratorId: parsed.iteratorId,
+            customersSyncRequested: true,
+            lastError: null,
+            lastSyncAt: new Date(),
+          },
+        });
+        return intResult("receiveResponseXML", 50);
+      }
+      await prisma.$transaction([
+        prisma.qbwcSession.update({ where: { id: ticket }, data: { jobId: null, lastError: null } }),
+        prisma.qbwcConfig.update({
+          where: { organizationId: session.organizationId },
+          data: {
+            customersIteratorId: null,
+            customersSyncRequested: false,
+            customersSyncedAt: new Date(),
+            lastSyncAt: new Date(),
+            lastError: null,
+          },
+        }),
+      ]);
+      const remainingAfterCustomers = (await orgQbwcIsOn(session.organizationId))
+        ? await queuedCount(session.organizationId)
+        : 0;
+      return intResult("receiveResponseXML", remainingAfterCustomers > 0 ? 50 : 100);
+    }
     if (jobId) {
       if (isFailedHresult(hresult)) {
         const error = message || hresult;
@@ -296,7 +394,7 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
     const session = await getQbwcSession(ticket);
     if (session) {
       await prisma.qbwcSession.update({ where: { id: ticket }, data: { lastError: error || "Connection error" } });
-      if (session.jobId) {
+      if (session.jobId && session.jobId !== CUSTOMERS_JOB) {
         await prisma.qbEstimateJob.update({
           where: { id: session.jobId },
           data: { status: "ERROR", error: error || "Connection error" },
@@ -304,7 +402,12 @@ export async function handleQbwcSoap(xml: string, soapAction: string) {
       }
       await prisma.qbwcConfig.update({
         where: { organizationId: session.organizationId },
-        data: { lastError: error || "Connection error" },
+        data: {
+          lastError: error || "Connection error",
+          ...(session.jobId === CUSTOMERS_JOB
+            ? { customersSyncRequested: false, customersIteratorId: null }
+            : {}),
+        },
       });
     }
     return stringResult("connectionError", "done");

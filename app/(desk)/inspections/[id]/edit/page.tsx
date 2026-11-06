@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { InspectionWizard } from "@/components/InspectionWizard";
 import { getSession } from "@/lib/auth";
+import { requireInspectionsAccess } from "@/lib/inspection-access";
 import { isInspectionKind, readVisit } from "@/lib/inspection-form";
 import { getInspection, loadInspectionCustomers } from "@/lib/inspections";
-import { ROLES } from "@/lib/roles";
+import { orgQbCustomerListIsOn } from "@/lib/ocr-samples";
 
 export default async function EditInspectionPage({
   params,
@@ -15,14 +16,16 @@ export default async function EditInspectionPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (session.role === ROLES.FARMER) redirect("/dashboard");
+  await requireInspectionsAccess(session);
   const { id } = await params;
   const query = await searchParams;
   const item = await getInspection(session, id);
   if (!item || !isInspectionKind(item.kind) || item.kind !== "visit") notFound();
+  const customerSource = (await orgQbCustomerListIsOn(session.organizationId)) ? "quickbooks" : "static";
   const customers = await loadInspectionCustomers(session);
   const visit = readVisit(item.headerJson, item.checksJson);
   visit.farmerId = item.farmerId;
+  visit.qbListId = "";
   visit.deskPivotId = item.pivotId ?? "";
   visit.inspectedOn = item.inspectedOn;
   visit.inspectedBy = item.inspectedBy;
@@ -39,7 +42,14 @@ export default async function EditInspectionPage({
       {query.error ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{query.error}</p>
       ) : null}
-      <InspectionWizard customers={customers} visit={visit} id={item.id} initialStep={step} />
+      <InspectionWizard
+        organizationId={session.organizationId}
+        customerSource={customerSource}
+        customers={customers}
+        visit={visit}
+        id={item.id}
+        initialStep={step}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { ActionForm } from "@/components/ActionForm";
-import { setQbwcPasswordAction } from "@/lib/qbwc-actions";
+import { requestQbCustomerSyncAction, setQbwcPasswordAction } from "@/lib/qbwc-actions";
 
 type QbwcSetupProps = {
   username: string;
@@ -8,6 +8,11 @@ type QbwcSetupProps = {
   lastError: string | null;
   lastSyncAt: Date | null;
   queuedCount: number;
+  customersEnabled?: boolean;
+  customerCount?: number;
+  customersSyncedAt?: Date | null;
+  customersSyncRequested?: boolean;
+  estimatesEnabled?: boolean;
 };
 
 export function QbwcSetup({
@@ -17,19 +22,24 @@ export function QbwcSetup({
   lastError,
   lastSyncAt,
   queuedCount,
+  customersEnabled = false,
+  customerCount = 0,
+  customersSyncedAt = null,
+  customersSyncRequested = false,
+  estimatesEnabled = true,
 }: QbwcSetupProps) {
   return (
     <section className="rounded-xl border border-stone-200 bg-white p-4">
       <h2 className="font-display text-xl">QuickBooks Desktop</h2>
       <p className="mt-2 text-sm text-stone-600">
-        Send a work order as a QuickBooks Desktop estimate using Intuit’s Web Connector. This is a
-        separate application from any other Web Connector file you already run. In Web Connector the
-        application name is <span className="font-mono">AGDESKPRO</span>. The QuickBooks customer is the
-        farm's QuickBooks customer name when that field is filled in. The work order has to be on a pivot
-        or other asset that belongs to that farm, unless this customer has only one mapped farm. If the
-        field is blank, the AG Desk customer name is used. The estimate description starts on line 10 with the work order number, title, site,
-        assignee, opening description, parts, labor, equipment, and work notes typed on the work order. The estimate date
-        is the day the repair was marked done. QuickBooks items are not used.
+        {estimatesEnabled
+          ? "Send a work order as a QuickBooks Desktop estimate using Intuit’s Web Connector. "
+          : "Pull the QuickBooks customer list through Intuit’s Web Connector for pivot inspections. "}
+        This is a separate application from any other Web Connector file you already run. In Web Connector the
+        application name is <span className="font-mono">AGDESKPRO</span>.
+        {estimatesEnabled
+          ? " The QuickBooks customer is the farm's QuickBooks customer name when that field is filled in. QuickBooks items are not used."
+          : ""}
       </p>
       <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-stone-700">
         <li>
@@ -73,6 +83,13 @@ export function QbwcSetup({
       ) : (
         <p className="mt-3 text-sm text-amber-800">No password yet — Web Connector cannot sign in.</p>
       )}
+      {customersEnabled ? (
+        <p className="mt-2 text-sm text-stone-700">
+          Customer list: {customerCount.toLocaleString("en-US")} on file
+          {customersSyncedAt ? ` · synced ${customersSyncedAt.toLocaleString()}` : " · not synced yet"}
+          {customersSyncRequested ? " · sync waiting for Web Connector" : ""}
+        </p>
+      ) : null}
       {lastError ? <p className="mt-2 text-sm text-red-700">{lastError}</p> : null}
       <ActionForm action={setQbwcPasswordAction} className="mt-4 flex flex-wrap items-end gap-2">
         <label className="text-sm font-medium">
@@ -95,6 +112,17 @@ export function QbwcSetup({
           Download AGDESKPRO.qwc
         </a>
       </ActionForm>
+      {customersEnabled ? (
+        <ActionForm action={requestQbCustomerSyncAction} className="mt-3">
+          <button className="rounded-lg border border-emerald-800 px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-50">
+            Queue customer list sync
+          </button>
+          <p className="mt-2 text-xs text-stone-500">
+            Then run Update Selected on AGDESKPRO in Web Connector. Phones and tablets cache the list for offline
+            inspections.
+          </p>
+        </ActionForm>
+      ) : null}
     </section>
   );
 }

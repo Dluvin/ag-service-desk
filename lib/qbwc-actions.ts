@@ -5,15 +5,20 @@ import { getSession } from "./auth";
 import { prisma } from "./prisma";
 import { canAssignTickets, isAdmin, PRINTABLE_STATUSES } from "./roles";
 import { ticketWhere } from "./scope";
-import { orgQbwcIsOn } from "./ocr-samples";
-import { ensureQbEstimateJobMeta, qbwcIsReady, setQbwcPassword } from "./qbwc";
+import { orgQbCustomerListIsOn, orgQbwcIsOn } from "./ocr-samples";
+import { ensureQbCustomerSchema, requestQbCustomerSync } from "./qb-customers";
+import { ensureQbEstimateJobMeta, ensureQbwcConfig, qbwcIsReady, setQbwcPassword } from "./qbwc";
 import { clearQbJobMeta } from "./qbwc-xml";
+
+async function qbConnectorAllowed(organizationId: string) {
+  return (await orgQbwcIsOn(organizationId)) || (await orgQbCustomerListIsOn(organizationId));
+}
 
 export async function setQbwcPasswordAction(formData: FormData) {
   const session = await getSession();
   if (!session) return { error: "Sign in to continue." };
   if (!isAdmin(session.role)) return { error: "Only company admins can set the Web Connector password." };
-  if (!(await orgQbwcIsOn(session.organizationId))) {
+  if (!(await qbConnectorAllowed(session.organizationId))) {
     return { error: "QuickBooks Desktop is not on this plan. Ask platform to turn it on for this company." };
   }
   const password = String(formData.get("password") || "").trim();
@@ -21,6 +26,26 @@ export async function setQbwcPasswordAction(formData: FormData) {
   await setQbwcPassword(session.organizationId, password);
   revalidatePath("/reveal");
   return { success: "Web Connector password saved. Download the .qwc file and add it in QuickBooks Web Connector." };
+}
+
+export async function requestQbCustomerSyncAction() {
+  const session = await getSession();
+  if (!session) return { error: "Sign in to continue." };
+  if (!isAdmin(session.role)) return { error: "Only company admins can sync QuickBooks customers." };
+  if (!(await orgQbCustomerListIsOn(session.organizationId))) {
+    return { error: "QuickBooks customer list is not on for this company. Turn it on under platform setup." };
+  }
+  await ensureQbwcConfig(session.organizationId);
+  if (!(await qbwcIsReady(session.organizationId))) {
+    return { error: "Set a Web Connector password first, then add the .qwc file in QuickBooks." };
+  }
+  await ensureQbCustomerSchema();
+  await requestQbCustomerSync(session.organizationId);
+  revalidatePath("/reveal");
+  revalidatePath("/inspections");
+  return {
+    success: "Customer sync queued. Run Update Selected on AGDESKPRO in QuickBooks Web Connector.",
+  };
 }
 
 async function queueOrganizationEstimate(organizationId: string, ticketId: string) {

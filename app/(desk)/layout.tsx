@@ -52,6 +52,7 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
           showMaps={entitlements.mapsEnabled}
           showGps={entitlements.gpsEnabled}
           showForms={entitlements.formsEnabled}
+          showInspections={entitlements.inspectionsEnabled}
         />
         {isShopStaff(session.role) && !session.impersonatorId ? <PresenceBeacon /> : null}
         <main className="mx-auto max-w-7xl px-4 py-8 print:max-w-none print:px-0 print:py-0">{children}</main>

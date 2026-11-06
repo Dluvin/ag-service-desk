@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+import { requireInspectionsAccess } from "@/lib/inspection-access";
 import {
   formatInspectionDate,
   inspectionSubtitle,
@@ -10,7 +11,6 @@ import {
   visitAttention,
 } from "@/lib/inspection-form";
 import { listInspections } from "@/lib/inspections";
-import { ROLES } from "@/lib/roles";
 
 export default async function InspectionsPage({
   searchParams,
@@ -19,7 +19,7 @@ export default async function InspectionsPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (session.role === ROLES.FARMER) redirect("/dashboard");
+  await requireInspectionsAccess(session);
   const params = await searchParams;
   const q = (params.q ?? "").trim();
   const rows = await listInspections(session, q);

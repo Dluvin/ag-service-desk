@@ -45,6 +45,8 @@ model Organization {
   ocrEnabled          Boolean? // null = derive from plan
   formsEnabled        Boolean? // null = derive from plan
   qbwcEnabled         Boolean? // null = derive from plan — QuickBooks Desktop Web Connector
+  inspectionsEnabled  Boolean? // null = derive from plan — pivot inspection visit wizard
+  qbCustomerListEnabled Boolean? // null = derive from plan — inspections use QB customer list
   ocrBoxesConfirmedAt DateTime?
   ocrFirstScanAt      DateTime?
   ocrFieldListReviewedAt DateTime?
@@ -75,6 +77,7 @@ model Organization {
   qbwcConfig          QbwcConfig?
   qbwcSessions        QbwcSession[]
   qbEstimateJobs      QbEstimateJob[]
+  qbCustomers         QbCustomer[]
 }
 
 model OrgOcrSample {
@@ -590,6 +593,21 @@ model TicketPhoto {
   @@index([ticketId])
 }
 
+model QbCustomer {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  listId         String
+  name           String
+  fullName       String
+  companyName    String       @default("")
+  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, listId])
+  @@index([organizationId, fullName])
+}
+
 model QbwcConfig {
   organizationId String       @id
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -600,6 +618,9 @@ model QbwcConfig {
   companyName    String?
   lastError      String?
   lastSyncAt     DateTime?
+  customersSyncedAt      DateTime?
+  customersIteratorId    String?
+  customersSyncRequested Boolean  @default(false)
   updatedAt      DateTime     @updatedAt
 }
 

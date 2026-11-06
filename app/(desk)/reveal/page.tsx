@@ -31,12 +31,18 @@ export default async function RevealSettingsPage() {
   const entitlements = resolveEntitlements({ ...plan?.org, ...flags });
   const gpsOn = showVehicleGps({ ...plan?.org, ...flags });
   const qbOn = entitlements.qbwcEnabled;
-  const qbwc = qbOn ? await ensureQbwcConfig(session.organizationId) : null;
-  const queuedCount = qbwc
+  const qbCustomersOn = entitlements.qbCustomerListEnabled;
+  const qbConnectorOn = qbOn || qbCustomersOn;
+  const qbwc = qbConnectorOn ? await ensureQbwcConfig(session.organizationId) : null;
+  const queuedCount = qbwc && qbOn
     ? await prisma.qbEstimateJob.count({
         where: { organizationId: session.organizationId, status: "QUEUED" },
       })
     : 0;
+  const customerCount =
+    qbwc && qbCustomersOn
+      ? await prisma.qbCustomer.count({ where: { organizationId: session.organizationId } })
+      : 0;
 
   const configured = gpsOn ? Boolean(await loadRevealCreds(session.organizationId)) : false;
   const vehicles = configured ? await storedRevealVehicles(session.organizationId) : [];
@@ -49,7 +55,7 @@ export default async function RevealSettingsPage() {
         each connector on per dealer under upgrade options.
       </p>
 
-      {qbOn && qbwc ? (
+      {qbConnectorOn && qbwc ? (
         <div className="mt-6">
           <QbwcSetup
             username={qbwc.username}
@@ -58,14 +64,19 @@ export default async function RevealSettingsPage() {
             lastError={qbwc.lastError}
             lastSyncAt={qbwc.lastSyncAt}
             queuedCount={queuedCount}
+            estimatesEnabled={qbOn}
+            customersEnabled={qbCustomersOn}
+            customerCount={customerCount}
+            customersSyncedAt={qbwc.customersSyncedAt}
+            customersSyncRequested={qbwc.customersSyncRequested}
           />
         </div>
       ) : (
         <div className="mt-6">
           <h2 className="font-display text-xl">QuickBooks Desktop</h2>
           <p className="mt-2 text-sm text-stone-600">
-            Estimates from work orders are an upgrade option. Off on Starter and Shop unless platform
-            turns them on for this company.
+            Estimates and QuickBooks customer lists are upgrade options. Off on Starter and Shop unless
+            platform turns them on for this company.
           </p>
           <div className="mt-4">
             <ContactSalesNote>{contactSalesQbwcMessage({ ...plan?.org, ...flags })}</ContactSalesNote>

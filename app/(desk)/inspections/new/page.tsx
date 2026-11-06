@@ -2,17 +2,20 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { InspectionWizard } from "@/components/InspectionWizard";
 import { getSession } from "@/lib/auth";
+import { requireInspectionsAccess } from "@/lib/inspection-access";
 import { inspectionToday, type VisitDraft } from "@/lib/inspection-form";
 import { loadInspectionCustomers } from "@/lib/inspections";
-import { ROLES } from "@/lib/roles";
+import { orgQbCustomerListIsOn } from "@/lib/ocr-samples";
 
 export default async function NewInspectionPage() {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (session.role === ROLES.FARMER) redirect("/dashboard");
+  await requireInspectionsAccess(session);
+  const customerSource = (await orgQbCustomerListIsOn(session.organizationId)) ? "quickbooks" : "static";
   const customers = await loadInspectionCustomers(session);
   const visit: VisitDraft = {
     farmerId: "",
+    qbListId: "",
     deskPivotId: "",
     inspectedOn: inspectionToday(),
     inspectedBy: session.name,
@@ -36,7 +39,12 @@ export default async function NewInspectionPage() {
           Inspections
         </Link>
       </p>
-      <InspectionWizard customers={customers} visit={visit} />
+      <InspectionWizard
+        organizationId={session.organizationId}
+        customerSource={customerSource}
+        customers={customers}
+        visit={visit}
+      />
     </div>
   );
 }

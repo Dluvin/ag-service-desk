@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { isAdmin } from "@/lib/roles";
 import { appBaseUrl } from "@/lib/app-url";
-import { orgQbwcIsOn } from "@/lib/ocr-samples";
+import { orgQbCustomerListIsOn, orgQbwcIsOn } from "@/lib/ocr-samples";
 import { ensureQbwcConfig } from "@/lib/qbwc";
 import { qbwcFile } from "@/lib/qbwc-soap";
 
@@ -13,7 +13,10 @@ export async function GET(request: NextRequest) {
   if (!session || !isAdmin(session.role)) {
     return new NextResponse("Admin only", { status: 403 });
   }
-  if (!(await orgQbwcIsOn(session.organizationId))) {
+  if (
+    !(await orgQbwcIsOn(session.organizationId)) &&
+    !(await orgQbCustomerListIsOn(session.organizationId))
+  ) {
     return new NextResponse("QuickBooks Desktop is not on this plan", { status: 403 });
   }
   const config = await ensureQbwcConfig(session.organizationId);

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { orgInspectionsIsOn } from "@/lib/ocr-samples";
 import { factsFromPackage, findPackagesBySerial, indexPivotPackages } from "@/lib/pivot-package-match";
 import { loadPivotPackages } from "@/lib/pivot-packages-data";
 
@@ -17,6 +18,9 @@ async function packageIndex() {
 export async function GET(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await orgInspectionsIsOn(session.organizationId))) {
+    return NextResponse.json({ error: "Pivot inspections are not enabled." }, { status: 403 });
+  }
   const serial = new URL(request.url).searchParams.get("serial")?.trim() ?? "";
   if (serial.length < 3) return NextResponse.json({ matches: [] });
   const index = await packageIndex();

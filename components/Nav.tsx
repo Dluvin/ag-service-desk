@@ -20,6 +20,7 @@ export function Nav({
   showMaps = true,
   showGps = true,
   showForms = true,
+  showInspections = false,
 }: {
   session: SessionUser;
   locale: Locale;
@@ -28,6 +29,7 @@ export function Nav({
   showMaps?: boolean;
   showGps?: boolean;
   showForms?: boolean;
+  showInspections?: boolean;
 }) {
   const farmer = session.role === ROLES.FARMER;
   const beforeTickets = farmer
@@ -39,7 +41,7 @@ export function Nav({
     { href: "/startup", label: t(locale, "nav.maintenance") },
     ...(!farmer
       ? [
-          { href: "/inspections", label: t(locale, "nav.inspections") },
+          ...(showInspections ? [{ href: "/inspections", label: t(locale, "nav.inspections") }] : []),
           { href: "/parts", label: t(locale, "nav.parts") },
           { href: "/labor", label: t(locale, "nav.labor") },
           { href: "/equipment", label: t(locale, "nav.equipment") },

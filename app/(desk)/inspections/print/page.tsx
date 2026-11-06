@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import { PrintButton } from "@/components/PrintButton";
 import { VisitSheets } from "@/components/VisitSheets";
 import { getSession } from "@/lib/auth";
+import { requireInspectionsAccess } from "@/lib/inspection-access";
 import { isInspectionKind, readVisit } from "@/lib/inspection-form";
 import { listInspections } from "@/lib/inspections";
-import { ROLES } from "@/lib/roles";
 
 export default async function InspectionsPrintPage({
   searchParams,
@@ -14,7 +14,7 @@ export default async function InspectionsPrintPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (session.role === ROLES.FARMER) redirect("/dashboard");
+  await requireInspectionsAccess(session);
   const params = await searchParams;
   const q = (params.q ?? "").trim();
   const rows = await listInspections(session, q);

@@ -20,6 +20,8 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
         {entitlements.ocrEnabled ? " · scans on" : " · no handwritten scans"}
         {entitlements.formsEnabled ? " · forms on" : " · no office forms"}
         {entitlements.qbwcEnabled ? " · QuickBooks Desktop on" : " · no QuickBooks Desktop"}
+        {entitlements.inspectionsEnabled ? " · pivot inspections on" : " · no pivot inspections"}
+        {entitlements.qbCustomerListEnabled ? " · QB customer list on" : " · Ag Desk customer list"}
         {entitlements.gpsEnabled ? ` · GPS ${entitlements.gpsProvider}` : " · no live GPS"}
         {entitlements.maxStores != null ? ` · ${entitlements.maxStores} stores` : " · unlimited stores"}
       </p>
@@ -107,6 +109,35 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
             <option value="1">On for this company</option>
             <option value="0">Off for this company</option>
           </select>
+        </label>
+        <label className="block text-xs font-medium text-stone-600 sm:col-span-2">
+          Pivot inspections add-on
+          <select
+            name="inspectionsEnabled"
+            defaultValue={org.inspectionsEnabled == null ? "" : org.inspectionsEnabled ? "1" : "0"}
+            className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm"
+          >
+            <option value="">Plan default ({PLANS[entitlements.plan].inspectionsEnabled ? "on" : "off"})</option>
+            <option value="1">On for this company</option>
+            <option value="0">Off for this company</option>
+          </select>
+        </label>
+        <label className="block text-xs font-medium text-stone-600 sm:col-span-2">
+          Inspection customer list
+          <select
+            name="qbCustomerListEnabled"
+            defaultValue={org.qbCustomerListEnabled == null ? "" : org.qbCustomerListEnabled ? "1" : "0"}
+            className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm"
+          >
+            <option value="">
+              Plan default ({PLANS[entitlements.plan].qbCustomerListEnabled ? "QuickBooks list" : "Ag Desk customers"})
+            </option>
+            <option value="0">Ag Desk customers (static)</option>
+            <option value="1">QuickBooks customer list</option>
+          </select>
+          <span className="mt-1 block font-normal text-stone-500">
+            QuickBooks mode syncs through Web Connector and caches on the phone/tablet for offline field use.
+          </span>
         </label>
         <label className="flex items-center gap-2 text-sm text-stone-700 sm:col-span-2">
           <input type="checkbox" name="revealGps" value="1" defaultChecked={entitlements.revealGps} />

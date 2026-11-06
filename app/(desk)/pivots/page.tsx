@@ -6,6 +6,7 @@ import { pivotWhere } from "@/lib/scope";
 import { canImportPivots, isShopStaff } from "@/lib/roles";
 import { importAgSensePivotsAction } from "@/lib/actions";
 import { syncPivotPackagesAction } from "@/lib/pivot-package-actions";
+import { orgInspectionsIsOn } from "@/lib/ocr-samples";
 import { ActionForm } from "@/components/ActionForm";
 import { PivotDirectory } from "@/components/PivotDirectory";
 import { ChooseAssetTypeButton } from "@/components/ChooseAssetTypeButton";
@@ -31,6 +32,7 @@ export default async function PivotsPage({
   const query = await searchParams;
   const canAdd = isShopStaff(session.role);
   const canImport = canImportPivots(session.role);
+  const showPackages = canImport && (await orgInspectionsIsOn(session.organizationId));
   const [pivots, farmers, types] = await Promise.all([
     prisma.pivot.findMany({
       where: pivotWhere(session),
@@ -99,18 +101,20 @@ export default async function PivotsPage({
       </div>
       {canImport ? (
         <div id="import" className="lg:col-span-2 space-y-8">
-          <div>
-            <h2 className="font-display text-xl">Pivot packages</h2>
-            <p className="mt-2 text-sm text-stone-600">
-              Match the sprinkler-package catalog onto pivots by exact serial/item number or a unique pivot-name
-              match in the package description. Ambiguous names are left alone.
-            </p>
-            <ActionForm action={syncPivotPackagesAction} className="mt-3">
-              <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
-                Sync package matches
-              </button>
-            </ActionForm>
-          </div>
+          {showPackages ? (
+            <div>
+              <h2 className="font-display text-xl">Pivot packages</h2>
+              <p className="mt-2 text-sm text-stone-600">
+                Match the sprinkler-package catalog onto pivots by exact serial/item number or a unique pivot-name
+                match in the package description. Ambiguous names are left alone.
+              </p>
+              <ActionForm action={syncPivotPackagesAction} className="mt-3">
+                <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">
+                  Sync package matches
+                </button>
+              </ActionForm>
+            </div>
+          ) : null}
           <div>
           <h2 className="font-display text-xl">Import pivots</h2>
           <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-stone-600">

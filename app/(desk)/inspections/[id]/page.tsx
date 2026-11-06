@@ -4,9 +4,9 @@ import { InspectionDeleteButton } from "@/components/InspectionDeleteButton";
 import { PrintButton } from "@/components/PrintButton";
 import { VisitSheets } from "@/components/VisitSheets";
 import { getSession } from "@/lib/auth";
+import { requireInspectionsAccess } from "@/lib/inspection-access";
 import { isInspectionKind, readVisit } from "@/lib/inspection-form";
 import { getInspection } from "@/lib/inspections";
-import { ROLES } from "@/lib/roles";
 
 export default async function InspectionPage({
   params,
@@ -17,7 +17,7 @@ export default async function InspectionPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
-  if (session.role === ROLES.FARMER) redirect("/dashboard");
+  await requireInspectionsAccess(session);
   const { id } = await params;
   const query = await searchParams;
   const item = await getInspection(session, id);

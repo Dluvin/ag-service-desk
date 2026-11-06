@@ -15,7 +15,7 @@ export type PlanId = (typeof PLAN_IDS)[number];
 export const GPS_PROVIDERS = ["NONE", "REVEAL", "VERIZON", "OTHER"] as const;
 export type GpsProvider = (typeof GPS_PROVIDERS)[number];
 
-export type PlanFeature = "maps" | "gps" | "stores" | "ocr" | "forms" | "qbwc";
+export type PlanFeature = "maps" | "gps" | "stores" | "ocr" | "forms" | "qbwc" | "inspections" | "qbCustomers";
 
 export type PlanCatalog = {
   id: PlanId;
@@ -27,6 +27,8 @@ export type PlanCatalog = {
   ocrEnabled: boolean;
   formsEnabled: boolean;
   qbwcEnabled: boolean;
+  inspectionsEnabled: boolean;
+  qbCustomerListEnabled: boolean;
   directionsEnabled: boolean;
   /** Hard user cap. null = unlimited (or pay-per-seat with no lock). */
   maxUsers: number | null;
@@ -51,6 +53,8 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     ocrEnabled: false,
     formsEnabled: false,
     qbwcEnabled: false,
+    inspectionsEnabled: false,
+    qbCustomerListEnabled: false,
     directionsEnabled: true,
     maxUsers: null,
     includedUsers: 1,
@@ -70,6 +74,8 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     ocrEnabled: false,
     formsEnabled: false,
     qbwcEnabled: false,
+    inspectionsEnabled: false,
+    qbCustomerListEnabled: false,
     directionsEnabled: true,
     maxUsers: 10,
     includedUsers: 10,
@@ -89,6 +95,8 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     ocrEnabled: true,
     formsEnabled: true,
     qbwcEnabled: true,
+    inspectionsEnabled: true,
+    qbCustomerListEnabled: false,
     directionsEnabled: true,
     maxUsers: null,
     includedUsers: null,
@@ -109,6 +117,8 @@ export type PlanOrg = {
   ocrEnabled?: boolean | null;
   formsEnabled?: boolean | null;
   qbwcEnabled?: boolean | null;
+  inspectionsEnabled?: boolean | null;
+  qbCustomerListEnabled?: boolean | null;
   gpsEnabled?: boolean | null;
   gpsProvider?: string | null;
   revealGps?: boolean | null;
@@ -138,6 +148,8 @@ export type ResolvedPlan = {
   ocrEnabled: boolean;
   formsEnabled: boolean;
   qbwcEnabled: boolean;
+  inspectionsEnabled: boolean;
+  qbCustomerListEnabled: boolean;
   directionsEnabled: boolean;
   gpsEnabled: boolean;
   gpsProvider: GpsProvider;
@@ -177,6 +189,8 @@ export function resolveEntitlements(org: PlanOrg | null | undefined): ResolvedPl
   const ocrEnabled = org?.ocrEnabled ?? catalog.ocrEnabled;
   const formsEnabled = org?.formsEnabled ?? catalog.formsEnabled;
   const qbwcEnabled = org?.qbwcEnabled ?? catalog.qbwcEnabled;
+  const inspectionsEnabled = org?.inspectionsEnabled ?? catalog.inspectionsEnabled;
+  const qbCustomerListEnabled = org?.qbCustomerListEnabled ?? catalog.qbCustomerListEnabled;
   const gpsEnabled = Boolean(org?.gpsEnabled) || catalog.gpsEnabled || revealGps;
 
   let gpsProvider: GpsProvider = isGpsProvider(org?.gpsProvider) ? org.gpsProvider : catalog.gpsProvider;
@@ -195,6 +209,8 @@ export function resolveEntitlements(org: PlanOrg | null | undefined): ResolvedPl
     ocrEnabled,
     formsEnabled,
     qbwcEnabled,
+    inspectionsEnabled,
+    qbCustomerListEnabled,
     directionsEnabled: catalog.directionsEnabled,
     gpsEnabled,
     gpsProvider,
@@ -215,6 +231,8 @@ export function planAllows(org: PlanOrg | null | undefined, feature: PlanFeature
   if (feature === "ocr") return entitlements.ocrEnabled;
   if (feature === "forms") return entitlements.formsEnabled;
   if (feature === "qbwc") return entitlements.qbwcEnabled;
+  if (feature === "inspections") return entitlements.inspectionsEnabled;
+  if (feature === "qbCustomers") return entitlements.qbCustomerListEnabled;
   if (feature === "gps") return entitlements.gpsEnabled;
   return entitlements.maxStores == null || entitlements.maxStores > 0;
 }
@@ -237,6 +255,14 @@ export function showOfficeForms(org: PlanOrg | null | undefined) {
 
 export function showQuickBooksDesktop(org: PlanOrg | null | undefined) {
   return planAllows(org, "qbwc");
+}
+
+export function showPivotInspections(org: PlanOrg | null | undefined) {
+  return planAllows(org, "inspections");
+}
+
+export function showQbCustomerList(org: PlanOrg | null | undefined) {
+  return planAllows(org, "qbCustomers");
 }
 
 export function canAddStore(org: PlanOrg | null | undefined, currentCount: number, adding = 1) {

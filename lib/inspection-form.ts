@@ -36,6 +36,7 @@ export type TowerDraft = {
 
 export type VisitDraft = {
   farmerId: string;
+  qbListId: string;
   deskPivotId: string;
   inspectedOn: string;
   inspectedBy: string;
@@ -304,6 +305,7 @@ export function readVisit(headerJson: string, checksJson: string): VisitDraft {
   }
   return {
     farmerId: "",
+    qbListId: "",
     deskPivotId: "",
     inspectedOn: "",
     inspectedBy: "",
