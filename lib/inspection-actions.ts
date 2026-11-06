@@ -15,6 +15,12 @@ import {
 } from "./inspection-form";
 import { getInspection, scheduleFromInspectedOn } from "./inspections";
 import { orgQbCustomerListIsOn } from "./ocr-samples";
+import {
+  findPackagesBySerial,
+  indexPivotPackages,
+  packageFieldsFromMatch,
+} from "./pivot-package-match";
+import { loadPivotPackages } from "./pivot-packages-data";
 import { linkQbCustomerToFarmer, resolveFarmerFromQbCustomer } from "./qb-customers";
 import { prisma } from "./prisma";
 import { ROLES } from "./roles";
@@ -27,13 +33,15 @@ async function requireInspectionUser() {
   return session;
 }
 
-function refreshInspections(id?: string, ticketId?: string | null) {
+function refreshInspections(id?: string, ticketId?: string | null, pivotId?: string | null) {
   revalidatePath("/inspections");
   revalidatePath("/inspections/print");
   revalidatePath("/dispatch");
   revalidatePath("/tickets");
+  revalidatePath("/pivots");
   if (id) revalidatePath(`/inspections/${id}`);
   if (ticketId) revalidatePath(`/tickets/${ticketId}`);
+  if (pivotId) revalidatePath(`/pivots/${pivotId}`);
 }
 
 export async function saveVisitAction(
@@ -164,11 +172,51 @@ export async function saveVisitAction(
         },
       });
 
-  if (pivot && serialNumber && !pivot.serialNumber) {
-    await prisma.pivot.update({
-      where: { id: pivot.id },
-      data: { serialNumber },
-    });
+  if (pivot) {
+    const packageItem = cleanLine(input.packageItem, 40);
+    const pivotPatch: {
+      serialNumber?: string;
+      packageItem?: string;
+      packageDescription?: string;
+      packageBrand?: string | null;
+      packageTowerCount?: number | null;
+      packageLengthFeet?: string | null;
+      packageVendor?: string | null;
+      packageMatchedAt?: Date;
+    } = {};
+
+    if (serialNumber && !pivot.serialNumber) {
+      pivotPatch.serialNumber = serialNumber;
+    }
+
+    // Serial/package match from the inspection attaches onto the selected pivot/asset.
+    if (packageItem || serialNumber) {
+      const packages = await loadPivotPackages();
+      const index = indexPivotPackages(packages);
+      const byItem = packageItem
+        ? packages.find((pkg) => pkg.item.toLowerCase() === packageItem.toLowerCase())
+        : null;
+      const bySerial = !byItem && serialNumber ? findPackagesBySerial(index, serialNumber) : [];
+      const matched = byItem ?? (bySerial.length === 1 ? bySerial[0] : null);
+      if (matched) {
+        Object.assign(pivotPatch, packageFieldsFromMatch(matched));
+      } else if (packageItem) {
+        Object.assign(pivotPatch, {
+          packageItem,
+          packageDescription: cleanLine(input.packageDescription, 300) || null,
+          packageBrand: brand || null,
+          packageTowerCount: towerCount,
+          packageMatchedAt: new Date(),
+        });
+      }
+    }
+
+    if (Object.keys(pivotPatch).length) {
+      await prisma.pivot.update({
+        where: { id: pivot.id },
+        data: pivotPatch,
+      });
+    }
   }
 
   let ticketId = existing?.ticketId ?? saved.ticketId;
@@ -213,7 +261,7 @@ export async function saveVisitAction(
     });
   }
 
-  refreshInspections(saved.id, ticketId);
+  refreshInspections(saved.id, ticketId, pivot?.id);
   return { id: saved.id };
 }
 
