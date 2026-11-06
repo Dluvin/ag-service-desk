@@ -48,6 +48,15 @@ export default async function InspectionPage({
       {query.saved ? (
         <p className="no-print rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
           Saved
+          {item.pivotId ? (
+            <>
+              {" "}
+              · on{" "}
+              <Link href={`/pivots/${item.pivotId}`} className="font-semibold underline">
+                the pivot asset
+              </Link>
+            </>
+          ) : null}
           {item.ticket ? (
             <>
               {" "}

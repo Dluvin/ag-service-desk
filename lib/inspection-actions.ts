@@ -185,11 +185,12 @@ export async function saveVisitAction(
       packageMatchedAt?: Date;
     } = {};
 
-    if (serialNumber && !pivot.serialNumber) {
+    // Always keep the serial the tech entered on the asset, match or not.
+    if (serialNumber) {
       pivotPatch.serialNumber = serialNumber;
     }
 
-    // Serial/package match from the inspection attaches onto the selected pivot/asset.
+    // Full package details only when the catalog finds a match.
     if (packageItem || serialNumber) {
       const packages = await loadPivotPackages();
       const index = indexPivotPackages(packages);
@@ -200,14 +201,6 @@ export async function saveVisitAction(
       const matched = byItem ?? (bySerial.length === 1 ? bySerial[0] : null);
       if (matched) {
         Object.assign(pivotPatch, packageFieldsFromMatch(matched));
-      } else if (packageItem) {
-        Object.assign(pivotPatch, {
-          packageItem,
-          packageDescription: cleanLine(input.packageDescription, 300) || null,
-          packageBrand: brand || null,
-          packageTowerCount: towerCount,
-          packageMatchedAt: new Date(),
-        });
       }
     }
 

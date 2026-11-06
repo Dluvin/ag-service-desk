@@ -27,6 +27,18 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
       tickets: { orderBy: { updatedAt: "desc" } },
       notes: { include: { user: true }, orderBy: { createdAt: "desc" } },
       documents: { include: { user: true }, orderBy: { createdAt: "desc" } },
+      pivotInspections: {
+        orderBy: [{ inspectedOn: "desc" }, { updatedAt: "desc" }],
+        take: 20,
+        select: {
+          id: true,
+          inspectedOn: true,
+          inspectedBy: true,
+          customerName: true,
+          ticketId: true,
+          updatedAt: true,
+        },
+      },
     },
   });
   if (!pivot) notFound();
@@ -163,6 +175,25 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
           </label>
           <button className="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white">Save note</button>
         </ActionForm>
+
+        <h2 className="font-display mt-8 text-xl">Pivot inspections</h2>
+        <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
+          {pivot.pivotInspections.length === 0 ? (
+            <li className="p-4 text-sm text-stone-600">No pivot inspections linked to this asset yet.</li>
+          ) : (
+            pivot.pivotInspections.map((inspection) => (
+              <li key={inspection.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                <Link href={`/inspections/${inspection.id}`} className="font-medium hover:underline">
+                  Inspected {inspection.inspectedOn}
+                  {inspection.inspectedBy ? ` · ${inspection.inspectedBy}` : ""}
+                </Link>
+                <span className="text-xs text-stone-500">
+                  Updated {new Date(inspection.updatedAt).toLocaleString()}
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
 
         <h2 className="font-display mt-8 text-xl">Work orders</h2>
         <ul className="mt-3 divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200 bg-white">
