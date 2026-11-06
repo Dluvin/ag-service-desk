@@ -11,6 +11,9 @@ type PivotRow = {
   latitude: number;
   longitude: number;
   serialNumber: string | null;
+  packageItem: string | null;
+  packageBrand: string | null;
+  packageTowerCount: number | null;
   openTickets: number;
   notes: number;
 };
@@ -21,7 +24,15 @@ export function PivotDirectory({ pivots }: { pivots: PivotRow[] }) {
     const q = query.trim().toLowerCase();
     if (!q) return pivots;
     return pivots.filter((pivot) =>
-      [pivot.name, pivot.farmerName, pivot.serialNumber, String(pivot.latitude), String(pivot.longitude)]
+      [
+        pivot.name,
+        pivot.farmerName,
+        pivot.serialNumber,
+        pivot.packageItem,
+        pivot.packageBrand,
+        String(pivot.latitude),
+        String(pivot.longitude),
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
@@ -46,6 +57,13 @@ export function PivotDirectory({ pivots }: { pivots: PivotRow[] }) {
                 {pivot.latitude.toFixed(5)}, {pivot.longitude.toFixed(5)}
                 {pivot.serialNumber ? ` · ${pivot.serialNumber}` : ""}
               </p>
+              {pivot.packageItem ? (
+                <p className="mt-1 text-xs text-emerald-900">
+                  Package {pivot.packageItem}
+                  {pivot.packageBrand ? ` · ${pivot.packageBrand}` : ""}
+                  {pivot.packageTowerCount != null ? ` · ${pivot.packageTowerCount} towers` : ""}
+                </p>
+              ) : null}
               <p className="mt-2 text-sm">
                 {pivot.openTickets} open work order(s)
                 {pivot.notes > 0 ? ` · ${pivot.notes} note(s)` : ""}

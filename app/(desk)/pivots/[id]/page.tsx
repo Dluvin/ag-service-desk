@@ -59,6 +59,19 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
           {pivot.serialNumber ? ` · SN ${pivot.serialNumber}` : ""}
         </p>
         {pivot.locationNote ? <p className="mt-2 text-sm">{pivot.locationNote}</p> : null}
+        {pivot.packageItem ? (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
+            <h2 className="font-display text-xl">Sprinkler package</h2>
+            <p className="mt-1 text-sm text-stone-700">
+              Item {pivot.packageItem}
+              {pivot.packageBrand ? ` · ${pivot.packageBrand}` : ""}
+              {pivot.packageTowerCount != null ? ` · ${pivot.packageTowerCount} towers` : ""}
+              {pivot.packageLengthFeet ? ` · ${pivot.packageLengthFeet}'` : ""}
+            </p>
+            <p className="mt-2 text-sm text-stone-900">{pivot.packageDescription}</p>
+            {pivot.packageVendor ? <p className="mt-1 text-xs text-stone-500">{pivot.packageVendor}</p> : null}
+          </div>
+        ) : null}
         {canEdit ? (
           <ActionForm action={updatePivotAction} className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
             <input type="hidden" name="pivotId" value={pivot.id} />

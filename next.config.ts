@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "25mb",
     },
   },
+  outputFileTracingIncludes: {
+    "/api/inspections/lookup": ["./data/pivot-packages.json"],
+    "/pivots": ["./data/pivot-packages.json"],
+    "/inspections/**/*": ["./data/pivot-packages.json"],
+  },
 };
 
 export default nextConfig;

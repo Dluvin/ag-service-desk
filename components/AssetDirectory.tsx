@@ -8,6 +8,17 @@ import type { UnifiedAssetRow } from "@/lib/assets";
 import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
 import { useT } from "@/components/I18nProvider";
 
+function packageLabel(asset: UnifiedAssetRow) {
+  if (!asset.packageItem) return "";
+  return [
+    `pkg ${asset.packageItem}`,
+    asset.packageBrand,
+    asset.packageTowerCount != null ? `${asset.packageTowerCount} twr` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function assetSearchText(asset: UnifiedAssetRow) {
   return [
     asset.name,
@@ -15,6 +26,8 @@ function assetSearchText(asset: UnifiedAssetRow) {
     asset.farmerName,
     asset.farmName ?? UNASSIGNED_FARM_LABEL,
     asset.serialNumber,
+    asset.packageItem,
+    asset.packageBrand,
     String(asset.latitude),
     String(asset.longitude),
   ]
@@ -24,7 +37,7 @@ function assetSearchText(asset: UnifiedAssetRow) {
 }
 
 function assetSubtitle(asset: UnifiedAssetRow) {
-  return [asset.typeName, asset.farmerName, asset.farmName ?? UNASSIGNED_FARM_LABEL, asset.serialNumber]
+  return [asset.typeName, asset.farmerName, asset.farmName ?? UNASSIGNED_FARM_LABEL, asset.serialNumber, packageLabel(asset)]
     .filter(Boolean)
     .join(" · ");
 }
@@ -121,6 +134,9 @@ export function AssetDirectory({ assets }: { assets: UnifiedAssetRow[] }) {
                 {asset.latitude.toFixed(5)}, {asset.longitude.toFixed(5)}
                 {asset.serialNumber ? ` · ${asset.serialNumber}` : ""}
               </p>
+              {asset.packageItem ? (
+                <p className="mt-1 text-xs text-emerald-900">{packageLabel(asset)}</p>
+              ) : null}
             </li>
           ))}
         </ul>

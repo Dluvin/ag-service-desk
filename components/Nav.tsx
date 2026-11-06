@@ -39,6 +39,7 @@ export function Nav({
     { href: "/startup", label: t(locale, "nav.maintenance") },
     ...(!farmer
       ? [
+          { href: "/inspections", label: t(locale, "nav.inspections") },
           { href: "/parts", label: t(locale, "nav.parts") },
           { href: "/labor", label: t(locale, "nav.labor") },
           { href: "/equipment", label: t(locale, "nav.equipment") },

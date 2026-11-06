@@ -61,6 +61,7 @@ model Organization {
   pivots              Pivot[]
   tickets             Ticket[]
   inspections         StartupInspection[]
+  pivotInspections    PivotInspection[]
   startupChecks       StartupCheckTemplate[]
   catalogParts        CatalogPart[]
   catalogLabor        CatalogLabor[]
@@ -193,6 +194,7 @@ model Farmer {
   contacts        FarmerContact[]
   farms           Farm[]
   farmAssignments FarmAssignment[]
+  pivotInspections PivotInspection[]
 }
 
 model Farm {
@@ -254,13 +256,22 @@ model Pivot {
   longitude      Float
   locationNote   String?
   serialNumber   String?
+  packageItem         String?
+  packageDescription  String?
+  packageBrand        String?
+  packageTowerCount   Int?
+  packageLengthFeet   String?
+  packageVendor       String?
+  packageMatchedAt    DateTime?
   createdAt      DateTime     @default(now())
   tickets        Ticket[]
   inspections    StartupInspection[]
+  pivotInspections PivotInspection[]
   notes          PivotNote[]
   documents      PivotDocument[]
 
   @@index([farmId])
+  @@index([organizationId, packageItem])
 }
 
 model PivotDocument {
@@ -357,6 +368,7 @@ model Ticket {
   labor          TicketLabor[]
   equipment      TicketEquipment[]
   inspections    StartupInspection[]
+  pivotInspections PivotInspection[]
   siteVisits     SiteVisit[]
   qbEstimateJobs QbEstimateJob[]
 
@@ -478,6 +490,32 @@ model TicketEquipment {
   sku                 String?
   unitRate            Float?
   createdAt           DateTime          @default(now())
+}
+
+model PivotInspection {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  farmerId       String
+  farmer         Farmer       @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  pivotId        String?
+  pivot          Pivot?       @relation(fields: [pivotId], references: [id], onDelete: SetNull)
+  ticketId       String?
+  ticket         Ticket?      @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  kind           String       @default("visit")
+  customerName   String       @default("")
+  inspectedOn    String
+  inspectedBy    String       @default("")
+  headerJson     String       @default("{}")
+  checksJson     String       @default("{}")
+  createdById    String       @default("")
+  createdByName  String       @default("")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, inspectedOn])
+  @@index([farmerId])
+  @@index([ticketId])
 }
 
 model StartupInspection {

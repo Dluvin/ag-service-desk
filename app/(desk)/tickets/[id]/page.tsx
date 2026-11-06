@@ -60,6 +60,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         siteVisits: { orderBy: { startedAt: "asc" } },
         photos: { orderBy: { createdAt: "desc" } },
         inspections: { orderBy: { createdAt: "desc" } },
+        pivotInspections: { orderBy: { createdAt: "desc" }, take: 1 },
         qbEstimateJobs: { orderBy: { createdAt: "desc" }, take: 1 },
     },
   });
@@ -159,6 +160,13 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           <p className="mt-2 text-sm">
             <Link href={`/startup/${ticket.inspections[0].id}`} className="text-emerald-800 hover:underline">
               {t(locale, "ticket.checklist")}
+            </Link>
+          </p>
+        ) : null}
+        {ticket.pivotInspections[0] ? (
+          <p className="mt-2 text-sm">
+            <Link href={`/inspections/${ticket.pivotInspections[0].id}`} className="text-emerald-800 hover:underline">
+              Open pivot inspection
             </Link>
           </p>
         ) : null}

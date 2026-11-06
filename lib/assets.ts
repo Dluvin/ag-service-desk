@@ -56,6 +56,9 @@ export type UnifiedAssetRow = {
   longitude: number;
   serialNumber: string | null;
   locationNote: string | null;
+  packageItem: string | null;
+  packageBrand: string | null;
+  packageTowerCount: number | null;
 };
 
 export function pivotToUnifiedRow(
@@ -66,6 +69,9 @@ export function pivotToUnifiedRow(
     longitude: number;
     serialNumber: string | null;
     locationNote: string | null;
+    packageItem?: string | null;
+    packageBrand?: string | null;
+    packageTowerCount?: number | null;
     farmer: { name: string };
     farm?: { name: string } | null;
   },
@@ -83,6 +89,9 @@ export function pivotToUnifiedRow(
     longitude: pivot.longitude,
     serialNumber: pivot.serialNumber,
     locationNote: pivot.locationNote,
+    packageItem: pivot.packageItem ?? null,
+    packageBrand: pivot.packageBrand ?? null,
+    packageTowerCount: pivot.packageTowerCount ?? null,
   };
 }
 
@@ -109,6 +118,9 @@ export function assetToUnifiedRow(asset: {
     longitude: asset.longitude,
     serialNumber: asset.serialNumber,
     locationNote: asset.locationNote,
+    packageItem: null,
+    packageBrand: null,
+    packageTowerCount: null,
   };
 }
 

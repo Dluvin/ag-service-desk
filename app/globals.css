@@ -264,6 +264,16 @@ h2,
     page-break-after: always;
   }
 
+  .inspection-sheet + .inspection-sheet {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .inspection-diagram {
+    max-height: 3.5in;
+    object-fit: contain;
+  }
+
   .office-form input,
   .office-form textarea {
     color: #1c1917;
