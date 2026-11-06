@@ -118,6 +118,11 @@ export function canImportPivots(role: string) {
   return role === ROLES.ADMIN;
 }
 
+/** Admins can correct a wrong serial/package stamp left on a pivot from an inspection. */
+export function canCorrectPivotSerial(role: string) {
+  return role === ROLES.ADMIN;
+}
+
 export function canImportStaff(role: string) {
   return role === ROLES.ADMIN;
 }

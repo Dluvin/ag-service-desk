@@ -214,6 +214,18 @@ export function packageFieldsFromMatch(pkg: PivotPackage) {
   };
 }
 
+export function emptyPackageFields() {
+  return {
+    packageItem: null as string | null,
+    packageDescription: null as string | null,
+    packageBrand: null as string | null,
+    packageTowerCount: null as number | null,
+    packageLengthFeet: null as string | null,
+    packageVendor: null as string | null,
+    packageMatchedAt: null as Date | null,
+  };
+}
+
 export function ownerTokens(customerName: string) {
   const owner = customerName.replace(/\s*\([^)]*\)\s*$/, "");
   const tokens = owner

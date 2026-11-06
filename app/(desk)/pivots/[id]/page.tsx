@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { pivotWhere } from "@/lib/scope";
-import { ROLES, canDeleteRecords, isShopStaff } from "@/lib/roles";
+import { ROLES, canCorrectPivotSerial, canDeleteRecords, isShopStaff } from "@/lib/roles";
 import { GoogleMapPanel } from "@/components/GoogleMapPanel";
 import { StatusBadge } from "@/components/Badges";
 import { addPivotNoteAction, deletePivotAction, updatePivotAction } from "@/lib/actions";
@@ -44,6 +44,7 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
   if (!pivot) notFound();
 
   const canEdit = isShopStaff(session.role);
+  const canCorrectSerial = canCorrectPivotSerial(session.role);
   const [customers, farms] = canEdit
     ? await Promise.all([
         prisma.farmer.findMany({
@@ -100,8 +101,40 @@ export default async function PivotDetailPage({ params }: { params: Promise<{ id
             </label>
             <label className="block text-sm font-medium">
               Serial number
-              <input name="serialNumber" defaultValue={pivot.serialNumber ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+              <input
+                name="serialNumber"
+                defaultValue={pivot.serialNumber ?? ""}
+                readOnly={!canCorrectSerial && Boolean(pivot.serialNumber)}
+                className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 read-only:bg-stone-100"
+              />
+              {!canCorrectSerial && pivot.serialNumber ? (
+                <span className="mt-1 block text-xs font-normal text-stone-500">
+                  Serial is locked after it is saved. Ask an admin to correct a wrong number.
+                </span>
+              ) : null}
+              {canCorrectSerial ? (
+                <span className="mt-1 block text-xs font-normal text-stone-500">
+                  Admins can correct a wrong serial. Saving rematches or clears the sprinkler package.
+                </span>
+              ) : null}
             </label>
+            {canCorrectSerial && pivot.packageItem ? (
+              <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-3">
+                <p className="text-sm font-medium text-amber-950">Sprinkler package on this asset</p>
+                <p className="text-sm text-amber-950">
+                  Item {pivot.packageItem}
+                  {pivot.packageDescription ? ` · ${pivot.packageDescription}` : ""}
+                </p>
+                <label className="flex items-center gap-2 text-sm text-amber-950">
+                  <input type="checkbox" name="rematchPackage" value="1" defaultChecked />
+                  Rematch package from the serial on save
+                </label>
+                <label className="flex items-center gap-2 text-sm text-amber-950">
+                  <input type="checkbox" name="clearPackage" value="1" />
+                  Clear package from this asset
+                </label>
+              </div>
+            ) : null}
             <label className="block text-sm font-medium">
               Location note
               <input name="locationNote" defaultValue={pivot.locationNote ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />

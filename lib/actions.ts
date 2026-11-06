@@ -17,6 +17,7 @@ import {
   canDeleteRecords,
   canEditStaffMember,
   canImportPivots,
+  canCorrectPivotSerial,
   canImportStaff,
   canManageParts,
   canManageShopStaff,
@@ -1252,6 +1253,9 @@ export async function updatePivotAction(formData: FormData) {
   const parsed = mapsInput ? parseMapsLocation(mapsInput) : null;
   const lat = parsed?.latitude ?? latitude;
   const lng = parsed?.longitude ?? longitude;
+  const adminCorrecting = canCorrectPivotSerial(session.role);
+  const clearPackage = adminCorrecting && formString(formData, "clearPackage") === "1";
+  const rematchPackage = adminCorrecting && formString(formData, "rematchPackage") === "1";
 
   if (!name || Number.isNaN(lat) || Number.isNaN(lng)) {
     return { error: "Name and a map location are required." };
@@ -1262,6 +1266,11 @@ export async function updatePivotAction(formData: FormData) {
   });
   if (!pivot) return { error: "Pivot not found." };
 
+  // Staff can set a blank serial once; only admins can change or clear one already on the asset.
+  if (!adminCorrecting && pivot.serialNumber && serialNumber !== pivot.serialNumber) {
+    return { error: "Only an admin can change the serial number on a pivot." };
+  }
+
   const farmer = await prisma.farmer.findFirst({
     where: { id: farmerId, organizationId: session.organizationId },
   });
@@ -1270,17 +1279,52 @@ export async function updatePivotAction(formData: FormData) {
   const farm = await resolveFarmIdForCustomer(session.organizationId, farmerId, parseFarmId(formString(formData, "farmId")));
   if (farm.error) return { error: farm.error };
 
+  const data: {
+    farmerId: string;
+    farmId: string | null;
+    name: string;
+    latitude: number;
+    longitude: number;
+    serialNumber: string | null;
+    locationNote: string | null;
+    packageItem?: string | null;
+    packageDescription?: string | null;
+    packageBrand?: string | null;
+    packageTowerCount?: number | null;
+    packageLengthFeet?: string | null;
+    packageVendor?: string | null;
+    packageMatchedAt?: Date | null;
+  } = {
+    farmerId,
+    farmId: farm.farmId,
+    name,
+    latitude: lat,
+    longitude: lng,
+    serialNumber: serialNumber || null,
+    locationNote: locationNote || null,
+  };
+
+  if (adminCorrecting && (clearPackage || rematchPackage || serialNumber !== (pivot.serialNumber ?? ""))) {
+    const { emptyPackageFields, findPackagesBySerial, indexPivotPackages, packageFieldsFromMatch } =
+      await import("./pivot-package-match");
+    const { loadPivotPackages } = await import("./pivot-packages-data");
+    if (clearPackage || !serialNumber) {
+      Object.assign(data, emptyPackageFields());
+    } else {
+      const packages = await loadPivotPackages();
+      const matches = findPackagesBySerial(indexPivotPackages(packages), serialNumber);
+      if (matches.length === 1) {
+        Object.assign(data, packageFieldsFromMatch(matches[0]));
+      } else if (rematchPackage || serialNumber !== (pivot.serialNumber ?? "")) {
+        // Wrong serial / no catalog hit — drop the old package stamp.
+        Object.assign(data, emptyPackageFields());
+      }
+    }
+  }
+
   await prisma.pivot.update({
     where: { id: pivotId },
-    data: {
-      farmerId,
-      farmId: farm.farmId,
-      name,
-      latitude: lat,
-      longitude: lng,
-      serialNumber: serialNumber || null,
-      locationNote: locationNote || null,
-    },
+    data,
   });
   if (farmerId !== pivot.farmerId) {
     await prisma.ticket.updateMany({
