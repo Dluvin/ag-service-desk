@@ -11,8 +11,8 @@ import { googleMapsPlaceUrl } from "@/lib/maps";
 import { fetchRevealLocationReport, loadRevealCreds, type RevealLocation } from "@/lib/reveal";
 import { loadStoredRevealLocations, withDemoRevealMotion } from "@/lib/reveal-locations";
 import { loadOrgPlan } from "@/lib/org-plan";
-import { contactSalesGpsMessage, showVehicleGps } from "@/lib/plans";
-import { ContactSalesNote } from "@/components/ContactSalesNote";
+import { lockedPlanNotes, showVehicleGps } from "@/lib/plans";
+import { PlanLimitNote } from "@/components/PlanLimitNote";
 
 function formatLocationTime(value?: string) {
   if (!value) return "";
@@ -31,13 +31,13 @@ export default async function VehiclesPage({
   if (!canAddTechnicians(session.role)) redirect("/dashboard");
   const plan = await loadOrgPlan(session.organizationId);
   if (!plan || !showVehicleGps(plan.org)) {
+    const gpsNote = lockedPlanNotes(plan?.org).find((note) => note.id === "gps");
     return (
-      <div className="max-w-3xl">
-        <h1 className="font-display text-3xl">Verizon vehicles</h1>
-        <p className="mt-2 text-stone-600">Live vehicle GPS is not on this plan.</p>
-        <div className="mt-6">
-          <ContactSalesNote>{contactSalesGpsMessage(plan?.org)}</ContactSalesNote>
-        </div>
+      <div className="max-w-xl">
+        <PlanLimitNote
+          title={gpsNote?.title ?? "Live truck GPS"}
+          why={gpsNote?.why ?? "Live vehicle GPS is not on this plan."}
+        />
       </div>
     );
   }

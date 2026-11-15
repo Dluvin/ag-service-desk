@@ -103,6 +103,14 @@ export function TicketOcrImport({
     if (scanState?.draft) setDraft(scanState.draft);
   }, [scanState]);
 
+  if (!enabled) {
+    return (
+      <p className="text-sm text-stone-500">
+        <span className="font-medium text-stone-700">{t("ocr.title")}.</span> {t("ocr.notEnabled")}
+      </p>
+    );
+  }
+
   const canScan = configured && enabled;
 
   return (

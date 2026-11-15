@@ -8,6 +8,7 @@ import { AllTicketsMap } from "@/components/AllTicketsMap";
 import { StoreFilter } from "@/components/StoreFilter";
 import { OPEN_TICKET_STATUSES, ticketPins } from "@/lib/map-pins";
 import { parseStoreParam, storePivotWhere, storeTicketWhere } from "@/lib/stores";
+import { loadOrgPlan } from "@/lib/org-plan";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
 
@@ -18,6 +19,10 @@ export default async function MapPage({
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const plan = await loadOrgPlan(session.organizationId);
+  if (!plan?.entitlements.mapsEnabled) {
+    redirect(session.role === ROLES.FARMER ? "/dashboard" : "/dispatch");
+  }
 
   const query = await searchParams;
   const locale = await getRequestLocale();

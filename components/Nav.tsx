@@ -11,6 +11,8 @@ import { LanguagePicker } from "@/components/LanguagePicker";
 import { assetTypeHref } from "@/lib/assets";
 import { t, type Locale } from "@/lib/i18n";
 import { OFFICE_FORMS } from "@/lib/office-forms";
+import { PlanLockedMenu } from "@/components/PlanLockedMenu";
+import type { LockedPlanNote } from "@/lib/plans";
 
 export function Nav({
   session,
@@ -21,6 +23,8 @@ export function Nav({
   showGps = true,
   showForms = true,
   showInspections = false,
+  planLabel = "Starter",
+  lockedNotes = [],
 }: {
   session: SessionUser;
   locale: Locale;
@@ -30,6 +34,8 @@ export function Nav({
   showGps?: boolean;
   showForms?: boolean;
   showInspections?: boolean;
+  planLabel?: string;
+  lockedNotes?: LockedPlanNote[];
 }) {
   const farmer = session.role === ROLES.FARMER;
   const beforeTickets = farmer
@@ -129,11 +135,13 @@ export function Nav({
             <NavLinkMenu href="/farmers" label={t(locale, "nav.customers")} links={customerLinks} />
           ) : null}
           {settingsLinks.length ? <NavDropdown label={t(locale, "nav.settings")} links={settingsLinks} /> : null}
+          <PlanLockedMenu planLabel={planLabel} notes={lockedNotes} />
           <NavLinkMenu
             href="/help"
             label={t(locale, "nav.support")}
             links={[
               { href: "/help", label: t(locale, "nav.support") },
+              { href: "/help/sms", label: t(locale, "nav.smsSetup") },
               { href: "/help/faq", label: t(locale, "nav.faq") },
               { href: "/terms", label: t(locale, "nav.terms") },
             ]}

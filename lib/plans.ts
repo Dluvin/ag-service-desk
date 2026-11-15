@@ -289,6 +289,64 @@ export function extraStaffSeatsFor(org: PlanOrg | null | undefined, staffCount: 
   return Math.max(0, staffCount - included);
 }
 
+export type LockedPlanNote = {
+  id: string;
+  title: string;
+  why: string;
+};
+
+/** Features this company does not have, with a one-line reason. Empty when the plan includes them. */
+export function lockedPlanNotes(org: PlanOrg | null | undefined): LockedPlanNote[] {
+  const entitlements = resolveEntitlements(org);
+  const notes: LockedPlanNote[] = [];
+  if (!entitlements.mapsEnabled) {
+    notes.push({
+      id: "maps",
+      title: "In-app maps",
+      why: "Directions stay in Google Maps. The satellite map inside the app is on Shop and Enterprise.",
+    });
+  }
+  if (!entitlements.gpsEnabled) {
+    notes.push({
+      id: "gps",
+      title: "Live truck GPS",
+      why:
+        entitlements.plan === "STARTER"
+          ? "Not included on Starter. Shop can add Reveal. Enterprise includes Verizon GPS."
+          : "A Shop add-on, or included on Enterprise.",
+    });
+  }
+  if (!entitlements.formsEnabled) {
+    notes.push({
+      id: "forms",
+      title: "Office forms",
+      why: "Included on Enterprise.",
+    });
+  }
+  if (!entitlements.inspectionsEnabled) {
+    notes.push({
+      id: "inspections",
+      title: "Pivot inspections",
+      why: "Included on Enterprise. Seasonal maintenance stays on this plan.",
+    });
+  }
+  if (!entitlements.ocrEnabled) {
+    notes.push({
+      id: "ocr",
+      title: "Handwritten scans",
+      why: "Scanning a paper work order into a ticket is included on Enterprise.",
+    });
+  }
+  if (!entitlements.qbwcEnabled) {
+    notes.push({
+      id: "qb",
+      title: "QuickBooks Desktop",
+      why: "Sending estimates to QuickBooks Desktop is included on Enterprise.",
+    });
+  }
+  return notes;
+}
+
 export function contactSalesLabel() {
   return `Contact sales at ${SALES_EMAIL}`;
 }

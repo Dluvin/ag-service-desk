@@ -61,7 +61,7 @@ export default async function NewTicketPage({
   ]);
 
   const ocrEnabled = isShopStaff(session.role) ? await orgOcrIsOn(session.organizationId) : false;
-  const showOcr = isShopStaff(session.role);
+  const showOcr = isShopStaff(session.role) && ocrEnabled;
 
   return (
     <div className={showOcr ? "max-w-6xl" : "max-w-3xl"}>
@@ -71,6 +71,11 @@ export default async function NewTicketPage({
       <p className="mt-1 text-sm text-stone-600">
         {session.role === ROLES.FARMER ? t(locale, "ticket.requestHelp") : t(locale, "ticket.newHelp")}
       </p>
+      {isShopStaff(session.role) && !ocrEnabled ? (
+        <div className="mt-3">
+          <TicketOcrImport configured={false} enabled={false} />
+        </div>
+      ) : null}
       <div className={showOcr ? "lg:mt-6 lg:grid lg:grid-cols-5 lg:items-start lg:gap-8" : undefined}>
         {showOcr ? (
           <div className="order-1 mt-6 lg:order-2 lg:col-span-2 lg:mt-0">

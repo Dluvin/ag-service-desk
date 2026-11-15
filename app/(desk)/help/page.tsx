@@ -27,6 +27,14 @@ export default async function DeskSupportPage({
         </Link>
         .
       </p>
+      <p className="mt-2 text-sm text-stone-600">
+        <Link href="/help/sms" className="font-semibold text-emerald-800 hover:underline">
+          {t(locale, "nav.smsSetup")}
+        </Link>
+        {locale === "es"
+          ? " explica cómo abrir Bird, las tarifas y cada paso."
+          : " walks through the Bird account, the fees, and each step."}
+      </p>
 
       {sent === "1" ? (
         <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-950">

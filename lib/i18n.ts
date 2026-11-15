@@ -53,6 +53,7 @@ const EN_UI = {
   "nav.connectors": "Connectors",
   "nav.vehicles": "Vehicles",
   "nav.support": "Support",
+  "nav.smsSetup": "SMS setup",
   "nav.faq": "FAQ",
   "nav.terms": "Terms and Conditions",
   "nav.forms": "Forms",
@@ -165,12 +166,12 @@ const EN_UI = {
   "map.openLink": "Open work order map",
   "map.legend":
     "Green = work order at the pivot. Red = assigned Verizon truck. Flashing On-site means GPS is inside the pivot radius and time is being recorded. Truck pins refresh every 45 seconds.",
-  "map.planOff": "In-app maps are not on this plan. Use Google Maps on a work order for directions.",
+  "map.planOff": "Directions stay in Google Maps. The satellite map inside the app is on Shop and Enterprise.",
   "map.noPivots": "No pivot locations yet.",
   "map.assignedTrucks": "Assigned trucks",
   "map.pivotLegend":
     "Green = pivot. Red = assigned Verizon truck. Flashing On-site means GPS time is being recorded.",
-  "map.planOffOpen": "In-app maps are not on this plan. Use Open in Google Maps for directions.",
+  "map.planOffOpen": "Open in Google Maps stays on. The satellite map inside the app is on Shop and Enterprise.",
 
   "tickets.title": "Work orders",
   "tickets.batchPrint": "Batch print work orders",
@@ -355,6 +356,7 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
   "nav.connectors": "Conectores",
   "nav.vehicles": "Vehículos",
   "nav.support": "Soporte",
+  "nav.smsSetup": "Configurar SMS",
   "nav.faq": "Preguntas",
   "nav.terms": "Términos y condiciones",
   "nav.forms": "Formularios",
@@ -468,13 +470,13 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
   "map.legend":
     "Verde = orden en el pivote. Rojo = camión Verizon asignado. En sitio intermitente significa que el GPS está dentro del radio del pivote y se registra el tiempo. Los pines de camión se actualizan cada 45 segundos.",
   "map.planOff":
-    "Los mapas en la app no están en este plan. Use Google Maps en una orden para las indicaciones.",
+    "Las indicaciones siguen en Google Maps. El mapa satelital dentro de la app está en Shop y Enterprise.",
   "map.noPivots": "Aún no hay ubicaciones de pivote.",
   "map.assignedTrucks": "Camiones asignados",
   "map.pivotLegend":
     "Verde = pivote. Rojo = camión Verizon asignado. En sitio intermitente significa que se registra el tiempo GPS.",
   "map.planOffOpen":
-    "Los mapas en la app no están en este plan. Use Abrir en Google Maps para las indicaciones.",
+    "Abrir en Google Maps sigue activo. El mapa satelital dentro de la app está en Shop y Enterprise.",
 
   "tickets.title": "Órdenes de trabajo",
   "tickets.batchPrint": "Imprimir órdenes en lote",

@@ -12,10 +12,11 @@ import { loadOrgPlanFlagOverrides } from "@/lib/ocr-samples";
 import {
   contactSalesGpsMessage,
   contactSalesQbwcMessage,
+  lockedPlanNotes,
   resolveEntitlements,
   showVehicleGps,
 } from "@/lib/plans";
-import { ContactSalesNote } from "@/components/ContactSalesNote";
+import { PlanLimitNote } from "@/components/PlanLimitNote";
 import { ensureQbwcConfig } from "@/lib/qbwc";
 import { QbwcSetup } from "@/components/QbwcSetup";
 
@@ -50,10 +51,12 @@ export default async function RevealSettingsPage() {
   return (
     <div className="max-w-3xl">
       <h1 className="font-display text-3xl">Connectors</h1>
-      <p className="mt-2 text-stone-600">
-        Connect QuickBooks Desktop and fleet GPS. Company admins set these up here; platform turns
-        each connector on per dealer under upgrade options.
-      </p>
+      {qbConnectorOn || gpsOn ? (
+        <p className="mt-2 text-stone-600">
+          Connect QuickBooks Desktop and fleet GPS. Company admins set these up here; platform turns
+          each connector on per dealer under upgrade options.
+        </p>
+      ) : null}
 
       {qbConnectorOn && qbwc ? (
         <div className="mt-6">
@@ -73,14 +76,10 @@ export default async function RevealSettingsPage() {
         </div>
       ) : (
         <div className="mt-6">
-          <h2 className="font-display text-xl">QuickBooks Desktop</h2>
-          <p className="mt-2 text-sm text-stone-600">
-            Estimates and QuickBooks customer lists are upgrade options. Off on Starter and Shop unless
-            platform turns them on for this company.
-          </p>
-          <div className="mt-4">
-            <ContactSalesNote>{contactSalesQbwcMessage({ ...plan?.org, ...flags })}</ContactSalesNote>
-          </div>
+          <PlanLimitNote
+            title="QuickBooks Desktop"
+            why={lockedPlanNotes({ ...plan?.org, ...flags }).find((note) => note.id === "qb")?.why ?? contactSalesQbwcMessage({ ...plan?.org, ...flags })}
+          />
         </div>
       )}
 
@@ -210,11 +209,10 @@ export default async function RevealSettingsPage() {
         </section>
       ) : (
         <section className="mt-8">
-          <h2 className="font-display text-xl">Live vehicle GPS</h2>
-          <p className="mt-2 text-sm text-stone-600">Live vehicle GPS is not on this plan.</p>
-          <div className="mt-4">
-            <ContactSalesNote>{contactSalesGpsMessage({ ...plan?.org, ...flags })}</ContactSalesNote>
-          </div>
+          <PlanLimitNote
+            title="Live truck GPS"
+            why={lockedPlanNotes({ ...plan?.org, ...flags }).find((note) => note.id === "gps")?.why ?? contactSalesGpsMessage({ ...plan?.org, ...flags })}
+          />
         </section>
       )}
 

@@ -7,7 +7,7 @@ import { TrialBanner } from "@/components/TrialBanner";
 import { PlanProvider } from "@/components/PlanProvider";
 import { PresenceBeacon } from "@/components/PresenceBeacon";
 import { ensureAssetTypes } from "@/lib/assets";
-import { PLAN_ORG_SELECT, resolveEntitlements } from "@/lib/plans";
+import { PLAN_ORG_SELECT, lockedPlanNotes, resolveEntitlements } from "@/lib/plans";
 import { isShopStaff } from "@/lib/roles";
 import { getRequestLocale } from "@/lib/user-locale";
 import { I18nProvider } from "@/components/I18nProvider";
@@ -42,7 +42,7 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
       <div className="min-h-full">
         {session.impersonatorId ? <ImpersonationBanner companyName={org.name} /> : null}
         {org.trialEndsAt && org.trialEndsAt.getTime() > Date.now() - 24 * 60 * 60 * 1000 ? (
-          <TrialBanner trialEndsAt={org.trialEndsAt} />
+          <TrialBanner trialEndsAt={org.trialEndsAt} plan={entitlements} />
         ) : null}
         <Nav
           session={session}
@@ -53,6 +53,8 @@ export default async function DeskLayout({ children }: { children: React.ReactNo
           showGps={entitlements.gpsEnabled}
           showForms={entitlements.formsEnabled}
           showInspections={entitlements.inspectionsEnabled}
+          planLabel={entitlements.label}
+          lockedNotes={lockedPlanNotes(entitlements)}
         />
         {isShopStaff(session.role) && !session.impersonatorId ? <PresenceBeacon /> : null}
         <main className="mx-auto max-w-7xl px-4 py-8 print:max-w-none print:px-0 print:py-0">{children}</main>

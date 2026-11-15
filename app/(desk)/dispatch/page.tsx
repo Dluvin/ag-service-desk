@@ -23,6 +23,7 @@ import { DispatchTilesBoard } from "@/components/DispatchTilesBoard";
 import { dispatchFilterExtra, filterDispatchTickets, parseDispatchListQuery } from "@/lib/dispatch-list";
 import { loadUserDispatchView } from "@/lib/dispatch-view";
 import { formatSchedule } from "@/lib/schedule";
+import { loadOrgPlan } from "@/lib/org-plan";
 import { getRequestLocale } from "@/lib/user-locale";
 import { statusLabel, t } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
@@ -37,7 +38,7 @@ export default async function DispatchPage({
   if (session.role === ROLES.FARMER) redirect("/dashboard");
 
   const query = await searchParams;
-  const [stores, dispatchView, locale] = await Promise.all([
+  const [stores, dispatchView, locale, plan] = await Promise.all([
     prisma.store.findMany({
       where: { organizationId: session.organizationId },
       orderBy: { name: "asc" },
@@ -45,6 +46,7 @@ export default async function DispatchPage({
     }),
     loadUserDispatchView(session.userId),
     getRequestLocale(),
+    loadOrgPlan(session.organizationId),
   ]);
   const selectedStore = parseStoreParam(query.store, stores);
   const filters = parseDispatchListQuery(query);
@@ -139,9 +141,13 @@ export default async function DispatchPage({
 
       <DispatchCalendarToggle tickets={openTickets} month={query.month} store={selectedStore} />
 
-      <h2 className="font-display mt-10 text-xl">{t(locale, "dispatch.mapTitle")}</h2>
-      <p className="mt-1 text-sm text-stone-600">{t(locale, "dispatch.mapHelp")}</p>
-      <div className="mt-4">
+      {plan?.entitlements.mapsEnabled ? (
+        <>
+          <h2 className="font-display mt-10 text-xl">{t(locale, "dispatch.mapTitle")}</h2>
+          <p className="mt-1 text-sm text-stone-600">{t(locale, "dispatch.mapHelp")}</p>
+        </>
+      ) : null}
+      <div className={plan?.entitlements.mapsEnabled ? "mt-4" : "mt-8"}>
         <DispatchFleetMap ticketPins={ticketPins(openTickets)} canConfigure={session.role === ROLES.ADMIN} store={selectedStore} />
       </div>
     </div>

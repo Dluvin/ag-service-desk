@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -27,6 +28,17 @@ export default async function SmsSettingsPage() {
         Waiting on parts, Completed, or Cancelled. Staff messages include a link to that work order.
         Manager, office/clerical, and technician numbers come from each person&apos;s phone field;
         customer texts use customer contact phones, and the customer email uses the farmer email.
+      </p>
+      <p className="mt-3 text-sm text-stone-600">
+        Bird charges separately for numbers and each text.{" "}
+        <Link href="/help/sms" className="font-semibold text-emerald-800 hover:underline">
+          SMS setup
+        </Link>{" "}
+        walks through the Bird account step by step. Call David at{" "}
+        <a href="tel:+12299389001" className="font-semibold text-emerald-800 hover:underline">
+          229-938-9001
+        </a>{" "}
+        if you need help setting this up.
       </p>
       <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-stone-600">
         <li>In Bird, enable the US (and any other countries you serve) under SMS Destinations.</li>

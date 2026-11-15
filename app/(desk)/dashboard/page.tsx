@@ -123,9 +123,13 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      <h2 className="font-display mt-10 text-xl">Open work orders map</h2>
-      <p className="mt-1 text-sm text-stone-600">Every active call at the pivot location.</p>
-      <div className="mt-4">
+      {showMaps ? (
+        <>
+          <h2 className="font-display mt-10 text-xl">Open work orders map</h2>
+          <p className="mt-1 text-sm text-stone-600">Every active call at the pivot location.</p>
+        </>
+      ) : null}
+      <div className={showMaps ? "mt-4" : "mt-8"}>
         <AllTicketsMap pins={ticketPins(openTickets)} />
       </div>
     </div>

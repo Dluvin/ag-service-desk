@@ -10,6 +10,7 @@ import { OfficeFormDocument } from "@/components/office-forms/OfficeFormDocument
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
 import { orgFormsIsOn } from "@/lib/ocr-samples";
+import { PlanLimitNote } from "@/components/PlanLimitNote";
 import { ticketSiteName } from "@/lib/ticket-site";
 
 async function serviceTicketSite(session: SessionUser) {
@@ -72,12 +73,7 @@ export default async function OfficeFormPage({ params }: { params: Promise<{ slu
   if (!form) notFound();
   const locale = await getRequestLocale();
   if (!(await orgFormsIsOn(session.organizationId))) {
-    return (
-      <div className="max-w-xl">
-        <h1 className="font-display text-3xl">{t(locale, "forms.title")}</h1>
-        <p className="mt-2 text-stone-600">{t(locale, "forms.notEnabled")}</p>
-      </div>
-    );
+    return <PlanLimitNote title={t(locale, form.titleKey)} why={t(locale, "forms.notEnabled")} />;
   }
 
   const [org, tickets, createSite] = await Promise.all([

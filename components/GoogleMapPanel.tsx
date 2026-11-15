@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import type { MapPin } from "@/lib/map-pins";
 import { googleMapsPlaceUrl } from "@/lib/maps";
 import { useRevealVehiclePins } from "./useRevealVehiclePins";
+import { PlanLimitNote } from "./PlanLimitNote";
 import { usePlan } from "./PlanProvider";
 import { useT } from "./I18nProvider";
 
@@ -54,6 +55,25 @@ export function GoogleMapPanel({
   }));
   const all = [...placePins, ...trucks];
   const active = markers.find((m) => m.id === selectedId) ?? markers[0];
+
+  if (!plan.mapsEnabled) {
+    return (
+      <div className="space-y-2">
+        <PlanLimitNote title={t("nav.workOrderMap")} why={t("map.planOffOpen")} />
+        {active ? (
+          <a
+            href={googleMapsPlaceUrl(active.lat, active.lng)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex text-sm font-medium text-emerald-800 hover:underline"
+          >
+            {t("ticket.maps")}
+            {active.name ? ` · ${active.name}` : ""}
+          </a>
+        ) : null}
+      </div>
+    );
+  }
 
   if (all.length === 0) {
     return (

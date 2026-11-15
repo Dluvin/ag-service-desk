@@ -275,8 +275,7 @@ export const REST_EN = {
   "forms.title": "Forms",
   "forms.help":
     "Fill these office tickets, print them, or download a copy. Save onto an open work order by choosing the job first. On the service order you can create a new work order instead. The dealer logo is used except on AgSense, which keeps the AgSense mark from that sheet.",
-  "forms.notEnabled":
-    "Office forms are not on for this company yet. Enterprise includes them. Platform can turn the plan flag on for Starter or Shop.",
+  "forms.notEnabled": "Office forms are included on Enterprise.",
   "forms.back": "All forms",
   "forms.download": "Download",
   "forms.saveToWorkOrder": "Save to work order",
@@ -361,8 +360,7 @@ export const REST_EN = {
   "ticketForm.saveSamples": "Save samples",
   "ticketForm.removeSample": "Remove",
 
-  "ocr.notEnabled":
-    "Handwritten import is not on for this company yet. Enterprise includes it. Platform can turn it on for Starter or Shop.",
+  "ocr.notEnabled": "Scanning a paper work order into a ticket is included on Enterprise.",
 
   "ocrOnboard.title": "Dealer onboarding",
   "ocrOnboard.help":
@@ -664,7 +662,7 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "forms.help":
     "Llene estos tickets de oficina, imprímalos o descargue una copia. Para guardarlos en una orden abierta, elija el trabajo primero. En la orden de servicio también puede crear una orden nueva. Se usa el logotipo del dealer, salvo AgSense, que conserva la marca de esa hoja.",
   "forms.notEnabled":
-    "Los formularios de oficina aún no están activos en esta empresa. Enterprise los incluye. La plataforma puede encender el flag del plan en Starter o Shop.",
+    "Los formularios de oficina están incluidos en Enterprise.",
   "forms.back": "Todos los formularios",
   "forms.download": "Descargar",
   "forms.saveToWorkOrder": "Guardar en la orden",
@@ -750,7 +748,7 @@ export const REST_ES: Record<keyof typeof REST_EN, string> = {
   "ticketForm.removeSample": "Quitar",
 
   "ocr.notEnabled":
-    "La importación a mano aún no está activa en esta empresa. Enterprise la incluye. La plataforma puede encenderla en Starter o Shop.",
+    "Escanear una orden en papel está incluido en Enterprise.",
 
   "ocrOnboard.title": "Puesta en marcha del concesionario",
   "ocrOnboard.help":

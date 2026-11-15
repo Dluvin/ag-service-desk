@@ -6,6 +6,7 @@ import { OFFICE_FORMS } from "@/lib/office-forms";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
 import { orgFormsIsOn } from "@/lib/ocr-samples";
+import { PlanLimitNote } from "@/components/PlanLimitNote";
 
 export default async function FormsIndexPage() {
   const session = await getSession();
@@ -14,10 +15,7 @@ export default async function FormsIndexPage() {
   const locale = await getRequestLocale();
   if (!(await orgFormsIsOn(session.organizationId))) {
     return (
-      <div className="max-w-xl">
-        <h1 className="font-display text-3xl">{t(locale, "forms.title")}</h1>
-        <p className="mt-2 text-stone-600">{t(locale, "forms.notEnabled")}</p>
-      </div>
+      <PlanLimitNote title={t(locale, "forms.title")} why={t(locale, "forms.notEnabled")} />
     );
   }
 

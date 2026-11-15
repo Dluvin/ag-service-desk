@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { MapPin } from "@/lib/map-pins";
 import { STORE_ALL, storeQuery } from "@/lib/stores";
 import { useRevealVehiclePins } from "./useRevealVehiclePins";
+import { PlanLimitNote } from "./PlanLimitNote";
 import { usePlan } from "./PlanProvider";
 import { useT } from "./I18nProvider";
 
@@ -41,7 +42,10 @@ export function AllTicketsMap({
   const plan = usePlan();
   const showMap = plan.mapsEnabled;
   const showGps = plan.gpsEnabled;
-  const fetched = useRevealVehiclePins(showGps && vehiclePins === undefined, store);
+  const fetched = useRevealVehiclePins(showGps && vehiclePins === undefined && showMap, store);
+  if (!showMap) {
+    return <PlanLimitNote title={t("nav.workOrderMap")} why={t("map.planOff")} />;
+  }
   const trucks = showGps
     ? [...new Map((vehiclePins ?? fetched.vehicles).map((truck) => [truck.id, truck])).values()]
     : [];

@@ -5,6 +5,8 @@ import { getSession } from "@/lib/auth";
 import { loadOrgOcrSettings } from "@/lib/ocr-samples";
 import { isAdmin } from "@/lib/roles";
 import { getRequestLocale } from "@/lib/user-locale";
+import { PlanLimitNote } from "@/components/PlanLimitNote";
+import { t } from "@/lib/i18n";
 
 export default async function TicketFormPage() {
   const session = await getSession();
@@ -13,6 +15,9 @@ export default async function TicketFormPage() {
 
   const locale = await getRequestLocale();
   const settings = await loadOrgOcrSettings(session.organizationId);
+  if (!settings.ocrOn) {
+    return <PlanLimitNote title={t(locale, "ocr.title")} why={t(locale, "ocr.notEnabled")} />;
+  }
 
   return (
     <div className="max-w-xl space-y-8">
