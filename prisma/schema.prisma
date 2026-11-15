@@ -22,6 +22,10 @@ model Organization {
   birdWorkspaceId     String?
   birdChannelId       String?
   birdSmsEnabled      Boolean  @default(false)
+  // OFF | SMS | EMAIL | BOTH. Rows that already have birdSmsEnabled stay on SMS.
+  notifyChannel       String   @default("OFF")
+  resendApiKey        String?
+  resendFrom          String?
   logoMimeType        String?
   logoFileName        String?
   paused              Boolean  @default(false)

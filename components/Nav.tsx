@@ -142,6 +142,7 @@ export function Nav({
             links={[
               { href: "/help", label: t(locale, "nav.support") },
               { href: "/help/sms", label: t(locale, "nav.smsSetup") },
+              { href: "/help/email", label: t(locale, "nav.emailSetup") },
               { href: "/help/faq", label: t(locale, "nav.faq") },
               { href: "/terms", label: t(locale, "nav.terms") },
             ]}

@@ -24,7 +24,38 @@ export async function sendEmail(input: {
   html: string;
   fromName?: string;
   attachments?: { filename: string; content: Buffer; contentType?: string }[];
+  /** This dealership's Resend account. Platform SMTP is not used when this is set. */
+  resend?: { apiKey: string; from: string };
 }): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (input.resend) {
+    const from = formatFrom(input.resend.from, input.fromName);
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${input.resend.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [input.to],
+        subject: input.subject,
+        text: input.text,
+        html: input.html,
+        attachments: input.attachments?.map((file) => ({
+          filename: file.filename,
+          content: file.content.toString("base64"),
+          content_type: file.contentType,
+        })),
+      }),
+    });
+    if (!response.ok) {
+      const detail = await response.text();
+      console.error("Resend email failed", response.status, detail);
+      return { ok: false, error: detail.slice(0, 400) || "Email could not be sent." };
+    }
+    return { ok: true };
+  }
+
   const fromEnv = process.env.EMAIL_FROM?.trim();
   if (!fromEnv) return { ok: false, error: "EMAIL_FROM is not set." };
   const from = formatFrom(fromEnv, input.fromName);

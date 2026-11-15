@@ -43,6 +43,7 @@ import { closeOpenSiteVisits } from "./onsite";
 import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, normalizeRevealAppId, syncRevealVehicles } from "./reveal";
 import { notifyFarmerRepairDone, notifyTicketSms } from "./ticket-sms";
 import { sendBirdSms, toE164 } from "./bird";
+import { sendEmail } from "./mail";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles, readTicketPhotoFile, removeTicketPhotoFile } from "./ticket-photos";
 import { documentFilesFromForm, removePivotDocumentFile, safePivotReturnTo, savePivotDocuments } from "./pivot-documents";
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
@@ -3139,25 +3140,39 @@ export async function markOcrFieldListReviewedAction(_formData: FormData) {
   redirect("/company/ticket-form");
 }
 
+function looksLikeEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 export async function saveBirdSettingsAction(formData: FormData) {
   const session = await requireSession();
-  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can save Bird SMS settings." };
+  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can save SMS and email settings." };
 
   const apiKey = formString(formData, "birdApiKey");
   const from = formString(formData, "birdFrom");
   const workspaceId = formString(formData, "birdWorkspaceId");
   const channelId = formString(formData, "birdChannelId");
-  const enabled = formString(formData, "birdSmsEnabled") === "on";
+  const resendKeyInput = formString(formData, "resendApiKey");
+  const resendFrom = formString(formData, "resendFrom");
+  const requested = formString(formData, "notifyChannel");
+  const channel = requested === "SMS" || requested === "EMAIL" || requested === "BOTH" ? requested : "OFF";
 
   const existing = await prisma.organization.findUnique({ where: { id: session.organizationId } });
   if (!existing) return { error: "Company not found." };
   const nextKey = apiKey || existing.birdApiKey;
-  if (enabled && !nextKey) return { error: "Paste a Bird API key before turning SMS on." };
-  if (enabled && nextKey?.startsWith("bk_") && !from) {
+  const nextResendKey = resendKeyInput || existing.resendApiKey;
+  const smsOn = channel === "SMS" || channel === "BOTH";
+  const emailOn = channel === "EMAIL" || channel === "BOTH";
+  if (smsOn && !nextKey) return { error: "Paste a Bird API key before turning SMS on." };
+  if (smsOn && nextKey?.startsWith("bk_") && !from) {
     return { error: "Sender ID or from-number is required for Bird SMS keys." };
   }
-  if (enabled && nextKey && !nextKey.startsWith("bk_") && (!workspaceId || !channelId)) {
+  if (smsOn && nextKey && !nextKey.startsWith("bk_") && (!workspaceId || !channelId)) {
     return { error: "Access Key sends need a workspace ID and SMS channel ID." };
+  }
+  if (emailOn && !nextResendKey) return { error: "Paste a Resend API key before turning email on." };
+  if (emailOn && !looksLikeEmail(resendFrom)) {
+    return { error: "From address must be an email on a domain you verified in Resend." };
   }
 
   await prisma.organization.update({
@@ -3167,7 +3182,10 @@ export async function saveBirdSettingsAction(formData: FormData) {
       birdFrom: from || null,
       birdWorkspaceId: workspaceId || null,
       birdChannelId: channelId || null,
-      birdSmsEnabled: enabled,
+      birdSmsEnabled: smsOn,
+      notifyChannel: channel,
+      resendApiKey: nextResendKey,
+      resendFrom: resendFrom || null,
     },
   });
   redirect("/sms");
@@ -3198,6 +3216,28 @@ export async function testBirdSmsAction(formData: FormData) {
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Bird SMS failed." };
   }
+}
+
+export async function testResendEmailAction(formData: FormData) {
+  const session = await requireSession();
+  if (session.role !== ROLES.ADMIN) return { error: "Only company admins can send a test email." };
+
+  const to = formString(formData, "testEmail").toLowerCase();
+  if (!looksLikeEmail(to)) return { error: "Enter a valid email address." };
+
+  const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
+  if (!org?.resendApiKey || !org.resendFrom) return { error: "Save a Resend API key and from address first." };
+
+  const result = await sendEmail({
+    to,
+    subject: `${org.name}: test email from Ag Desk Pro`,
+    text: `${org.name}: this is a test email from Ag Desk Pro. Work-order alerts will come from this address.`,
+    html: `<p>${org.name}: this is a test email from Ag Desk Pro. Work-order alerts will come from this address.</p>`,
+    fromName: org.name,
+    resend: { apiKey: org.resendApiKey, from: org.resendFrom },
+  });
+  if (!result.ok) return { error: result.error };
+  return { ok: `Test accepted for ${to}.` };
 }
 
 export async function createAssetTypeAction(formData: FormData) {

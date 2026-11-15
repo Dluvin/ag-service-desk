@@ -28,6 +28,13 @@ export default async function SmsSetupHelpPage() {
           ? "Ag Desk Pro envía los textos de las órdenes de trabajo por su propia cuenta de Bird (bird.com). Bird le cobra al concesionario por separado. Esas tarifas no están incluidas en el plan de Ag Desk Pro."
           : "Ag Desk Pro sends work-order texts through your own Bird account at bird.com. Bird bills the dealership separately. Those fees are not included in the Ag Desk Pro plan."}
       </p>
+      <p className="mt-2 text-sm text-stone-600">
+        {es ? "Si el registro 10DLC se interpone, use " : "If 10DLC registration is in the way, use "}
+        <Link href="/help/email" className="font-semibold text-emerald-800 hover:underline">
+          {es ? "correo con Resend" : "email with Resend"}
+        </Link>
+        {es ? " para los mismos avisos." : " for the same alerts."}
+      </p>
 
       <h2 className="font-display mt-8 text-xl">{es ? "Hay tarifas" : "There are fees"}</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-stone-600">

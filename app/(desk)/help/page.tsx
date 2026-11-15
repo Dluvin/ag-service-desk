@@ -32,8 +32,14 @@ export default async function DeskSupportPage({
           {t(locale, "nav.smsSetup")}
         </Link>
         {locale === "es"
-          ? " explica cómo abrir Bird, las tarifas y cada paso."
-          : " walks through the Bird account, the fees, and each step."}
+          ? " explica cómo abrir Bird, las tarifas y cada paso. "
+          : " walks through the Bird account, the fees, and each step. "}
+        <Link href="/help/email" className="font-semibold text-emerald-800 hover:underline">
+          {t(locale, "nav.emailSetup")}
+        </Link>
+        {locale === "es"
+          ? " explica Resend cuando el registro 10DLC se interpone."
+          : " covers Resend when 10DLC registration is in the way."}
       </p>
 
       {sent === "1" ? (

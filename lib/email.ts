@@ -16,6 +16,8 @@ function workOrderUrl(ticketId: string) {
   return base ? `${base}/tickets/${ticketId}` : "";
 }
 
+type OrgResend = { apiKey: string; from: string };
+
 export async function ticketRepairDoneEmail(input: {
   to: string;
   organizationName: string;
@@ -25,8 +27,9 @@ export async function ticketRepairDoneEmail(input: {
   pivotName: string;
   ticketId: string;
   locale?: Locale;
+  resend?: OrgResend;
 }) {
-  if (!mailIsConfigured()) return "skipped" as const;
+  if (!input.resend && !mailIsConfigured()) return "skipped" as const;
 
   const locale = input.locale ?? "en";
   const first = input.farmerName.trim().split(/\s+/)[0] || t(locale, "email.there");
@@ -56,6 +59,8 @@ export async function ticketRepairDoneEmail(input: {
     to: input.to,
     subject,
     text,
+    fromName: input.organizationName,
+    resend: input.resend,
     html: `
       ${brandLogoEmailHtml()}
       <p>${escapeHtml(t(locale, "email.repairHi", vars))}</p>
@@ -81,8 +86,9 @@ export async function officeRepairDoneEmail(input: {
   ticketId: string;
   attachmentHtml: string;
   locale?: Locale;
+  resend?: OrgResend;
 }) {
-  if (!mailIsConfigured()) return "skipped" as const;
+  if (!input.resend && !mailIsConfigured()) return "skipped" as const;
 
   const locale = input.locale ?? "en";
   const first = input.firstName.trim().split(/\s+/)[0] || t(locale, "email.there");
@@ -111,6 +117,7 @@ export async function officeRepairDoneEmail(input: {
   const result = await sendEmail({
     to: input.to,
     fromName: input.organizationName,
+    resend: input.resend,
     subject,
     text,
     html: `
