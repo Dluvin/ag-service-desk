@@ -149,7 +149,7 @@ export default async function SmsSettingsPage() {
           </table>
         </div>
         <p className="text-xs text-stone-500">
-          Managers, admins, and office follow the customer&apos;s store, then the whole company if that store has nobody in the role. Tech means the technician on that work order. Office email on Repair done includes the work order.
+          Admins, managers, and office only get alerts for their own store. A Repair done work order at one store does not email office, admin, or managers at another store. Tech means the technician assigned to that work order. Office email on Repair done includes the work order.
         </p>
         <NotifyAudienceFields staff={staff} recipients={recipients} />
         <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Bird SMS</p>

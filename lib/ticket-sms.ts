@@ -77,31 +77,28 @@ async function shopStaff(
   storeId: string | null,
   roles: string[],
   actorUserId?: string | null,
-  fallbackToAll = true,
 ) {
-  const select = { id: true, phone: true, email: true };
-  const roleFilter = { in: roles };
-
-  let people = storeId
-    ? await prisma.user.findMany({
-        where: { organizationId, role: roleFilter, storeId },
-        select,
-      })
-    : [];
-  if (people.length === 0 && (!storeId || fallbackToAll)) {
-    people = await prisma.user.findMany({
-      where: { organizationId, role: roleFilter },
-      select,
-    });
-  }
-
+  const people = await prisma.user.findMany({
+    where: { organizationId, role: { in: roles }, storeId: storeId ?? null },
+    select: { id: true, phone: true, email: true },
+  });
   return people.filter((person) => !(actorUserId && person.id === actorUserId));
 }
 
-async function chosenPeople(organizationId: string, userIds: string[], actorUserId?: string | null) {
+async function chosenPeople(
+  organizationId: string,
+  userIds: string[],
+  storeId: string | null,
+  actorUserId?: string | null,
+) {
   if (userIds.length === 0) return [];
   const people = await prisma.user.findMany({
-    where: { organizationId, id: { in: userIds }, role: { in: [...SHOP_STAFF_ROLES] } },
+    where: {
+      organizationId,
+      id: { in: userIds },
+      role: { in: [...SHOP_STAFF_ROLES] },
+      storeId: storeId ?? null,
+    },
     select: { id: true, phone: true, email: true, name: true },
   });
   return people.filter((person) => !(actorUserId && person.id === actorUserId));
@@ -180,8 +177,8 @@ export async function notifyTicketSms(input: {
   const statusKey = alertStatus(input.kind, ticket.status);
   const storeId = ticket.storeId ?? ticket.farmer.storeId;
   if (chosen.mode === "CHOSEN") {
-    const smsPeople = await chosenPeople(input.organizationId, chosen.smsUserIds, input.actorUserId);
-    const emailPeople = await chosenPeople(input.organizationId, chosen.emailUserIds, input.actorUserId);
+    const smsPeople = await chosenPeople(input.organizationId, chosen.smsUserIds, storeId, input.actorUserId);
+    const emailPeople = await chosenPeople(input.organizationId, chosen.emailUserIds, storeId, input.actorUserId);
     for (const [phone, locale] of phonesFrom(smsPeople, locales)) phoneRecipients.set(phone, locale);
     for (const [email, locale] of emailsFrom(emailPeople, locales)) emailRecipients.set(email, locale);
   } else if (input.kind === "assigned") {
@@ -202,7 +199,7 @@ export async function notifyTicketSms(input: {
       const wantSms = roleWants(org, statusKey, alertRole, "sms");
       const wantEmail = roleWants(org, statusKey, alertRole, "email");
       if (!wantSms && !wantEmail) continue;
-      const people = await shopStaff(input.organizationId, storeId, [role], input.actorUserId, true);
+      const people = await shopStaff(input.organizationId, storeId, [role], input.actorUserId);
       if (wantSms) {
         for (const [phone, locale] of phonesFrom(people, locales)) phoneRecipients.set(phone, locale);
       }
@@ -471,13 +468,13 @@ async function notifyStoreClericalRepairDone(input: {
 
   const storeId = ticket.storeId ?? ticket.farmer.storeId;
   const officeSelect = { id: true, name: true, email: true };
-  let clerical =
+  const clerical =
     input.emailUserIds == null
       ? await prisma.user.findMany({
           where: {
             organizationId: input.organizationId,
             role: ROLES.CLERICAL,
-            ...(storeId ? { storeId } : {}),
+            storeId: storeId ?? null,
             email: { not: "" },
           },
           select: officeSelect,
@@ -487,20 +484,11 @@ async function notifyStoreClericalRepairDone(input: {
             organizationId: input.organizationId,
             id: { in: input.emailUserIds },
             role: { in: [...SHOP_STAFF_ROLES] },
+            storeId: storeId ?? null,
             email: { not: "" },
           },
           select: officeSelect,
         });
-  if (clerical.length === 0 && input.emailUserIds == null) {
-    clerical = await prisma.user.findMany({
-      where: {
-        organizationId: input.organizationId,
-        role: ROLES.CLERICAL,
-        email: { not: "" },
-      },
-      select: officeSelect,
-    });
-  }
   if (clerical.length === 0) return;
 
   const html = workOrderAttachmentHtml(ticket);
