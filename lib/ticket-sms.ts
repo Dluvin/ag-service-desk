@@ -310,8 +310,9 @@ export async function notifyFarmerRepairDone(input: {
   const ticket = await prisma.ticket.findFirst({
     where: { id: input.ticketId, organizationId: input.organizationId },
     include: {
-      farmer: { include: { contacts: true } },
+      farmer: { include: { contacts: true, store: true } },
       pivot: true,
+      store: true,
       organization: {
         select: {
           name: true,
@@ -345,7 +346,9 @@ export async function notifyFarmerRepairDone(input: {
       farmerTargets.map((to) =>
         ticketRepairDoneEmail({
           to,
+          organizationId: input.organizationId,
           organizationName: ticket.organization.name,
+          storeName: ticket.store?.name || ticket.farmer.store?.name || "",
           farmerName: ticket.farmer.name,
           ticketNumber: ticket.number,
           title: ticket.title,

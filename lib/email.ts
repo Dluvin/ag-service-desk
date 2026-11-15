@@ -1,4 +1,4 @@
-import { appBaseUrl, brandLogoEmailHtml } from "./app-url";
+import { appBaseUrl } from "./app-url";
 import { mailIsConfigured, sendEmail } from "./mail";
 import { t, type Locale } from "./i18n";
 import { tenantBrandEmailHtml } from "./org-brand";
@@ -20,7 +20,9 @@ type OrgResend = { apiKey: string; from: string };
 
 export async function ticketRepairDoneEmail(input: {
   to: string;
+  organizationId: string;
   organizationName: string;
+  storeName?: string;
   farmerName: string;
   ticketNumber: number;
   title: string;
@@ -33,20 +35,24 @@ export async function ticketRepairDoneEmail(input: {
 
   const locale = input.locale ?? "en";
   const first = input.farmerName.trim().split(/\s+/)[0] || t(locale, "email.there");
+  const storeName = input.storeName?.trim() || "";
   const url = workOrderUrl(input.ticketId);
   const vars = {
     first,
     org: input.organizationName,
+    store: storeName,
     number: input.ticketNumber,
     title: input.title,
     pivot: input.pivotName,
     url,
   };
   const subject = t(locale, "email.repairSubject", vars);
+  const storeLine = storeName ? t(locale, "email.repairStore", vars) : "";
   const text = [
     t(locale, "email.repairHi", vars),
     "",
     t(locale, "email.repairBody", vars),
+    storeLine,
     t(locale, "email.repairReady"),
     url ? t(locale, "email.repairViewLine", vars) : "",
     "",
@@ -55,14 +61,16 @@ export async function ticketRepairDoneEmail(input: {
     .filter(Boolean)
     .join("\n");
 
+  const brand = await tenantBrandEmailHtml(input.organizationId, input.organizationName);
   const result = await sendEmail({
     to: input.to,
     subject,
     text,
-    fromName: input.organizationName,
+    fromName: storeName ? `${input.organizationName} — ${storeName}` : input.organizationName,
     resend: input.resend,
     html: `
-      ${brandLogoEmailHtml()}
+      ${brand}
+      ${storeLine ? `<p style="margin:-8px 0 16px;color:#57534e">${escapeHtml(storeLine)}</p>` : ""}
       <p>${escapeHtml(t(locale, "email.repairHi", vars))}</p>
       <p>${escapeHtml(t(locale, "email.repairBody", vars))}</p>
       <p>${escapeHtml(t(locale, "email.repairReady"))}</p>
