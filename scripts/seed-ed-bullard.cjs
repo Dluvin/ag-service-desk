@@ -29,48 +29,70 @@ function daysAgo(days, hours) {
 }
 
 async function main() {
-  const existing = await prisma.organization.findUnique({ where: { slug: SLUG }, select: { id: true, name: true } });
-  if (existing) {
-    console.log(`Ed Bullard seed skipped: ${existing.name} already exists.`);
-    return;
-  }
-
   const passwordHash = await bcrypt.hash("demo1234", 10);
   const now = new Date();
-  const org = await prisma.organization.create({
-    data: {
-      name: "Ed Bullard Irrigation",
-      slug: SLUG,
-      paused: false,
-      signupStatus: "ACTIVE",
-      signupPhone: "(910) 483-7148",
-      signupAddress: "3304 Hayfield Rd",
-      signupCity: "Wade",
-      signupRegion: "NC",
-      signupPostalCode: "28395",
-      trialEndsAt: new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()),
-      startupChecks: {
-        create: STARTUP_CHECKS.map((check, index) => ({
+  let org = await prisma.organization.findUnique({ where: { slug: SLUG } });
+  if (!org) {
+    org = await prisma.organization.create({
+      data: {
+        name: "Ed Bullard Irrigation",
+        slug: SLUG,
+        paused: false,
+        signupStatus: "ACTIVE",
+        signupPhone: "(910) 483-7148",
+        signupAddress: "3304 Hayfield Rd",
+        signupCity: "Wade",
+        signupRegion: "NC",
+        signupPostalCode: "28395",
+        trialEndsAt: new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()),
+      },
+    });
+    console.log(`Created company ${org.name}.`);
+  } else {
+    console.log(`Adding demo data to existing company ${org.name} (${org.slug}).`);
+  }
+
+  for (const [index, check] of STARTUP_CHECKS.entries()) {
+    const found = await prisma.startupCheckTemplate.findFirst({
+      where: { organizationId: org.id, checkKey: check.key },
+    });
+    if (!found) {
+      await prisma.startupCheckTemplate.create({
+        data: {
+          organizationId: org.id,
           checkKey: check.key,
           label: check.label,
           detail: check.detail,
           sortOrder: index,
-        })),
-      },
-      assetTypes: {
-        create: ASSET_TYPES.map((type) => ({ ...type, builtIn: true })),
-      },
-    },
-  });
+        },
+      });
+    }
+  }
 
-  const store = await prisma.store.create({
-    data: {
-      organizationId: org.id,
-      name: "Wade shop",
-      address: "3304 Hayfield Rd, Wade, NC",
-      phone: "(910) 483-7148",
-    },
+  for (const type of ASSET_TYPES) {
+    const found = await prisma.assetType.findFirst({
+      where: { organizationId: org.id, slug: type.slug },
+    });
+    if (!found) {
+      await prisma.assetType.create({
+        data: { organizationId: org.id, ...type, builtIn: true },
+      });
+    }
+  }
+
+  let store = await prisma.store.findFirst({
+    where: { organizationId: org.id, name: "Wade shop" },
   });
+  if (!store) {
+    store = await prisma.store.create({
+      data: {
+        organizationId: org.id,
+        name: "Wade shop",
+        address: "3304 Hayfield Rd, Wade, NC",
+        phone: "(910) 483-7148",
+      },
+    });
+  }
 
   const staff = {};
   for (const person of [
@@ -79,45 +101,67 @@ async function main() {
     { key: "luis", name: "Luis Ortega", email: "luis@edbullard.demo", role: "TECHNICIAN", phone: "910-555-0188" },
     { key: "chris", name: "Chris Lang", email: "chris@edbullard.demo", role: "TECHNICIAN", phone: "910-555-0189" },
   ]) {
-    staff[person.key] = await prisma.user.create({
-      data: {
-        organizationId: org.id,
-        storeId: store.id,
-        name: person.name,
-        email: person.email,
-        role: person.role,
-        phone: person.phone,
-        passwordHash,
-      },
+    const found = await prisma.user.findFirst({
+      where: { organizationId: org.id, email: person.email },
     });
+    staff[person.key] =
+      found ??
+      (await prisma.user.create({
+        data: {
+          organizationId: org.id,
+          storeId: store.id,
+          name: person.name,
+          email: person.email,
+          role: person.role,
+          phone: person.phone,
+          passwordHash,
+        },
+      }));
   }
 
   async function addFarmer(input) {
-    const farmer = await prisma.farmer.create({
-      data: {
-        organizationId: org.id,
-        storeId: store.id,
-        name: input.name,
-        email: input.email,
-        phone: input.phone,
-        address: input.address,
-        notes: "Demo customer for the Wade service area.",
-        contacts: { create: { name: input.contactName, phone: input.phone, email: input.email } },
-      },
+    let farmer = await prisma.farmer.findFirst({
+      where: { organizationId: org.id, email: input.email },
       include: { contacts: true },
     });
-    const farm = await prisma.farm.create({
-      data: {
-        organizationId: org.id,
-        farmerId: farmer.id,
-        primaryContactId: farmer.contacts[0].id,
-        name: input.farmName,
-        location: input.farmLocation,
-        latitude: input.lat,
-        longitude: input.lng,
-        assignments: { create: { farmerId: farmer.id, startYear: 2016 } },
-      },
+    if (!farmer) {
+      farmer = await prisma.farmer.create({
+        data: {
+          organizationId: org.id,
+          storeId: store.id,
+          name: input.name,
+          email: input.email,
+          phone: input.phone,
+          address: input.address,
+          notes: "Demo customer for the Wade service area.",
+          contacts: { create: { name: input.contactName, phone: input.phone, email: input.email } },
+        },
+        include: { contacts: true },
+      });
+    }
+    let contact = farmer.contacts[0];
+    if (!contact) {
+      contact = await prisma.farmerContact.create({
+        data: { farmerId: farmer.id, name: input.contactName, phone: input.phone, email: input.email },
+      });
+    }
+    let farm = await prisma.farm.findFirst({
+      where: { organizationId: org.id, farmerId: farmer.id, name: input.farmName },
     });
+    if (!farm) {
+      farm = await prisma.farm.create({
+        data: {
+          organizationId: org.id,
+          farmerId: farmer.id,
+          primaryContactId: contact.id,
+          name: input.farmName,
+          location: input.farmLocation,
+          latitude: input.lat,
+          longitude: input.lng,
+          assignments: { create: { farmerId: farmer.id, startYear: 2016 } },
+        },
+      });
+    }
     return { farmer, farm };
   }
 
@@ -181,18 +225,23 @@ async function main() {
 
   const pivots = {};
   for (const spec of pivotSpecs) {
-    const pivot = await prisma.pivot.create({
-      data: {
-        organizationId: org.id,
-        farmerId: spec.farmer.farmer.id,
-        farmId: spec.farmer.farm.id,
-        name: spec.name,
-        serialNumber: spec.serial,
-        latitude: spec.lat,
-        longitude: spec.lng,
-        locationNote: spec.note,
-      },
+    const found = await prisma.pivot.findFirst({
+      where: { organizationId: org.id, serialNumber: spec.serial },
     });
+    const pivot =
+      found ??
+      (await prisma.pivot.create({
+        data: {
+          organizationId: org.id,
+          farmerId: spec.farmer.farmer.id,
+          farmId: spec.farmer.farm.id,
+          name: spec.name,
+          serialNumber: spec.serial,
+          latitude: spec.lat,
+          longitude: spec.lng,
+          locationNote: spec.note,
+        },
+      }));
     pivots[spec.name] = { ...spec, id: pivot.id };
   }
 
@@ -280,6 +329,25 @@ async function main() {
   ];
 
   for (const ticket of tickets) {
+    const already = await prisma.ticket.findFirst({
+      where: { organizationId: org.id, title: ticket.title },
+      select: { id: true },
+    });
+    if (already) continue;
+
+    const numberTaken = await prisma.ticket.findFirst({
+      where: { organizationId: org.id, number: ticket.number },
+      select: { id: true },
+    });
+    let number = ticket.number;
+    if (numberTaken) {
+      const last = await prisma.ticket.aggregate({
+        where: { organizationId: org.id },
+        _max: { number: true },
+      });
+      number = (last._max.number ?? 1000) + 1;
+    }
+
     await prisma.ticket.create({
       data: {
         organizationId: org.id,
@@ -287,7 +355,7 @@ async function main() {
         pivotId: ticket.pivot.id,
         storeId: store.id,
         technicianId: ticket.technicianId,
-        number: ticket.number,
+        number,
         title: ticket.title,
         description: ticket.description,
         status: ticket.status,
@@ -309,7 +377,15 @@ async function main() {
     });
   }
 
-  console.log("Ed Bullard Irrigation demo data created.");
+  const [users, farmers, pivotCount, ticketCount] = await Promise.all([
+    prisma.user.count({ where: { organizationId: org.id } }),
+    prisma.farmer.count({ where: { organizationId: org.id } }),
+    prisma.pivot.count({ where: { organizationId: org.id } }),
+    prisma.ticket.count({ where: { organizationId: org.id } }),
+  ]);
+  console.log(
+    `Ed Bullard Irrigation demo ready: ${users} staff, ${farmers} customers, ${pivotCount} pivots, ${ticketCount} work orders.`,
+  );
 }
 
 main()
