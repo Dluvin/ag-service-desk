@@ -44,6 +44,7 @@ import { REVEAL_EU, REVEAL_US, clearRevealTokenCache, normalizeRevealAppId, sync
 import { notifyFarmerRepairDone, notifyTicketSms } from "./ticket-sms";
 import { sendBirdSms, toE164 } from "./bird";
 import { sendEmail } from "./mail";
+import { statusAlertsFromForm } from "./notify-status";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles, readTicketPhotoFile, removeTicketPhotoFile } from "./ticket-photos";
 import { documentFilesFromForm, removePivotDocumentFile, safePivotReturnTo, savePivotDocuments } from "./pivot-documents";
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
@@ -3186,6 +3187,7 @@ export async function saveBirdSettingsAction(formData: FormData) {
       notifyChannel: channel,
       resendApiKey: nextResendKey,
       resendFrom: resendFrom || null,
+      notifyStatusJson: JSON.stringify(statusAlertsFromForm(formData)),
     },
   });
   redirect("/sms");

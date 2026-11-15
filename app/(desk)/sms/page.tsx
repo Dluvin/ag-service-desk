@@ -8,6 +8,8 @@ import { ActionForm } from "@/components/ActionForm";
 import { BirdTestForm } from "@/components/BirdTestForm";
 import { EmailTestForm } from "@/components/EmailTestForm";
 import { notifyChannelOf } from "@/lib/notify-channel";
+import { parseStatusAlerts } from "@/lib/notify-status";
+import { STATUS_LABELS, TICKET_STATUSES } from "@/lib/roles";
 
 export default async function SmsSettingsPage() {
   const session = await getSession();
@@ -17,6 +19,7 @@ export default async function SmsSettingsPage() {
   const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
   if (!org) redirect("/dashboard");
   const channel = notifyChannelOf(org);
+  const statusAlerts = parseStatusAlerts(org.notifyStatusJson);
   const choices = [
     ["OFF", "Off"],
     ["SMS", "SMS only"],
@@ -32,11 +35,11 @@ export default async function SmsSettingsPage() {
         at that customer&apos;s store are notified. If the customer has no store, every manager is
         notified. A technician is notified only when the work order is assigned to them. Status
         changes notify the store&apos;s managers. When a work order is moved to Repair done,
-        office/clerical at that store are also notified, and the customer is notified. Customers are
-        not notified on Assigned, In progress, Waiting on parts, Completed, or Cancelled. Staff
-        messages include a link to that work order. Texts use each person&apos;s phone. Emails use
-        each person&apos;s email. Customer texts use contact phones, and customer emails use contact
-        emails, or the customer email when there is no contact email.
+        office/clerical at that store are also notified, and the customer is notified.         Choose the statuses below. Shop alerts go to the store&apos;s managers, to the technician
+        when the work order is Assigned, and to office staff on Repair done. Customer alerts go to
+        the customer. Staff messages include a link to that work order. Texts use each person&apos;s
+        phone. Emails use each person&apos;s email. Customer texts use contact phones, and customer
+        emails use contact emails, or the customer email when there is no contact email.
       </p>
       <p className="mt-3 text-sm text-stone-600">
         Bird charges separately for numbers and each text. Resend charges for email after its free
@@ -77,6 +80,44 @@ export default async function SmsSettingsPage() {
             ))}
           </div>
         </fieldset>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[36rem] text-left text-sm">
+            <thead>
+              <tr className="text-xs uppercase tracking-wide text-stone-500">
+                <th className="py-2 pr-3 font-semibold">Status</th>
+                <th className="px-2 py-2 font-semibold">Shop text</th>
+                <th className="px-2 py-2 font-semibold">Shop email</th>
+                <th className="px-2 py-2 font-semibold">Customer text</th>
+                <th className="px-2 py-2 font-semibold">Customer email</th>
+              </tr>
+            </thead>
+            <tbody>
+              {TICKET_STATUSES.map((status) => (
+                <tr key={status} className="border-t border-stone-100">
+                  <th className="py-2 pr-3 font-medium text-stone-800">{STATUS_LABELS[status]}</th>
+                  {(
+                    [
+                      ["shopSms", "Shop text", statusAlerts[status].shopSms],
+                      ["shopEmail", "Shop email", statusAlerts[status].shopEmail],
+                      ["customerSms", "Customer text", statusAlerts[status].customerSms],
+                      ["customerEmail", "Customer email", statusAlerts[status].customerEmail],
+                    ] as const
+                  ).map(([name, label, checked]) => (
+                    <td key={name} className="px-2 py-2">
+                      <input
+                        type="checkbox"
+                        name={`${name}.${status}`}
+                        aria-label={`${label} for ${STATUS_LABELS[status]}`}
+                        defaultChecked={checked}
+                        className="rounded border-stone-300"
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Bird SMS</p>
         <label className="block text-sm font-medium">
           API key

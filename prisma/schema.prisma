@@ -26,6 +26,8 @@ model Organization {
   notifyChannel       String   @default("OFF")
   resendApiKey        String?
   resendFrom          String?
+  // Per-status shop and customer text/email. Null keeps the original defaults.
+  notifyStatusJson    String?
   logoMimeType        String?
   logoFileName        String?
   paused              Boolean  @default(false)

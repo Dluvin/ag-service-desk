@@ -1,10 +1,11 @@
 import { prisma } from "./prisma";
-import { ROLES, type TicketStatus } from "./roles";
+import { ROLES, TICKET_STATUSES, type TicketStatus } from "./roles";
 import { isPlaceholderUsNumber, sendBirdSms, toE164 } from "./bird";
 import { appBaseUrl } from "./app-url";
 import { ticketRepairDoneEmail, officeRepairDoneEmail } from "./email";
 import { sendEmail } from "./mail";
 import { sendsEmail, sendsSms } from "./notify-channel";
+import { customerWants, shopWants } from "./notify-status";
 import { closedTicketPrintInclude } from "./ticket-print";
 import { workOrderAttachmentHtml } from "./work-order-html";
 import { statusLabel, t, type Locale, type MessageKey } from "./i18n";
@@ -26,8 +27,11 @@ function withTicketLink(body: string, ticketId: string) {
   return url ? `${body} ${url}` : body;
 }
 
-/** Customer texts only when a work order moves to Repair done. */
-export const TICKET_SMS_STATUSES: TicketStatus[] = ["REPAIR_DONE"];
+function alertStatus(kind: "assigned" | "updated" | "opened", status: string): TicketStatus {
+  if (kind === "assigned") return "ASSIGNED";
+  if (kind === "opened") return "OPEN";
+  return TICKET_STATUSES.includes(status as TicketStatus) ? (status as TicketStatus) : "OPEN";
+}
 
 function addRecipient(recipients: Map<string, Locale>, raw: string | null | undefined, locale: Locale) {
   const e164 = toE164(raw);
@@ -185,7 +189,9 @@ export async function notifyTicketSms(input: {
     }
   }
 
-  if (smsOn && phoneRecipients.size > 0 && org.birdApiKey) {
+  const statusKey = alertStatus(input.kind, ticket.status);
+
+  if (smsOn && shopWants(org, statusKey, "sms") && phoneRecipients.size > 0 && org.birdApiKey) {
     const config = {
       apiKey: org.birdApiKey,
       from: org.birdFrom || org.name.slice(0, 11),
@@ -201,7 +207,7 @@ export async function notifyTicketSms(input: {
     );
   }
 
-  if (emailOn && emailRecipients.size > 0 && org.resendApiKey && org.resendFrom) {
+  if (emailOn && shopWants(org, statusKey, "email") && emailRecipients.size > 0 && org.resendApiKey && org.resendFrom) {
     const resend = { apiKey: org.resendApiKey, from: org.resendFrom };
     await Promise.allSettled(
       [...emailRecipients.entries()].map(async ([to, locale]) => {
@@ -218,6 +224,10 @@ export async function notifyTicketSms(input: {
       }),
     );
   }
+
+  if (statusKey !== "REPAIR_DONE") {
+    await notifyCustomerProgress(org, input.organizationId, input.ticketId, statusKey);
+  }
 }
 
 export async function sendTicketStatusSmsToFarmer(input: {
@@ -225,10 +235,8 @@ export async function sendTicketStatusSmsToFarmer(input: {
   ticketId: string;
   status: TicketStatus;
 }) {
-  if (!TICKET_SMS_STATUSES.includes(input.status)) return;
-
   const org = await prisma.organization.findUnique({ where: { id: input.organizationId } });
-  if (!org || !sendsSms(org) || !org.birdApiKey) return;
+  if (!org || !sendsSms(org) || !org.birdApiKey || !customerWants(org, input.status, "sms")) return;
 
   const ticket = await prisma.ticket.findFirst({
     where: { id: input.ticketId, organizationId: input.organizationId },
@@ -278,7 +286,14 @@ export async function notifyFarmerRepairDone(input: {
       farmer: { include: { contacts: true } },
       pivot: true,
       organization: {
-        select: { name: true, notifyChannel: true, birdSmsEnabled: true, resendApiKey: true, resendFrom: true },
+        select: {
+          name: true,
+          notifyChannel: true,
+          birdSmsEnabled: true,
+          resendApiKey: true,
+          resendFrom: true,
+          notifyStatusJson: true,
+        },
       },
     },
   });
@@ -297,29 +312,107 @@ export async function notifyFarmerRepairDone(input: {
     status: "REPAIR_DONE",
   });
 
-  const farmerTargets = resend ? farmerEmails(ticket.farmer) : ticket.farmer.email ? [ticket.farmer.email] : [];
-  await Promise.allSettled(
-    farmerTargets.map((to) =>
-      ticketRepairDoneEmail({
-        to,
-        organizationName: ticket.organization.name,
-        farmerName: ticket.farmer.name,
-        ticketNumber: ticket.number,
-        title: ticket.title,
-        pivotName: ticketSiteName(ticket),
-        ticketId: ticket.id,
-        locale,
-        resend,
-      }),
-    ),
+  if (customerWants(ticket.organization, "REPAIR_DONE", "email")) {
+    const farmerTargets = resend ? farmerEmails(ticket.farmer) : ticket.farmer.email ? [ticket.farmer.email] : [];
+    await Promise.allSettled(
+      farmerTargets.map((to) =>
+        ticketRepairDoneEmail({
+          to,
+          organizationName: ticket.organization.name,
+          farmerName: ticket.farmer.name,
+          ticketNumber: ticket.number,
+          title: ticket.title,
+          pivotName: ticketSiteName(ticket),
+          ticketId: ticket.id,
+          locale,
+          resend,
+        }),
+      ),
+    );
+  }
+
+  if (shopWants(ticket.organization, "REPAIR_DONE", "email")) {
+    await notifyStoreClericalRepairDone({
+      organizationId: input.organizationId,
+      ticketId: input.ticketId,
+      locales,
+      resend,
+    });
+  }
+}
+
+async function notifyCustomerProgress(
+  org: {
+    name: string;
+    birdApiKey: string | null;
+    birdFrom: string | null;
+    birdWorkspaceId: string | null;
+    birdChannelId: string | null;
+    resendApiKey: string | null;
+    resendFrom: string | null;
+    notifyChannel: string | null;
+    birdSmsEnabled: boolean | null;
+    notifyStatusJson: string | null;
+  },
+  organizationId: string,
+  ticketId: string,
+  status: TicketStatus,
+) {
+  const sms = Boolean(sendsSms(org) && org.birdApiKey && customerWants(org, status, "sms"));
+  const email = Boolean(sendsEmail(org) && org.resendApiKey && org.resendFrom && customerWants(org, status, "email"));
+  if (!sms && !email) return;
+
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, organizationId },
+    include: { farmer: { include: { contacts: true } } },
+  });
+  if (!ticket) return;
+
+  const locales = await loadOrgLocales(ticket.organizationId);
+  const locale = await farmerLocale(ticket.farmerId, locales);
+  const body = withTicketLink(
+    t(locale, "sms.customerStatus", {
+      org: org.name,
+      number: ticket.number,
+      title: ticket.title,
+      status: statusLabel(locale, status),
+    }),
+    ticket.id,
   );
 
-  await notifyStoreClericalRepairDone({
-    organizationId: input.organizationId,
-    ticketId: input.ticketId,
-    locales,
-    resend,
-  });
+  if (sms && org.birdApiKey) {
+    const config = {
+      apiKey: org.birdApiKey,
+      from: org.birdFrom || org.name.slice(0, 11),
+      workspaceId: org.birdWorkspaceId || "",
+      channelId: org.birdChannelId || "",
+    };
+    const phones = farmerPhones(ticket.farmer);
+    await Promise.allSettled(
+      phones.map((to) =>
+        sendBirdSms(config, to, body).catch((error) => {
+          console.error(`Bird SMS to ${to} failed`, error);
+        }),
+      ),
+    );
+  }
+
+  if (email && org.resendApiKey && org.resendFrom) {
+    const resend = { apiKey: org.resendApiKey, from: org.resendFrom };
+    await Promise.allSettled(
+      farmerEmails(ticket.farmer).map(async (to) => {
+        const result = await sendEmail({
+          to,
+          subject: t(locale, "email.notifySubject", { org: org.name, number: ticket.number }),
+          text: body,
+          html: `<p>${escapeHtml(body)}</p>`,
+          fromName: org.name,
+          resend,
+        });
+        if (!result.ok) console.error(`Customer email to ${to} failed`, result.error);
+      }),
+    );
+  }
 }
 
 async function notifyStoreClericalRepairDone(input: {
