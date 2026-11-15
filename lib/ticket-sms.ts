@@ -1,11 +1,12 @@
 import { prisma } from "./prisma";
-import { ROLES, TICKET_STATUSES, type TicketStatus } from "./roles";
+import { ROLES, SHOP_STAFF_ROLES, TICKET_STATUSES, type TicketStatus } from "./roles";
 import { isPlaceholderUsNumber, sendBirdSms, toE164 } from "./bird";
 import { appBaseUrl } from "./app-url";
 import { ticketRepairDoneEmail, officeRepairDoneEmail } from "./email";
 import { sendEmail } from "./mail";
 import { sendsEmail, sendsSms } from "./notify-channel";
 import { customerWants, shopWants } from "./notify-status";
+import { parseNotifyRecipients } from "./notify-recipients";
 import { closedTicketPrintInclude } from "./ticket-print";
 import { workOrderAttachmentHtml } from "./work-order-html";
 import { statusLabel, t, type Locale, type MessageKey } from "./i18n";
@@ -97,6 +98,15 @@ async function shopStaff(
   return people.filter((person) => !(actorUserId && person.id === actorUserId));
 }
 
+async function chosenPeople(organizationId: string, userIds: string[], actorUserId?: string | null) {
+  if (userIds.length === 0) return [];
+  const people = await prisma.user.findMany({
+    where: { organizationId, id: { in: userIds }, role: { in: [...SHOP_STAFF_ROLES] } },
+    select: { id: true, phone: true, email: true, name: true },
+  });
+  return people.filter((person) => !(actorUserId && person.id === actorUserId));
+}
+
 function phonesFrom(people: { id: string; phone: string | null }[], locales: Map<string, Locale>) {
   const recipients = new Map<string, Locale>();
   for (const person of people) addRecipient(recipients, person.phone, locales.get(person.id) ?? "en");
@@ -166,7 +176,13 @@ export async function notifyTicketSms(input: {
   const locales = await loadOrgLocales(input.organizationId);
   const phoneRecipients = new Map<string, Locale>();
   const emailRecipients = new Map<string, Locale>();
-  if (input.kind === "assigned") {
+  const chosen = parseNotifyRecipients(org.notifyStatusJson);
+  if (chosen.mode === "CHOSEN") {
+    const smsPeople = await chosenPeople(input.organizationId, chosen.smsUserIds, input.actorUserId);
+    const emailPeople = await chosenPeople(input.organizationId, chosen.emailUserIds, input.actorUserId);
+    for (const [phone, locale] of phonesFrom(smsPeople, locales)) phoneRecipients.set(phone, locale);
+    for (const [email, locale] of emailsFrom(emailPeople, locales)) emailRecipients.set(email, locale);
+  } else if (input.kind === "assigned") {
     if (ticket.technician && ticket.technician.id !== input.actorUserId) {
       const locale = locales.get(ticket.technician.id) ?? "en";
       addRecipient(phoneRecipients, ticket.technician.phone, locale);
@@ -207,7 +223,15 @@ export async function notifyTicketSms(input: {
     );
   }
 
-  if (emailOn && shopWants(org, statusKey, "email") && emailRecipients.size > 0 && org.resendApiKey && org.resendFrom) {
+  const skipShortEmail = chosen.mode === "CHOSEN" && statusKey === "REPAIR_DONE";
+  if (
+    emailOn &&
+    !skipShortEmail &&
+    shopWants(org, statusKey, "email") &&
+    emailRecipients.size > 0 &&
+    org.resendApiKey &&
+    org.resendFrom
+  ) {
     const resend = { apiKey: org.resendApiKey, from: org.resendFrom };
     await Promise.allSettled(
       [...emailRecipients.entries()].map(async ([to, locale]) => {
@@ -332,11 +356,13 @@ export async function notifyFarmerRepairDone(input: {
   }
 
   if (shopWants(ticket.organization, "REPAIR_DONE", "email")) {
+    const chosen = parseNotifyRecipients(ticket.organization.notifyStatusJson);
     await notifyStoreClericalRepairDone({
       organizationId: input.organizationId,
       ticketId: input.ticketId,
       locales,
       resend,
+      emailUserIds: chosen.mode === "CHOSEN" ? chosen.emailUserIds : null,
     });
   }
 }
@@ -420,6 +446,7 @@ async function notifyStoreClericalRepairDone(input: {
   ticketId: string;
   locales: Map<string, Locale>;
   resend?: { apiKey: string; from: string };
+  emailUserIds?: string[] | null;
 }) {
   const ticket = await prisma.ticket.findFirst({
     where: { id: input.ticketId, organizationId: input.organizationId },
@@ -430,16 +457,29 @@ async function notifyStoreClericalRepairDone(input: {
   });
   if (!ticket || ticket.status !== "REPAIR_DONE") return;
 
+  if (input.emailUserIds && input.emailUserIds.length === 0) return;
+
   const storeId = ticket.storeId ?? ticket.farmer.storeId;
-  const clerical = await prisma.user.findMany({
-    where: {
-      organizationId: input.organizationId,
-      role: ROLES.CLERICAL,
-      storeId,
-      email: { not: "" },
-    },
-    select: { id: true, name: true, email: true },
-  });
+  const clerical =
+    input.emailUserIds == null
+      ? await prisma.user.findMany({
+          where: {
+            organizationId: input.organizationId,
+            role: ROLES.CLERICAL,
+            storeId,
+            email: { not: "" },
+          },
+          select: { id: true, name: true, email: true },
+        })
+      : await prisma.user.findMany({
+          where: {
+            organizationId: input.organizationId,
+            id: { in: input.emailUserIds },
+            role: { in: [...SHOP_STAFF_ROLES] },
+            email: { not: "" },
+          },
+          select: { id: true, name: true, email: true },
+        });
   if (clerical.length === 0) return;
 
   const html = workOrderAttachmentHtml(ticket);

@@ -2,24 +2,33 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLES } from "@/lib/roles";
+import { ROLES, SHOP_STAFF_ROLES, STATUS_LABELS, TICKET_STATUSES } from "@/lib/roles";
 import { saveBirdSettingsAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { BirdTestForm } from "@/components/BirdTestForm";
 import { EmailTestForm } from "@/components/EmailTestForm";
 import { notifyChannelOf } from "@/lib/notify-channel";
 import { parseStatusAlerts } from "@/lib/notify-status";
-import { STATUS_LABELS, TICKET_STATUSES } from "@/lib/roles";
+import { parseNotifyRecipients } from "@/lib/notify-recipients";
+import { NotifyAudienceFields } from "@/components/NotifyAudienceFields";
 
 export default async function SmsSettingsPage() {
   const session = await getSession();
   if (!session) redirect("/login");
   if (session.role !== ROLES.ADMIN) redirect("/dashboard");
 
-  const org = await prisma.organization.findUnique({ where: { id: session.organizationId } });
+  const [org, staff] = await Promise.all([
+    prisma.organization.findUnique({ where: { id: session.organizationId } }),
+    prisma.user.findMany({
+      where: { organizationId: session.organizationId, role: { in: [...SHOP_STAFF_ROLES] } },
+      select: { id: true, name: true, role: true, phone: true, email: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
   if (!org) redirect("/dashboard");
   const channel = notifyChannelOf(org);
   const statusAlerts = parseStatusAlerts(org.notifyStatusJson);
+  const recipients = parseNotifyRecipients(org.notifyStatusJson);
   const choices = [
     ["OFF", "Off"],
     ["SMS", "SMS only"],
@@ -31,15 +40,9 @@ export default async function SmsSettingsPage() {
     <div className="max-w-3xl">
       <h1 className="font-display text-3xl">SMS and email</h1>
       <p className="mt-2 text-stone-600">
-        The same alerts can go by text, email, or both. When a customer opens a work order, managers
-        at that customer&apos;s store are notified. If the customer has no store, every manager is
-        notified. A technician is notified only when the work order is assigned to them. Status
-        changes notify the store&apos;s managers. When a work order is moved to Repair done,
-        office/clerical at that store are also notified, and the customer is notified.         Choose the statuses below. Shop alerts go to the store&apos;s managers, to the technician
-        when the work order is Assigned, and to office staff on Repair done. Customer alerts go to
-        the customer. Staff messages include a link to that work order. Texts use each person&apos;s
-        phone. Emails use each person&apos;s email. Customer texts use contact phones, and customer
-        emails use contact emails, or the customer email when there is no contact email.
+        The same alerts can go by text, email, or both. Shop alerts go to the people you choose
+        below. Customer alerts go to that customer&apos;s contacts. Staff messages include a link
+        to the work order. Texts use each person&apos;s phone. Emails use each person&apos;s email.
       </p>
       <p className="mt-3 text-sm text-stone-600">
         Bird charges separately for numbers and each text. Resend charges for email after its free
@@ -118,6 +121,7 @@ export default async function SmsSettingsPage() {
             </tbody>
           </table>
         </div>
+        <NotifyAudienceFields staff={staff} recipients={recipients} />
         <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Bird SMS</p>
         <label className="block text-sm font-medium">
           API key

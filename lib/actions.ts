@@ -45,6 +45,7 @@ import { notifyFarmerRepairDone, notifyTicketSms } from "./ticket-sms";
 import { sendBirdSms, toE164 } from "./bird";
 import { sendEmail } from "./mail";
 import { statusAlertsFromForm } from "./notify-status";
+import { keepStaffIds, recipientsFromForm } from "./notify-recipients";
 import { saveTicketPhotos, photoFilesFromForm, validatePhotoFiles, readTicketPhotoFile, removeTicketPhotoFile } from "./ticket-photos";
 import { documentFilesFromForm, removePivotDocumentFile, safePivotReturnTo, savePivotDocuments } from "./pivot-documents";
 import { saveCompanyLogoFile, removeCompanyLogoFile } from "./company-logo";
@@ -3212,6 +3213,15 @@ export async function saveBirdSettingsAction(formData: FormData) {
     return { error: "From address must be an email on a domain you verified in Resend." };
   }
 
+  const staff = await prisma.user.findMany({
+    where: { organizationId: session.organizationId },
+    select: { id: true, role: true },
+  });
+  const staffIds = staff.filter((person) => isShopStaffRole(person.role)).map((person) => person.id);
+  const recipients = recipientsFromForm(formData);
+  recipients.smsUserIds = keepStaffIds(recipients.smsUserIds, staffIds);
+  recipients.emailUserIds = keepStaffIds(recipients.emailUserIds, staffIds);
+
   await prisma.organization.update({
     where: { id: session.organizationId },
     data: {
@@ -3223,7 +3233,7 @@ export async function saveBirdSettingsAction(formData: FormData) {
       notifyChannel: channel,
       resendApiKey: nextResendKey,
       resendFrom: resendFrom || null,
-      notifyStatusJson: JSON.stringify(statusAlertsFromForm(formData)),
+      notifyStatusJson: JSON.stringify({ ...statusAlertsFromForm(formData), recipients }),
     },
   });
   redirect("/sms");
