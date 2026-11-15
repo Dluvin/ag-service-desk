@@ -8,6 +8,7 @@ import { DeleteButton } from "@/components/DeleteButton";
 import { ContactSalesNote } from "@/components/ContactSalesNote";
 import { loadOrgPlan } from "@/lib/org-plan";
 import { canAddStore, contactSalesStoreMessage, resolveEntitlements } from "@/lib/plans";
+import { defaultStoreName } from "@/lib/store-names";
 
 export default async function StoresPage() {
   const session = await getSession();
@@ -89,7 +90,13 @@ export default async function StoresPage() {
           <ActionForm action={createStoreAction} className="mt-3 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
             <label className="block text-sm font-medium">
               Name
-              <input name="name" required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="York shop" />
+              <input
+                name="name"
+                required
+                defaultValue={defaultStoreName(stores.length + 1)}
+                className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+              />
+              <span className="mt-1 block text-xs font-normal text-stone-500">Change this before you save if the shop has a real name.</span>
             </label>
             <label className="block text-sm font-medium">
               Address

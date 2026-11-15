@@ -1,6 +1,8 @@
 import { PLAN } from "@/lib/plan";
+import { PLANS } from "@/lib/plans";
 import { signupAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
+import { SignupStoreFields } from "@/components/SignupStoreFields";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Link from "next/link";
@@ -64,6 +66,7 @@ export default function SignupPage() {
             Staff who will log in
             <input name="staffCount" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" placeholder="Admins, managers, office, techs" />
           </label>
+          <SignupStoreFields maxStores={PLANS.SHOP.maxStores ?? 1} />
           <label className="block text-sm font-medium sm:col-span-2">
             Password for your admin login
             <input name="password" type="password" minLength={8} required className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />

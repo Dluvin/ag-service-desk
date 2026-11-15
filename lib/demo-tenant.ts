@@ -1,19 +1,25 @@
 import { prisma } from "./prisma";
 import { openServiceTicket } from "./tickets";
 import { ensureAssetTypes } from "./assets";
+import { defaultStoreName } from "./store-names";
 
 export async function seedApprovedDemo(organizationId: string, adminUserId: string) {
   await ensureAssetTypes(organizationId);
   const existing = await prisma.farmer.count({ where: { organizationId } });
   if (existing > 0) return;
 
-  const store = await prisma.store.create({
-    data: {
-      organizationId,
-      name: "Main shop (demo)",
-      address: "Replace with your shop address",
-    },
-  });
+  const store =
+    (await prisma.store.findFirst({
+      where: { organizationId },
+      orderBy: { createdAt: "asc" },
+    })) ??
+    (await prisma.store.create({
+      data: {
+        organizationId,
+        name: defaultStoreName(1),
+        address: "Replace with your shop address",
+      },
+    }));
   const farm = await prisma.farmer.create({
     data: {
       organizationId,

@@ -58,7 +58,8 @@ import { parseDateTimeLocal } from "./schedule";
 import { parseMoneyInput } from "./money";
 import { emailSignupToOwner } from "./signup-notify";
 import { assertCanAddStaff, assertCanAddStore, loadOrgPlan } from "./org-plan";
-import { contactSalesGpsMessage, remainingUserSlots, showVehicleGps } from "./plans";
+import { PLANS, contactSalesGpsMessage, remainingUserSlots, showVehicleGps } from "./plans";
+import { defaultStoreName, storeNamesFromSignup } from "./store-names";
 import {
   ASSET_KIND,
   BUILTIN_ASSET_TYPES,
@@ -315,6 +316,10 @@ export async function signupAction(formData: FormData) {
   const existing = await prisma.organization.findUnique({ where: { slug } });
   if (existing) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
 
+  const storeCap = PLANS.SHOP.maxStores ?? 1;
+  const namedStores = storeNamesFromSignup(formData, storeCap);
+  if ("error" in namedStores) return { error: namedStores.error };
+
   const org = await prisma.organization.create({
     data: {
       name: company,
@@ -329,6 +334,13 @@ export async function signupAction(formData: FormData) {
       signupPostalCode: postalCode || null,
       signupStaffCount: staffCount || null,
       signupNotes: notes || null,
+      stores: {
+        create: namedStores.names.map((storeName, index) => ({
+          name: storeName,
+          address: index === 0 ? address || null : null,
+          phone: index === 0 ? phone || null : null,
+        })),
+      },
       users: {
         create: {
           name,
@@ -356,7 +368,18 @@ export async function signupAction(formData: FormData) {
         })),
       },
     },
+    include: { stores: true, users: { take: 1 } },
   });
+
+  const firstName = namedStores.names[0];
+  const firstStore = org.stores.find((store) => store.name === firstName) ?? org.stores[0];
+  const owner = org.users[0];
+  if (firstStore && owner) {
+    await prisma.user.update({
+      where: { id: owner.id },
+      data: { storeId: firstStore.id },
+    });
+  }
 
   try {
     await applyOrgOcrFromSignup(org.id, formData);
@@ -1117,10 +1140,10 @@ export async function createStoreAction(formData: FormData) {
   const session = await requireSession();
   if (!isAdmin(session.role)) return { error: "Only company admins can add stores." };
 
-  const name = formString(formData, "name");
   const address = formString(formData, "address");
   const phone = formString(formData, "phone");
-  if (!name) return { error: "Store name is required." };
+  const currentCount = await prisma.store.count({ where: { organizationId: session.organizationId } });
+  const name = formString(formData, "name") || defaultStoreName(currentCount + 1);
 
   const cap = await assertCanAddStore(session.organizationId);
   if ("error" in cap && cap.error) return { error: cap.error };
