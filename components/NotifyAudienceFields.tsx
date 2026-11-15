@@ -47,9 +47,9 @@ export function NotifyAudienceFields({
         </label>
       </div>
       <p className="mt-2 text-xs text-stone-500">
-        Automatic texts the store&apos;s managers, the assigned technician, and office staff on Repair done.
-        Choose people to send shop texts and emails only to the people you check. You can check more than one.
-        Customer alerts still go to that customer&apos;s contacts.
+        Automatic uses the role checkboxes above. Choose people to send those alerts only to the
+        people you check. You can check more than one. Customer alerts still go to that
+        customer&apos;s contacts.
       </p>
       <ul className={`mt-3 divide-y divide-stone-100 ${mode === "CHOSEN" ? "" : "hidden"}`}>
         {staff.length === 0 ? (

@@ -5,7 +5,7 @@ import { appBaseUrl } from "./app-url";
 import { ticketRepairDoneEmail, officeRepairDoneEmail } from "./email";
 import { sendEmail } from "./mail";
 import { sendsEmail, sendsSms } from "./notify-channel";
-import { customerWants, shopWants } from "./notify-status";
+import { anyStaffWants, customerWants, roleWants } from "./notify-status";
 import { parseNotifyRecipients } from "./notify-recipients";
 import { closedTicketPrintInclude } from "./ticket-print";
 import { workOrderAttachmentHtml } from "./work-order-html";
@@ -177,37 +177,50 @@ export async function notifyTicketSms(input: {
   const phoneRecipients = new Map<string, Locale>();
   const emailRecipients = new Map<string, Locale>();
   const chosen = parseNotifyRecipients(org.notifyStatusJson);
+  const statusKey = alertStatus(input.kind, ticket.status);
+  const storeId = ticket.storeId ?? ticket.farmer.storeId;
   if (chosen.mode === "CHOSEN") {
     const smsPeople = await chosenPeople(input.organizationId, chosen.smsUserIds, input.actorUserId);
     const emailPeople = await chosenPeople(input.organizationId, chosen.emailUserIds, input.actorUserId);
     for (const [phone, locale] of phonesFrom(smsPeople, locales)) phoneRecipients.set(phone, locale);
     for (const [email, locale] of emailsFrom(emailPeople, locales)) emailRecipients.set(email, locale);
   } else if (input.kind === "assigned") {
-    if (ticket.technician && ticket.technician.id !== input.actorUserId) {
-      const locale = locales.get(ticket.technician.id) ?? "en";
-      addRecipient(phoneRecipients, ticket.technician.phone, locale);
-      addEmail(emailRecipients, ticket.technician.email, locale);
+    if (roleWants(org, "ASSIGNED", "tech", "sms") || roleWants(org, "ASSIGNED", "tech", "email")) {
+      if (ticket.technician && ticket.technician.id !== input.actorUserId) {
+        const locale = locales.get(ticket.technician.id) ?? "en";
+        if (roleWants(org, "ASSIGNED", "tech", "sms")) addRecipient(phoneRecipients, ticket.technician.phone, locale);
+        if (roleWants(org, "ASSIGNED", "tech", "email")) addEmail(emailRecipients, ticket.technician.email, locale);
+      }
     }
   } else {
-    const storeId = ticket.storeId ?? ticket.farmer.storeId;
-    const managers = await shopStaff(input.organizationId, storeId, [ROLES.MANAGER], input.actorUserId);
-    for (const [phone, locale] of phonesFrom(managers, locales)) phoneRecipients.set(phone, locale);
-    for (const [email, locale] of emailsFrom(managers, locales)) emailRecipients.set(email, locale);
-    if (input.kind === "updated" && ticket.status === "REPAIR_DONE") {
-      const clerical = await shopStaff(
-        input.organizationId,
-        storeId,
-        [ROLES.CLERICAL],
-        input.actorUserId,
-        false,
-      );
-      for (const [phone, locale] of phonesFrom(clerical, locales)) phoneRecipients.set(phone, locale);
+    const staffRoles = [
+      [ROLES.ADMIN, "admin"],
+      [ROLES.MANAGER, "manager"],
+      [ROLES.CLERICAL, "office"],
+    ] as const;
+    for (const [role, alertRole] of staffRoles) {
+      const wantSms = roleWants(org, statusKey, alertRole, "sms");
+      const wantEmail = roleWants(org, statusKey, alertRole, "email");
+      if (!wantSms && !wantEmail) continue;
+      const people = await shopStaff(input.organizationId, storeId, [role], input.actorUserId, true);
+      if (wantSms) {
+        for (const [phone, locale] of phonesFrom(people, locales)) phoneRecipients.set(phone, locale);
+      }
+      if (wantEmail && !(alertRole === "office" && statusKey === "REPAIR_DONE")) {
+        for (const [email, locale] of emailsFrom(people, locales)) emailRecipients.set(email, locale);
+      }
+    }
+    if (ticket.technician && ticket.technician.id !== input.actorUserId) {
+      const locale = locales.get(ticket.technician.id) ?? "en";
+      if (roleWants(org, statusKey, "tech", "sms")) addRecipient(phoneRecipients, ticket.technician.phone, locale);
+      if (roleWants(org, statusKey, "tech", "email")) addEmail(emailRecipients, ticket.technician.email, locale);
     }
   }
 
-  const statusKey = alertStatus(input.kind, ticket.status);
+  const staffSms = phoneRecipients.size > 0 && (chosen.mode !== "CHOSEN" || anyStaffWants(org, statusKey, "sms"));
+  const staffEmail = emailRecipients.size > 0 && (chosen.mode !== "CHOSEN" || anyStaffWants(org, statusKey, "email"));
 
-  if (smsOn && shopWants(org, statusKey, "sms") && phoneRecipients.size > 0 && org.birdApiKey) {
+  if (smsOn && staffSms && org.birdApiKey) {
     const config = {
       apiKey: org.birdApiKey,
       from: org.birdFrom || org.name.slice(0, 11),
@@ -224,14 +237,7 @@ export async function notifyTicketSms(input: {
   }
 
   const skipShortEmail = chosen.mode === "CHOSEN" && statusKey === "REPAIR_DONE";
-  if (
-    emailOn &&
-    !skipShortEmail &&
-    shopWants(org, statusKey, "email") &&
-    emailRecipients.size > 0 &&
-    org.resendApiKey &&
-    org.resendFrom
-  ) {
+  if (emailOn && !skipShortEmail && staffEmail && org.resendApiKey && org.resendFrom) {
     const resend = { apiKey: org.resendApiKey, from: org.resendFrom };
     await Promise.allSettled(
       [...emailRecipients.entries()].map(async ([to, locale]) => {
@@ -355,8 +361,12 @@ export async function notifyFarmerRepairDone(input: {
     );
   }
 
-  if (shopWants(ticket.organization, "REPAIR_DONE", "email")) {
-    const chosen = parseNotifyRecipients(ticket.organization.notifyStatusJson);
+  const chosen = parseNotifyRecipients(ticket.organization.notifyStatusJson);
+  const officeEmail =
+    chosen.mode === "CHOSEN"
+      ? anyStaffWants(ticket.organization, "REPAIR_DONE", "email")
+      : roleWants(ticket.organization, "REPAIR_DONE", "office", "email");
+  if (officeEmail) {
     await notifyStoreClericalRepairDone({
       organizationId: input.organizationId,
       ticketId: input.ticketId,
@@ -460,16 +470,17 @@ async function notifyStoreClericalRepairDone(input: {
   if (input.emailUserIds && input.emailUserIds.length === 0) return;
 
   const storeId = ticket.storeId ?? ticket.farmer.storeId;
-  const clerical =
+  const officeSelect = { id: true, name: true, email: true };
+  let clerical =
     input.emailUserIds == null
       ? await prisma.user.findMany({
           where: {
             organizationId: input.organizationId,
             role: ROLES.CLERICAL,
-            storeId,
+            ...(storeId ? { storeId } : {}),
             email: { not: "" },
           },
-          select: { id: true, name: true, email: true },
+          select: officeSelect,
         })
       : await prisma.user.findMany({
           where: {
@@ -478,8 +489,18 @@ async function notifyStoreClericalRepairDone(input: {
             role: { in: [...SHOP_STAFF_ROLES] },
             email: { not: "" },
           },
-          select: { id: true, name: true, email: true },
+          select: officeSelect,
         });
+  if (clerical.length === 0 && input.emailUserIds == null) {
+    clerical = await prisma.user.findMany({
+      where: {
+        organizationId: input.organizationId,
+        role: ROLES.CLERICAL,
+        email: { not: "" },
+      },
+      select: officeSelect,
+    });
+  }
   if (clerical.length === 0) return;
 
   const html = workOrderAttachmentHtml(ticket);

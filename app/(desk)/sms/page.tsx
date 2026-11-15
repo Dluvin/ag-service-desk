@@ -37,12 +37,13 @@ export default async function SmsSettingsPage() {
   ] as const;
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-6xl">
       <h1 className="font-display text-3xl">SMS and email</h1>
       <p className="mt-2 text-stone-600">
-        The same alerts can go by text, email, or both. Shop alerts go to the people you choose
-        below. Customer alerts go to that customer&apos;s contacts. Staff messages include a link
-        to the work order. Texts use each person&apos;s phone. Emails use each person&apos;s email.
+        The same alerts can go by text, email, or both. Each status can text or email admins,
+        managers, office, the assigned technician, and the customer. Office gets the Repair done
+        work order. Customer alerts go to that customer&apos;s contacts. Staff messages include a
+        link to the work order.
       </p>
       <p className="mt-3 text-sm text-stone-600">
         Bird charges separately for numbers and each text. Resend charges for email after its free
@@ -84,14 +85,34 @@ export default async function SmsSettingsPage() {
           </div>
         </fieldset>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[36rem] text-left text-sm">
+          <table className="w-full min-w-[64rem] text-left text-sm">
             <thead>
               <tr className="text-xs uppercase tracking-wide text-stone-500">
-                <th className="py-2 pr-3 font-semibold">Status</th>
-                <th className="px-2 py-2 font-semibold">Shop text</th>
-                <th className="px-2 py-2 font-semibold">Shop email</th>
-                <th className="px-2 py-2 font-semibold">Customer text</th>
-                <th className="px-2 py-2 font-semibold">Customer email</th>
+                <th className="py-2 pr-3 font-semibold" rowSpan={2}>
+                  Status
+                </th>
+                {(
+                  [
+                    ["Admin", "Company admins"],
+                    ["Manager", "Managers at the customer's store"],
+                    ["Office", "Office/clerical"],
+                    ["Tech", "The assigned technician"],
+                    ["Customer", "The customer's contacts"],
+                  ] as const
+                ).map(([label, title]) => (
+                  <th key={label} className="px-2 py-2 text-center font-semibold" colSpan={2} title={title}>
+                    {label}
+                  </th>
+                ))}
+              </tr>
+              <tr className="text-xs uppercase tracking-wide text-stone-500">
+                {["Admin", "Manager", "Office", "Tech", "Customer"].flatMap((role) =>
+                  ["Text", "Email"].map((channel) => (
+                    <th key={`${role}-${channel}`} className="px-2 py-1 font-medium">
+                      {channel}
+                    </th>
+                  )),
+                )}
               </tr>
             </thead>
             <tbody>
@@ -100,18 +121,24 @@ export default async function SmsSettingsPage() {
                   <th className="py-2 pr-3 font-medium text-stone-800">{STATUS_LABELS[status]}</th>
                   {(
                     [
-                      ["shopSms", "Shop text", statusAlerts[status].shopSms],
-                      ["shopEmail", "Shop email", statusAlerts[status].shopEmail],
-                      ["customerSms", "Customer text", statusAlerts[status].customerSms],
-                      ["customerEmail", "Customer email", statusAlerts[status].customerEmail],
+                      ["adminSms", "Admin text"],
+                      ["adminEmail", "Admin email"],
+                      ["managerSms", "Manager text"],
+                      ["managerEmail", "Manager email"],
+                      ["officeSms", "Office text"],
+                      ["officeEmail", "Office email"],
+                      ["techSms", "Tech text"],
+                      ["techEmail", "Tech email"],
+                      ["customerSms", "Customer text"],
+                      ["customerEmail", "Customer email"],
                     ] as const
-                  ).map(([name, label, checked]) => (
+                  ).map(([name, label]) => (
                     <td key={name} className="px-2 py-2">
                       <input
                         type="checkbox"
                         name={`${name}.${status}`}
                         aria-label={`${label} for ${STATUS_LABELS[status]}`}
-                        defaultChecked={checked}
+                        defaultChecked={statusAlerts[status][name]}
                         className="rounded border-stone-300"
                       />
                     </td>
@@ -121,6 +148,9 @@ export default async function SmsSettingsPage() {
             </tbody>
           </table>
         </div>
+        <p className="text-xs text-stone-500">
+          Managers, admins, and office follow the customer&apos;s store, then the whole company if that store has nobody in the role. Tech means the technician on that work order. Office email on Repair done includes the work order.
+        </p>
         <NotifyAudienceFields staff={staff} recipients={recipients} />
         <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">Bird SMS</p>
         <label className="block text-sm font-medium">
