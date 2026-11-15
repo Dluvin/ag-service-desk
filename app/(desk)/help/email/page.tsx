@@ -119,8 +119,8 @@ export default async function EmailSetupHelpPage() {
           <p className="font-medium text-stone-900">{es ? "Envíe una prueba" : "Send a test"}</p>
           <p className="mt-1 text-stone-600">
             {es
-              ? "Después de guardar la clave, la página muestra “Send a test email”. Si Resend lo rechaza, el dominio aún no está verificado o la dirección From no está en ese dominio."
-              : "After the key is saved, the page shows “Send a test email”. If Resend rejects it, the domain is not verified yet or the From address is not on that domain."}
+              ? "La página de SMS tiene “Send a test email”, igual que la prueba de texto. Guarde la clave y la dirección From antes de enviarla. Si Resend lo rechaza, el dominio aún no está verificado o la dirección From no está en ese dominio."
+              : "The SMS page has “Send a test email”, the same way it has the text test. Save the key and From address before sending. If Resend rejects it, the domain is not verified yet or the From address is not on that domain."}
           </p>
         </li>
       </ol>

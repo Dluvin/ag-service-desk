@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { testResendEmailAction } from "@/lib/actions";
 
-export function EmailTestForm() {
+export function EmailTestForm({ configured }: { configured: boolean }) {
   const [state, formAction, pending] = useActionState(
     async (_prev: { error?: string; ok?: string } | null, formData: FormData) => {
       return testResendEmailAction(formData);
@@ -14,6 +14,9 @@ export function EmailTestForm() {
   return (
     <form action={formAction} className="mt-6 space-y-3 rounded-xl border border-stone-200 bg-white p-4">
       <p className="text-sm font-semibold text-stone-800">Send a test email</p>
+      {configured ? null : (
+        <p className="text-sm text-stone-600">Save a Resend API key and from address above, then send the test.</p>
+      )}
       {state?.error ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{state.error}</p>
       ) : null}

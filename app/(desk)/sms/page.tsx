@@ -215,7 +215,7 @@ export default async function SmsSettingsPage() {
       </ActionForm>
 
       {org.birdApiKey ? <BirdTestForm /> : null}
-      {org.resendApiKey ? <EmailTestForm /> : null}
+      <EmailTestForm configured={Boolean(org.resendApiKey && org.resendFrom)} />
     </div>
   );
 }
