@@ -9,7 +9,6 @@ import { StoreSelect } from "@/components/StoreSelect";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
-import { assignCustomersToAmericusStore } from "@/lib/stores";
 
 export default async function FarmersPage({
   searchParams,
@@ -24,7 +23,6 @@ export default async function FarmersPage({
   if (session.role === ROLES.FARMER) redirect("/dashboard");
   const query = await searchParams;
   const locale = await getRequestLocale();
-  await assignCustomersToAmericusStore(session.organizationId);
 
   const [farmers, stores] = await Promise.all([
     prisma.farmer.findMany({

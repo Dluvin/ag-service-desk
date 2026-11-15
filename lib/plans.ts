@@ -59,7 +59,7 @@ export const PLANS: Record<PlanId, PlanCatalog> = {
     maxUsers: null,
     includedUsers: 1,
     extraSeatCents: 1995,
-    maxStores: 2,
+    maxStores: 1,
     gpsEnabled: false,
     gpsProvider: "NONE",
     revealAddOnAvailable: false,
@@ -421,7 +421,7 @@ export function landingPlanTiles(): LandingPlanTile[] {
       features: [
         { label: "Full desk: work orders, customers, and farms", included: true },
         { label: "Open in Google Maps and outbound directions", included: true },
-        { label: "1–2 stores", included: true },
+        { label: "1 store", included: true },
         { label: "In-app satellite maps", included: false },
         { label: "Live vehicle GPS / Reveal", included: false },
         { label: "QuickBooks Desktop estimates", included: false },

@@ -1,5 +1,4 @@
 import type { Prisma } from "@prisma/client";
-import { prisma } from "./prisma";
 
 export const STORE_ALL = "all";
 export const STORE_NONE = "none";
@@ -73,30 +72,4 @@ export function resolvedTicketStoreId(ticket: {
 
 export function storeQuery(selected: string) {
   return selected === STORE_ALL ? "" : `?store=${encodeURIComponent(selected)}`;
-}
-
-function americusStoreId(stores: { id: string; name: string }[]) {
-  const named = stores.filter((store) => store.name.trim().toLowerCase().includes("americus"));
-  return named.find((store) => store.name.trim().toLowerCase() === "americus")?.id ?? named[0]?.id ?? null;
-}
-
-export async function assignCustomersToAmericusStore(organizationId: string) {
-  const stores = await prisma.store.findMany({
-    where: { organizationId },
-    select: { id: true, name: true },
-  });
-  let storeId = americusStoreId(stores);
-  if (!storeId && stores.length === 1) storeId = stores[0].id;
-  if (!storeId) {
-    const created = await prisma.store.create({
-      data: { organizationId, name: "Americus" },
-      select: { id: true },
-    });
-    storeId = created.id;
-  }
-  const result = await prisma.farmer.updateMany({
-    where: { organizationId },
-    data: { storeId },
-  });
-  return result.count;
 }

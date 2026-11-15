@@ -1178,7 +1178,20 @@ export async function deleteStoreAction(formData: FormData) {
   });
   if (!store) return { error: "Store not found." };
 
-  await prisma.store.delete({ where: { id: storeId } });
+  const where = { storeId };
+  const clear = { storeId: null };
+  try {
+    await prisma.$transaction([
+      prisma.user.updateMany({ where, data: clear }),
+      prisma.farmer.updateMany({ where, data: clear }),
+      prisma.ticket.updateMany({ where, data: clear }),
+      prisma.revealVehicle.updateMany({ where, data: clear }),
+      prisma.store.delete({ where: { id: storeId } }),
+    ]);
+  } catch (error) {
+    console.error("deleteStoreAction", error);
+    return { error: "That store could not be deleted. Customers and work orders are still there. Try again." };
+  }
   redirect("/stores");
 }
 

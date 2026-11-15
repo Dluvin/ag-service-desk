@@ -37,6 +37,7 @@ export function DeleteButton({
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
   const matches = (Array.isArray(typedMatch) ? typedMatch : typedMatch ? [typedMatch] : []).filter(Boolean);
   const phrase = t("delete.phrase");
   const primaryMatch = matches[0] ?? "";
@@ -62,12 +63,17 @@ export function DeleteButton({
     const formData = new FormData();
     formData.set(name, value);
     setPending(true);
+    setError("");
     try {
-      await action(formData);
+      const result = await action(formData);
+      if (result && "error" in result && result.error) {
+        setError(result.error);
+        return;
+      }
       setOpen(false);
-    } catch (error) {
-      if (isNextRedirect(error)) throw error;
-      throw error;
+    } catch (caught) {
+      if (isNextRedirect(caught)) throw caught;
+      setError("That could not be deleted. Try again.");
     } finally {
       setPending(false);
     }
@@ -100,6 +106,7 @@ export function DeleteButton({
         type="button"
         onClick={() => {
           setTyped("");
+          setError("");
           setOpen(true);
         }}
         className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-semibold text-red-800 hover:bg-red-50"
@@ -121,6 +128,7 @@ export function DeleteButton({
             <p className="mt-2 text-sm text-stone-600">
               {t("delete.hint", { match: primaryMatch, phrase })}
             </p>
+            {error ? <p className="mt-3 text-sm font-medium text-red-800">{error}</p> : null}
             <input
               value={typed}
               onChange={(event) => setTyped(event.target.value)}

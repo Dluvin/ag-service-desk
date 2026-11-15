@@ -16,7 +16,6 @@ import { FarmerPivotList } from "@/components/FarmerPivotList";
 import { UNASSIGNED_FARM_LABEL } from "@/lib/farms";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
-import { assignCustomersToAmericusStore } from "@/lib/stores";
 
 export default async function FarmerDetailPage({
   params,
@@ -32,8 +31,6 @@ export default async function FarmerDetailPage({
   const locale = await getRequestLocale();
 
   if (session.role === ROLES.FARMER && session.farmerId !== id) notFound();
-
-  await assignCustomersToAmericusStore(session.organizationId);
 
   const farmer = await prisma.farmer.findFirst({
     where: { id, organizationId: session.organizationId },

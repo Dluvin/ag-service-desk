@@ -7,7 +7,7 @@ import { ActionForm } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { ContactSalesNote } from "@/components/ContactSalesNote";
 import { loadOrgPlan } from "@/lib/org-plan";
-import { canAddStore, contactSalesStoreMessage } from "@/lib/plans";
+import { canAddStore, contactSalesStoreMessage, resolveEntitlements } from "@/lib/plans";
 
 export default async function StoresPage() {
   const session = await getSession();
@@ -23,6 +23,8 @@ export default async function StoresPage() {
     loadOrgPlan(session.organizationId),
   ]);
   const allowStore = plan ? canAddStore(plan.org, stores.length) : true;
+  const maxStores = plan ? resolveEntitlements(plan.org).maxStores : null;
+  const overStoreLimit = maxStores != null && stores.length > maxStores;
 
   return (
     <div className="grid gap-8 lg:grid-cols-5">
@@ -32,6 +34,11 @@ export default async function StoresPage() {
           Use stores to split dashboard and dispatch by shop. Customers pick a default store so their
           work orders show with that location.
         </p>
+        {overStoreLimit ? (
+          <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            This plan includes {maxStores} store{maxStores === 1 ? "" : "s"}. Delete the extras. Customers and work orders stay. They just lose that store as their default.
+          </p>
+        ) : null}
         <ul className="mt-6 space-y-3">
           {stores.length === 0 ? (
             <li className="rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-600">
