@@ -40,6 +40,11 @@ export default async function SmsSetupHelpPage() {
       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-stone-600">
         <li>
           {es
+            ? "Ag Desk Pro cobra $400 una sola vez para configurar el SMS: la cuenta de Bird del concesionario, el número y el registro 10DLC. Esa tarifa no está incluida en el plan."
+            : "Ag Desk Pro charges $400 one time to set up SMS: the dealership’s Bird account, the sending number, and 10DLC registration. That fee is not included in the plan."}
+        </li>
+        <li>
+          {es
             ? "Bird usa una billetera de prepago. Si no alcanza el saldo, el texto no sale."
             : "Bird uses a prepaid wallet. A text does not send when the balance cannot cover it."}
         </li>

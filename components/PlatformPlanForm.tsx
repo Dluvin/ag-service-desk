@@ -4,12 +4,21 @@ import {
   GPS_PROVIDERS,
   PLAN_IDS,
   PLANS,
+  SMS_SETUP_CENTS,
+  SMS_SETUP_STATUSES,
   formatPlanCents,
   resolveEntitlements,
+  isSmsSetupStatus,
+  smsSetupStatusLabel,
   type PlanOrg,
+  type SmsSetupStatus,
 } from "@/lib/plans";
 
-export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
+function smsSetupValue(status: string | null | undefined): SmsSetupStatus {
+  return isSmsSetupStatus(status) ? status : "NONE";
+}
+
+export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string; smsSetupStatus?: string | null } }) {
   const entitlements = resolveEntitlements(org);
   // Remount after save so selects pick up the values that actually persisted.
   const formKey = [
@@ -24,6 +33,7 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
     org.maxStores,
     org.includedUsers,
     org.gpsProvider,
+    org.smsSetupStatus,
   ].join(":");
   return (
     <ActionForm
@@ -41,6 +51,7 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
         {entitlements.inspectionsEnabled ? " · pivot inspections on" : " · no pivot inspections"}
         {entitlements.qbCustomerListEnabled ? " · QB customer list on" : " · Ag Desk customer list"}
         {entitlements.gpsEnabled ? ` · GPS ${entitlements.gpsProvider}` : " · no live GPS"}
+        {` · SMS setup ${smsSetupStatusLabel(org.smsSetupStatus)}`}
         {entitlements.maxStores != null ? ` · ${entitlements.maxStores} stores` : " · unlimited stores"}
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -160,6 +171,23 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string } }) {
         <label className="flex items-center gap-2 text-sm text-stone-700 sm:col-span-2">
           <input type="checkbox" name="revealGps" value="1" defaultChecked={entitlements.revealGps} />
           Reveal GPS add-on ({formatPlanCents(PLANS.SHOP.revealAddOnCents)}/month on Shop)
+        </label>
+        <label className="block text-xs font-medium text-stone-600 sm:col-span-2">
+          SMS setup ({formatPlanCents(SMS_SETUP_CENTS)} one time)
+          <select
+            name="smsSetupStatus"
+            defaultValue={smsSetupValue(org.smsSetupStatus)}
+            className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm"
+          >
+            {SMS_SETUP_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {smsSetupStatusLabel(status)}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block font-normal text-stone-500">
+            Ag Desk Pro sets up Bird, the number, and 10DLC. Bird still bills the wallet and each text. Waive it for a dealership that is staying.
+          </span>
         </label>
       </div>
       <button type="submit" className="mt-3 rounded-lg bg-stone-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-stone-800">

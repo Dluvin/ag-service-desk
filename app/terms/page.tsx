@@ -121,6 +121,12 @@ export default function TermsPage() {
               already charged for the current period are not refunded. Reply STOP only stops text
               messages. It does not cancel the subscription.
             </p>
+            <p>
+              SMS setup is a one-time $400 fee when a company asks Ag Desk Pro to set up texting.
+              That fee covers the Bird account, the sending number, and 10DLC registration. Bird’s
+              charges for the number and each text are billed by Bird and are not part of the $400.
+              The setup fee is not refunded if the company cancels.
+            </p>
 
             <h2>Contact</h2>
             <p>

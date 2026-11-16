@@ -43,6 +43,7 @@ export default function DemoPacketPage() {
                 staff seats.
               </li>
               <li>Enterprise: {formatPlanCents(PLANS.ENTERPRISE.monthlyCents)} a month.</li>
+              <li>SMS setup: $400 one time. Bird still bills the number and each text.</li>
             </ul>
             <p>
               Pricing on the site is at <Link href="/#pricing">agdeskpro.com/#pricing</Link>. A new

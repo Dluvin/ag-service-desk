@@ -15,7 +15,7 @@ import {
 } from "./platform";
 import { removeCompanyLogoFile } from "./company-logo";
 import { PLAN } from "./plan";
-import { isGpsProvider, isPlanId, orgFieldsForPlan } from "./plans";
+import { isGpsProvider, isPlanId, isSmsSetupStatus, orgFieldsForPlan } from "./plans";
 import { ensureOrgOcrSchema } from "./ocr-samples";
 import { seedApprovedDemo } from "./demo-tenant";
 import { startTenantBilling, stripeIsConfigured } from "./stripe";
@@ -219,6 +219,8 @@ export async function updateTenantPlanAction(formData: FormData) {
     const qbwcRaw = formString(formData, "qbwcEnabled");
     const inspectionsRaw = formString(formData, "inspectionsEnabled");
     const qbCustomersRaw = formString(formData, "qbCustomerListEnabled");
+    const smsSetupRaw = formString(formData, "smsSetupStatus");
+    if (!isSmsSetupStatus(smsSetupRaw)) return { error: "Choose an SMS setup status." };
 
     await prisma.organization.update({
       where: { id: org.id },
@@ -235,6 +237,7 @@ export async function updateTenantPlanAction(formData: FormData) {
         qbwcEnabled: qbwcRaw === "" ? null : qbwcRaw === "1",
         inspectionsEnabled: inspectionsRaw === "" ? null : inspectionsRaw === "1",
         qbCustomerListEnabled: qbCustomersRaw === "" ? null : qbCustomersRaw === "1",
+        smsSetupStatus: smsSetupRaw,
       },
     });
     revalidatePath("/platform");

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SALES_EMAIL, SALES_MAILTO, TRIAL_DAYS, landingPlanTiles } from "@/lib/plans";
+import { SALES_EMAIL, SALES_MAILTO, SMS_SETUP_CENTS, TRIAL_DAYS, formatPlanCents, landingPlanTiles } from "@/lib/plans";
 
 export function LandingPricing() {
   const tiles = landingPlanTiles();
@@ -56,6 +56,11 @@ export function LandingPricing() {
           ))}
         </div>
         <p className="landing-muted" style={{ marginTop: "1.25rem" }}>
+          SMS setup is {formatPlanCents(SMS_SETUP_CENTS)} one time. Ag Desk Pro sets up the dealership’s
+          Bird account, the sending number, and 10DLC registration. Bird still bills the wallet and each
+          text. Email does not have this fee.
+        </p>
+        <p className="landing-muted" style={{ marginTop: "0.75rem" }}>
           Overages and other GPS providers:{" "}
           <a href={SALES_MAILTO}>
             <strong>{SALES_EMAIL}</strong>

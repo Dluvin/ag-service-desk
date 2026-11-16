@@ -64,6 +64,8 @@ model Organization {
   includedUsers       Int?     // null = derive from plan
   extraSeatCents      Int?     // null = derive from plan
   monthlyCents        Int?     // null = derive from plan
+  // NONE | DUE | PAID | WAIVED. One-time SMS setup fee tracked on the platform.
+  smsSetupStatus      String   @default("NONE")
   users               User[]
   farmers             Farmer[]
   pivots              Pivot[]

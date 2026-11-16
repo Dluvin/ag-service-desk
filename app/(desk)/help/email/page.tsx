@@ -33,7 +33,9 @@ export default async function EmailSetupHelpPage() {
         <Link href="/help/sms" className="font-semibold text-emerald-800 hover:underline">
           {t(locale, "nav.smsSetup")}
         </Link>
-        {es ? " explica Bird. Puede usar correo, SMS, o los dos." : " covers Bird. You can use email, SMS, or both."}
+        {es
+          ? " explica Bird. Configurar textos es un cargo único de $400. El correo no tiene ese cargo. Puede usar correo, SMS, o los dos."
+          : " covers Bird. Setting up texts is a one-time $400 fee. Email does not have that fee. You can use email, SMS, or both."}
       </p>
 
       <h2 className="font-display mt-8 text-xl">{es ? "Hay tarifas" : "There are fees"}</h2>

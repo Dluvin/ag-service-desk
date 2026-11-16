@@ -47,7 +47,7 @@ function asIso(value: unknown): string | null {
 }
 
 /** Bump when Organization flag columns are added so live DBs re-run ALTER after deploy. */
-const ORG_OCR_SCHEMA_VERSION = 2;
+const ORG_OCR_SCHEMA_VERSION = 3;
 let ensuredVersion = 0;
 let ensured: Promise<void> | null = null;
 
@@ -90,6 +90,11 @@ export async function ensureOrgOcrSchema() {
     }
     if (!names.has("ocrFieldListReviewedAt")) {
       await prisma.$executeRawUnsafe("ALTER TABLE Organization ADD COLUMN ocrFieldListReviewedAt DATETIME");
+    }
+    if (!names.has("smsSetupStatus")) {
+      await prisma.$executeRawUnsafe(
+        "ALTER TABLE Organization ADD COLUMN smsSetupStatus TEXT NOT NULL DEFAULT 'NONE'",
+      );
     }
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS OrgOcrSample (

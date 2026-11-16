@@ -46,8 +46,8 @@ export default async function SmsSettingsPage() {
         link to the work order.
       </p>
       <p className="mt-3 text-sm text-stone-600">
-        Bird charges separately for numbers and each text. Resend charges for email after its free
-        allowance.{" "}
+        SMS setup is a $400 one-time fee. Bird still charges separately for numbers and each text.
+        Resend charges for email after its free allowance.{" "}
         <Link href="/help/sms" className="font-semibold text-emerald-800 hover:underline">
           SMS setup
         </Link>{" "}

@@ -5,6 +5,37 @@
  * so David’s dealers keep maps after this ships. Flip a company on /platform.
  */
 
+/** One-time fee for Ag Desk Pro to set up the dealership's Bird SMS account. Bird's own charges are separate. */
+export const SMS_SETUP_CENTS = 40000;
+
+export const SMS_SETUP_STATUSES = ["NONE", "DUE", "PAID", "WAIVED"] as const;
+export type SmsSetupStatus = (typeof SMS_SETUP_STATUSES)[number];
+
+export function isSmsSetupStatus(value: string | null | undefined): value is SmsSetupStatus {
+  return SMS_SETUP_STATUSES.includes(value as SmsSetupStatus);
+}
+
+export function smsSetupStatusLabel(status: string | null | undefined) {
+  switch (status) {
+    case "DUE":
+      return `Fee due (${formatPlanCents(SMS_SETUP_CENTS)})`;
+    case "PAID":
+      return "Paid";
+    case "WAIVED":
+      return "Waived";
+    default:
+      return "Not started";
+  }
+}
+
+function smsSetupFeature(): LandingPlanFeature {
+  return {
+    label: `SMS setup ${formatPlanCents(SMS_SETUP_CENTS)} one time`,
+    included: false,
+    optional: true,
+  };
+}
+
 export const SALES_EMAIL = "david@agdeskpro.com";
 export const SALES_MAILTO = `mailto:${SALES_EMAIL}`;
 export const TRIAL_DAYS = 15;
@@ -425,6 +456,7 @@ export function landingPlanTiles(): LandingPlanTile[] {
         { label: "In-app satellite maps", included: false },
         { label: "Live vehicle GPS / Reveal", included: false },
         { label: "QuickBooks Desktop estimates", included: false },
+        smsSetupFeature(),
       ],
     },
     {
@@ -448,6 +480,7 @@ export function landingPlanTiles(): LandingPlanTile[] {
         { label: "Unlimited users and stores", included: false },
         { label: "Live GPS included", included: false },
         { label: "QuickBooks Desktop estimates", included: false },
+        smsSetupFeature(),
       ],
     },
     {
@@ -465,6 +498,7 @@ export function landingPlanTiles(): LandingPlanTile[] {
         { label: "Verizon GPS included", included: true },
         { label: "Other GPS: contact sales, no setup fee", included: true },
         { label: "QuickBooks Desktop estimates", included: true },
+        smsSetupFeature(),
       ],
     },
   ];
