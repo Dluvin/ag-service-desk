@@ -16,6 +16,7 @@ const MERGES = [
   { source: "Lee Peanut Farm LLC", target: "Lee Peanut Farms LLC" },
   { source: "Lee Peanut Farms", target: "Lee Peanut Farms LLC" },
   { source: "NKC Southeast", target: "NKC Southeast LLC" },
+  { source: "Alliance Grazing Group", target: "Alliance Dairy Grazing Group" },
 ];
 
 function isAmericanIrrigationOrg(org) {
