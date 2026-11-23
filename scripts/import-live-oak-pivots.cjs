@@ -8,6 +8,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 const STORE_NAME = "Live Oak";
+const UNASSIGNED_NAME = "Unassigned";
 const CSV_PATH = path.join(__dirname, "..", "data", "live-oak-pivots.csv");
 
 function parseCsv(text) {
@@ -121,21 +122,22 @@ function readRows() {
   }
 
   const rows = [];
-  let lastCustomer = "";
   for (const cells of table.slice(1)) {
-    let customer = String(cells[idx.customer] || "").trim();
-    // Spreadsheet exports often blank the Customer cell after the first pivot in a group.
-    if (customer) lastCustomer = customer;
-    else customer = lastCustomer;
+    const rawCustomer = String(cells[idx.customer] || "").trim();
+    // Blank customer cells (merged spreadsheet) go to Unassigned — do not fill forward.
+    const customer = rawCustomer || UNASSIGNED_NAME;
+    const farmName = rawCustomer ? rawCustomer : UNASSIGNED_NAME;
     const name = String(cells[idx.pivotName] || "").trim();
     const latitude = parseNumber(cells[idx.latitude] || "");
     const longitude = parseNumber(cells[idx.longitude] || "");
     const notes = idx.notes >= 0 ? String(cells[idx.notes] || "").trim() : "";
-    if (!customer || !name || latitude == null || longitude == null) continue;
+    if (!name || latitude == null || longitude == null) continue;
     if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) continue;
     const contactName = contactFromNotes(notes);
     rows.push({
       customer,
+      farmName,
+      blankCustomer: !rawCustomer,
       name,
       latitude,
       longitude,
@@ -191,9 +193,9 @@ async function ensureFarmer(organizationId, storeId, customerName, cache) {
   return entry;
 }
 
-async function ensureFarm(organizationId, entry) {
-  if (entry.farm) return { farm: entry.farm, created: false };
-  const farmName = entry.farmer.name;
+async function ensureFarm(organizationId, entry, farmName) {
+  const key = `farm:${farmName.toLowerCase()}`;
+  if (entry[key]) return { farm: entry[key], created: false };
   let farm = await prisma.farm.findFirst({
     where: { organizationId, farmerId: entry.farmer.id, name: farmName },
   });
@@ -214,7 +216,9 @@ async function ensureFarm(organizationId, entry) {
     });
     created = true;
   }
-  entry.farm = farm;
+  entry[key] = farm;
+  // Keep default farm pointer for the common one-farm-per-customer path.
+  if (!entry.farm) entry.farm = farm;
   return { farm, created };
 }
 
@@ -231,9 +235,20 @@ async function ensureContact(farmerId, contactName) {
 }
 
 async function upsertPivot(organizationId, farmerId, farmId, row) {
-  const existing = await prisma.pivot.findFirst({
+  // Match on this customer first; otherwise same pin elsewhere in the org (fixes earlier fill-forward).
+  let existing = await prisma.pivot.findFirst({
     where: { organizationId, farmerId, name: row.name },
   });
+  if (!existing) {
+    existing = await prisma.pivot.findFirst({
+      where: {
+        organizationId,
+        name: row.name,
+        latitude: row.latitude,
+        longitude: row.longitude,
+      },
+    });
+  }
   const data = {
     farmerId,
     farmId,
@@ -244,7 +259,7 @@ async function upsertPivot(organizationId, farmerId, farmId, row) {
   };
   if (existing) {
     await prisma.pivot.update({ where: { id: existing.id }, data });
-    return "updated";
+    return existing.farmerId === farmerId && existing.farmId === farmId ? "updated" : "moved";
   }
   await prisma.pivot.create({
     data: { organizationId, ...data },
@@ -276,17 +291,20 @@ async function main() {
     contactsCreated: 0,
     pivotsCreated: 0,
     pivotsUpdated: 0,
+    pivotsMoved: 0,
+    blankCustomerRows: 0,
     skipped: 0,
   };
 
   for (const row of rows) {
     try {
+      if (row.blankCustomer) stats.blankCustomerRows += 1;
       const entry = await ensureFarmer(org.id, store.id, row.customer, farmerCache);
       if (entry.created) {
         stats.customersCreated += 1;
         entry.created = false;
       }
-      const farmResult = await ensureFarm(org.id, entry);
+      const farmResult = await ensureFarm(org.id, entry, row.farmName);
       if (farmResult.created) stats.farmsCreated += 1;
 
       const contact = await ensureContact(entry.farmer.id, row.contactName);
@@ -294,6 +312,7 @@ async function main() {
 
       const result = await upsertPivot(org.id, entry.farmer.id, farmResult.farm.id, row);
       if (result === "created") stats.pivotsCreated += 1;
+      else if (result === "moved") stats.pivotsMoved += 1;
       else stats.pivotsUpdated += 1;
     } catch (error) {
       stats.skipped += 1;
@@ -302,7 +321,7 @@ async function main() {
   }
 
   console.log(
-    `Live Oak import on ${org.name}: store=${store.name}; customers+${stats.customersCreated}; farms+${stats.farmsCreated}; contacts+${stats.contactsCreated}; pivots+${stats.pivotsCreated}/upd ${stats.pivotsUpdated}; skipped=${stats.skipped}; rows=${rows.length}`,
+    `Live Oak import on ${org.name}: store=${store.name}; customers+${stats.customersCreated}; farms+${stats.farmsCreated}; contacts+${stats.contactsCreated}; pivots+${stats.pivotsCreated}/upd ${stats.pivotsUpdated}/moved ${stats.pivotsMoved}; blankCustomerRows=${stats.blankCustomerRows}; skipped=${stats.skipped}; rows=${rows.length}`,
   );
 }
 
