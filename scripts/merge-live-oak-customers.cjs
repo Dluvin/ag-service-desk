@@ -12,6 +12,7 @@ const MERGES = [
   { source: "Alliance Dairy Trenton", target: "Alliance Dairy - Trenton" },
   { source: "Alliance Diary - Trenton", target: "Alliance Dairy - Trenton" },
   { source: "Barnes Hay Farms", target: "Barnes Hay Farms INC" },
+  { source: "Black Gold", target: "Black Gold Farms" },
 ];
 
 function isAmericanIrrigationOrg(org) {
