@@ -1,0 +1,661 @@
+﻿Customer,Pivot Name,Location,Latitude,Longitude,Other Names / Notes,On Work Order Log,# Work Orders
+83 Farms,Laverne,"29.803000, -82.888000",29.803000,-82.888000,Kelly Philman,No,0
+83 Farms,Moses Dairy 3,"29.962000, -82.993000",29.962000,-82.993000,"3/4; Kelly Philman",No,0
+83 Farms,Sassoon,"29.763000, -82.875000",29.763000,-82.875000,Kelly Philman,No,0
+83 Farms,Sid Roberts,"29.742000, -82.899000",29.742000,-82.899000,Kelly Philman,No,0
+83 Farms,Watson East,"29.582000, -82.678000",29.582000,-82.678000,Kelly Philman,No,0
+83 Farms,Watson West,"29.582000, -82.686000",29.582000,-82.686000,Kelly Philman,No,0
+83 Farms LLC,Alvarez Field,"29.686000, -82.924000",29.686000,-82.924000,Kelly Philman,No,0
+83 Farms LLC,Barker Field,"29.733000, -82.919000",29.733000,-82.919000,Kelly Philman,No,0
+83 Farms LLC,Byod Field,"29.698000, -82.889000",29.698000,-82.889000,Kelly Philman,Yes,1
+83 Farms LLC,Byrds Shop,"29.968000, -82.996000",29.968000,-82.996000,Kelly Philman,No,0
+83 Farms LLC,Byrds Store,"29.996000, -83.008000",29.996000,-83.008000,"3/4; Kelly Philman",No,0
+83 Farms LLC,Cumbie Corner,"29.670000, -82.920000",29.670000,-82.920000,Kelly Philman,No,0
+83 Farms LLC,Cumbie Corner,"29.696940, -82.911600",29.696940,-82.911600,Kelly Philman,No,0
+83 Farms LLC,FPI 1,"30.113000, -82.849000",30.113000,-82.849000,Kelly Philman,No,0
+83 Farms LLC,FPI 10,"30.106000, -82.866000",30.106000,-82.866000,Kelly Philman,No,0
+83 Farms LLC,FPI 13,"30.099000, -82.858000",30.099000,-82.858000,Kelly Philman,No,0
+83 Farms LLC,FPI 14,"30.091000, -82.858000",30.091000,-82.858000,Kelly Philman,No,0
+83 Farms LLC,FPI 19,"30.069000, -82.866000",30.069000,-82.866000,Kelly Philman,No,0
+83 Farms LLC,FPI 2,"30.113000, -82.841000",30.113000,-82.841000,Kelly Philman,No,0
+83 Farms LLC,FPI 20,"30.062000, -82.866000",30.062000,-82.866000,Kelly Philman,No,0
+83 Farms LLC,FPI 21,"30.069000, -82.874000",30.069000,-82.874000,Kelly Philman,No,0
+83 Farms LLC,FPI 4,"30.106000, -82.824000",30.106000,-82.824000,Kelly Philman,No,0
+83 Farms LLC,FPI 5,"30.106000, -82.841000",30.106000,-82.841000,Kelly Philman,No,0
+83 Farms LLC,FPI 6,"30.106000, -82.849000",30.106000,-82.849000,Kelly Philman,No,0
+83 Farms LLC,FPI Well 11 & 12,"30.098000, -82.867000",30.098000,-82.867000,"FPI 11 & 12 WELL; Kelly Philman",No,0
+83 Farms LLC,FPI Well 3,"30.111000, -82.836000",30.111000,-82.836000,"FPI #3 WELL; Kelly Philman",No,0
+83 Farms LLC,FPI Well 7 & 8,"30.106000, -82.857000",30.106000,-82.857000,"FPI 7&8 WELL; Kelly Philman",No,0
+83 Farms LLC,Geovaney Field,"29.711000, -82.924000",29.711000,-82.924000,Kelly Philman,No,0
+83 Farms LLC,Hillard,"29.748000, -82.904000",29.748000,-82.904000,Kelly Philman,No,0
+83 Farms LLC,Jr Kelly Back,"29.741000, -82.916000",29.741000,-82.916000,Kelly Philman,No,0
+83 Farms LLC,Jr Kelly Front,"29.743000, -82.914000",29.743000,-82.914000,Kelly Philman,No,0
+83 Farms LLC,Kane #2,"29.880000, -82.847000",29.880000,-82.847000,Kelly Philman,No,0
+83 Farms LLC,Mikell Field,"29.689000, -82.903000",29.689000,-82.903000,Kelly Philman,No,0
+83 Farms LLC,Moses Dairy 1,"29.961000, -82.977000",29.961000,-82.977000,Kelly Philman,No,0
+83 Farms LLC,Moses Dairy 2,"29.963000, -82.983000",29.963000,-82.983000,"3/4; Kelly Philman",No,0
+83 Farms LLC,Moses Dairy 4,"29.967000, -82.990000",29.967000,-82.990000,"3/4; Kelly Philman",No,0
+83 Farms LLC,Moses SE,"29.957000, -82.968000",29.957000,-82.968000,Kelly Philman,No,0
+83 Farms LLC,Riorden,"29.818000, -82.880000",29.818000,-82.880000,Kelly Philman,No,0
+83 Farms LLC,Spears Field,"29.697000, -82.889000",29.697000,-82.889000,Kelly Philman,No,0
+83 Farms LLC,SS80 Field,"29.711000, -82.920000",29.711000,-82.920000,Kelly Philman,No,0
+83 Farms LLC,Usher,"29.718000, -82.891000",29.718000,-82.891000,Kelly Philman,No,0
+83 Farms LLC,Vergie,"29.818000, -82.859000",29.818000,-82.859000,Kelly Philman,No,0
+Adam Whitehurst,Gibbons Field,"29.509000, -82.444000",29.509000,-82.444000,,No,0
+Adams MD Farm INC,Adams Granny,"30.524472, -83.070972",30.524472,-83.070972,Granny Field,No,0
+Adams MD Farm INC,Hayfield,"30.488917, -83.272917",30.488917,-83.272917,Lee Peanut,No,0
+Adams MD Farm INC,I-75 North,"30.532285, -83.072708",30.532285,-83.072708,,Yes,1
+Adams MD Farm INC,Joe Mathis Lewis Field,"30.526000, -83.119000",30.526000,-83.119000,,No,0
+Adams MD Farm INC,Mathis Field,"29.690000, -82.886000",29.690000,-82.886000,,Yes,1
+Adrian Land,Luda Vitches,"30.032000, -82.979000",30.032000,-82.979000,,No,0
+Adrian Land,Newbern Field,"29.868000, -82.941000",29.868000,-82.941000,,No,0
+Adrian Land,The BIG Field,"29.877000, -82.951000",29.877000,-82.951000,,No,0
+Allaince,HPI 1/2,"29.595318, -82.840631",29.595318,-82.840631,,No,0
+Alliance,HPI 1,"29.602557, -82.844208",29.602557,-82.844208,,No,0
+Alliance,HPI 10,"29.600496, -82.854714",29.600496,-82.854714,,No,0
+Alliance,HPI 11,"29.600720, -82.850530",29.600720,-82.850530,,No,0
+Alliance,HPI 2,"29.600654, -82.838014",29.600654,-82.838014,,No,0
+Alliance,HPI 5,"29.605766, -82.877510",29.605766,-82.877510,,No,0
+Alliance,WC 1,"29.529417, -82.818444",29.529417,-82.818444,,No,0
+Alliance,WC 2,"29.529250, -82.810278",29.529250,-82.810278,,No,0
+Alliance,WC 5,"29.536944, -82.802000",29.536944,-82.802000,,No,0
+Alliance,WC 7,"29.540472, -82.793694",29.540472,-82.793694,,No,0
+Alliance Dairy - Branford,A-Pivot,"29.898000, -82.844000",29.898000,-82.844000,,Yes,2
+Alliance Dairy - Trenton,20hp Sub Behind Digester,"29.586000, -82.864000",29.586000,-82.864000,,No,0
+Alliance Dairy - Trenton,40hp sub behind Digester,"29.589000, -82.865000",29.589000,-82.865000,,Yes,1
+Alliance Dairy - Trenton,5hp East of Dairy,"29.584000, -82.849000",29.584000,-82.849000,,No,0
+Alliance Dairy - Trenton,5hp North of Dairy,"29.602000, -82.857000",29.602000,-82.857000,,No,0
+Alliance Dairy - Trenton,640 Field Cow Cooling Well,"29.601000, -82.840000",29.601000,-82.840000,,No,0
+Alliance Dairy - Trenton,Alliance Faircloth Field,"29.551544, -82.827110",29.551544,-82.827110,,No,0
+Alliance Dairy - Trenton,Magnolia Field,"29.577000, -82.869000",29.577000,-82.869000,,No,0
+Alliance Dairy - Trenton,Parlor Well #1,"29.587000, -82.858000",29.587000,-82.858000,Parlor 1 Well,No,0
+Alliance Dairy - Trenton,Parlor Well #2,"29.585000, -82.859000",29.585000,-82.859000,Parlor 2 Well,No,0
+Alliance Dairy - Trenton,PSF 6,"29.653639, -82.836028",29.653639,-82.836028,Piedmont,No,0
+Alliance Dairy - Trenton,SF 18,"29.597028, -82.883306",29.597028,-82.883306,"Hill top #18; Hilltop 18",No,0
+Alliance Dairy - Trenton,SF 22,"29.573139, -82.843833",29.573139,-82.843833,Spray Field #22,Yes,1
+Alliance Dairy - Trenton,SF 24,"29.580111, -82.869361",29.580111,-82.869361,,Yes,1
+Alliance Dairy - Trenton,SF 3,"29.572944, -82.852417",29.572944,-82.852417,Spray Field #3,Yes,1
+Alliance Dairy - Trenton,SF 4,"29.587667, -82.853167",29.587667,-82.853167,Spray Field #4,Yes,1
+Alliance Dairy - Trenton,SF 5,"29.595000, -82.848000",29.595000,-82.848000,"Spray Field #5; HPI-6",No,0
+Alliance Dairy - Trenton,Southeast Cooling Well,"29.646000, -82.818000",29.646000,-82.818000,,No,0
+Alliance Dairy - Trenton,Southpoint 2,"29.427417, -82.926583",29.427417,-82.926583,,Yes,1
+Alliance Dairy - trenton,Turbine Behind Digester,"29.588000, -82.865000",29.588000,-82.865000,,No,0
+Alliance Dairy - Trenton,WC 3,"29.533361, -82.810278",29.533361,-82.810278,,No,0
+Alliance Dairy - Trenton,WC 6,"29.535031, -82.795680",29.535031,-82.795680,,Yes,1
+Alliance Dairy Branford,Alcock,"29.894000, -82.842000",29.894000,-82.842000,,Yes,6
+Alliance Dairy Branford,B-Pivot,"29.905000, -82.839000",29.905000,-82.839000,,Yes,2
+Alliance Dairy Branford,C- Pivot,"29.904339, -82.846530",29.904339,-82.846530,,Yes,1
+Alliance Dairy Branford,D-Pivot,"29.902000, -82.848000",29.902000,-82.848000,,Yes,2
+Alliance Dairy Branford,E-Pivot,"29.897000, -82.854000",29.897000,-82.854000,,No,0
+Alliance Dairy Grazing Group,Blue Tank,"29.650000, -82.828000",29.650000,-82.828000,,No,0
+Alliance Dairy Grazing Group,Commodity Barn,"29.650000, -82.823000",29.650000,-82.823000,,Yes,1
+Alliance Dairy Grazing Group,Mills Field Well,"29.602000, -82.894000",29.602000,-82.894000,,No,0
+Alliance Dairy Trenton,SF 12,"29.573028, -82.860861",29.573028,-82.860861,,Yes,1
+Alliance Dairy Trenton,SF 2,"29.580028, -82.860528",29.580028,-82.860528,,Yes,1
+Alliance Dairy Trenton,SF 25,"29.595222, -82.861083",29.595222,-82.861083,"(Heifer, Rock Field)",No,0
+Alliance Dairy Trenton,SF 7,"29.580583, -82.844028",29.580583,-82.844028,Dukes,Yes,1
+Alliance Dairy Trenton,Well for Graham Pivots 6 & 7,"29.537000, -82.793000",29.537000,-82.793000,,No,0
+Alliance Diary - Trenton,Ezabell,"29.575000, -82.829000",29.575000,-82.829000,Forage1,No,0
+Alliance Grazing Group,Grassy Bell,"29.683056, -82.846500",29.683056,-82.846500,,Yes,1
+Allison Brothers,Lee Dairy,"30.092000, -82.798830",30.092000,-82.798830,,Yes,2
+Allison Brothers,Wiley,"30.123110, -83.052340",30.123110,-83.052340,,Yes,1
+Alton Poultry & Dairy Farm,Alton Farm,"30.050000, -83.115000",30.050000,-83.115000,,No,0
+Alvin Henderson,A East 255,"30.498000, -83.296000",30.498000,-83.296000,Old East 255,No,0
+Alvin Henderson,Corn,"30.501000, -83.301000",30.501000,-83.301000,,No,0
+Alvin Henderson,East Copeland,"31.031000, -83.615000",31.031000,-83.615000,,No,0
+Alvin Henderson,Henderson North 6,"30.470278, -83.285333",30.470278,-83.285333,,No,0
+Alvin Henderson,Henderson South 6,"30.466722, -83.285333",30.466722,-83.285333,,No,0
+Alvin Henderson,North of 6,"30.475889, -83.278917",30.475889,-83.278917,,No,0
+Alvin Henderson,South of 6,"30.468639, -83.279056",30.468639,-83.279056,,No,0
+Alvin Henderson,Valdosta,"30.875000, -83.415000",30.875000,-83.415000,,No,0
+Alvin Henderson,West Copeland,"31.030000, -83.618000",31.030000,-83.618000,,No,0
+Barnes Hay Farms,Barnes Folsom Pivot,"30.082917, -83.000139",30.082917,-83.000139,,No,0
+Barnes Hay Farms INC,Barnes Suggs Corner,"30.068528, -82.937056",30.068528,-82.937056,"Barnes Corner Arm; Suggs Farm Big",No,0
+Black Gold,West Philly,"30.160875, -83.114706",30.160875,-83.114706,Lawson,Yes,1
+Black Gold Farms,Brannon,"30.169833, -83.130750",30.169833,-83.130750,,Yes,3
+Black Gold Farms,East Philly,"30.160939, -83.110477",30.160939,-83.110477,,No,0
+Black Gold Farms,Mitchell Road,"30.315420, -83.159660",30.315420,-83.159660,,Yes,1
+Cedar Farms LLC,Deer Farm 1,"30.345000, -82.966000",30.345000,-82.966000,,No,0
+Cedar Farms LLC,Deer Farm 2,"30.347000, -82.966000",30.347000,-82.966000,,No,0
+Central FL Land and Timber,Front Pivot,"30.171000, -83.294000",30.171000,-83.294000,,Yes,2
+Central FL Land and Timber,Half Circle Pivot,"30.168000, -83.297000",30.168000,-83.297000,New Pivot,No,0
+David Corbett Farms,Corbett Lee 5,"30.376528, -83.256083",30.376528,-83.256083,,No,0
+David Corbett Farms,Frier 1,"30.271480, -83.194280",30.271480,-83.194280,,No,0
+David Corbett Farms,Frier 11,"30.277000, -83.183722",30.277000,-83.183722,,No,0
+David Corbett Farms,Frier 16,"30.286139, -83.194278",30.286139,-83.194278,,No,0
+David Corbett Farms,Frier 8,"30.286000, -83.186139",30.286000,-83.186139,Frier Farm #8,No,0
+David Corbett Farms,Frier 9,"30.286000, -83.177583",30.286000,-83.177583,,Yes,2
+Deas Brothers,Shephard Field,"30.588000, -83.229000",30.588000,-83.229000,,No,0
+Doug Simpson Jr.,Doug Simpson Well North Side of 341,"29.657000, -82.911000",29.657000,-82.911000,,No,0
+Doug Simpson Jr.,Sherman Field,"29.624000, -82.902000",29.624000,-82.902000,,No,0
+Doug Simpson Jr.,Simpson Field,"29.609000, -82.911000",29.609000,-82.911000,,No,0
+Dwight Stansel,154867 McCook,"30.126383, -82.944600",30.126383,-82.944600,,No,0
+Dwight Stansel,McCook,"30.013000, -82.945000",30.013000,-82.945000,,No,0
+Dwight Stansel,Mobley North,"30.111000, -82.983000",30.111000,-82.983000,,No,0
+Dwight Stansel,Mobley South,"30.110000, -82.981000",30.110000,-82.981000,154865,Yes,1
+Dwight Stansel,Mobley South,"30.106556, -82.985330",30.106556,-82.985330,,No,0
+Eternity Land Ranch III LLC,Reinke Oil Lube,"30.141000, -83.068000",30.141000,-83.068000,,No,0
+Experimental Farm North well,North Pivot,"30.055000, -82.857000",30.055000,-82.857000,"117960 North Pivot; Barnes Hay Farms INC; IFASLO",No,0
+Full Circle Dairy,FCD 10,"30.300000, -83.295000",30.300000,-83.295000,,No,0
+Full Circle Dairy,FCD 13,"30.321000, -83.300000",30.321000,-83.300000,,No,0
+Full Circle Dairy,FCD 14,"30.316000, -83.300000",30.316000,-83.300000,,No,0
+Full Circle Dairy,FCD 15,"30.311000, -83.300000",30.311000,-83.300000,,No,0
+Full Circle Dairy,FCD 9,"30.322250, -83.308667",30.322250,-83.308667,,No,0
+Full Circle Dairy,Well #2 FCD,"30.311000, -83.309000",30.311000,-83.309000,,No,0
+Full Circle Dairy,Well #3 FCD,"30.317000, -83.309000",30.317000,-83.309000,,No,0
+Full Circle Dairy,Well #4 FCD,"30.321000, -83.309000",30.321000,-83.309000,,No,0
+Full Circle Dairy,Well #5 FCD,"30.322000, -83.309000",30.322000,-83.309000,,No,0
+Garrison Brothers,Dons #1,"30.334000, -83.017000",30.334000,-83.017000,,Yes,1
+Garrison Brothers,Dons #2,"30.337000, -83.030000",30.337000,-83.030000,,Yes,1
+Garrison Brothers,Shelffield 1,"30.509000, -83.102000",30.509000,-83.102000,,No,0
+Garrison Brothers,Shelffield 2,"30.514000, -83.105000",30.514000,-83.105000,,No,0
+Gary Jones,Gary Jones 2,"29.796000, -82.979000",29.796000,-82.979000,,No,0
+Gary Jones,Gary Jones Towable,"29.796083, -82.974917",29.796083,-82.974917,GJ Towable,No,0
+Glenn Emerson,Madison 40 Acre,"30.485000, -83.344000",30.485000,-83.344000,,No,0
+Glenn Emerson,South Pivot,"30.480000, -83.346000",30.480000,-83.346000,,No,0
+Glenn Emerson,Sundown Creek,"30.417000, -83.574000",30.417000,-83.574000,,No,0
+Graham Farms LLC,168711,"29.528000, -82.827000",29.528000,-82.827000,,No,0
+Graham Farms LLC,Beachum 1,"29.515000, -82.787000",29.515000,-82.787000,Murray Tillis,No,0
+Graham Farms LLC,Beachum 2,"29.515000, -82.794000",29.515000,-82.794000,Murray Tillis,No,0
+Graham Farms LLC,D.O.T. Field,"29.482000, -82.844000",29.482000,-82.844000,DOT Field,No,0
+Graham Farms LLC,John Ed Field,"29.502000, -82.843000",29.502000,-82.843000,,No,0
+Graham Farms LLC,John Ed Pivot,"30.253778, -83.168778",30.253778,-83.168778,Black Gold Farms,Yes,1
+Graham Farms LLC,King Field,"29.479000, -82.808000",29.479000,-82.808000,,No,0
+Graham Farms LLC,Lesbee Field,"29.522000, -82.836000",29.522000,-82.836000,,No,0
+Graham Farms LLC,Quincey Cattle Field,"29.500000, -82.808000",29.500000,-82.808000,Quincey Cattle Company,No,0
+Graham Farms LLC,Webster Field,"29.509000, -82.844000",29.509000,-82.844000,,No,0
+Gwinn Brothers Farm,Well off of 164th,"30.154000, -83.044000",30.154000,-83.044000,,No,0
+Hugh Hunter,Hunter Pivot,"30.469740, -82.690160",30.469740,-82.690160,,No,0
+IFASLO,Experimental Farm South Well,"30.047000, -82.857000",30.047000,-82.857000,,No,0
+Jack Putnal,Bulb,"30.169000, -83.210000",30.169000,-83.210000,,No,0
+Jack Putnal,Firestation 1,"30.177000, -83.135000",30.177000,-83.135000,,No,0
+Jack Putnal,Richardson 1,"30.208000, -83.154000",30.208000,-83.154000,,No,0
+James Coggins,Scaff 2,"30.333773, -83.243124",30.333773,-83.243124,,Yes,1
+Jeff Willis,Driggers,"30.282000, -82.786000",30.282000,-82.786000,,No,0
+JH Farming Co. LLC,40 Acre Field,"30.521000, -83.336000",30.521000,-83.336000,,No,0
+JH Farming Co. LLC,Anderson North,"30.346000, -83.265000",30.346000,-83.265000,,No,0
+JH Farming CO. LLC,Anderson South,"30.343000, -83.264000",30.343000,-83.264000,,No,0
+JH Farming Co. LLC,Big Anderson,"30.344556, -83.258361",30.344556,-83.258361,,Yes,1
+JH Farming Co. LLC,Billy Sullivan,"30.526694, -83.338111",30.526694,-83.338111,,Yes,1
+JH Farming Co. LLC,Bishop,"30.474000, -83.374000",30.474000,-83.374000,,No,0
+JH Farming Co. LLC,Boogies,"30.515944, -83.312500",30.515944,-83.312500,,No,0
+JH Farming Co. LLC,Bradfield's South,"30.417000, -83.274000",30.417000,-83.274000,,No,0
+JH Farming Co. LLC,Bradfields North,"30.419000, -83.273000",30.419000,-83.273000,,No,0
+JH Farming Co. LLC,DS Middle,"30.540000, -83.332000",30.540000,-83.332000,,No,0
+JH Farming Co. LLC,DS North,"30.543000, -83.332000",30.543000,-83.332000,,No,0
+JH Farming Co. LLC,DS South,"30.536000, -83.332000",30.536000,-83.332000,,No,0
+JH Farming Co. LLC,Fraleigh,"30.482000, -83.407000",30.482000,-83.407000,,No,0
+JH Farming Co. LLC,Henry North,"30.357000, -83.336000",30.357000,-83.336000,,No,0
+JH Farming Co. LLC,Henry South,"30.350000, -83.336000",30.350000,-83.336000,,No,0
+JH Farming Co. LLC,Hinton,"30.556000, -83.326000",30.556000,-83.326000,,No,0
+JH Farming Co. LLC,Jeff's North,"30.536000, -83.357000",30.536000,-83.357000,,Yes,1
+JH Farming Co. LLC,Jeff's South,"30.532000, -83.357000",30.532000,-83.357000,,No,0
+JH Farming Co. LLC,Rollings,"30.552528, -83.342194",30.552528,-83.342194,,Yes,1
+JH Farming Co. LLC,Ronnie's North,"30.439000, -83.248000",30.439000,-83.248000,,No,0
+JH Farming Co. LLC,Ronnie's South,"30.434000, -83.248000",30.434000,-83.248000,Ronnie Smith,No,0
+JH Farming Co. LLC,Rutherford,"30.505194, -83.329528",30.505194,-83.329528,,Yes,2
+JH Farming CO. LLC,Sapp Pivot,"30.585000, -83.296000",30.585000,-83.296000,,No,0
+JH Farming Co. LLC,Thomas Big,"30.366000, -83.301000",30.366000,-83.301000,,Yes,1
+JH Farming Co. LLC,Thomas Northeast,"30.365000, -83.298000",30.365000,-83.298000,,No,0
+JH Farming Co. LLC,Thomas South,"30.361000, -83.302000",30.361000,-83.302000,,Yes,1
+Jody Land,Bull Lot,"29.870000, -82.928000",29.870000,-82.928000,,No,0
+Jody Land,Clark Field,"29.996000, -82.899000",29.996000,-82.899000,,No,0
+Jody Land,Coastal Field 27,"29.981000, -82.992000",29.981000,-82.992000,,No,0
+Jody Land,Dairy Barn Well,"29.982000, -83.000000",29.982000,-83.000000,,No,0
+Jody Land,Dallas Field,"29.845000, -82.907000",29.845000,-82.907000,,No,0
+Jody Land,Darell Adams Field,"29.992000, -82.985000",29.992000,-82.985000,,No,0
+Jody Land,Sheep Field,"29.988000, -83.006000",29.988000,-83.006000,,No,0
+Jody Land,Shop Field,"29.857000, -82.922000",29.857000,-82.922000,,No,0
+Jody Land,Wilson Field,"29.843000, -82.922000",29.843000,-82.922000,,No,0
+Jody Land,WingGate,"30.037000, -82.949000",30.037000,-82.949000,,No,0
+John L Hart,Cabbage Field,"30.133000, -83.275000",30.133000,-83.275000,,No,0
+Ladeda LLC,Bellamy West,"30.468333, -83.241000",30.468333,-83.241000,,No,0
+Ladeda LLC,Ladeda 1,"30.227667, -83.219250",30.227667,-83.219250,"NKC 1 Siros; Luraville; Black Gold Farms",No,0
+Ladeda LLC,Ladeda 10,"30.155222, -83.117750",30.155222,-83.117750,"NKC 10; Main Farm 10; PC12 #3; Luraville",No,0
+Ladeda LLC,Ladeda 11,"30.157000, -83.112000",30.157000,-83.112000,"Main Farm 11; Luraville",No,0
+Ladeda LLC,Ladeda 12,"30.151000, -83.121000",30.151000,-83.121000,"Main Farm 12; Luraville",No,0
+Ladeda LLC,Ladeda 13,"30.152000, -83.112000",30.152000,-83.112000,"Main Farm 13; Luraville",No,0
+Ladeda LLC,Ladeda 14,"30.146722, -83.119167",30.146722,-83.119167,"NKC 14; Main Farm 14; Luraville",No,0
+Ladeda LLC,Ladeda 14,"30.402861, -83.258111",30.402861,-83.258111,Mercer 14,No,0
+Ladeda LLC,Ladeda 15,"30.148000, -83.113000",30.148000,-83.113000,"Main Farm 15; Luraville; NKC Southeast LLC",Yes,1
+Ladeda LLC,Ladeda 2,"30.165833, -83.185194",30.165833,-83.185194,"Canamera Lake Property; Luraville",No,0
+Ladeda LLC,Ladeda 3A,"30.153000, -83.152000",30.153000,-83.152000,"Well 3a, 3b, and 3c; Luraville; Eternity; NKC Southeast",No,0
+Ladeda LLC,Ladeda 3B,"30.150000, -83.153000",30.150000,-83.153000,"Luraville; Eternity",No,0
+Ladeda LLC,Ladeda 3C,"30.150000, -83.149000",30.150000,-83.149000,"Luraville; Eternity",No,0
+Ladeda LLC,Ladeda 5,"30.152000, -83.143000",30.152000,-83.143000,"Eternity 5; Luraville",No,0
+Ladeda LLC,Ladeda 6A,"30.148000, -83.135000",30.148000,-83.135000,"Well 6a and 6b; NKC Southeast LLC",No,0
+Ladeda LLC,Ladeda 6B,"30.147167, -83.139083",30.147167,-83.139083,"Canamera 4t; Luraville",No,0
+Ladeda LLC,Ladeda 7,"44.709000, -98.215000",44.709000,-98.215000,"I don't know, this is the coordinates we have. Sorry.",No,0
+Ladeda LLC,Ladeda 8,"30.163000, -83.135000",30.163000,-83.135000,"NKC 8; Ward Bros 8; Luraville",No,0
+Ladeda LLC,Ladeda 9,"30.155694, -83.126639",30.155694,-83.126639,"NKC 9; Main Farm 9; Luraville",No,0
+Ladeda LLC,Ladeda W-7,"30.425000, -83.275000",30.425000,-83.275000,,No,0
+Ladeda LLC,Little A Field,"29.879000, -82.927000",29.879000,-82.927000,,No,0
+Ladeda LLC,Loncala 1 & 2,"29.718660, -82.703712",29.718660,-82.703712,,No,0
+Ladeda LLC,Loncala 3 & 4,"29.718722, -82.696731",29.718722,-82.696731,,No,0
+Ladeda LLC,Sweetwater #1,"30.435561, -83.195014",30.435561,-83.195014,,Yes,1
+Ladeda LLC,Valmont 9,"30.410106, -83.220193",30.410106,-83.220193,,Yes,3
+Lebanon Church,Lebanon Chuch,"29.943810, -82.866610",29.943810,-82.866610,Dewane Knighton,Yes,1
+Lee Peanut Farm LLC,Woodlands 10,"30.388333, -83.228806",30.388333,-83.228806,,No,0
+Lee Peanut Farms,Beaver 6,"30.402370, -83.109190",30.402370,-83.109190,,Yes,3
+Lee Peanut Farms,Corbett Lee 7,"30.373667, -83.245556",30.373667,-83.245556,,No,0
+Lee Peanut Farms,Cumberland 2,"30.367083, -83.237250",30.367083,-83.237250,,Yes,2
+Lee Peanut Farms,Deas East,"30.443083, -83.165722",30.443083,-83.165722,,Yes,3
+Lee Peanut Farms,Deas West,"30.442750, -83.173583",30.442750,-83.173583,,Yes,2
+Lee Peanut Farms,Hazelton 1,"30.350028, -83.227889",30.350028,-83.227889,,Yes,1
+Lee Peanut Farms,Hazelton 2,"30.350667, -83.238944",30.350667,-83.238944,,Yes,1
+Lee Peanut Farms,Hazelton 3,"30.352306, -83.249222",30.352306,-83.249222,,No,0
+Lee Peanut Farms,Hazelton 5,"30.353056, -83.263250",30.353056,-83.263250,,No,0
+Lee Peanut Farms,HWY 141 Curdog,"30.425944, -83.168778",30.425944,-83.168778,,No,0
+Lee Peanut Farms,Richardson Flori,"30.482972, -83.262056",30.482972,-83.262056,,Yes,1
+Lee Peanut Farms,River Road Pivot,"30.372000, -83.211000",30.372000,-83.211000,,No,0
+Lee Peanut Farms,Scaff 5,"30.335773, -83.232739",30.335773,-83.232739,,Yes,3
+Lee Peanut Farms,Stewart East,"30.512306, -83.274500",30.512306,-83.274500,,Yes,3
+Lee Peanut Farms,Tippette Farm,"30.460583, -83.320472",30.460583,-83.320472,,No,0
+Lee Peanut Farms,Woodlands 4,"30.400778, -83.223861",30.400778,-83.223861,,No,0
+Lee Peanut Farms,Woodlands 5,"30.395583, -83.220306",30.395583,-83.220306,,Yes,1
+Lee Peanut Farms LLC,Alderman Central,"30.506802, -83.268384",30.506802,-83.268384,,Yes,3
+Lee Peanut Farms LLC,Andrew's Copeland,"30.512111, -83.266083",30.512111,-83.266083,Copeland Field,No,0
+Lee Peanut Farms LLC,Chap Phillips Field,"30.333000, -83.309000",30.333000,-83.309000,,No,0
+Lee Peanut Farms LLC,Cumberland 1,"30.373806, -83.237222",30.373806,-83.237222,,Yes,1
+Lee Peanut Farms LLC,Cumberland 3,"30.364583, -83.226750",30.364583,-83.226750,Was Cumberland 2,Yes,2
+Lee Peanut Farms LLC,Cumberland 5,"30.373722, -83.228750",30.373722,-83.228750,Woodlands #8,No,0
+Lee Peanut Farms LLC,Dixon Hill,"30.490472, -83.275667",30.490472,-83.275667,,Yes,1
+Lee Peanut Farms LLC,Hazleton 4,"30.353000, -83.258361",30.353000,-83.258361,,No,0
+Lee Peanut Farms LLC,Plantation 1,"30.358528, -83.223833",30.358528,-83.223833,,No,0
+Lee Peanut Farms LLC,Plantation 2,"30.358472, -83.232861",30.358472,-83.232861,,No,0
+Lee Peanut Farms LLC,Plantation 3,"30.358806, -83.241917",30.358806,-83.241917,,Yes,4
+Lee Peanut Farms LLC,Plantation 4,"30.362889, -83.245583",30.362889,-83.245583,,No,0
+Lee Peanut Farms LLC,Plantation 5,"30.359972, -83.253750",30.359972,-83.253750,,Yes,1
+Lee Peanut Farms LLC,Plantation 6,"30.366639, -83.254861",30.366639,-83.254861,,No,0
+Lee Peanut Farms LLC,Scaff 4,"30.341667, -83.236222",30.341667,-83.236222,,No,0
+Lee Peanut Farms LLC,Scott 1,"30.302889, -83.245000",30.302889,-83.245000,,Yes,2
+Lee Peanut Farms LLC,Scott 2,"30.309111, -83.239333",30.309111,-83.239333,,No,0
+Lee Peanut Farms LLC,Scott 3,"30.309389, -83.246750",30.309389,-83.246750,,No,0
+Lee Peanut Farms LLC,Scott 4,"30.315583, -83.244722",30.315583,-83.244722,,Yes,4
+Lee Peanut Farms LLC,Scott 5,"30.319474, -83.238833",30.319474,-83.238833,,Yes,2
+Lee Peanut Farms LLC,Scott 6,"30.325994, -83.245013",30.325994,-83.245013,Scaff 1,No,0
+Lee Peanut Farms LLC,Valmont 1,"30.457444, -83.225056",30.457444,-83.225056,,No,0
+Lee Peanut Farms LLC,Valmont 10,"30.454000, -83.241000",30.454000,-83.241000,,No,0
+Lee Peanut Farms LLC,Woodlands 11,"30.395583, -83.228694",30.395583,-83.228694,,Yes,1
+Lee Peanut Farms LLC,Woodlands 3,"30.402444, -83.230972",30.402444,-83.230972,,No,0
+Lee Peanut Farms LLC,Woodlands 6,"30.388250, -83.220361",30.388250,-83.220361,,No,0
+Lee Peanut Farms LLC,Woodlands 7,"30.380889, -83.220306",30.380889,-83.220306,,Yes,1
+Lee Peanut Farms LLC,Woodlands 9,"30.381083, -83.228861",30.381083,-83.228861,,No,0
+Liev Oak Stud Farm,North Perry Field,"29.146000, -82.280000",29.146000,-82.280000,,No,0
+Live Oak Sod,Pivot #2 LOS,"30.113690, -83.052410",30.113690,-83.052410,,No,0
+Lyle Stanley Trace LLC,Pivot at Dave Roffey,"30.490270, -83.427240",30.490270,-83.427240,"Pivot at his house; Dave Roffey",Yes,1
+Mark Hodge,Jonesville Well,"29.594000, -82.473000",29.594000,-82.473000,,No,0
+Mark Hodge,Well Behind Blueberry Field,"29.635000, -82.569000",29.635000,-82.569000,,No,0
+Mark Hodge,Wore out pump,"29.589000, -82.552000",29.589000,-82.552000,,No,0
+Mark Hunt,Mark Hunt,"30.070000, -83.128000",30.070000,-83.128000,,Yes,1
+Michael Wilkerson,Cheifland,"29.388000, -82.868000",29.388000,-82.868000,,No,0
+Michael Wilkerson,JT Beck's,"29.757000, -82.838000",29.757000,-82.838000,,No,0
+Michael Wilkerson,Landers 80,"29.620000, -82.894000",29.620000,-82.894000,,No,0
+Michael Wilkerson,Martin Pivot,"29.744000, -82.678000",29.744000,-82.678000,,No,0
+Michael Wilkerson,Mills Field,"29.603000, -82.781000",29.603000,-82.781000,,No,0
+Michael Wilkerson,Thomas's Place,"29.638000, -82.932000",29.638000,-82.932000,,No,0
+Mike Adams,Culbreth,"30.510250, -83.129833",30.510250,-83.129833,,No,0
+Murray Tillis,Bee Well #1,"29.588000, -82.598000",29.588000,-82.598000,,No,0
+Murray Tillis,Bee Well #2,"29.588000, -82.594000",29.588000,-82.594000,,No,0
+Murray Tillis,Tillis Mills,"29.478833, -82.775806",29.478833,-82.775806,,No,0
+NKC Southeast,17A,"30.153838, -83.086708",30.153838,-83.086708,Allison Brothers,No,0
+NKC Southeast,17B,"30.149311, -83.086451",30.149311,-83.086451,Allison Brothers,No,0
+NKC Southeast,17C,"30.148346, -83.084391",30.148346,-83.084391,Allison Brothers,No,0
+NKC Southeast,18 Mrvica,"30.119501, -83.100961",30.119501,-83.100961,Allison Brothers,No,0
+NKC Southeast,Rock Field,"30.148000, -83.076000",30.148000,-83.076000,"NKC #17D; Ladeda LLC",No,0
+NKC Southeast LLC,Tedder 16a,"30.168000, -83.112000",30.168000,-83.112000,,No,0
+NKC Southeast LLC,Tedder 4a,"30.157000, -83.145000",30.157000,-83.145000,,No,0
+NKC Southeast LLC,Tedder 4b,"30.157000, -83.141000",30.157000,-83.141000,,No,0
+NKC Southeast LLC,Tedder Half Circle,"30.165000, -83.110000",30.165000,-83.110000,16,No,0
+NKC Southeast LLC,Ward Bros #7,"30.155000, -83.135000",30.155000,-83.135000,,No,0
+Piedmont,PSF 1,"29.660778, -82.828028",29.660778,-82.828028,,No,0
+Piedmont,PSF 2,"29.653417, -82.827472",29.653417,-82.827472,,No,0
+Piedmont,PSF 3,"29.653778, -82.819472",29.653778,-82.819472,,No,0
+Piedmont,PSF 4,"29.644750, -82.827944",29.644750,-82.827944,,No,0
+Piedmont,PSF 5,"29.661056, -82.835722",29.661056,-82.835722,,No,0
+Piedmont,PSF 7,"29.645778, -82.817917",29.645778,-82.817917,DP1,No,0
+POLO Hay LLC,Back Pivot,"30.197000, -83.204000",30.197000,-83.204000,,No,0
+POLO Hay LLC,Corner Arm,"30.195000, -83.212000",30.195000,-83.212000,,Yes,3
+Polo Hay LLC,Middle,"30.197000, -83.209000",30.197000,-83.209000,,No,0
+Polo Hay LLC,Pivot 4,"30.184000, -83.219000",30.184000,-83.219000,,Yes,1
+Polo Hay LLC,Pivot 5,"30.181000, -83.215000",30.181000,-83.215000,122279,No,0
+Polo Hay LLC,Pivot 6,"30.177000, -83.219000",30.177000,-83.219000,105370,Yes,3
+Polo Hay LLC,Pivot 7,"30.190000, -83.215000",30.190000,-83.215000,,Yes,1
+Polo Hay LLC,Springfield,"30.454000, -84.005000",30.454000,-84.005000,109716,No,0
+R. Moore Farms INC.,Front of Dairy,"30.155030, -83.176740",30.155030,-83.176740,,Yes,1
+Riley Putnal,Bell,"30.209000, -83.275000",30.209000,-83.275000,,No,0
+Riley Putnal,Mario,"30.111000, -82.963000",30.111000,-82.963000,,No,0
+Riley Putnal,Pearson,"30.070000, -83.102000",30.070000,-83.102000,,No,0
+Robinson Peanut Farm,35-3,"29.274000, -82.534000",29.274000,-82.534000,,No,0
+Robinson Peanut Farm,35-4,"29.260000, -82.527000",29.260000,-82.527000,,No,0
+Robinson Peanut Farm,35-7,"29.275000, -82.535000",29.275000,-82.535000,,No,0
+Robinson Peanut Farm,NM-2,"29.193000, -82.562000",29.193000,-82.562000,,No,0
+Robinson Peanut Farm,NM-7,"29.214000, -82.549000",29.214000,-82.549000,,No,0
+Robinson Peanut Farm,NM-8,"29.213000, -82.554000",29.213000,-82.554000,,No,0
+Robinson Peanut Farm,NM-9,"29.213000, -82.562000",29.213000,-82.562000,,No,0
+Robinson Peanut Farm,Peanut Fans,"29.327000, -82.517000",29.327000,-82.517000,,No,0
+Robinson Peanut Farm,Robinson Tract,"29.108000, -82.628000",29.108000,-82.628000,,No,0
+Roy Brown,#301 2 Tower,"29.676000, -82.115000",29.676000,-82.115000,,No,0
+Roy Brown,#301 5 Tower,"29.676000, -82.116000",29.676000,-82.116000,,No,0
+Roy Brown,249873,"29.585000, -82.089000",29.585000,-82.089000,,No,0
+Roy Brown,249874,"29.679000, -82.116000",29.679000,-82.116000,,No,0
+Roy Brown,Furnari South Side,"29.678000, -82.120000",29.678000,-82.120000,,No,0
+Roy Brown,Hawthorne - North,"29.586000, -82.092000",29.586000,-82.092000,,No,0
+Roy Brown,New Ground Pivot,"29.719000, -82.127000",29.719000,-82.127000,Valley Pivot,No,0
+Roy Brown,Pierce 1,"29.679000, -82.117000",29.679000,-82.117000,,No,0
+Roy Brown,Pierce 2,"29.583832, -82.089914",29.583832,-82.089914,Middle 3 TWR,No,0
+Roy Brown,South 2 TWR,"29.581000, -82.090000",29.581000,-82.090000,,No,0
+Sanchez Farm,Cow Field,"29.654000, -82.844000",29.654000,-82.844000,"Rentz Smith New Ground; Smith Farms of Bell INC",No,0
+Sanchez Farm,Cox North,"29.521000, -82.891000",29.521000,-82.891000,,No,0
+Sanchez Farm,Dechampian 4,"29.624222, -82.860722",29.624222,-82.860722,,Yes,1
+Sanchez Farm,Douglas 1,"29.741000, -82.968000",29.741000,-82.968000,,No,0
+Sanchez Farm,Douglas 2,"29.738000, -82.968000",29.738000,-82.968000,,No,0
+Sanchez Farm,Douglas 3,"29.737000, -82.976000",29.737000,-82.976000,,No,0
+Sanchez Farm,Garrett,"29.931000, -82.848000",29.931000,-82.848000,,No,0
+Sanchez Farm,Holy Field,"29.707000, -82.997000",29.707000,-82.997000,,No,0
+Sanchez Farm,Parring Place,"29.752000, -82.979000",29.752000,-82.979000,,No,0
+Sanchez Farm,Sanchez Sinkhole,"29.701306, -82.903694",29.701306,-82.903694,,No,0
+Sanchez Farm,Sapp Field,"29.676000, -82.674000",29.676000,-82.674000,,No,0
+Sanchez Farm,South Usher,"29.698000, -82.997000",29.698000,-82.997000,,No,0
+Sanchez Farm,Spare Pump,"29.453000, -82.899000",29.453000,-82.899000,,No,0
+Sanchez Farm,Torrez 1,"30.268000, -83.288000",30.268000,-83.288000,,No,0
+Sanchez Farm,Torrez 4,"30.264000, -83.299000",30.264000,-83.299000,,No,0
+Sanchez Farm,Walker 1,"29.812639, -82.843583",29.812639,-82.843583,,No,0
+Sanchez Farm,Walker 2,"29.818000, -82.841000",29.818000,-82.841000,,Yes,2
+Sanchez Farm,Walker 4,"29.818000, -82.829000",29.818000,-82.829000,,No,0
+Sanchez Farm,Walker 5,"29.822000, -82.821000",29.822000,-82.821000,,No,0
+Sanchez Farm,Walker 7,"29.829000, -82.821000",29.829000,-82.821000,,No,0
+Sanchez Farm,Walker 8,"29.827000, -82.827000",29.827000,-82.827000,,No,0
+Sandlin Farms,B4,"29.472000, -82.621000",29.472000,-82.621000,,No,0
+Sandlin Farms,S3,"29.342000, -82.566000",29.342000,-82.566000,,No,0
+Sandlin Farms,S7,"29.342000, -82.565000",29.342000,-82.565000,,No,0
+SanRiver LLC,SanRiver 45 & 46,"30.119000, -83.022000",30.119000,-83.022000,,No,0
+SanRiver LLC,SanRiver 47 & 48,"30.119000, -83.037000",30.119000,-83.037000,,No,0
+SanRiver LLC,Suwannee Farms 1,"30.083000, -83.025000",30.083000,-83.025000,,No,0
+SanRiver LLC,Suwannee Farms 10,"30.097000, -83.042000",30.097000,-83.042000,,No,0
+SanRiver LLC,Suwannee Farms 11,"30.090000, -83.042000",30.090000,-83.042000,,No,0
+SanRiver LLC,Suwannee Farms 12,"30.083000, -83.042000",30.083000,-83.042000,,Yes,1
+SanRiver LLC,Suwannee Farms 13,"30.075000, -83.042000",30.075000,-83.042000,,No,0
+SanRiver LLC,Suwannee Farms 14,"30.076000, -83.049000",30.076000,-83.049000,,No,0
+SanRiver LLC,Suwannee Farms 15,"30.083000, -83.050000",30.083000,-83.050000,,No,0
+SanRiver LLC,Suwannee Farms 16,"30.090000, -83.050000",30.090000,-83.050000,,No,0
+SanRiver LLC,Suwannee Farms 17,"30.097000, -83.050000",30.097000,-83.050000,,Yes,1
+SanRiver LLC,Suwannee Farms 18,"30.104000, -83.050000",30.104000,-83.050000,,No,0
+SanRiver LLC,Suwannee Farms 19,"30.097000, -83.059000",30.097000,-83.059000,,No,0
+SanRiver LLC,Suwannee Farms 2,"30.075000, -83.034000",30.075000,-83.034000,,No,0
+SanRiver LLC,Suwannee Farms 20,"30.090000, -83.059000",30.090000,-83.059000,,No,0
+SanRiver LLC,Suwannee Farms 21,"30.083000, -83.058000",30.083000,-83.058000,,No,0
+SanRiver LLC,Suwannee Farms 22,"30.068000, -82.983000",30.068000,-82.983000,,No,0
+SanRiver LLC,Suwannee Farms 23,"30.068000, -82.991000",30.068000,-82.991000,,No,0
+SanRiver LLC,Suwannee Farms 24,"30.061000, -82.991000",30.061000,-82.991000,,No,0
+SanRiver LLC,Suwannee Farms 25,"30.061000, -82.983000",30.061000,-82.983000,,No,0
+SanRiver LLC,Suwannee Farms 26,"30.061000, -82.975000",30.061000,-82.975000,,No,0
+SanRiver LLC,Suwannee Farms 27,"30.076000, -82.975000",30.076000,-82.975000,,No,0
+SanRiver LLC,Suwannee Farms 28,"30.083000, -82.975000",30.083000,-82.975000,,Yes,1
+SanRiver LLC,Suwannee Farms 29,"30.079000, -83.055000",30.079000,-83.055000,,No,0
+SanRiver LLC,Suwannee Farms 3,"30.083000, -83.034000",30.083000,-83.034000,,No,0
+SanRiver LLC,Suwannee Farms 30,"30.079000, -83.060000",30.079000,-83.060000,,No,0
+SanRiver LLC,Suwannee Farms 31,"30.076000, -83.057000",30.076000,-83.057000,,No,0
+SanRiver LLC,Suwannee Farms 32,"30.074000, -83.054000",30.074000,-83.054000,,No,0
+SanRiver LLC,Suwannee Farms 33,"30.105000, -83.025000",30.105000,-83.025000,,No,0
+SanRiver LLC,Suwannee Farms 34,"30.090000, -83.025000",30.090000,-83.025000,,No,0
+SanRiver LLC,Suwannee Farms 35,"30.097000, -83.025000",30.097000,-83.025000,,No,0
+SanRiver LLC,Suwannee Farms 36,"30.097000, -83.017000",30.097000,-83.017000,,No,0
+SanRiver LLC,Suwannee Farms 37,"30.090000, -83.017000",30.090000,-83.017000,,No,0
+SanRiver LLC,Suwannee Farms 38,"30.123000, -83.059000",30.123000,-83.059000,,No,0
+SanRiver LLC,Suwannee Farms 39,"30.148000, -83.059000",30.148000,-83.059000,,No,0
+SanRiver LLC,Suwannee Farms 4,"30.090000, -83.034000",30.090000,-83.034000,,No,0
+SanRiver LLC,Suwannee Farms 40,"30.229000, -83.060000",30.229000,-83.060000,"SanRiver 40; Sanchez Farm",No,0
+SanRiver LLC,Suwannee Farms 41,"30.117000, -83.061000",30.117000,-83.061000,,No,0
+SanRiver LLC,Suwannee Farms 42,"30.117000, -83.057000",30.117000,-83.057000,,No,0
+SanRiver LLC,Suwannee Farms 5,"30.097000, -83.035000",30.097000,-83.035000,,No,0
+SanRiver LLC,Suwannee Farms 51,"30.141000, -83.017000",30.141000,-83.017000,,No,0
+SanRiver LLC,Suwannee Farms 52,"30.133000, -83.018000",30.133000,-83.018000,,No,0
+SanRiver LLC,Suwannee Farms 53,"30.124000, -83.018000",30.124000,-83.018000,,No,0
+SanRiver LLC,Suwannee Farms 54,"30.124000, -83.028000",30.124000,-83.028000,,No,0
+SanRiver LLC,Suwannee Farms 55,"30.132000, -83.029000",30.132000,-83.029000,,No,0
+SanRiver LLC,Suwannee Farms 56,"30.141000, -83.027000",30.141000,-83.027000,,No,0
+SanRiver LLC,Suwannee Farms 57,"30.139056, -83.037556",30.139056,-83.037556,,No,0
+SanRiver LLC,Suwannee Farms 58,"30.132000, -83.036000",30.132000,-83.036000,,No,0
+SanRiver LLC,Suwannee Farms 6,"30.105000, -83.034000",30.105000,-83.034000,,No,0
+SanRiver LLC,Suwannee Farms 7,"30.112000, -83.034000",30.112000,-83.034000,,No,0
+SanRiver LLC,Suwannee Farms 8,"30.112000, -83.042000",30.112000,-83.042000,,No,0
+SanRiver LLC,Suwannee Farms 9,"30.104583, -83.042111",30.104583,-83.042111,,No,0
+Smith Farms of Bell INC,129 Field,"30.021161, -82.930262",30.021161,-82.930262,,No,0
+Smith Farms of Bell INC,129 Field,"29.557574, -82.824664",29.557574,-82.824664,,No,0
+Smith Farms of Bell INC,129 Pivot,"29.661000, -82.853000",29.661000,-82.853000,,No,0
+Smith Farms of Bell INC,3/4 Circle,"29.712000, -82.895000",29.712000,-82.895000,,No,0
+Smith Farms of Bell INC,Billy Smith's Pivot,"29.698000, -82.853000",29.698000,-82.853000,,No,0
+Smith Farms of Bell INC,Byrant Field,"29.713000, -82.914000",29.713000,-82.914000,,No,0
+Smith Farms of Bell INC,David Key North,"29.661000, -82.894000",29.661000,-82.894000,,No,0
+Smith Farms of Bell INC,David Key South,"29.657000, -82.894000",29.657000,-82.894000,,No,0
+Smith Farms of Bell INC,Front of House East Field,"29.666000, -82.884000",29.666000,-82.884000,,No,0
+Smith Farms of Bell INC,House Tower 3,"29.663000, -82.884000",29.663000,-82.884000,House 3 Tower,No,0
+Smith Farms of Bell INC,Peanut Dryer,"29.617000, -82.861000",29.617000,-82.861000,,No,0
+Smith Farms of Bell INC,Pecan Field,"29.704000, -82.895000",29.704000,-82.895000,Pecan Pivot,No,0
+Smith Farms of Bell INC,Russell Pivot,"29.729278, -82.724333",29.729278,-82.724333,"Rantz Smith; Sanchez",No,0
+Smith Farms of Bell INC,Towable,"29.666000, -82.888000",29.666000,-82.888000,,No,0
+Smith Farms of Bell INC,Triangle Field,"29.642000, -82.833000",29.642000,-82.833000,,No,0
+Smith Farms of Bell INC,Watermelon Pond,"29.585000, -82.613000",29.585000,-82.613000,,No,0
+Smith Farms of Bell INC,Wilkerson Thomas,"29.719278, -82.861861",29.719278,-82.861861,CD Moore,No,0
+Suggs Farm Little,Barnes Suggs North,"30.074111, -82.935083",30.074111,-82.935083,Barnes Hay Farms INC,No,0
+T T T Farms LLC,Dave Edwards,"29.377000, -82.875000",29.377000,-82.875000,Dwight Stansel,No,0
+Trevor Bass,Big Pivot,"29.601000, -82.679000",29.601000,-82.679000,,No,0
+Trevor Bass,Buford Place,"29.618000, -82.676000",29.618000,-82.676000,,No,0
+Trevor Bass,Gator Back,"29.702000, -82.536000",29.702000,-82.536000,,No,0
+Trevor Bass,Johnson Place,"29.597000, -82.615000",29.597000,-82.615000,Behind Watermelon Shed,Yes,3
+Trevor Bass,Seed Mill #5,"29.592890, -82.677090",29.592890,-82.677090,,Yes,1
+Trevor Bass,Well Behind Feed Store,"29.614000, -82.586000",29.614000,-82.586000,,No,0
+Tricounty,147736,"30.119000, -82.860000",30.119000,-82.860000,"Old 145951; rfernandez",No,0
+TriCounty,154866 Bailey Farm,"30.169000, -82.800000",30.169000,-82.800000,,No,0
+TriCounty,Garrison,"30.113000, -82.998000",30.113000,-82.998000,"Old Garrison; Riley Putnal",No,0
+TriCounty,Old B1,"29.486000, -82.618000",29.486000,-82.618000,,No,0
+TriCounty,Old Back Pivot,"30.171000, -83.297000",30.171000,-83.297000,,No,0
+TriCounty,Old Deer Farm 1,"30.343660, -82.968000",30.343660,-82.968000,,No,0
+TriCounty,Old SEC 32-29-39,"37.488000, -101.602000",37.488000,-101.602000,,No,0
+TriCounty,Putnal Field,"30.180200, -83.197800",30.180200,-83.197800,,No,0
+TriCounty,Vann Pivot,"30.084400, -82.898000",30.084400,-82.898000,,No,0
+University of FL Dairy Science,UF Dairy I Pivot,"29.786350, -82.411700",29.786350,-82.411700,,No,0
+University of FL Dairy Science,UF Dairy J Pivot,"29.786920, -82.415490",29.786920,-82.415490,,No,0
+University of FL Dairy Science,UF Dairy K Pivot,"29.787280, -82.419860",29.787280,-82.419860,,No,0
+Van Aernam Timber Management INC,Vanarnum Sub 25hp,"29.961000, -82.980000",29.961000,-82.980000,,No,0
+Van Aernam Timber Management INC,Vanarnum Sub 30 hp,"29.967328, -82.990025",29.967328,-82.990025,,No,0
+Walker & Sons Farms,Broken Well,"30.591000, -83.793000",30.591000,-83.793000,,No,0
+Wayne Lane,Boyd 3,"30.650000, -83.610000",30.650000,-83.610000,,No,0
+Wayne Lane,Boyd 4,"30.644000, -83.616000",30.644000,-83.616000,,No,0
+Wayne Lane,East 1,"30.653000, -83.610000",30.653000,-83.610000,,No,0
+Wayne Lane,East 2,"30.653000, -83.608000",30.653000,-83.608000,,No,0
+Wayne Lane,East Pivot,"30.731000, -83.643000",30.731000,-83.643000,7000 Valley 6 Tower,No,0
+Wayne Lane,Jeff CO 5 Tower,"30.611000, -83.646000",30.611000,-83.646000,,No,0
+Wayne Lane,Old West Field,"30.730000, -83.649000",30.730000,-83.649000,,No,0
+Wayne Lane,West,"30.647000, -83.615000",30.647000,-83.615000,,No,0
+Williams Heritage,Pivot #2,"29.398530, -82.842210",29.398530,-82.842210,Tommy Williams,Yes,1
+Williams Heritage LLP,Well #3,"29.372724, -82.838858",29.372724,-82.838858,Tommy Williams,No,0
+,1/2 Circle Cooling Cows,"29.594361, -82.843972",29.594361,-82.843972,,No,0
+,255 Pivot,"30.463206, -83.302760",30.463206,-83.302760,,No,0
+,3/4 L,"30.497639, -83.274722",30.497639,-83.274722,,No,0
+,Adams Burnham,"30.528278, -83.144611",30.528278,-83.144611,,No,0
+,Adams Harold Tyre,"30.483056, -83.115139",30.483056,-83.115139,,No,0
+,Adams Sapp North,"30.507583, -83.007611",30.507583,-83.007611,,No,0
+,Adams Wyndham East,"30.517667, -83.091972",30.517667,-83.091972,,No,0
+,Adams Wyndham West,"30.517472, -83.095806",30.517472,-83.095806,,No,0
+,Alderman East,"30.504833, -83.262083",30.504833,-83.262083,,No,0
+,Alderman West,"30.504889, -83.275000",30.504889,-83.275000,,No,0
+,Alli/,"30.193861, -83.074417",30.193861,-83.074417,,No,0
+,Alliance 339 North,"29.595083, -82.810167",29.595083,-82.810167,,No,0
+,Alliance 339 South,"29.594111, -82.810861",29.594111,-82.810861,,No,0
+,Alliance Alice,"29.555083, -82.832083",29.555083,-82.832083,,No,0
+,Alliance Mills,"29.602389, -82.894250",29.602389,-82.894250,,No,0
+,Alliance Southpoint,"29.423689, -82.919106",29.423689,-82.919106,,No,0
+,Andrew's Corner,"30.513722, -83.259667",30.513722,-83.259667,,Yes,1
+,Andy Snider 2 wheel,"30.026417, -82.968056",30.026417,-82.968056,,No,0
+,Barn Middle,"29.629194, -82.810778",29.629194,-82.810778,,No,0
+,Barn Shed,"29.633167, -82.805806",29.633167,-82.805806,,No,0
+,Barnes Dasher,"30.105583, -82.882944",30.105583,-82.882944,,No,0
+,Battson Back,"29.629194, -82.929750",29.629194,-82.929750,,No,0
+,Battson North,"29.632889, -82.925611",29.632889,-82.925611,,No,0
+,Beachum Tillis,"29.471556, -82.772806",29.471556,-82.772806,,No,0
+,Beaver 1,"30.402611, -83.135694",30.402611,-83.135694,,Yes,1
+,Beaver 2,"30.402855, -83.127291",30.402855,-83.127291,,No,0
+,Beaver 3,"30.398722, -83.127750",30.398722,-83.127750,,No,0
+,Bellemy East,"30.467361, -83.235778",30.467361,-83.235778,,No,0
+,Billy Brown,"30.364556, -83.275000",30.364556,-83.275000,,No,0
+,Blue Springs Big,"30.467861, -83.269556",30.467861,-83.269556,,No,0
+,Blue Springs Small,"30.463361, -83.268444",30.463361,-83.268444,,No,0
+,Bowdoin Big,"30.205194, -82.751083",30.205194,-82.751083,,Yes,1
+,Bowdoin Small,"30.200083, -82.751278",30.200083,-82.751278,,No,0
+,Boy's Ranch,"30.490582, -83.259973",30.490582,-83.259973,,No,0
+,Brocks,"29.565333, -82.780944",29.565333,-82.780944,,No,0
+,Brown Cemetery SE,"30.079639, -83.254583",30.079639,-83.254583,,No,0
+,Castleton North,"29.646056, -82.852861",29.646056,-82.852861,,No,0
+,Castleton South,"29.638833, -82.852611",29.638833,-82.852611,,No,0
+,CB Cattle 1,"30.367826, -83.262024",30.367826,-83.262024,,Yes,1
+,Cedar Lane,"30.604167, -83.145889",30.604167,-83.145889,,No,0
+,Chandler Stamp Pivot,"30.514639, -83.011861",30.514639,-83.011861,,No,0
+,Cheshire,"30.314002, -82.835675",30.314002,-82.835675,,No,0
+,ChuckNut,"30.299000, -83.179667",30.299000,-83.179667,,No,0
+,Cleanout Well,"30.401000, -83.239000",30.401000,-83.239000,,No,0
+,Cliff Townsend,"30.410250, -83.072389",30.410250,-83.072389,,No,0
+,Coggins Blue Springs,"30.439083, -83.270556",30.439083,-83.270556,,Yes,1
+,Cone Farms,"30.420889, -83.549861",30.420889,-83.549861,,No,0
+,Corbett Lee 1,"30.392250, -83.254083",30.392250,-83.254083,,No,0
+,Corbett Lee 2,"30.386389, -83.256389",30.386389,-83.256389,,No,0
+,Corbett Lee 3,"30.381944, -83.250444",30.381944,-83.250444,,No,0
+,Corbett Lee 4,"30.381611, -83.262111",30.381611,-83.262111,,No,0
+,Corbett Lee 6,"30.369972, -83.250972",30.369972,-83.250972,,No,0
+,Corn Barn Pivot,"29.504528, -82.750694",29.504528,-82.750694,,No,0
+,Crews Nursery,"30.314222, -82.143306",30.314222,-82.143306,,No,0
+,Cumberland 4,"30.373694, -83.224444",30.373694,-83.224444,,Yes,1
+,Cumberland 6,"30.369694, -83.232694",30.369694,-83.232694,,No,0
+,Davis 5,"30.408750, -83.380528",30.408750,-83.380528,,No,0
+,Dennis,"30.146131, -83.183217",30.146131,-83.183217,,No,0
+,East Tow South,"30.200778, -83.091278",30.200778,-83.091278,,No,0
+,Edwards Pivot,"30.186194, -83.041000",30.186194,-83.041000,,No,0
+,Ernesto Garcia,"30.120778, -83.081778",30.120778,-83.081778,,No,0
+,EZ Tow North,"30.194000, -83.091250",30.194000,-83.091250,,Yes,1
+,EZ Tow South,"30.190278, -83.091139",30.190278,-83.091139,,No,0
+,FCD 17,"30.323806, -83.287722",30.323806,-83.287722,,No,0
+,FCD 2,"30.305861, -83.312917",30.305861,-83.312917,,No,0
+,FCD 3,"30.312722, -83.308806",30.312722,-83.308806,,No,0
+,FCD 4,"30.318444, -83.313111",30.318444,-83.313111,,No,0
+,FCD 5,"30.326139, -83.312667",30.326139,-83.312667,,No,0
+,FCD 6,"30.325889, -83.304722",30.325889,-83.304722,,No,0
+,FCD 7,"30.318722, -83.304639",30.318722,-83.304639,,No,0
+,Frier 10,"30.280611, -83.183972",30.280611,-83.183972,,No,0
+,Frier 7,"30.279417, -83.189611",30.279417,-83.189611,,Yes,2
+,Ganus 4,"29.778639, -82.962222",29.778639,-82.962222,,No,0
+,Granddaddy's,"30.192000, -83.084611",30.192000,-83.084611,,No,0
+,Grassy Bell 129,"29.693333, -82.857028",29.693333,-82.857028,,Yes,1
+,Grassy Bell 3/4,"29.686694, -82.827778",29.686694,-82.827778,,No,0
+,Gray,"29.701028, -82.861750",29.701028,-82.861750,,No,0
+,Greg Watson Asbell,"29.556861, -82.862389",29.556861,-82.862389,,No,0
+,GTO Farms Edna,"29.826944, -82.716583",29.826944,-82.716583,,No,0
+,GTO Farms House,"29.843250, -82.735472",29.843250,-82.735472,,No,0
+,Hal Land Barn,"30.209500, -83.080694",30.209500,-83.080694,,No,0
+,Hal Land Pivot Field 12,"30.195194, -83.093278",30.195194,-83.093278,,No,0
+,Hazelton 6,"30.359194, -83.262472",30.359194,-83.262472,,No,0
+,Henderson NW Hay Field,"30.506944, -83.295778",30.506944,-83.295778,,No,0
+,Hogan South,"29.441972, -82.876389",29.441972,-82.876389,,No,0
+,HPI 3,"29.597203, -82.838121",29.597203,-82.838121,,No,0
+,Hutchison Pivot,"29.544361, -82.781194",29.544361,-82.781194,,No,0
+,Jefferey Reed,"29.601417, -82.719056",29.601417,-82.719056,,No,0
+,Jody Land Pivot,"30.076556, -82.882861",30.076556,-82.882861,,No,0
+,Jody Spender,"30.083778, -83.129667",30.083778,-83.129667,,No,0
+,Johnson L Big,"30.515972, -83.325306",30.515972,-83.325306,,No,0
+,Johnson L Small,"30.514167, -83.319306",30.514167,-83.319306,,No,0
+,Jones 40,"29.724583, -82.969972",29.724583,-82.969972,,No,0
+,Kirkman 2,"30.544250, -83.094361",30.544250,-83.094361,,No,0
+,Kirkman Gate,"30.543500, -83.102417",30.543500,-83.102417,,No,0
+,Lee Peanut Colquitt,"31.075583, -84.654500",31.075583,-84.654500,,No,0
+,Leeroy,"30.483097, -83.253904",30.483097,-83.253904,,No,0
+,LF Farms,"30.264222, -82.896056",30.264222,-82.896056,,No,0
+,Live Oak Sod,"30.111861, -83.054333",30.111861,-83.054333,,No,0
+,Loncala 12,"29.702361, -82.709917",29.702361,-82.709917,,Yes,6
+,Machelles,"29.679636, -82.865696",29.679636,-82.865696,,No,0
+,Melon Shed,"29.624111, -83.063167",29.624111,-83.063167,,No,0
+,Mike Adams 3,"30.496278, -83.058056",30.496278,-83.058056,,No,0
+,NFD H Pivot,"29.720833, -82.884694",29.720833,-82.884694,,No,0
+,NFH Pivot B,"29.726500, -82.864806",29.726500,-82.864806,,No,0
+,Norfleet 33 Field,"29.672528, -82.619194",29.672528,-82.619194,,No,0
+,Norfleet 34 Field,"29.680000, -82.619611",29.680000,-82.619611,,No,0
+,Norfleet Pit Field,"29.692972, -82.609611",29.692972,-82.609611,,No,0
+,Norfleet Tripp’s House,"29.661611, -82.666917",29.661611,-82.666917,,No,0
+,Norfleet Tyner Field,"29.702472, -82.611639",29.702472,-82.611639,,No,0
+,North Wards Full,"29.552083, -82.805722",29.552083,-82.805722,,No,0
+,Parker House North,"30.260611, -82.847389",30.260611,-82.847389,,No,0
+,Pecan,"30.497528, -83.266250",30.497528,-83.266250,,No,0
+,Philpot 3,"29.733806, -82.870083",29.733806,-82.870083,,No,0
+,Pine Tree,"30.497389, -83.259778",30.497389,-83.259778,,No,0
+,Pivot 12,"30.193639, -83.095139",30.193639,-83.095139,,Yes,1
+,Pivot 19,"30.186444, -83.091333",30.186444,-83.091333,,No,0
+,Power line,"30.521361, -83.310528",30.521361,-83.310528,,Yes,1
+,Putnal Pelow Field,"30.207472, -83.143222",30.207472,-83.143222,,No,0
+,Quincey 1 Sanchez,"29.587194, -82.796556",29.587194,-82.796556,,No,0
+,Quincey 2 Sanchez,"29.593694, -82.792389",29.593694,-82.792389,,No,0
+,Reads Place,"29.599944, -82.780972",29.599944,-82.780972,,No,0
+,Reid Johnson Gate,"30.599000, -83.242194",30.599000,-83.242194,,No,0
+,Reid River,"30.584706, -83.249576",30.584706,-83.249576,,No,0
+,Reid River Place,"30.586783, -83.251368",30.586783,-83.251368,,No,0
+,Reid Zipper,"30.517444, -83.185778",30.517444,-83.185778,,No,0
+,River Rd Tower,"30.368306, -83.218528",30.368306,-83.218528,,No,0
+,Rogers Pivot,"30.166333, -83.118361",30.166333,-83.118361,,Yes,1
+,Running M Ranch,"30.596282, -83.498957",30.596282,-83.498957,,No,0
+,Rutherford,"30.461056, -83.277000",30.461056,-83.277000,,No,0
+,Sanchez Ganus Barn,"29.774874, -82.974776",29.774874,-82.974776,,No,0
+,Sanchez Ocean Pond,"29.643667, -83.067472",29.643667,-83.067472,,No,0
+,Sanchez Packing Shed,"29.611056, -83.047972",29.611056,-83.047972,,No,0
+,Sanchez Stockman,"29.501611, -82.949250",29.501611,-82.949250,,No,0
+,Scaff 3,"30.342722, -83.244861",30.342722,-83.244861,,No,0
+,Scaff 6,"30.330587, -83.233512",30.330587,-83.233512,,Yes,1
+,Scaff Drive,"30.506611, -83.054694",30.506611,-83.054694,,No,0
+,Scaff North,"30.483694, -83.145667",30.483694,-83.145667,,No,0
+,Scaff South,"30.478327, -83.145742",30.478327,-83.145742,,No,0
+,Scott Pivot,"30.165667, -83.118306",30.165667,-83.118306,,Yes,2
+,Scott Wynn,"30.506056, -83.126056",30.506056,-83.126056,,No,0
+,Scott Wynn Drive,"30.495000, -83.128361",30.495000,-83.128361,,No,0
+,Selph 1,"30.526389, -83.140278",30.526389,-83.140278,,No,0
+,Selph 2,"30.525083, -83.145667",30.525083,-83.145667,,No,0
+,SF 1,"29.591694, -82.860472",29.591694,-82.860472,,No,0
+,SF 11,"29.578750, -82.854444",29.578750,-82.854444,,Yes,1
+,SF 13,"29.587667, -82.864444",29.587667,-82.864444,,No,0
+,SF 15,"29.594611, -82.868722",29.594611,-82.868722,,No,0
+,SF 16,"29.601694, -82.868528",29.601694,-82.868528,,Yes,1
+,SF 17,"29.580389, -82.877417",29.580389,-82.877417,,No,0
+,SF 19,"29.605444, -82.887556",29.605444,-82.887556,,No,0
+,SF 20,"29.608889, -82.894222",29.608889,-82.894222,,Yes,1
+,SF 21,"29.580222, -82.885833",29.580222,-82.885833,,No,0
+,SF 26,"29.602000, -82.860861",29.602000,-82.860861,,Yes,1
+,SF 8,"29.588139, -82.844028",29.588139,-82.844028,,No,0
+,Sims Place,"30.763641, -83.126558",30.763641,-83.126558,,No,0
+,Sorth Ward Tillis,"29.544333, -82.801833",29.544333,-82.801833,,No,0
+,Southpoint 1,"29.434583, -82.910167",29.434583,-82.910167,,No,0
+,Southpoint 3,"29.427667, -82.918250",29.427667,-82.918250,,No,0
+,Southpoint 4,"29.420361, -82.918417",29.420361,-82.918417,,No,0
+,Southpoint 5,"29.424194, -82.912889",29.424194,-82.912889,,Yes,1
+,Southpoint 6,"29.434472, -82.918194",29.434472,-82.918194,,No,0
+,Southpoint 7,"29.420028, -82.926389",29.420028,-82.926389,,No,0
+,Stewart West,"30.512333, -83.278806",30.512333,-83.278806,,No,0
+,Sun Springs,"29.718483, -82.920444",29.718483,-82.920444,,Yes,1
+,Tidy Bowl,"30.490667, -83.266750",30.490667,-83.266750,,Yes,2
+,Tillis Quincey,"29.587750, -82.801667",29.587750,-82.801667,,No,0
+,Tim Webb,"30.121056, -82.960306",30.121056,-82.960306,,No,0
+,Tobacco Patch,"30.490633, -83.323262",30.490633,-83.323262,,Yes,1
+,Tommy Cason,"29.387056, -82.888111",29.387056,-82.888111,,No,0
+,Tommy House Sanchez,"29.677374, -82.863468",29.677374,-82.863468,,No,0
+,Trevor Bass Asbell,"29.570972, -82.680833",29.570972,-82.680833,,No,0
+,Trevor Bass New,"29.543622, -82.647014",29.543622,-82.647014,,No,0
+,Trevor Bass New,"29.568611, -82.647000",29.568611,-82.647000,,No,0
+,Tycore Pivot,"30.725056, -83.109750",30.725056,-83.109750,,No,0
+,Valmont 2,"30.460806, -83.232750",30.460806,-83.232750,,No,0
+,Valmont 3,"30.453694, -83.232556",30.453694,-83.232556,,No,0
+,Walther Randy Michael,"29.799722, -82.981056",29.799722,-82.981056,,No,0
+,Watson Packing Shed,"29.547415, -82.840659",29.547415,-82.840659,,No,0
+,WC 4,"29.531694, -82.802111",29.531694,-82.802111,,Yes,1
+,WC 8,"29.536611, -82.785278",29.536611,-82.785278,,No,0
+,WC Entrance,"29.526028, -82.822750",29.526028,-82.822750,,No,0
+,Whitty Big,"30.417278, -83.266389",30.417278,-83.266389,,No,0
+,Wingit,"30.522611, -83.173667",30.522611,-83.173667,,No,0
+,Woodlands 12,"30.399459, -83.241209",30.399459,-83.241209,,No,0
+,Woodlands 2,"30.395417, -83.245611",30.395417,-83.245611,,No,0
+,Zant East,"30.597528, -83.209194",30.597528,-83.209194,,No,0
+,Zant West,"30.601250, -83.213056",30.601250,-83.213056,,No,0
