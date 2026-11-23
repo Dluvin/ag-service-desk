@@ -11,6 +11,15 @@ const STORE_NAME = "Live Oak";
 const UNASSIGNED_NAME = "Unassigned";
 const CSV_PATH = path.join(__dirname, "..", "data", "live-oak-pivots.csv");
 
+/** Normalize duplicate customer spellings from the map export. */
+const CUSTOMER_ALIASES = new Map([["83 farms", "83 Farms LLC"]]);
+
+function canonicalCustomerName(name) {
+  const trimmed = String(name || "").trim();
+  if (!trimmed) return trimmed;
+  return CUSTOMER_ALIASES.get(trimmed.toLowerCase()) || trimmed;
+}
+
 function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -123,7 +132,7 @@ function readRows() {
 
   const rows = [];
   for (const cells of table.slice(1)) {
-    const rawCustomer = String(cells[idx.customer] || "").trim();
+    const rawCustomer = canonicalCustomerName(String(cells[idx.customer] || "").trim());
     // Blank customer cells (merged spreadsheet) go to Unassigned — do not fill forward.
     const customer = rawCustomer || UNASSIGNED_NAME;
     const farmName = rawCustomer ? rawCustomer : UNASSIGNED_NAME;
