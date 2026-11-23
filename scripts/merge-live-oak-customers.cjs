@@ -15,6 +15,7 @@ const MERGES = [
   { source: "Black Gold", target: "Black Gold Farms" },
   { source: "Lee Peanut Farm LLC", target: "Lee Peanut Farms LLC" },
   { source: "Lee Peanut Farms", target: "Lee Peanut Farms LLC" },
+  { source: "NKC Southeast", target: "NKC Southeast LLC" },
 ];
 
 function isAmericanIrrigationOrg(org) {
