@@ -1,0 +1,229 @@
+date,customer,site,work,order_number,google_location,est_number,tech,bom,invoice_number
+2026-05-26,Alvin Henderson,South East,No Power,2010,,,Avery,2253.73,L2602010
+2026-06-23,Usher Land & Timber,Hay Field Pivot,Pivot Not Walking,2014,,,Avery,1692.21,L2502014
+2026-07-06,Lee Peanut Farms,Deas East,End Tower Will Not Walk,2016,"30.443083, -83.165722",,AVery,675.53,L2502016
+2026-08-07,Black Gold Farms,John Ed,Blank Screen In Panel,2025,,,Blake,663.34,L2502025
+2026-09-09,Black Gold Farms,Hingson South,GPS Not Working,2027,,,Blake,1006.40,L2502027
+2026-09-09,Reid Family Partnership,In-Between,Radio Not Working,2028,,,Blake,250.00,L2502028
+2026-09-09,Bass Farm,Needed Part,,2029,,,Blake,93.29,L2502029
+2026-09-11,Eastwind Preserve,Deer Pen,Pump Panel Not Coming On,2030,,,Blake,550.48,L2502030
+2026-09-09,Full Circle Dairy,Pivot # 16,Pivot Will Not Move,2031,,,Blake,325.00,L2502031
+2026-09-09,Adams MD Farms,Grain Bin,Possible Lightning Strike,2032,,,Blake,1109.78,L2502032
+2026-09-09,Valmont,Pecan Pivot,Center Drive Is Bad,2033,,,Blake,1632.85,L2502033
+2026-09-11,David Corbett Farms,Frier # 7,Pivot Will Not Walk,2034,"30.279417, -83.189611",,Blake,265.64,L2502034
+2026-09-11,James Coggins,Lee # 2,Leaking Boot,2035,,,Blake,340.75,L2502035
+2026-09-09,Harold Land,Tobacco Barn,Roto Phase Will Not Come On,2036,,,Blake,384.04,L2502036
+2026-09-11,Live Oak Stud Farm,VFD,Showing Code,2037,,,Blake,11087.44,L2502037
+2026-09-11,Full Circle Dairy,"Full Circle # 2, # 4, # 5, # 7, & # 8","Replace 10"" Valves",2038,,,Blake,14639.36,L2602038
+2026-09-21,Alliance Dairy,SF # 11,GPS Not Working,2039,"29.57875, -82.854444",,Blake,1905.81,L2502039
+2026-09-21,Ladeda,Williams # 4 & # 5,Replaced Meter Can,2040,,,Blake,1056.97,L2502040
+2026-09-21,Alliance Dairy,SF # 16,GPS Not Working,2041,"29.601694, -82.868528",,Blake,1449.41,L2502041
+2026-09-21,Mike Adams,Wynn East & West,Repaired Crop Link Lite,2042,,,Blake,544.36,L2502042
+2026-09-22,Sanchez Farms,Loncala # 12,Replace Drive,2043,"29.702361, -82.709917",,Blake,16550.00,L2602043
+2026-09-25,Adams MD Farms,Havener Middle,Blowing Fuses,2044,,,Blake,2095.17,L2502044
+2026-10-05,Richard Osteen,Pivot,Burnt Disconnect,2045,,,Blake,250.00,L2502045
+2026-10-05,Parker Sod,4 Wheel Towable,Booster Pump Not Coming On,2046,,,Blake,250.00,L2502046
+2026-10-05,David Corbett Farms,Frier # 6,Bad Pressure Transducer,2047,,,Blake,659.54,L2502047
+2026-10-05,Black Gold Farms,John Ed,Soft Start Tripping,2048,,,Blake,2290.74,L2502048
+2026-10-09,M & B Of Tampa,3 Pivots,Service Pivots,2049,,,Blake,1464.44,L2502049
+2026-06-29,Adams MD Farms,Lewis # 3,Pull Turbine Replace With Sub,3592,,,Saul,41809.77,L2603592
+2026-06-10,Lee Peanut Farms,Off Hwy 6,Burnt Wires,3607,,,Desi,365.64,L2503607
+2026-09-09,Grimmway,Williams # 10,Replace Gearbox,3613,,,Avery,1175.00,L2503613
+2026-09-15,Jody Land,Pivot Off Hwy 49,Second Tower Will Not Move,3614,,,Saul,258.20,L2503614
+2026-09-23,Jim Hulbert,Small Pump,No Water,3615,,,Avery,235.69,L2503615
+2026-09-21,Jody Land,Pivot Off HWY 49,Install Timer On Pump Panel,3616,,,Desi,372.37,L2503616
+2026-10-01,Polo Hay,Pivot # 6,Bad Gearbox,3617,"30.177, -83.219",,Twiggs,1687.70,L2503617
+2026-09-29,Sanchez,Loncala # 8 & # 11,Replace Parts In Drive,3618,,,Wade,966.58,L2503618
+2026-09-29,Ladeda,Luraville # 9,Walked Out Of Track,3619,,,Wade,250.00,L2503619
+2026-09-29,Ladeda,Luraville # 17,Pump Will Not Come On,3620,,,Wade,250.00,L2503620
+2026-09-29,Black Gold,John Ed,Pump Panel Tripping,3621,,,Wade,1229.99,L2503621
+2026-09-29,Full Circle Dairy,Pivot # 16,Pivot Will Not Walk,3622,,,Wade,250.00,L2503622
+2026-09-29,David Corbett Farms,Frier # 12 & # 13,Nelson Valves Not Working,3623,,,Wade,526.96,L2503623
+2026-09-29,Hugh Hunter,Pivot,Pivot Will Not Walk,3624,,,Wade,519.19,L2503624
+2026-10-02,Mike Adams,Wynn West,Pivot Will Not Walk,3626,,,Wade,77.72,L2503626
+2026-10-02,Mike Adams,Scaff Middle,Timer Issues,3627,AI Warranty,,Wade,0.00,L2503627
+2026-10-01,Grimmway Farms,Davis # 7,Bad Underground,3628,,,Blake,1257.99,L2503628
+2026-10-12,Donna Riegel,Small Pump,No Water,3629,,,Avery,273.82,L2503629
+2026-10-14,Eastwind Preserve,East & West Pivots,Low Pressure,3631,,,Blake,250.00,L2503631
+2026-11-02,Ladeda,Luraville # 1,Will Not Walk,3632,,,Wade,408.13,L2503632
+2026-11-02,Ladeda,Loncala # 12,VFD Not Working,3633,"29.702361, -82.709917",,Wade,400.00,L2503633
+2026-11-02,Grimmway Farms,Davis # 4,Aux Not Working,3634,,,Wade,250.00,L2503634
+2026-11-02,Lee Peanut Farms,Tippet West,Service Burnt Up,3635,,,Wade,1545.79,L2503635
+2026-11-02,R. Moore Farms,Behind Shop Pivot,Leak At End Tower,3636,,,Wade,252.02,L25003636
+2026-11-02,James Coggins,Lee Farm # 7,Will Not Walk,3637,,,Wade,250.00,L25003637
+2026-11-03,Deas Brothers,Wingate,Pivot Will Not Walk,3638,,,Wade,290.68,L2503638
+2026-06-01,Jerkin Farms,Valley Off 252,Will Not Turn On Pump,3692,,,Kale Twiggs,337.70,L2503692
+2026-06-12,Lee Peanut Farms,Chad Phillips Pivot,Phase Converter Not Working,3694,,,Kale Twiggs,550.00,L2503694
+2026-06-04,Black Gold Farms,Brannon Pivot,Problem With VFD,3695,,,Kale Twiggs,1140.85,L2503695
+2026-06-10,Reid Family Partnership,House Z Pivot,Lost Communication,3698,,,Kale Twiggs,1175.42,L2503698
+2026-06-10,Grimmway Farms,Williams # 10,Blown Motor,3699,,,Kale Twiggs,17043.75,L25003699
+2026-06-10,Black Gold Farms,Milton # 1,Pivot Safety Out,3700,,,Kale Twiggs,339.92,L25003700
+2026-06-10,Betty Williams,Small Pump,No Water,3701,,,Saul/Ryan,,
+2026-06-01,Challenger Ibero America,Well Pump,Broken Shaft,3705,,,Saul,3859.37,L2603705
+2026-07-01,Alliance Dairy-Trenton,Old # 1 Parlor,30 HP Sub,3723,,,Saul,6315.95,L2603723
+2026-06-16,Sanchez Farms,Ganus # 1,Pull And Check Pump,3732,,,Saul Vargus,1698.78,L2503732
+2026-06-19,Bass Farms,Asbell North,Set New Pump,3734,,,Saul Vargus,19061.25,L2503734
+2026-05-30,Lee Peanut Farms,Woodlands # 7,Broken Shaft,3737,"30.380889, -83.220306",,Saul,14387.58,L2603737
+2026-06-19,Lee Peanut Farms,Tippett,Add Column Pipe,3738,,,Saul Vargus,1500.00,L2503738A
+2026-06-01,Mark Hodges,Reinke Pivot,Pull Pump,3741,,,Saul,3540.56,L2503741
+2026-06-01,Sanchez Farms,Ganus # 1,Pull And Set,3743,,,Saul,15852.13,L2603743
+2026-06-03,Bass Farms,Asbell North,Pull Turbine,3748,,,Saul,750.00,L2603748
+2026-06-09,Sanriver Farms,Pivot # 13,Pull And Set Sub,3750,,,Saul,6034.36,L2503750
+2026-06-01,Charles Floyd,Small Pump,Pump Not Shutting Off,4758,,,Blake,421.15,L2504758
+2026-05-30,Alliance Trenton,Rantz Smith House,GPS Not Working,4762,,,Blake,1803.93,L2604762
+2026-06-09,Dwight Stansel,Mobley Pivot,Pump Not Coming On,4763,,,Blake,250.00,L25004763
+2026-06-22,Lee Peanut Farms,Scott # 1,Move Pivot Point Of Cracked Pad,4764,"30.302889, -83.245",,Blake,1493.01,L25004764
+2026-06-22,Grimmway Farms,Williams # 5,Bad 5 HP Booster Pump,4765,,,Blake,5099.08,L25004765
+2026-06-10,Dairy Research Unit,Pivot G,Not Walking,4766,,,Blake,478.52,L25004766
+2026-06-10,David Corbett Farms,Frier 1 & 2,Valves Not Closing,4767,,,Blake,1892.68,L25004767
+2026-06-23,Lee Peanut Farms,Henderson North & South,Blown Fuses,4769,,,Blake,274.50,L25004769
+2026-06-22,EWH Ranch,Pivot,Riser Pipe Broken,4770,,,Blake,572.29,L25004770
+2026-06-22,Usher Land & Timber,Front Pivot,Pivot Will Not Walk,4772,"30.171, -83.294",,Blake,1737.24,L25004772
+2026-06-22,Bass Farms,Watermelon,Pivot Will Not Walk,4773,,,Blake,671.74,L25004773
+2026-08-07,Richard Cone,Pivot North Of 53,No Power At Panel,4775,,,Blake,663.34,L25004775
+2026-06-04,Black Gold Famrs,Milton # 1,Corner Out Of lIne,4801,,,Wade,250.00,L2504801
+2026-06-11,Black Gold Famrs,Philly East,Pivot Hit By Lightning,4802,,,Wade,2254.42,L25004802
+2026-06-04,Jackson Family Farms,Milton # 1,Valve Not Shutting Off,4803,,,Wade,400.00,L2504803
+2026-06-04,Sanchez Farms,Loncala # 12,Pivot Will Not Walk,4804,"29.702361, -82.709917",,Wade,4579.94,L2504804
+2026-06-04,Jackson Family Farms,Dean Jerkins Old Valley,3rd Tower Not Walking,4805,,,Wade,337.70,L2504805
+2026-06-11,Ladeda,Luraville # 15,Will Not Run On Auto,4806,,,Wade,1745.00,L25004806
+2026-06-10,Lee Peanut Farms,Hayfield Pivot,Pump Panel Not Turning On IN Auto,4808,,,Wade,271.72,L25004808
+2026-06-10,Lee Peanut Farms,Cumberland # 3,Pivot Safety Out,4809,"30.364583, -83.22675",,Wade,2682.63,L25004809
+2026-06-10,Grimmway Farms,Williams # 10,Pivot Safety Out,4810,,,Wade,273.70,L25004810
+2026-06-18,Grimmway Farms,Williams # 10,Endgun Not Coming On,4811,,,Wade,4704.60,L25004811
+2026-06-19,Lee Peanut Farms,Lee # 5,Pivot Will Not Walk,4812,,,Wade,250.00,L25004812
+2026-06-19,David Corbett Farms,Frier # 2,Corner Arm Not Walking,4813,,,Wade,250.00,L25004813
+2026-06-19,Doug Carter,Pivot By Chicken House,2nd Tower Will Not Walk,4814,,,Wade,325.92,L25004814
+2026-06-19,Deas Brothers,Blair,Power Unit Will Not Stay Running,4815,,,Wade,451.98,L25004815
+2026-06-22,Ladeda,Beki,Corner Arm Walked Out Of Track,4816,,,Wade,250.00,L25004816
+2026-06-22,Lee Peanut Farms,Andrews Corner Arm,East Pump Will Not Run,4817,,,Wade,299.50,L25004817
+2026-06-22,Sanchez Farms,Loncala # 12,Pivot Safety Out,4818,"29.702361, -82.709917",,Wade,250.00,L25004818
+2026-06-22,Lee Peanut Farms,Blue Springs,End Tower Will Not Move,4819,,,Wade,250.00,L25004819
+2026-06-22,Black Gold Farms,Osteen Jr,No Power At Pivot,4820,,,Wade,310.12,L25004820
+2026-06-22,John L Hart,Off 27,Pivot Will Not Walk,4821,,,Wade,403.52,L25004821
+2026-07-08,Lee Peanut Farms,Cumberland # 4,No Power At Pivot,4825,"30.373694, -83.224444",,Wade,250.00,L25004825
+2026-07-13,Scott Wynn,Hwy 6 Pivot,Replace Service,4828,,,Wade Twiggs,3594.69,L25004928
+2026-08-10,Barbara Barker,12287 117th Dr,Small Pump,4843,,,Wade,235.85,L25004843
+2026-08-11,Ladeda,Luraville # 1,Pivot Will Not Walk,4844,,,Wade,250.00,L25004844
+2026-08-11,Lee Peanut Farms,Scaff # 1,Pump Will Not Come On,4845,,,Wade,1165.39,L25004845
+2026-08-11,Lee Peanut Farms,Whitty,Pump Will Not Come On,4846,,,Wade,1315.39,L25004846
+2026-09-01,Joe Ard,Small Pump,No Water,4847,,,Saul Vargus,274.61,L25004847
+2026-09-29,Lee Peanut Farms,Tidy Bowl,Pivot Will Not Walk,4848,"30.490667, -83.26675",,Wade,337.70,L25004848
+2026-09-29,Lee Peanut Farms,Andrews Corner Arm,Wells Will Not Come On,4849,,,Wade,250.00,L25004849
+2026-09-29,Sanchez Farms,Holly Hills # 4,Sprinklers Not Shutting Off,4850,,,Wade,250.00,L25004850
+2026-06-12,Ash Groove,Branford,Replace Pump,4851,,,Saul Vargus,6003.19,L25004851
+2026-06-09,Rob Lewis,Small Pump,No Water,4852,,,Saul Vargus,657.55,L25004852
+2026-06-12,Carlton Padgett,Small Pump,Will Not Build Pressure,4853,,,Saul Vargus,250.00,L25004853
+2026-06-10,Sanriver,Well # 4,Pipe Has Hole,4854,,,Saul Vargus,7021.37,L25004854
+2026-06-16,Sanchez,Guest House Place,Check Pump,4855,,,Saul Vargus,3197.89,L25004855
+2026-09-03,Lee Peanut,South Of Hwy 6,Swap Motors,4857,,,Saul Vargus,6412.65,L25004897
+2026-06-12,Jerry Goff,Behind Chicken Houses,Pump Will Not Run,4858,,,Saul Vargus,250.00,L25004858
+2026-07-07,Adams MD Farms,Sapp Place,Pump Shaking,4861,,,Saul Vargus,14244.49,L2604861
+2026-06-11,Chad Futch,Newberry SW 15th Ave,"Pull Turbine, Included In Michaels Inv",4862,,,Saul Vargus,13838.31,L47173
+2026-07-06,Dean Hendricks,Hay Barn Well,No Water,4867,,,Saul Vargus,6897.85,L25004867
+2026-07-07,Bass Farms,Johnson Place,Set 100 HP Sub Back In,4868,"29.597, -82.615",,Saul Vargus,815.32,L2604868
+2026-07-07,Alliance Dairy Trenton,WC # 4,Swap Motors,4869,"29.531694, -82.802111",,Saul Vargus,7625.98,L2604869
+2026-09-18,Straughn Farms,South Well,Pull Oil Lube Turbine,4882,,,Saul,850.00,L25004882
+2026-08-03,Ricky Lyons,Pig Farm,No Water Lots Of Air,4883,,,Saul,310.40,L2604883
+2026-08-03,Walter Boatwright,14855 173rd,Tank Leaking,4884,,,Saul,990.81,L2604884
+2026-08-12,Sanriver,Pivot # 5,Lightning Strike At Pump,4885,,,Saul,7867.88,L25004885
+2026-08-10,Ryan Peters,Home,No Water Small Pump,4886,,,Saul,3726.68,L25004886
+2026-08-12,Charles Spencer,Home,Small Pump Water Leak,4887,,,Saul,238.65,L25004887
+2026-08-14,Tammy Lee,Home,No Water Small Pump,4888,,,Saul,356.14,L25004888
+2026-09-02,Straughn Farms,Archer FL,Check Pump,4889,,,Saul,250.00,L25004889
+2026-09-17,Straughn Farms,Archer FL,Install New Pump,4890,,,Saul,20909.94,L25004890
+2026-09-02,Alliance Dairy Trenton,SF # 20,Pump Vibration,4892,"29.608889, -82.894222",,Saul,4177.80,L25004892
+2026-09-09,Lee Peanut Farms,Tidy Bowl,Bad Turbine Motor,4893,"30.490667, -83.26675",,Saul,9519.30,L25004893
+2026-09-04,Full Circle Dairy,Well # 2,Pulled And Checked Pump,4896,,,Saul,3272.75,L25004896
+2026-09-02,Alliance Dairy Trenton,Hilltop # 18,Pump Is Shaking,4898,,,Saul,4248.38,L25004898
+2026-09-09,Sanriver,Pivot # 3,No Water,4899,,,Saul,7074.84,L25004899
+2026-09-18,Ladeda,Luraville #9,Motor Smoking,4900,,,Saul,9459.88,L25004900
+2026-06-12,Tater Farms,Pivot # 1,Endgun NOt Putiing Out Enough Water,4902,,,Kale Twiggs,426.95,L25004902
+2026-06-22,GD Watson Farms,2 Newest Pivots,Will Not Walk,4906,,,Twiggs,325.00,L25004906
+2026-07-06,Grimmway Farms,Davis Track # 17,Panel Has No Power,4912,,,Kale Twiggs,300.64,L25004912
+2026-07-06,Lee Peanut Farms,Hazelton # 1,Pivot Will Not Walk,4913,"30.350028, -83.227889",,Kale Twiggs,1131.54,L25004913
+2026-07-10,GTO Farms,Edna Field,Corner Arm,4914,,,Kale Twiggs,2971.66,L25004914
+2026-07-06,Scott Wynn,North Pivot,Bad Starter,4921,,,Kale Twiggs,2373.40,L25004921
+2026-07-06,Full Circle Dairy,Well # 1,VFD Fault,4922,,,Kale Twiggs,372.22,L25004622
+2026-07-06,Ladeda,Williams # 12,Will Not Walk,4923,,,Kale Twiggs,3284.42,L25004923
+2026-08-03,JH Farming,Rutherford,Safety Out,4941,"30.505194, -83.329528",,Kale Twiggs,1106.39,L25004941
+2026-08-03,Garrett Brothers,Main Farm,VFD Issues,4942,,,Kale Twiggs,638.71,L25004942
+2026-08-10,Alliance Dairy Trenton,WC # 3 & # 4,Put Aux,4943,,,Kale Twiggs,0.00,L25004943
+2026-08-10,Alliance Dairy Trenton,Hucthinson,Put Aux,4944,,,Kale Twiggs,0.00,L25004944
+2026-08-20,Alliance Dairy Trenton,Faricloth,Put Aux,4945,,,Kale Twiggs,0.00,L2604945
+2026-08-11,Lee Peanut Farms,Full Circle # 6,No Power,4946,,,Kale Twiggs,433.81,L25004946
+2026-06-25,Sandy Hollock,6239 53rd rd,Small Pump,4951,,,Ryan,2422.90,L25004951
+2026-09-02,Ashley Eubanks,5169 148th Place,Small Pump,4955,,,Saul Vargus,1275.99,L25004955
+2026-09-03,Mike Mercado,20504 50th St,Small Pump,4956,,,Saul,225.00,L25004956
+2026-09-14,Melody Christian Center,Bungalow,No Water,4957,,,Saul,230.00,L2604957
+2026-09-15,Frank Walker,11434 22nd Place,Leak At Tank,4958,,,Saul,347.57,L25004958
+2026-11-03,Karen Mazzola,Small Pump,No Water,4959,,,Saul,366.32,L2604959
+2026-10-27,Alton Poultry,NE Rown Rd,Not Enough Pressure,4960,,,Saul,4362.66,L25004960
+2026-08-14,Eastwind Preserve,Deer Park,Pump Not Coming On,5251,,,Kale Twiggs,250.00,L25005251
+2026-08-14,Full Circle Dairy,Well # 2,Well Will Not Come On,5252,,,Kale Twiggs,1580.97,L25005252
+2026-08-14,Lee Peanut Farms,Lee Farms # 4,Nelson Valve Not Working,5254,,,Kale Twiggs,573.68,L25005254
+2026-08-14,Jack Putnal,Day # 2,2nd Tower Out Of Line,5255,,,Kale Twiggs,369.19,L2505255
+2026-08-14,Alliance Dairy,Castleton Well,Install Control Card,5256,,,Kale Twiggs,1467.13,L25005256
+2026-09-01,Alliance Dairy,Castleton,Install Drive,5257,,,Kale Twiggs,15732.04,L25005257
+2026-08-14,Garrett Brothers,VFD By Green Houses,Replace Control Board,5258,,,Kale Twiggs,11188.72,L2605258
+2026-09-01,Drummond Cattle Company,Reinke,2nd Tower Out Of Line,5259,,,Kale Twiggs,281.49,L25005259
+2026-09-01,Jack Putnal,Richardson Well,Pump Will Not Come On,5260,,,Kale Twiggs,250.00,L25005260
+2026-09-01,Ladeda,Higson North Well,Pump Will Not Run On Auto,5261,,,Kale Twiggs,337.70,L25005261
+2026-09-01,Lee Peanut Farms,Alderman Central East,Well Will Not Come On,5262,"30.506802, -83.268384",,Kale Twiggs,1569.69,L25005262
+2026-10-01,Jack Putnal,Richardson # 4,Base Station Not Responding,5263,,,Kale Twiggs,1874.01,L25005263
+2026-09-01,Ladeda,"Well 17, 18, 19",VFD Showing Fault,5264,,,Kale Twiggs,1743.67,L25005264
+2026-09-01,Ladeda,Luraville # 12,Pivot Safety Out,5265,,,Kale Twiggs,277.93,L25005265
+2026-09-09,David Corbett Farms,Frier # 7,Pivot Not Walking,5266,"30.279417, -83.189611",,Kale Twiggs,273.46,L25005266
+2026-09-09,NKC,Mervica,Booster Pump,5267,,,Kale Twiggs,2375.21,L25005267
+2026-09-09,Grimmway Farms,Williams # 10,Pivot Stopped Walking Bender Kept Walking - WO Included With Avery's,5268,,,Kale Twiggs,0.00,L25005268
+2026-09-14,Ladeda,Valmont # 9,Last 2 Towers Out Of Alignment,5269,"30.410106, -83.220193",,Wade,250.00,L25005269
+2026-09-14,Lee Peanut Farms,Scott # 4,Pivot Don't Have Right Voltage,5270,"30.315583, -83.244722",,Wade,250.00,L25005270
+2026-09-14,R. Moore Farms,Pivot Past Taylor Store,Pivot Wrong Power,5271,,,Wade,995.10,L25005271
+2026-09-14,Black Gold Farms,John Ed,GPS Not Working,5272,,,Wade,250.00,L25005272
+2026-09-14,Full Circle Dairy,Well # 4,VFD With Not Run In Auto,5274,,,Wade,666.58,L25005274
+2026-09-14,Lee Peanut Farms,South Of 6,No Power At Pivot,5276,,,Wade,250.00,L25005276
+2026-09-29,Sanchez,Holly Hills # 4,Pivot Will Not Walk,5280,,,Wade,3435.37,L25005280
+2026-09-14,Black Gold Farms,Lord Pivot,End Tower Reverse Side Bog Down,5281,,,Wade,289.48,L25005281
+2026-09-14,Black Gold Farms,Hingson South,No Power,5282,,,Wade,337.98,L25005282
+2026-09-21,Lee Peanut Farms,Tippet East,Well Will Not Come On,5283,,,Twiggs,293.98,L25005283
+2026-09-25,Dairy Research Unit,Pivot I,Not Holding Safety,5284,,,Wade,281.49,L25005284
+2026-09-25,Dairy Research Unit,Pivot K,Pivot Will Not Walk,5285,,,Wade,1480.98,L25005285
+2026-10-01,Full Circle Dairy,Pivot # 12,Vines In Collerctor Ring,5288,"30.193639, -83.095139",,Kale Twiggs,399.54,L25005288
+2026-10-08,Henderson Farm,NW Pivot,Blown Fuses,5289,,,Kale Twiggs,748.46,L2505289
+2026-10-08,Barnes Hay Farm,Pivot On 129,Will Not Walk,5290,,,Kale Twiggs,1904.34,L25005290
+2026-10-27,Polo Hay,Corner Arm,Will Not Walk,5291,"30.195, -83.212",,Kale Twiggs,1395.31,L25005291
+2026-11-04,Tycor Farms,Sims Corner,End Gun Not Turning On,5292,,,Kale Twiggs,250.00,L25005292
+2026-11-03,Ladeda,Williams # 12,Corner Arm Out Of Track,5293,,,Kale Twiggs,1971.80,L25005293
+2026-11-03,Deas Brothers,JBD's Place,Change Gearbox,5294,,,Kale Twiggs,1248.52,L25005294
+2026-11-13,Mike Adams,Bland Place,Pivot Safety Out,5296,,,,250.00,L25005296
+2026-11-13,Ladeda,HWY 6,Corner Arm Will Not Walk,5298,,,,250.00,L25005298
+2026-11-16,Ladeda,Lurraville # 11,VFD Problems,5299,,,,438.39,L25005299
+2026-09-21,Ladeda,Luraville # 4,Pump Will Not Come On,5301,,,,6843.82,L25005301
+2026-09-21,Jody Land,New Well Off 49,Set Pump,5302,,,,2576.17,L25005302
+2026-09-23,Gary Paulk,Branford,Low Water Pressure,5303,,,,250.00,L25005303
+2026-09-23,Harold Gussman,Small Pump,Low Water Pressure,5304,,,,1805.14,L25005304
+2026-09-23,Bruce Goff,Small Pump,Pump Will Not Shut Off,5305,,,,1378.18,L25005305
+2026-09-25,Polo Hay,Pivot # 6,Swap Motors,5306,"30.177, -83.219",,,11976.01,L25005306
+2026-09-25,Tim Webb,McAlpin,Bad Sub Motor,5307,,,,3676.35,L25005307
+2026-09-25,Ryan Peters,Small Pump,Swap Tanks,5308,,,,3948.19,L25005308
+2026-09-25,Lee Peanut Farms,Scott # 1,Swap Motors,5309,"30.302889, -83.245",,,9646.69,L25005309
+2026-10-01,Straughn Farms,South Well,Set Pump In,5310,,,,3539.34,L25005310
+2026-10-02,Barnes Hay Farm,Reinke Pivot,Set Pump,5311,,,,46878.92,L25005311A
+2026-10-09,Black Gold Farm,John Ed Pivot,Pull Pump,5312,"30.253778, -83.168778",,,5470.65,L25005312
+2026-11-02,Alliance Trenton,Main East Well,Pull And Set,5314,,,,12516.72,L2605314
+2026-10-16,Lucy Arocho,Small Pump,Water Leak,5315,,,,379.79,L25005315
+2026-11-13,Dewane Knighton,Branford,Pull And Set,5316,,,,7817.69,L25005316
+2026-11-13,Alliance Dairy,Hill Top SF # 18,Pull And Set,5318,,,,28783.63,L25005318
+2026-11-03,Full Circle Dairy,Well # 4,Swap Motors,5319,,,,22347.90,L25005319
+2026-11-03,Black Gold Farm,Hingson North,Bad Motor,5320,,,,3968.13,L25005320
+2026-11-11,Mark Graham,Hardee Well,Pull And Set,5322,,,Saul Vargas,1006.50,L2605322
+2026-10-16,Wincon Utilities,Waste Water Pivot,Will Not Start Pump,5352,,,Blake,812.47,L25005352
+2026-10-30,Mike Adams,Reinke 3/4 Lewis,Underground Water Leak,5354,,,Blake,886.45,L25005354
+2026-10-30,Mike Adams,North Hafner,Underground Water Leak,5355,,,Blake,2164.51,L25005355
+2026-10-29,Triple Quail,Pivot I,Will Not Walk,5356,,,Blake,325.00,L25005356
+2026-10-30,Dairy Research Unit,Pivot I,Walking Out Of Line,5357,,,Blake,254.96,L25005357
+2026-11-04,Black Gold Farms,Hingson South,Underground Water Leak,5359,,,Blake,632.59,L25005359
+2026-11-03,Running M Ranch,5 Tower,Bad Gearbox,5360,,,Blake,1289.20,L25005360
+2026-11-03,Lee Peanut,Woodlands # 1,Burnt Wire,5361,,,Blake,372.23,L25005361
+2026-11-13,Tater Farms,Main Pipe Line,Water Leak,5362,,,Blake,1516.60,L25005362
+2026-11-13,Polo Hay,Big Rienke,Check Pivot,5363,,,Blake,647.57,L25005363
