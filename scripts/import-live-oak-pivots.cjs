@@ -15,6 +15,9 @@ const CSV_PATH = path.join(__dirname, "..", "data", "live-oak-pivots.csv");
 const CUSTOMER_ALIASES = new Map([
   ["83 farms", "83 Farms LLC"],
   ["allaince", "Alliance"],
+  ["alliance dairy trenton", "Alliance Dairy - Trenton"],
+  ["alliance diary - trenton", "Alliance Dairy - Trenton"],
+  ["alliance diary trenton", "Alliance Dairy - Trenton"],
 ]);
 
 function canonicalCustomerName(name) {

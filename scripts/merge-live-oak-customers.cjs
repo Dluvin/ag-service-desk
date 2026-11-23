@@ -9,6 +9,8 @@ const prisma = new PrismaClient();
 const MERGES = [
   { source: "83 Farms", target: "83 Farms LLC" },
   { source: "Allaince", target: "Alliance" },
+  { source: "Alliance Dairy Trenton", target: "Alliance Dairy - Trenton" },
+  { source: "Alliance Diary - Trenton", target: "Alliance Dairy - Trenton" },
 ];
 
 function isAmericanIrrigationOrg(org) {
