@@ -1,18 +1,21 @@
 /**
- * One-time / idempotent: merge customer "83 Farms" into "83 Farms LLC"
- * for the American Irrigation dealership (Live Oak).
+ * Idempotent Live Oak customer merges for American Irrigation.
+ * Moves farms/pivots/assets/tickets/contacts from source → target, then deletes source.
  */
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
-const SOURCE_NAME = "83 Farms";
-const TARGET_NAME = "83 Farms LLC";
+
+const MERGES = [
+  { source: "83 Farms", target: "83 Farms LLC" },
+  { source: "Allaince", target: "Alliance" },
+];
 
 function isAmericanIrrigationOrg(org) {
   return /americus|american irrigation|heartland|demo-irrigation/i.test(`${org.name} ${org.slug}`);
 }
 
-async function mergeContacts(sourceId, targetId) {
+async function mergeContacts(sourceId, targetId, sourceName) {
   const [sourceContacts, targetContacts] = await Promise.all([
     prisma.farmerContact.findMany({ where: { farmerId: sourceId } }),
     prisma.farmerContact.findMany({ where: { farmerId: targetId } }),
@@ -22,8 +25,7 @@ async function mergeContacts(sourceId, targetId) {
   for (const contact of sourceContacts) {
     const key = contact.name.trim().toLowerCase();
     if (!key || existing.has(key)) continue;
-    // Skip the auto contact that only mirrors the source customer name.
-    if (key === SOURCE_NAME.toLowerCase()) continue;
+    if (key === sourceName.toLowerCase()) continue;
     await prisma.farmerContact.create({
       data: {
         farmerId: targetId,
@@ -38,41 +40,34 @@ async function mergeContacts(sourceId, targetId) {
   return created;
 }
 
-async function mergeOne(organizationId) {
+async function mergeOne(organizationId, sourceName, targetName) {
   const source = await prisma.farmer.findFirst({
-    where: { organizationId, name: SOURCE_NAME },
-    include: {
-      farms: true,
-      pivots: { select: { id: true } },
-      assets: { select: { id: true } },
-      tickets: { select: { id: true } },
-      users: { select: { id: true } },
-      pivotInspections: { select: { id: true } },
-    },
+    where: { organizationId, name: sourceName },
+    include: { farms: true },
   });
   if (!source) {
-    console.log(`Merge 83 Farms: source "${SOURCE_NAME}" not found — skipped.`);
+    console.log(`Merge customers: "${sourceName}" not found — skipped.`);
     return;
   }
 
   let target = await prisma.farmer.findFirst({
-    where: { organizationId, name: TARGET_NAME },
+    where: { organizationId, name: targetName },
   });
   if (!target) {
     target = await prisma.farmer.update({
       where: { id: source.id },
-      data: { name: TARGET_NAME },
+      data: { name: targetName },
     });
-    console.log(`Merge 83 Farms: renamed sole "${SOURCE_NAME}" to "${TARGET_NAME}".`);
+    console.log(`Merge customers: renamed sole "${sourceName}" to "${targetName}".`);
     return;
   }
   if (source.id === target.id) {
-    console.log("Merge 83 Farms: already the same customer.");
+    console.log(`Merge customers: "${sourceName}" and "${targetName}" are already the same.`);
     return;
   }
 
   const year = new Date().getFullYear();
-  const contactsCreated = await mergeContacts(source.id, target.id);
+  const contactsCreated = await mergeContacts(source.id, target.id, sourceName);
 
   await prisma.$transaction(async (tx) => {
     for (const farm of source.farms) {
@@ -130,7 +125,6 @@ async function mergeOne(organizationId) {
       data: { endYear: year },
     });
 
-    // Drop source contacts then the empty customer.
     await tx.farmerContact.deleteMany({ where: { farmerId: source.id } });
     await tx.farmer.delete({ where: { id: source.id } });
   });
@@ -138,7 +132,7 @@ async function mergeOne(organizationId) {
   const pivots = await prisma.pivot.count({ where: { organizationId, farmerId: target.id } });
   const farms = await prisma.farm.count({ where: { organizationId, farmerId: target.id } });
   console.log(
-    `Merge 83 Farms: merged "${SOURCE_NAME}" into "${TARGET_NAME}" · farms=${farms} pivots=${pivots} contacts+${contactsCreated}`,
+    `Merge customers: "${sourceName}" → "${targetName}" · farms=${farms} pivots=${pivots} contacts+${contactsCreated}`,
   );
 }
 
@@ -148,10 +142,12 @@ async function main() {
   });
   const org = orgs.find(isAmericanIrrigationOrg);
   if (!org) {
-    console.log("Merge 83 Farms: American Irrigation organization not found; skipped.");
+    console.log("Merge customers: American Irrigation organization not found; skipped.");
     return;
   }
-  await mergeOne(org.id);
+  for (const pair of MERGES) {
+    await mergeOne(org.id, pair.source, pair.target);
+  }
 }
 
 main()

@@ -12,7 +12,10 @@ const UNASSIGNED_NAME = "Unassigned";
 const CSV_PATH = path.join(__dirname, "..", "data", "live-oak-pivots.csv");
 
 /** Normalize duplicate customer spellings from the map export. */
-const CUSTOMER_ALIASES = new Map([["83 farms", "83 Farms LLC"]]);
+const CUSTOMER_ALIASES = new Map([
+  ["83 farms", "83 Farms LLC"],
+  ["allaince", "Alliance"],
+]);
 
 function canonicalCustomerName(name) {
   const trimmed = String(name || "").trim();

@@ -19,4 +19,4 @@ RUN mkdir -p /data /data/uploads
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["sh", "-c", "export DATABASE_URL=file:/data/prod.db && npx prisma db push && node scripts/seed-ed-bullard.cjs && node scripts/assign-americus.cjs && node scripts/import-live-oak-pivots.cjs && node scripts/merge-83-farms.cjs && npx next start -p ${PORT:-3000}"]
+CMD ["sh", "-c", "export DATABASE_URL=file:/data/prod.db && npx prisma db push && node scripts/seed-ed-bullard.cjs && node scripts/assign-americus.cjs && node scripts/import-live-oak-pivots.cjs && node scripts/merge-live-oak-customers.cjs && npx next start -p ${PORT:-3000}"]
