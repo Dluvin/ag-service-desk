@@ -18,6 +18,7 @@ const CUSTOMER_ALIASES = new Map([
   ["alliance dairy trenton", "Alliance Dairy - Trenton"],
   ["alliance diary - trenton", "Alliance Dairy - Trenton"],
   ["alliance diary trenton", "Alliance Dairy - Trenton"],
+  ["barnes hay farms", "Barnes Hay Farms INC"],
 ]);
 
 function canonicalCustomerName(name) {
