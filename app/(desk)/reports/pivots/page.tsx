@@ -68,9 +68,9 @@ export default async function PivotReportsPage({
         <Stat label={t(locale, "reports.startupPf", { year: STARTUP_SEASON_YEAR })} value={`${report.pivot.startupPassed} / ${report.pivot.startupFailed}`} />
       </div>
 
-      <TableCard title={t(locale, "reports.busiest")} className="mt-6">
+      <TableCard title={`${t(locale, "reports.busiest")} (${report.pivot.busiest.length})`} className="mt-6" scroll>
         <table className="w-full text-left text-sm">
-          <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+          <thead className="sticky top-0 z-10 bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
               <th className="px-3 py-2">Pivot</th>
               <th className="px-3 py-2">Customer</th>
@@ -115,9 +115,9 @@ export default async function PivotReportsPage({
         </table>
       </TableCard>
 
-      <TableCard title={t(locale, "reports.openOnPivots")} className="mt-6">
+      <TableCard title={`${t(locale, "reports.openOnPivots")} (${report.pivot.openWork.length})`} className="mt-6" scroll>
         <table className="w-full text-left text-sm">
-          <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+          <thead className="sticky top-0 z-10 bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
               <th className="px-3 py-2">Pivot</th>
               <th className="px-3 py-2">Customer</th>

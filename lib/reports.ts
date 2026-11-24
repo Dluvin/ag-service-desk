@@ -238,8 +238,7 @@ export async function loadReports(session: SessionUser, options: { store: string
 
   const busiestPivots = [...pivotRows]
     .filter((row) => row.ticketsInRange > 0)
-    .sort((a, b) => b.ticketsInRange - a.ticketsInRange || a.name.localeCompare(b.name))
-    .slice(0, 50);
+    .sort((a, b) => b.ticketsInRange - a.ticketsInRange || a.name.localeCompare(b.name));
   const openPivots = pivotRows.filter((row) => row.openTickets > 0).sort((a, b) => b.openTickets - a.openTickets);
   const quietPivots = pivotRows.filter((row) => row.ticketsInRange === 0).length;
 
@@ -279,7 +278,7 @@ export async function loadReports(session: SessionUser, options: { store: string
       startupPassed: pivotRows.filter((row) => row.startup === "Passed").length,
       startupFailed: pivotRows.filter((row) => row.startup.startsWith("Failed")).length,
       busiest: busiestPivots,
-      openWork: openPivots.slice(0, 50),
+      openWork: openPivots,
     },
   };
 }
@@ -553,7 +552,7 @@ export async function loadAssetReports(session: SessionUser, options: { store: s
     closed: closed.length,
     invoice: totals.invoice,
     byType,
-    pivotRows: pivotRows.filter((row) => row.opened > 0 || row.openNow > 0).slice(0, 75),
+    pivotRows: pivotRows.filter((row) => row.opened > 0 || row.openNow > 0),
     genericRows,
   };
 }

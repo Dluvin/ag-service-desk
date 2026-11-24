@@ -110,9 +110,9 @@ export default async function ReportsPage({
               </tbody>
             </table>
           </TableCard>
-          <TableCard title={t(locale, "reports.byTechnician")}>
+          <TableCard title={`${t(locale, "reports.byTechnician")} (${report.ticket.byTechnician.length})`} scroll>
             <table className="w-full text-left text-sm">
-              <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+              <thead className="sticky top-0 z-10 bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
                 <tr>
                   <th className="px-3 py-2">{t(locale, "common.technician")}</th>
                   <th className="px-3 py-2">{t(locale, "common.opened")}</th>
@@ -138,9 +138,9 @@ export default async function ReportsPage({
               </tbody>
             </table>
           </TableCard>
-          <TableCard title={t(locale, "reports.byStore")}>
+          <TableCard title={`${t(locale, "reports.byStore")} (${report.ticket.byStore.length})`} scroll>
             <table className="w-full text-left text-sm">
-              <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+              <thead className="sticky top-0 z-10 bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
                 <tr>
                   <th className="px-3 py-2">{t(locale, "common.store")}</th>
                   <th className="px-3 py-2">{t(locale, "common.opened")}</th>

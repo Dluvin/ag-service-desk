@@ -71,9 +71,9 @@ export default async function AssetReportsPage({
         <Stat label={t(locale, "reports.quietPivots")} value={String(report.quietPivots)} />
       </div>
 
-      <TableCard title={t(locale, "reports.byType")} className="mt-6">
+      <TableCard title={`${t(locale, "reports.byType")} (${report.byType.length})`} className="mt-6" scroll>
         <table className="w-full text-left text-sm">
-          <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+          <thead className="sticky top-0 z-10 bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
               <th className="px-3 py-2">Type</th>
               <th className="px-3 py-2">Assets</th>
@@ -112,9 +112,9 @@ export default async function AssetReportsPage({
         </table>
       </TableCard>
 
-      <TableCard title={t(locale, "reports.pivotsWithWo")} className="mt-6">
+      <TableCard title={`${t(locale, "reports.pivotsWithWo")} (${report.pivotRows.length})`} className="mt-6" scroll>
         <table className="w-full text-left text-sm">
-          <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+          <thead className="sticky top-0 z-10 bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
               <th className="px-3 py-2">Pivot</th>
               <th className="px-3 py-2">Customer</th>
@@ -161,9 +161,9 @@ export default async function AssetReportsPage({
         </table>
       </TableCard>
 
-      <TableCard title={t(locale, "reports.genericAssets")} className="mt-6">
+      <TableCard title={`${t(locale, "reports.genericAssets")} (${report.genericRows.length})`} className="mt-6" scroll>
         <table className="w-full text-left text-sm">
-          <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+          <thead className="sticky top-0 z-10 bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
               <th className="px-3 py-2">Asset</th>
               <th className="px-3 py-2">Type</th>

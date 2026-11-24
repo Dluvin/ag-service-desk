@@ -71,9 +71,9 @@ export default async function CustomerReportsPage({
         <Stat label={t(locale, "reports.laborMoneyClosed")} value={usd(report.labor)} />
       </div>
 
-      <TableCard title={t(locale, "reports.byCustomer")} className="mt-6">
+      <TableCard title={`${t(locale, "reports.byCustomer")} (${report.rows.length})`} className="mt-6" scroll>
         <table className="w-full text-left text-sm">
-          <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+          <thead className="sticky top-0 z-10 bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
             <tr>
               <th className="px-3 py-2">{t(locale, "common.customer")}</th>
               <th className="px-3 py-2">{t(locale, "common.store")}</th>
