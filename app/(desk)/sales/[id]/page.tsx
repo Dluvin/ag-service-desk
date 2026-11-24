@@ -208,7 +208,17 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
                 />
               </label>
               {sale.farmerId ? (
-                <FarmSelect farms={farms} farmerId={sale.farmerId} defaultFarmId={sale.farmId} />
+                <>
+                  <p className="text-sm text-stone-700">
+                    Customer: <span className="font-medium text-stone-900">{sale.farmer?.name}</span>
+                  </p>
+                  <FarmSelect
+                    farms={farms}
+                    farmerId={sale.farmerId}
+                    defaultFarmId={sale.farmId}
+                    hint="Farms for this customer only."
+                  />
+                </>
               ) : null}
               <MapLocationPicker
                 apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}

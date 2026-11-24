@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { FarmSelect } from "@/components/FarmSelect";
-import { FarmTypeahead } from "@/components/FarmTypeahead";
 import { StoreSelect } from "@/components/StoreSelect";
 import type { FarmOption } from "@/lib/farms";
 import { SALE_STATUSES, SALE_STATUS_LABELS, saleDateInputValue, type SaleStatus } from "@/lib/sales";
@@ -145,16 +144,29 @@ export function SaleFormFields({
 
       {farmerMode === "existing" ? (
         <div className="space-y-4">
-          <FarmTypeahead
-            farms={farmers}
-            farmerId={farmerId}
-            onSelect={(farm) => {
-              setFarmerId(farm?.id ?? "");
-              setFarmMode("existing");
-            }}
-            required
-          />
+          <label className="block text-sm font-medium">
+            Customer
+            <select
+              name="farmerId"
+              required
+              value={farmerId}
+              onChange={(event) => {
+                setFarmerId(event.target.value);
+                setFarmMode("existing");
+              }}
+              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+            >
+              <option value="">Select customer</option>
+              {farmers.map((farmer) => (
+                <option key={farmer.id} value={farmer.id}>
+                  {farmer.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <fieldset className="flex flex-wrap gap-4 text-sm">
+            <legend className="mb-2 w-full text-sm font-medium text-stone-800">Farm</legend>
             <label className="flex items-center gap-2">
               <input
                 type="radio"
@@ -178,7 +190,16 @@ export function SaleFormFields({
             </label>
           </fieldset>
           {farmMode === "existing" ? (
-            <FarmSelect farms={farms} farmerId={farmerId} defaultFarmId={defaults?.farmId} />
+            <FarmSelect
+              farms={farms}
+              farmerId={farmerId}
+              defaultFarmId={defaults?.farmId}
+              hint={
+                farmerId
+                  ? "Farms for this customer only. Leave Unassigned if the sale is not tied to a farm yet."
+                  : "Select a customer first to choose one of their farms."
+              }
+            />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block text-sm font-medium sm:col-span-2">
