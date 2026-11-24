@@ -19,11 +19,30 @@ export function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function TableCard({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
+export function TableCard({
+  title,
+  children,
+  className = "",
+  scroll = false,
+}: {
+  title: string;
+  children: ReactNode;
+  className?: string;
+  /** Cap height and scroll the table body (print still shows full list). */
+  scroll?: boolean;
+}) {
   return (
     <section className={`overflow-hidden rounded-xl border border-stone-200 bg-white ${className}`}>
       <h3 className="border-b border-stone-100 px-4 py-3 font-display text-lg">{title}</h3>
-      <div className="overflow-x-auto">{children}</div>
+      <div
+        className={
+          scroll
+            ? "max-h-[36rem] overflow-auto overscroll-contain print:max-h-none print:overflow-visible"
+            : "overflow-x-auto"
+        }
+      >
+        {children}
+      </div>
     </section>
   );
 }

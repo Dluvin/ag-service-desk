@@ -170,9 +170,13 @@ export default async function ReportsPage({
           </TableCard>
         </div>
 
-        <TableCard title={t(locale, "reports.closedInRangeTitle")} className="mt-6">
+        <TableCard
+          title={`${t(locale, "reports.closedInRangeTitle")} (${report.ticket.closedRows.length})`}
+          className="mt-6"
+          scroll
+        >
           <table className="w-full text-left text-sm">
-            <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
+            <thead className="sticky top-0 z-10 bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
               <tr>
                 <th className="px-3 py-2">{t(locale, "tickets.colWo")}</th>
                 <th className="px-3 py-2">{t(locale, "tickets.colCustomer")}</th>

@@ -257,7 +257,7 @@ export async function loadReports(session: SessionUser, options: { store: string
       byPriority,
       byTechnician,
       byStore,
-      closedRows: closed.slice(0, 75).map((ticket) => ({
+      closedRows: closed.map((ticket) => ({
         id: ticket.id,
         number: ticket.number,
         title: ticket.title,
