@@ -33,6 +33,7 @@ export function NewTicketSiteFields({
   defaultAssetId,
   defaultTypeSlug,
   defaultFarmerId,
+  blankSiteHint,
 }: {
   pivots: Omit<SiteOption, "typeSlug">[];
   assets: SiteOption[];
@@ -45,6 +46,8 @@ export function NewTicketSiteFields({
   defaultAssetId?: string;
   defaultTypeSlug?: string;
   defaultFarmerId?: string;
+  /** When true, show a notice if no asset is selected yet (edit with blank site, or new WO). */
+  blankSiteHint?: boolean;
 }) {
   const pivotType = types.find(isPivotAssetType) ?? types[0] ?? null;
   const defaultPivot = pivots.find((pivot) => pivot.id === defaultPivotId);
@@ -68,7 +71,7 @@ export function NewTicketSiteFields({
   const selectedType = types.find((type) => type.slug === typeSlug) ?? pivotType;
   const isPivot = selectedType ? isPivotAssetType(selectedType) : true;
   const singular = selectedType ? assetTypeSingular(selectedType.name) : "Asset";
-  const needsAsset = !hadDefaultSite && !siteId && siteMode === "existing";
+  const showBlankHint = Boolean(blankSiteHint) && !siteId && siteMode === "existing";
 
   function openCreateAsset(name = "") {
     setSiteId("");
@@ -181,10 +184,9 @@ export function NewTicketSiteFields({
         </label>
       </fieldset>
 
-      {needsAsset ? (
+      {showBlankHint ? (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-          This work order has no asset yet. Pick an existing {singular.toLowerCase()} below, or create a new one
-          without leaving this page.
+          Pick an existing {singular.toLowerCase()}, or create a new one on this page if it isn’t listed.
         </p>
       ) : null}
 
@@ -210,18 +212,16 @@ export function NewTicketSiteFields({
             createLabel={`Create new ${singular.toLowerCase()}: “{name}”`}
             hiddenName={isPivot ? "pivotId" : "assetId"}
           />
-          {farmerId ? (
-            <p className="text-sm text-stone-600">
-              Not listed?{" "}
-              <button
-                type="button"
-                className="font-semibold text-emerald-800 hover:underline"
-                onClick={() => openCreateAsset()}
-              >
-                Create a new {singular.toLowerCase()}
-              </button>
-            </p>
-          ) : null}
+          <p className="text-sm text-stone-600">
+            Not listed?{" "}
+            <button
+              type="button"
+              className="font-semibold text-emerald-800 hover:underline"
+              onClick={() => openCreateAsset()}
+            >
+              Create a new {singular.toLowerCase()}
+            </button>
+          </p>
         </div>
       ) : (
         <div className="space-y-4 rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">

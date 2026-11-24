@@ -100,6 +100,7 @@ export default async function EditTicketPage({ params }: { params: Promise<{ id:
           defaultAssetId={ticket.assetId ?? undefined}
           defaultTypeSlug={ticket.asset?.assetType.slug}
           defaultFarmerId={ticket.farmerId}
+          blankSiteHint={!ticket.pivotId && !ticket.assetId}
         />
         <label className="block text-sm font-medium">
           {t(locale, "ticket.title")}

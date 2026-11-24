@@ -105,6 +105,7 @@ export function OfficeFormDocument({
                 farmers={createSite.farmers}
                 canAddFarmer
                 mapsApiKey={createSite.mapsApiKey}
+                blankSiteHint
               />
               <label className="block text-sm font-medium">
                 {t("forms.workOrderTitle")}

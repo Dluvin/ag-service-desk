@@ -120,6 +120,7 @@ export default async function NewTicketPage({
           mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}
           lockedFarmerId={session.role === ROLES.FARMER ? session.farmerId : null}
           defaultPivotId={query.pivotId}
+          blankSiteHint
         />
         <label className="block text-sm font-medium">
           {t(locale, "ticket.title")}
