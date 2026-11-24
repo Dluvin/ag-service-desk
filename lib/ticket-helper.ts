@@ -3,9 +3,9 @@ import { prisma } from "./prisma";
 import { FIELD_TECH_ROLES, ROLES, canAddTechnicians } from "./roles";
 import { assertCanAddStaff } from "./org-plan";
 import { hashNewUserPassword, sendWelcomeLoginEmail } from "./welcome-mail";
+import { HELPER_NEW, HELPER_NONE } from "./ticket-helper-constants";
 
-export const HELPER_NONE = "__none__";
-export const HELPER_NEW = "__new__";
+export { HELPER_NEW, HELPER_NONE };
 
 function formString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();

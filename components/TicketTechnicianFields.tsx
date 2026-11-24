@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { HELPER_NEW, HELPER_NONE } from "@/lib/ticket-helper";
+import { HELPER_NEW, HELPER_NONE } from "@/lib/ticket-helper-constants";
 
 type Tech = { id: string; name: string };
 
