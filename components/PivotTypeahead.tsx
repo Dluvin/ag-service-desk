@@ -16,21 +16,25 @@ export function PivotTypeahead({
   pivots,
   pivotId,
   onSelect,
+  onCreateNew,
   required,
   disabled,
   label = "Pivot",
   placeholder,
   emptyLabel = "No matching pivots",
+  createLabel,
   hiddenName = "pivotId",
 }: {
   pivots: PivotChoice[];
   pivotId: string;
   onSelect: (pivot: PivotChoice | null) => void;
+  onCreateNew?: (name: string) => void;
   required?: boolean;
   disabled?: boolean;
   label?: string;
   placeholder?: string;
   emptyLabel?: string;
+  createLabel?: string;
   hiddenName?: string;
 }) {
   const plan = usePlan();
@@ -57,12 +61,22 @@ export function PivotTypeahead({
   }, [pivots, text]);
 
   const hovered = matches.find((pivot) => pivot.id === hoveredId) ?? null;
+  const typedName = text.trim();
+  const hasExactMatch = pivots.some((pivot) => pivot.name.toLowerCase() === typedName.toLowerCase());
+  const canCreate = Boolean(onCreateNew && typedName && !hasExactMatch);
 
   function choose(pivot: PivotChoice) {
     setText(pivot.name);
     setOpen(false);
     setHoveredId(null);
     onSelect(pivot);
+  }
+
+  function createNew() {
+    if (!onCreateNew || !typedName) return;
+    setOpen(false);
+    setHoveredId(null);
+    onCreateNew(typedName);
   }
 
   return (
@@ -97,6 +111,12 @@ export function PivotTypeahead({
             }
           }, 180);
         }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && canCreate && matches.length === 0) {
+            event.preventDefault();
+            createNew();
+          }
+        }}
       />
       {open && !disabled ? (
         <div className="absolute z-20 mt-1 w-full">
@@ -126,6 +146,20 @@ export function PivotTypeahead({
                 </li>
               ))
             )}
+            {canCreate ? (
+              <li className="border-t border-stone-100">
+                <button
+                  type="button"
+                  className="block w-full px-3 py-2 text-left font-medium text-emerald-900 hover:bg-emerald-50"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={createNew}
+                >
+                  {createLabel
+                    ? createLabel.replace("{name}", typedName)
+                    : `Create new ${label.toLowerCase()}: “${typedName}”`}
+                </button>
+              </li>
+            ) : null}
           </ul>
           {plan.mapsEnabled && hovered && hovered.latitude != null && hovered.longitude != null ? (
             <div className="absolute top-0 left-full z-30 ml-2 hidden w-64 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-lg lg:block">

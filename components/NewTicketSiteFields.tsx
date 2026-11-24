@@ -54,18 +54,28 @@ export function NewTicketSiteFields({
   const [typeSlug, setTypeSlug] = useState(
     defaultTypeSlug || (defaultAsset ? defaultAsset.typeSlug : pivotType?.slug) || types[0]?.slug || "pivots",
   );
+  const hadDefaultSite = Boolean(defaultPivotId || defaultAssetId);
   const [siteMode, setSiteMode] = useState<"existing" | "new">(
-    defaultPivotId || defaultAssetId || pivots.length || assets.length ? "existing" : "new",
+    hadDefaultSite || pivots.length || assets.length ? "existing" : "new",
   );
   const [farmerMode, setFarmerMode] = useState<"existing" | "new">(
     farmers.length && !lockedFarmerId ? "existing" : "new",
   );
   const [farmerId, setFarmerId] = useState(initialFarmId);
   const [siteId, setSiteId] = useState(defaultPivotId || defaultAssetId || "");
+  const [newAssetName, setNewAssetName] = useState("");
 
   const selectedType = types.find((type) => type.slug === typeSlug) ?? pivotType;
   const isPivot = selectedType ? isPivotAssetType(selectedType) : true;
   const singular = selectedType ? assetTypeSingular(selectedType.name) : "Asset";
+  const needsAsset = !hadDefaultSite && !siteId && siteMode === "existing";
+
+  function openCreateAsset(name = "") {
+    setSiteId("");
+    setNewAssetName(name.trim());
+    setSiteMode("new");
+    if (farmerId || lockedFarmerId) setFarmerMode("existing");
+  }
 
   const sites = useMemo(() => {
     if (isPivot) {
@@ -165,11 +175,18 @@ export function NewTicketSiteFields({
             name="siteMode"
             value="new"
             checked={siteMode === "new"}
-            onChange={() => setSiteMode("new")}
+            onChange={() => openCreateAsset(newAssetName)}
           />
           New {singular.toLowerCase()}
         </label>
       </fieldset>
+
+      {needsAsset ? (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
+          This work order has no asset yet. Pick an existing {singular.toLowerCase()} below, or create a new one
+          without leaving this page.
+        </p>
+      ) : null}
 
       {siteMode === "existing" ? (
         <div className="space-y-4">
@@ -185,16 +202,41 @@ export function NewTicketSiteFields({
             pivots={farmSites}
             pivotId={siteId}
             onSelect={(site) => setSiteId(site?.id ?? "")}
+            onCreateNew={openCreateAsset}
             required={siteMode === "existing"}
             disabled={!farmerId}
             label={singular}
             emptyLabel={`No matching ${selectedType?.name.toLowerCase() ?? "assets"}`}
+            createLabel={`Create new ${singular.toLowerCase()}: “{name}”`}
             hiddenName={isPivot ? "pivotId" : "assetId"}
           />
+          {farmerId ? (
+            <p className="text-sm text-stone-600">
+              Not listed?{" "}
+              <button
+                type="button"
+                className="font-semibold text-emerald-800 hover:underline"
+                onClick={() => openCreateAsset()}
+              >
+                Create a new {singular.toLowerCase()}
+              </button>
+            </p>
+          ) : null}
         </div>
       ) : (
-        <div className="space-y-4 rounded-lg border border-stone-200 bg-stone-50 p-4">
-          <p className="text-sm font-semibold text-stone-800">New {singular.toLowerCase()}</p>
+        <div className="space-y-4 rounded-lg border border-emerald-200 bg-emerald-50/40 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-stone-800">New {singular.toLowerCase()}</p>
+            {sites.length > 0 ? (
+              <button
+                type="button"
+                className="text-sm font-semibold text-emerald-800 hover:underline"
+                onClick={() => setSiteMode("existing")}
+              >
+                Use existing instead
+              </button>
+            ) : null}
+          </div>
           {lockedFarmerId ? (
             <input type="hidden" name="farmerId" value={lockedFarmerId} />
           ) : canAddFarmer ? (
@@ -255,7 +297,14 @@ export function NewTicketSiteFields({
 
           <label className="block text-sm font-medium">
             {singular} name
-            <input name="assetName" required placeholder={`North ${singular}`} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2" />
+            <input
+              name="assetName"
+              required
+              value={newAssetName}
+              onChange={(event) => setNewAssetName(event.target.value)}
+              placeholder={`North ${singular}`}
+              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
+            />
           </label>
           <label className="block text-sm font-medium">
             Serial number
