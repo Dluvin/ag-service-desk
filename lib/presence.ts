@@ -80,6 +80,8 @@ export function describeDeskPath(path: string | null | undefined): string {
   if (clean === "/parts") return "Parts";
   if (clean === "/labor") return "Labor";
   if (clean === "/equipment") return "Equipment";
+  if (clean === "/sales") return "Sales";
+  if (clean.startsWith("/sales/")) return "A sale";
   if (clean === "/assets") return "Assets";
   if (clean.startsWith("/assets/")) return "An asset";
   if (clean === "/reports") return "Work order reports";

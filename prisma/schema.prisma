@@ -81,6 +81,7 @@ model Organization {
   assetTypes          AssetType[]
   assets              Asset[]
   farms               Farm[]
+  sales               Sale[]
   ocrSamples          OrgOcrSample[]
   qbwcConfig          QbwcConfig?
   qbwcSessions        QbwcSession[]
@@ -137,6 +138,7 @@ model Store {
   users          User[]
   tickets        Ticket[]
   vehicles       RevealVehicle[]
+  sales          Sale[]
 
   @@unique([organizationId, name])
 }
@@ -173,6 +175,7 @@ model User {
   lastLatitude          Float?
   lastLongitude         Float?
   createdAt             DateTime              @default(now())
+  salesAsSalesman       Sale[]                @relation("SaleSalesman")
 
   @@unique([organizationId, email])
 }
@@ -206,6 +209,7 @@ model Farmer {
   farms           Farm[]
   farmAssignments FarmAssignment[]
   pivotInspections PivotInspection[]
+  sales           Sale[]
 }
 
 model Farm {
@@ -224,6 +228,7 @@ model Farm {
   createdAt        DateTime         @default(now())
   pivots           Pivot[]
   assets           Asset[]
+  sales            Sale[]
   assignments      FarmAssignment[]
 
   @@index([organizationId, farmerId])
@@ -280,6 +285,7 @@ model Pivot {
   pivotInspections PivotInspection[]
   notes          PivotNote[]
   documents      PivotDocument[]
+  sales          Sale[]
 
   @@index([farmId])
   @@index([organizationId, packageItem])
@@ -342,6 +348,7 @@ model Asset {
   notes          String?
   createdAt      DateTime     @default(now())
   tickets        Ticket[]
+  sales          Sale[]
 
   @@index([organizationId, assetTypeId])
   @@index([farmerId])
@@ -657,4 +664,46 @@ model QbEstimateJob {
 
   @@index([organizationId, status])
   @@index([ticketId])
+}
+
+/// Pivot / equipment sales pipeline (columns from 2026 Pivot Prospects workbook).
+model Sale {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  storeId        String?
+  store          Store?       @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  farmerId       String?
+  farmer         Farmer?      @relation(fields: [farmerId], references: [id], onDelete: SetNull)
+  farmId         String?
+  farm           Farm?        @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  salesmanUserId String?
+  salesmanUser   User?        @relation("SaleSalesman", fields: [salesmanUserId], references: [id], onDelete: SetNull)
+  salesmanName   String?
+  jobLead        String
+  location       String?
+  contactPhone   String?
+  contactName    String?
+  notes          String?
+  status         String       @default("LEAD")
+  lastContactAt  DateTime?
+  /// Asset type slug to create when the sale is finished (pivots, pumps, wells, …).
+  assetTypeSlug  String?
+  assetName      String?
+  latitude       Float?
+  longitude      Float?
+  locationNote   String?
+  serialNumber   String?
+  pivotId        String?
+  pivot          Pivot?       @relation(fields: [pivotId], references: [id], onDelete: SetNull)
+  assetId        String?
+  asset          Asset?       @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  finishedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, status])
+  @@index([organizationId, storeId])
+  @@index([farmerId])
+  @@index([farmId])
 }

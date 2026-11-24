@@ -54,6 +54,7 @@ export function Nav({
         ]
       : []),
   ];
+  const salesLink = !farmer ? { href: "/sales", label: t(locale, "nav.sales") } : null;
   const reportLinks = [
     { href: "/reports", label: t(locale, "nav.woReports") },
     { href: "/reports/pivots", label: t(locale, "nav.pivotReports") },
@@ -122,6 +123,11 @@ export function Nav({
             </Link>
           ))}
           <NavDropdown label={t(locale, "nav.workOrders")} links={ticketLinks} />
+          {salesLink ? (
+            <Link href={salesLink.href} className="hover:text-white">
+              {salesLink.label}
+            </Link>
+          ) : null}
           <NavLinkMenu href="/assets" label={t(locale, "nav.assets")} links={assetLinks} />
           <NavLinkMenu href="/reports" label={t(locale, "nav.reports")} links={reportLinks} />
           {!farmer && showForms ? (
