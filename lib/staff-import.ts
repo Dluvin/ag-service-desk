@@ -55,6 +55,17 @@ export function parseStaffRole(value: string | undefined) {
   }
   if (v === "manager" || v === "mgr" || v === "office manager") return ROLES.MANAGER;
   if (
+    v === "salesperson" ||
+    v === "sales person" ||
+    v === "sales" ||
+    v === "salesman" ||
+    v === "saleswoman" ||
+    v === "sales rep" ||
+    v === "sales representative"
+  ) {
+    return ROLES.SALESPERSON;
+  }
+  if (
     v === "clerical" ||
     v === "office" ||
     v === "office/clerical" ||

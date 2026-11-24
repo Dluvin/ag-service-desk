@@ -193,6 +193,7 @@ export async function notifyTicketSms(input: {
     const staffRoles = [
       [ROLES.ADMIN, "admin"],
       [ROLES.MANAGER, "manager"],
+      [ROLES.SALESPERSON, "manager"],
       [ROLES.CLERICAL, "office"],
     ] as const;
     for (const [role, alertRole] of staffRoles) {

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { logoutAction } from "@/lib/actions";
 import { roleLabel } from "@/lib/scope";
 import type { SessionUser } from "@/lib/auth";
-import { isShopStaff, ROLES } from "@/lib/roles";
+import { isManagerLevel, isShopStaff, ROLES } from "@/lib/roles";
 import { homePath } from "@/lib/home";
 import { NavDropdown } from "@/components/NavDropdown";
 import { NavLinkMenu } from "@/components/NavLinkMenu";
@@ -99,7 +99,7 @@ export function Nav({
             ? [{ href: "/vehicles", label: t(locale, "nav.vehicles") }]
             : []),
         ]
-      : session.role === ROLES.MANAGER
+      : isManagerLevel(session.role)
         ? [deskSettings, staffMenu, ...(showGps ? [{ href: "/vehicles", label: t(locale, "nav.vehicles") }] : [])]
         : session.role === ROLES.CLERICAL
           ? [deskSettings]

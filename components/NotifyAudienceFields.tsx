@@ -6,6 +6,7 @@ import type { NotifyRecipients } from "@/lib/notify-recipients";
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Company admin",
   MANAGER: "Manager",
+  SALESPERSON: "Sales Person",
   CLERICAL: "Office",
   TECHNICIAN: "Technician",
 };

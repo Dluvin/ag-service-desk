@@ -1,6 +1,7 @@
 export const ROLES = {
   ADMIN: "ADMIN",
   MANAGER: "MANAGER",
+  SALESPERSON: "SALESPERSON",
   CLERICAL: "CLERICAL",
   TECHNICIAN: "TECHNICIAN",
   FARMER: "FARMER",
@@ -8,7 +9,18 @@ export const ROLES = {
 
 export type Role = (typeof ROLES)[keyof typeof ROLES];
 
-export const SHOP_STAFF_ROLES: Role[] = [ROLES.ADMIN, ROLES.MANAGER, ROLES.CLERICAL, ROLES.TECHNICIAN];
+export const SHOP_STAFF_ROLES: Role[] = [
+  ROLES.ADMIN,
+  ROLES.MANAGER,
+  ROLES.SALESPERSON,
+  ROLES.CLERICAL,
+  ROLES.TECHNICIAN,
+];
+
+/** Manager and Sales Person share the same desk permissions. */
+export function isManagerLevel(role: string) {
+  return role === ROLES.MANAGER || role === ROLES.SALESPERSON;
+}
 
 export const TICKET_STATUSES = [
   "OPEN",
@@ -75,42 +87,49 @@ export function canViewStaffPresence(role: string) {
 }
 
 export function canAssignTickets(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.CLERICAL;
+  return role === ROLES.ADMIN || isManagerLevel(role) || role === ROLES.CLERICAL;
 }
 
 export function canEditWorkOrder(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+  return role === ROLES.ADMIN || isManagerLevel(role);
 }
 
 export function canEditStartupChecklist(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+  return role === ROLES.ADMIN || isManagerLevel(role);
 }
 
 export function canAddTechnicians(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+  return role === ROLES.ADMIN || isManagerLevel(role);
 }
 
 export function canManageShopStaff(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER;
+  return role === ROLES.ADMIN || isManagerLevel(role);
 }
 
 export function canEditDeskSettings(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.CLERICAL;
+  return role === ROLES.ADMIN || isManagerLevel(role) || role === ROLES.CLERICAL;
 }
 
 export function canEditStaffMember(actorRole: string, targetRole: string) {
   if (actorRole === ROLES.ADMIN) {
     return SHOP_STAFF_ROLES.includes(targetRole as Role);
   }
-  if (actorRole === ROLES.MANAGER) {
-    return targetRole === ROLES.MANAGER || targetRole === ROLES.CLERICAL || targetRole === ROLES.TECHNICIAN;
+  if (isManagerLevel(actorRole)) {
+    return (
+      targetRole === ROLES.MANAGER ||
+      targetRole === ROLES.SALESPERSON ||
+      targetRole === ROLES.CLERICAL ||
+      targetRole === ROLES.TECHNICIAN
+    );
   }
   return false;
 }
 
 export function staffRolesAssignableBy(actorRole: string) {
   if (actorRole === ROLES.ADMIN) return [...SHOP_STAFF_ROLES];
-  if (actorRole === ROLES.MANAGER) return [ROLES.MANAGER, ROLES.CLERICAL, ROLES.TECHNICIAN];
+  if (isManagerLevel(actorRole)) {
+    return [ROLES.MANAGER, ROLES.SALESPERSON, ROLES.CLERICAL, ROLES.TECHNICIAN];
+  }
   return [];
 }
 
@@ -128,7 +147,7 @@ export function canImportStaff(role: string) {
 }
 
 export function canManageParts(role: string) {
-  return role === ROLES.ADMIN || role === ROLES.MANAGER || role === ROLES.CLERICAL;
+  return role === ROLES.ADMIN || isManagerLevel(role) || role === ROLES.CLERICAL;
 }
 
 export function canDeleteRecords(role: string) {

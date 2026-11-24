@@ -70,6 +70,7 @@ export default async function StaffPage({
   const groups = [
     { role: ROLES.ADMIN, title: t(locale, "staff.admins") },
     { role: ROLES.MANAGER, title: t(locale, "staff.managers") },
+    { role: ROLES.SALESPERSON, title: t(locale, "staff.salespeople") },
     { role: ROLES.CLERICAL, title: t(locale, "staff.clerical") },
     { role: ROLES.TECHNICIAN, title: t(locale, "staff.technicians") },
   ].filter((group) => canEditStaffMember(session.role, group.role));
@@ -89,8 +90,8 @@ export default async function StaffPage({
         ) : null}
         <p className="mt-1 text-sm text-stone-600">
           {session.role === ROLES.ADMIN
-            ? "Add and edit company admins, managers, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."
-            : "Add and edit managers, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."}{" "}
+            ? "Add and edit company admins, managers, sales people, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."
+            : "Add and edit managers, sales people, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."}{" "}
           Customer logins stay on the Customers page.
         </p>
         <WelcomeMailNotice status={query.welcome} />

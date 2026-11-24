@@ -46,6 +46,7 @@ export async function loadTechnicians(organizationId: string) {
 export function roleLabel(role: Role | string, locale: Locale = "en") {
   if (role === ROLES.ADMIN) return t(locale, "role.ADMIN");
   if (role === ROLES.MANAGER) return t(locale, "role.MANAGER");
+  if (role === ROLES.SALESPERSON) return t(locale, "role.SALESPERSON");
   if (role === ROLES.CLERICAL) return t(locale, "role.CLERICAL");
   if (role === ROLES.TECHNICIAN) return t(locale, "role.TECHNICIAN");
   return t(locale, "role.FARMER");
