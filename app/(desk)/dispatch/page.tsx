@@ -91,7 +91,13 @@ export default async function DispatchPage({
         noneLabel={t(locale, "common.noStore")}
       />
       {tiles ? (
-        <DispatchTilesBoard tickets={openTickets} technicians={technicians} canAssign={canAssign} locale={locale} />
+        <DispatchTilesBoard
+          tickets={openTickets}
+          technicians={technicians}
+          canAssign={canAssign}
+          actorRole={session.role}
+          locale={locale}
+        />
       ) : (
         <>
           <DispatchStatusFilters
@@ -127,9 +133,11 @@ export default async function DispatchPage({
                   <DispatchAssignForm
                     ticketId={ticket.id}
                     technicianId={ticket.technicianId}
+                    helperTechnicianId={ticket.helperTechnicianId}
                     status={ticket.status}
                     canAssign={canAssign}
                     technicians={technicians}
+                    actorRole={session.role}
                     locale={locale}
                   />
                 </DispatchWorkOrderCard>

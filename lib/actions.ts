@@ -32,6 +32,7 @@ import {
 } from "./roles";
 import { ticketSiteName } from "./ticket-site";
 import { openServiceTicket } from "./tickets";
+import { resolveTicketHelper } from "./ticket-helper";
 import { INSPECTION_STATUS, STARTUP_CHECKS, STARTUP_SEASON_YEAR, checkLabel, ensureStartupTemplates, uniqueCheckKey } from "./startup";
 import { parseMapsLocation } from "./maps";
 import { parseAgSenseExport } from "./agsense";
@@ -1567,6 +1568,17 @@ export async function createTicketAction(formData: FormData) {
   else if (session.role === ROLES.TECHNICIAN) assigned = session.userId;
   else if (!canAssignTickets(session.role)) assigned = null;
 
+  const helper = canAssignTickets(session.role)
+    ? await resolveTicketHelper({
+        organizationId: session.organizationId,
+        organizationName: session.organizationName,
+        actorRole: session.role,
+        leadTechnicianId: assigned,
+        formData,
+      })
+    : { helperTechnicianId: null as string | null };
+  if ("error" in helper) return helper;
+
   const siteFarmerId = pivot?.farmerId ?? asset!.farmerId;
   const farmer = await prisma.farmer.findFirst({
     where: { id: siteFarmerId, organizationId: session.organizationId },
@@ -1583,6 +1595,7 @@ export async function createTicketAction(formData: FormData) {
     pivotId: pivot?.id ?? null,
     assetId: asset?.id ?? null,
     technicianId: assigned,
+    helperTechnicianId: helper.helperTechnicianId,
     storeId,
     userId: session.userId,
     title,
@@ -1654,11 +1667,20 @@ export async function editWorkOrderAction(formData: FormData) {
   const { pivot, asset } = site;
   const farmerId = pivot?.farmerId ?? asset!.farmerId;
   const nextTech = technicianId;
+  const helper = await resolveTicketHelper({
+    organizationId: session.organizationId,
+    organizationName: session.organizationName,
+    actorRole: session.role,
+    leadTechnicianId: nextTech,
+    formData,
+  });
+  if ("error" in helper) return helper;
   let nextStatus = ticket.status;
   if (nextTech && nextStatus === "OPEN") nextStatus = "ASSIGNED";
   if (!nextTech && nextStatus === "ASSIGNED") nextStatus = "OPEN";
 
   const previousTech = ticket.technicianId;
+  const previousHelper = ticket.helperTechnicianId;
   const storeId = await resolveStoreId(session.organizationId, formString(formData, "storeId"));
   const scheduledAt = parseDateTimeLocal(formString(formData, "scheduledAt"));
 
@@ -1672,6 +1694,7 @@ export async function editWorkOrderAction(formData: FormData) {
       pivotId: pivot?.id ?? null,
       assetId: asset?.id ?? null,
       technicianId: nextTech,
+      helperTechnicianId: helper.helperTechnicianId,
       status: nextStatus,
       storeId,
       scheduledAt,
@@ -1691,6 +1714,12 @@ export async function editWorkOrderAction(formData: FormData) {
       ? await prisma.user.findFirst({ where: { id: nextTech }, select: { name: true } })
       : null;
     notes.push(tech ? `technician to ${tech.name}` : "unassigned technician");
+  }
+  if (helper.helperTechnicianId !== previousHelper) {
+    const helperUser = helper.helperTechnicianId
+      ? await prisma.user.findFirst({ where: { id: helper.helperTechnicianId }, select: { name: true } })
+      : null;
+    notes.push(helperUser ? `helper to ${helperUser.name}` : "helper to none");
   }
   await prisma.ticketUpdate.create({
     data: {
@@ -1790,6 +1819,16 @@ export async function updateTicketAction(formData: FormData) {
     canAssignTickets(session.role)
       ? technicianId || null
       : ticket.technicianId;
+  const helper = canAssignTickets(session.role)
+    ? await resolveTicketHelper({
+        organizationId: session.organizationId,
+        organizationName: session.organizationName,
+        actorRole: session.role,
+        leadTechnicianId: nextTech,
+        formData,
+      })
+    : { helperTechnicianId: ticket.helperTechnicianId };
+  if ("error" in helper) return helper;
 
   const previousTech = ticket.technicianId;
   const previousStatus = ticket.status;
@@ -1798,6 +1837,7 @@ export async function updateTicketAction(formData: FormData) {
     data: {
       status,
       technicianId: nextTech,
+      helperTechnicianId: nextTech ? helper.helperTechnicianId : null,
       invoiceNumber: invoiceNumber || ticket.invoiceNumber,
       invoiceAmount: requiresInvoice(status) ? invoiceAmount : ticket.invoiceAmount,
       ...(formData.has("scheduledAt")
@@ -1875,6 +1915,16 @@ export async function assignTicketAction(formData: FormData) {
 
   const nextTech =
     canAssignTickets(session.role) ? technicianId || null : ticket.technicianId;
+  const helper = canAssignTickets(session.role)
+    ? await resolveTicketHelper({
+        organizationId: session.organizationId,
+        organizationName: session.organizationName,
+        actorRole: session.role,
+        leadTechnicianId: nextTech,
+        formData,
+      })
+    : { helperTechnicianId: ticket.helperTechnicianId };
+  if ("error" in helper) return helper;
   let nextStatus: string = TICKET_STATUSES.includes(status as TicketStatus) ? status : ticket.status;
   if (nextTech && nextStatus === "OPEN") nextStatus = "ASSIGNED";
   if (!nextTech && nextStatus === "ASSIGNED") nextStatus = "OPEN";
@@ -1886,7 +1936,11 @@ export async function assignTicketAction(formData: FormData) {
   const previousStatus = ticket.status;
   await prisma.ticket.update({
     where: { id: ticketId },
-    data: { technicianId: nextTech, status: nextStatus },
+    data: {
+      technicianId: nextTech,
+      helperTechnicianId: nextTech ? helper.helperTechnicianId : null,
+      status: nextStatus,
+    },
   });
   await prisma.ticketUpdate.create({
     data: {

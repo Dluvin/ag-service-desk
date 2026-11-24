@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { homePath } from "@/lib/home";
 import { prisma } from "@/lib/prisma";
-import { PRIORITIES, ROLES, canAssignTickets, isShopStaff } from "@/lib/roles";
+import { PRIORITIES, ROLES, canAddTechnicians, canAssignTickets, isShopStaff } from "@/lib/roles";
 import { createTicketAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { NewTicketSiteFields } from "@/components/NewTicketSiteFields";
@@ -11,6 +11,7 @@ import { TicketOcrImport } from "@/components/TicketOcrImport";
 import { NewTicketOcrPartsFields } from "@/components/NewTicketOcrPartsFields";
 import { StoreSelect } from "@/components/StoreSelect";
 import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
+import { TicketTechnicianFields } from "@/components/TicketTechnicianFields";
 import { getRequestLocale } from "@/lib/user-locale";
 import { priorityLabel, t } from "@/lib/i18n";
 import { visionOcrConfigured } from "@/lib/ticket-ocr";
@@ -143,19 +144,16 @@ export default async function NewTicketPage({
         {isShopStaff(session.role) ? (
           <StoreSelect stores={stores} defaultValue={actor?.storeId} label={t(locale, "common.store")} />
         ) : null}
-        {canAssignTickets(session.role) ? (
-          <label className="block text-sm font-medium">
-            {t(locale, "ticket.assignTech")}
-            <select name="technicianId" className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
-              <option value="">{t(locale, "common.unassigned")}</option>
-              {technicians.map((tech) => (
-                <option key={tech.id} value={tech.id}>
-                  {tech.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
+        <TicketTechnicianFields
+          technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name }))}
+          canAssign={canAssignTickets(session.role)}
+          canAdd={canAddTechnicians(session.role)}
+          leadLabel={t(locale, "ticket.assignTech")}
+          helperLabel={t(locale, "ticket.helperTech")}
+          unassignedLabel={t(locale, "common.unassigned")}
+          noneLabel={t(locale, "common.none")}
+          addNewLabel={t(locale, "ticket.addHelperTech")}
+        />
         <ScheduleDateTimeField label={t(locale, "ticket.scheduledFor")} />
         {showOcr ? <NewTicketOcrPartsFields /> : null}
         <TicketPhotoFields />

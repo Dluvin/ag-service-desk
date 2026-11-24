@@ -2,13 +2,14 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { PRIORITIES, canEditWorkOrder } from "@/lib/roles";
+import { PRIORITIES, canAddTechnicians, canEditWorkOrder } from "@/lib/roles";
 import { homePath } from "@/lib/home";
 import { editWorkOrderAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
 import { NewTicketSiteFields } from "@/components/NewTicketSiteFields";
 import { StoreSelect } from "@/components/StoreSelect";
 import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
+import { TicketTechnicianFields } from "@/components/TicketTechnicianFields";
 import { getRequestLocale } from "@/lib/user-locale";
 import { priorityLabel, t } from "@/lib/i18n";
 import { assetWhere, loadTechnicians, pivotWhere, ticketWhere } from "@/lib/scope";
@@ -132,17 +133,18 @@ export default async function EditTicketPage({ params }: { params: Promise<{ id:
           </select>
         </label>
         <StoreSelect stores={stores} defaultValue={resolvedTicketStoreId(ticket)} label={t(locale, "common.store")} />
-        <label className="block text-sm font-medium">
-          {t(locale, "ticket.assignTech")}
-          <select name="technicianId" defaultValue={ticket.technicianId ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
-            <option value="">{t(locale, "common.unassigned")}</option>
-            {technicians.map((tech) => (
-              <option key={tech.id} value={tech.id}>
-                {tech.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <TicketTechnicianFields
+          technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name }))}
+          defaultTechnicianId={ticket.technicianId}
+          defaultHelperTechnicianId={ticket.technicianId ? (ticket.helperTechnicianId ?? null) : undefined}
+          canAssign
+          canAdd={canAddTechnicians(session.role)}
+          leadLabel={t(locale, "ticket.assignTech")}
+          helperLabel={t(locale, "ticket.helperTech")}
+          unassignedLabel={t(locale, "common.unassigned")}
+          noneLabel={t(locale, "common.none")}
+          addNewLabel={t(locale, "ticket.addHelperTech")}
+        />
         <ScheduleDateTimeField label={t(locale, "ticket.scheduledFor")} initialValue={ticket.scheduledAt} />
         <div className="flex flex-wrap gap-2">
           <button className="rounded-lg bg-emerald-800 px-4 py-2 font-semibold text-white">{t(locale, "common.save")}</button>

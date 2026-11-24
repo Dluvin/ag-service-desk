@@ -157,6 +157,7 @@ model User {
   storeId        String?
   store          Store?       @relation(fields: [storeId], references: [id], onDelete: SetNull)
   tickets        Ticket[]              @relation("TechnicianTickets")
+  helperTickets  Ticket[]              @relation("HelperTickets")
   updates        TicketUpdate[]
   photos         TicketPhoto[]
   partsLogged    TicketPart[]
@@ -367,6 +368,8 @@ model Ticket {
   asset          Asset?        @relation(fields: [assetId], references: [id], onDelete: SetNull)
   technicianId   String?
   technician     User?         @relation("TechnicianTickets", fields: [technicianId], references: [id], onDelete: SetNull)
+  helperTechnicianId String?
+  helperTechnician   User?     @relation("HelperTickets", fields: [helperTechnicianId], references: [id], onDelete: SetNull)
   storeId        String?
   store          Store?        @relation(fields: [storeId], references: [id], onDelete: SetNull)
   number         Int
@@ -391,6 +394,7 @@ model Ticket {
   qbEstimateJobs QbEstimateJob[]
 
   @@unique([organizationId, number])
+  @@index([helperTechnicianId])
 }
 
 model SiteVisit {

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { loadTechnicians, ticketWhere } from "@/lib/scope";
-import { canAssignTickets, canDeleteRecords, canEditWorkOrder, isShopStaff } from "@/lib/roles";
+import { canAddTechnicians, canAssignTickets, canDeleteRecords, canEditWorkOrder, isFinishedStatus, isShopStaff } from "@/lib/roles";
 import { updateTicketAction, addTicketPartAction, addTicketLaborAction, addTicketEquipmentAction, deleteTicketAction, updateTicketPartAction, deleteTicketPartAction, updateTicketLaborAction, deleteTicketLaborAction, updateTicketEquipmentAction, deleteTicketEquipmentAction } from "@/lib/actions";
 import { queueQbEstimateAction } from "@/lib/qbwc-actions";
 import { ActionForm } from "@/components/ActionForm";
@@ -21,6 +21,7 @@ import { TicketLineItemRow } from "@/components/TicketLineItemRow";
 import { TicketCatalogQuickCreate } from "@/components/TicketCatalogQuickCreate";
 import { TicketOcrImport } from "@/components/TicketOcrImport";
 import { CollapsiblePanel } from "@/components/CollapsiblePanel";
+import { TicketTechnicianFields } from "@/components/TicketTechnicianFields";
 import { formatDuration, visitMinutes } from "@/lib/onsite";
 import { formatSchedule } from "@/lib/schedule";
 import { ScheduleDateTimeField } from "@/components/ScheduleDateTimeField";
@@ -52,6 +53,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
       pivot: { include: { farm: { select: { qbCustomerName: true, name: true } } } },
       asset: { include: { assetType: true, farm: { select: { qbCustomerName: true, name: true } } } },
       technician: true,
+      helperTechnician: { select: { id: true, name: true } },
       store: true,
         updates: { include: { user: true, photos: true }, orderBy: { createdAt: "desc" } },
         parts: { include: { user: true }, orderBy: { createdAt: "asc" } },
@@ -190,6 +192,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           )}
           {" · "}
           {ticket.technician ? t(locale, "ticket.assignedTo", { name: ticket.technician.name }) : t(locale, "common.unassigned")}
+          {ticket.helperTechnician
+            ? ` · ${t(locale, "ticket.helperWith", { name: ticket.helperTechnician.name })}`
+            : ticket.technician
+              ? ` · ${t(locale, "ticket.helperNone")}`
+              : ""}
           {shopName ? ` · ${shopName}` : ""}
           {ticket.scheduledAt ? ` · ${t(locale, "ticket.scheduled", { when: formatSchedule(ticket.scheduledAt) ?? "" })}` : ""}
           {qbwcEnabled ? ` · QuickBooks customer: ${qbCustomer}` : ""}
@@ -229,20 +236,26 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                   />
                   <ScheduleDateTimeField label={t(locale, "ticket.scheduledFor")} initialValue={ticket.scheduledAt} />
                   <StoreSelect stores={stores} defaultValue={ticket.storeId ?? ticket.farmer.storeId} label={t(locale, "common.store")} />
-                  {canAssignTickets(session.role) ? (
-                    <label className="block text-sm font-medium">
-                      {t(locale, "ticket.technician")}
-                      <select name="technicianId" defaultValue={ticket.technicianId ?? ""} className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2">
-                        <option value="">{t(locale, "common.unassigned")}</option>
-                        {technicians.map((tech) => (
-                          <option key={tech.id} value={tech.id}>
-                            {tech.name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                  {!isFinishedStatus(ticket.status) || canAssignTickets(session.role) ? (
+                    <TicketTechnicianFields
+                      technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name }))}
+                      defaultTechnicianId={ticket.technicianId}
+                      defaultHelperTechnicianId={
+                        ticket.technicianId ? (ticket.helperTechnicianId ?? null) : undefined
+                      }
+                      canAssign={canAssignTickets(session.role)}
+                      canAdd={canAddTechnicians(session.role)}
+                      leadLabel={t(locale, "ticket.technician")}
+                      helperLabel={t(locale, "ticket.helperTech")}
+                      unassignedLabel={t(locale, "common.unassigned")}
+                      noneLabel={t(locale, "common.none")}
+                      addNewLabel={t(locale, "ticket.addHelperTech")}
+                    />
                   ) : (
-                    <input type="hidden" name="technicianId" value={ticket.technicianId ?? ""} />
+                    <>
+                      <input type="hidden" name="technicianId" value={ticket.technicianId ?? ""} />
+                      <input type="hidden" name="helperTechnicianId" value={ticket.helperTechnicianId ?? ""} />
+                    </>
                   )}
                 </>
               ) : (

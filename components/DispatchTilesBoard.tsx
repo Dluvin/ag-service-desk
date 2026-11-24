@@ -14,6 +14,7 @@ type TileTicket = {
   priority: string;
   status: string;
   technicianId: string | null;
+  helperTechnicianId: string | null;
   scheduledAt: Date | null;
   farmer: { name: string; store: { name: string } | null };
   pivot: { name: string } | null;
@@ -25,11 +26,13 @@ export function DispatchTilesBoard({
   tickets,
   technicians,
   canAssign,
+  actorRole,
   locale,
 }: {
   tickets: TileTicket[];
   technicians: { id: string; name: string }[];
   canAssign: boolean;
+  actorRole: string;
   locale: Locale;
 }) {
   return (
@@ -63,9 +66,11 @@ export function DispatchTilesBoard({
                   <DispatchAssignForm
                     ticketId={ticket.id}
                     technicianId={ticket.technicianId}
+                    helperTechnicianId={ticket.helperTechnicianId}
                     status={ticket.status}
                     canAssign={canAssign}
                     technicians={technicians}
+                    actorRole={actorRole}
                     locale={locale}
                   />
                 </DispatchWorkOrderCard>

@@ -14,6 +14,7 @@ export async function openServiceTicket(input: {
   pivotId?: string | null;
   assetId?: string | null;
   technicianId: string | null;
+  helperTechnicianId?: string | null;
   storeId?: string | null;
   userId: string;
   title: string;
@@ -30,6 +31,7 @@ export async function openServiceTicket(input: {
       pivotId: input.pivotId ?? null,
       assetId: input.assetId ?? null,
       technicianId: input.technicianId,
+      helperTechnicianId: input.technicianId ? (input.helperTechnicianId ?? null) : null,
       storeId: input.storeId ?? null,
       number,
       title: input.title,
