@@ -3,10 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { assetWhere, pivotWhere } from "@/lib/scope";
-import { isShopStaff } from "@/lib/roles";
+import { isShopStaff, ROLES } from "@/lib/roles";
 import {
   assetToUnifiedRow,
-  assetTypeHref,
   assetTypeNewHref,
   assetTypeSingular,
   ensureAssetTypes,
@@ -15,13 +14,23 @@ import {
 } from "@/lib/assets";
 import { ChooseAssetTypeButton } from "@/components/ChooseAssetTypeButton";
 import { AssetDirectory } from "@/components/AssetDirectory";
+import { StoreFilter } from "@/components/StoreFilter";
+import { parseStoreParam, STORE_ALL, storeAssetWhere, storePivotWhere } from "@/lib/stores";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
+
+function assetsHref(opts: { type?: string; store?: string }) {
+  const params = new URLSearchParams();
+  if (opts.type) params.set("type", opts.type);
+  if (opts.store && opts.store !== STORE_ALL) params.set("store", opts.store);
+  const query = params.toString();
+  return query ? `/assets?${query}` : "/assets";
+}
 
 export default async function AssetsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string }>;
+  searchParams: Promise<{ type?: string; store?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -33,6 +42,15 @@ export default async function AssetsPage({
   const selected = filterSlug ? types.find((type) => type.slug === filterSlug) : null;
   if (filterSlug && !selected) notFound();
 
+  const stores = await prisma.store.findMany({
+    where: { organizationId: session.organizationId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+  const selectedStore = parseStoreParam(query.store, stores);
+  const storePivots = session.role === ROLES.FARMER ? {} : storePivotWhere(selectedStore);
+  const storeAssets = session.role === ROLES.FARMER ? {} : storeAssetWhere(selectedStore);
+
   const pivotType = types.find(isPivotAssetType);
   const includePivots = !selected || (pivotType != null && selected.slug === pivotType.slug);
   const includeGeneric = !selected || !isPivotAssetType(selected);
@@ -40,7 +58,7 @@ export default async function AssetsPage({
   const [pivots, assets] = await Promise.all([
     includePivots
       ? prisma.pivot.findMany({
-          where: pivotWhere(session),
+          where: { ...pivotWhere(session), ...storePivots },
           include: { farmer: true, farm: true },
           orderBy: { name: "asc" },
         })
@@ -49,6 +67,7 @@ export default async function AssetsPage({
       ? prisma.asset.findMany({
           where: {
             ...assetWhere(session),
+            ...storeAssets,
             ...(selected && !isPivotAssetType(selected) ? { assetTypeId: selected.id } : {}),
           },
           include: { farmer: true, farm: true, assetType: true },
@@ -64,6 +83,7 @@ export default async function AssetsPage({
 
   const canAdd = isShopStaff(session.role);
   const title = selected ? selected.name : t(locale, "assets.titleAll");
+  const storeExtra = { type: selected?.slug };
 
   return (
     <div>
@@ -71,7 +91,7 @@ export default async function AssetsPage({
         <div>
           {selected ? (
             <p className="text-sm text-stone-500">
-              <Link href="/assets" className="text-emerald-800 hover:underline">
+              <Link href={assetsHref({ store: selectedStore })} className="text-emerald-800 hover:underline">
                 {t(locale, "nav.assets")}
               </Link>
             </p>
@@ -106,7 +126,7 @@ export default async function AssetsPage({
 
       <div className="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Asset type">
         <Link
-          href="/assets"
+          href={assetsHref({ store: selectedStore })}
           role="tab"
           aria-selected={!selected}
           className={`rounded-full px-3 py-1.5 text-sm ${
@@ -120,7 +140,7 @@ export default async function AssetsPage({
           return (
             <Link
               key={type.id}
-              href={assetTypeHref(type)}
+              href={assetsHref({ type: type.slug, store: selectedStore })}
               role="tab"
               aria-selected={active}
               className={`rounded-full px-3 py-1.5 text-sm ${
@@ -132,6 +152,15 @@ export default async function AssetsPage({
           );
         })}
       </div>
+
+      {session.role !== ROLES.FARMER ? (
+        <StoreFilter
+          stores={stores}
+          selected={selectedStore}
+          pathname="/assets"
+          extra={storeExtra}
+        />
+      ) : null}
 
       {selected && isPivotAssetType(selected) ? (
         <p className="mt-4 text-sm">
