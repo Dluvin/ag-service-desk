@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
-import { ROLES, canAddTechnicians } from "./roles";
+import { FIELD_TECH_ROLES, ROLES, canAddTechnicians } from "./roles";
 import { assertCanAddStaff } from "./org-plan";
 import { hashNewUserPassword, sendWelcomeLoginEmail } from "./welcome-mail";
 
@@ -91,7 +91,7 @@ export async function resolveTicketHelper(input: {
     return { error: "Helper must be different from the lead technician." };
   }
   const user = await prisma.user.findFirst({
-    where: { id: raw, organizationId, role: ROLES.TECHNICIAN },
+    where: { id: raw, organizationId, role: { in: [...FIELD_TECH_ROLES] } },
     select: { id: true },
   });
   if (!user) return { error: "Helper technician not found." };

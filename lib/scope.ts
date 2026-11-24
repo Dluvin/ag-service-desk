@@ -38,8 +38,8 @@ export function assetWhere(session: SessionUser) {
 
 export async function loadTechnicians(organizationId: string) {
   return prisma.user.findMany({
-    where: { organizationId, role: ROLES.TECHNICIAN },
-    orderBy: { name: "asc" },
+    where: { organizationId, role: { in: [ROLES.TECH_LEAD, ROLES.TECHNICIAN] } },
+    orderBy: [{ role: "asc" }, { name: "asc" }],
   });
 }
 
@@ -47,6 +47,7 @@ export function roleLabel(role: Role | string, locale: Locale = "en") {
   if (role === ROLES.ADMIN) return t(locale, "role.ADMIN");
   if (role === ROLES.MANAGER) return t(locale, "role.MANAGER");
   if (role === ROLES.SALESPERSON) return t(locale, "role.SALESPERSON");
+  if (role === ROLES.TECH_LEAD) return t(locale, "role.TECH_LEAD");
   if (role === ROLES.CLERICAL) return t(locale, "role.CLERICAL");
   if (role === ROLES.TECHNICIAN) return t(locale, "role.TECHNICIAN");
   return t(locale, "role.FARMER");

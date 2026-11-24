@@ -66,6 +66,16 @@ export function parseStaffRole(value: string | undefined) {
     return ROLES.SALESPERSON;
   }
   if (
+    v === "tech lead" ||
+    v === "techlead" ||
+    v === "tech-lead" ||
+    v === "lead tech" ||
+    v === "lead technician" ||
+    v === "technician lead"
+  ) {
+    return ROLES.TECH_LEAD;
+  }
+  if (
     v === "clerical" ||
     v === "office" ||
     v === "office/clerical" ||

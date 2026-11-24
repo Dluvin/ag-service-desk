@@ -67,6 +67,7 @@ const EN_UI = {
   "role.ADMIN": "Company admin",
   "role.MANAGER": "Manager",
   "role.SALESPERSON": "Sales Person",
+  "role.TECH_LEAD": "Tech Lead",
   "role.CLERICAL": "Office/Clerical",
   "role.TECHNICIAN": "Technician",
   "role.FARMER": "Customer",
@@ -383,6 +384,7 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
   "role.ADMIN": "Administrador",
   "role.MANAGER": "Gerente",
   "role.SALESPERSON": "Vendedor",
+  "role.TECH_LEAD": "Líder técnico",
   "role.CLERICAL": "Oficina/Clerical",
   "role.TECHNICIAN": "Técnico",
   "role.FARMER": "Cliente",
@@ -665,6 +667,7 @@ export function roleMessageKey(role: string): MessageKey {
   if (role === "ADMIN") return "role.ADMIN";
   if (role === "MANAGER") return "role.MANAGER";
   if (role === "SALESPERSON") return "role.SALESPERSON";
+  if (role === "TECH_LEAD") return "role.TECH_LEAD";
   if (role === "CLERICAL") return "role.CLERICAL";
   if (role === "TECHNICIAN") return "role.TECHNICIAN";
   return "role.FARMER";

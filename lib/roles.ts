@@ -2,6 +2,7 @@ export const ROLES = {
   ADMIN: "ADMIN",
   MANAGER: "MANAGER",
   SALESPERSON: "SALESPERSON",
+  TECH_LEAD: "TECH_LEAD",
   CLERICAL: "CLERICAL",
   TECHNICIAN: "TECHNICIAN",
   FARMER: "FARMER",
@@ -13,13 +14,21 @@ export const SHOP_STAFF_ROLES: Role[] = [
   ROLES.ADMIN,
   ROLES.MANAGER,
   ROLES.SALESPERSON,
+  ROLES.TECH_LEAD,
   ROLES.CLERICAL,
   ROLES.TECHNICIAN,
 ];
 
-/** Manager and Sales Person share the same desk permissions. */
+/** Roles that can be assigned as lead/helper technicians on work orders. */
+export const FIELD_TECH_ROLES: Role[] = [ROLES.TECH_LEAD, ROLES.TECHNICIAN];
+
+/** Manager, Sales Person, and Tech Lead share the same desk permissions. */
 export function isManagerLevel(role: string) {
-  return role === ROLES.MANAGER || role === ROLES.SALESPERSON;
+  return role === ROLES.MANAGER || role === ROLES.SALESPERSON || role === ROLES.TECH_LEAD;
+}
+
+export function isFieldTechRole(role: string) {
+  return role === ROLES.TECH_LEAD || role === ROLES.TECHNICIAN;
 }
 
 export const TICKET_STATUSES = [
@@ -118,6 +127,7 @@ export function canEditStaffMember(actorRole: string, targetRole: string) {
     return (
       targetRole === ROLES.MANAGER ||
       targetRole === ROLES.SALESPERSON ||
+      targetRole === ROLES.TECH_LEAD ||
       targetRole === ROLES.CLERICAL ||
       targetRole === ROLES.TECHNICIAN
     );
@@ -128,7 +138,7 @@ export function canEditStaffMember(actorRole: string, targetRole: string) {
 export function staffRolesAssignableBy(actorRole: string) {
   if (actorRole === ROLES.ADMIN) return [...SHOP_STAFF_ROLES];
   if (isManagerLevel(actorRole)) {
-    return [ROLES.MANAGER, ROLES.SALESPERSON, ROLES.CLERICAL, ROLES.TECHNICIAN];
+    return [ROLES.MANAGER, ROLES.SALESPERSON, ROLES.TECH_LEAD, ROLES.CLERICAL, ROLES.TECHNICIAN];
   }
   return [];
 }

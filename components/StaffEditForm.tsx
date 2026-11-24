@@ -28,7 +28,11 @@ export function StaffEditForm({
   vehicles?: { number: string; name: string }[];
   showGps?: boolean;
 }) {
-  const showVehicle = person.role === ROLES.TECHNICIAN || roleOptions.includes(ROLES.TECHNICIAN);
+  const showVehicle =
+    person.role === ROLES.TECHNICIAN ||
+    person.role === ROLES.TECH_LEAD ||
+    roleOptions.includes(ROLES.TECHNICIAN) ||
+    roleOptions.includes(ROLES.TECH_LEAD);
 
   return (
     <ActionForm action={updateStaffAction} className="mt-2 grid gap-2 sm:grid-cols-2">
