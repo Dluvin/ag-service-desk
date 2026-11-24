@@ -26,6 +26,52 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
+.table-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table-grid th,
+.table-grid td {
+  border-bottom: 1px solid #e7e5e4;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table-grid th {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #57534e;
+}
+
+.table-grid th.num,
+.table-grid td.num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-freeze {
+  max-height: min(70vh, calc(100dvh - 14rem));
+  overflow: auto;
+}
+
+.table-freeze .table-grid {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-freeze .table-grid th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: white;
+}
+
 @media screen {
   html.dark:not(:has(.landing)) {
     color-scheme: dark;

@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     "/api/inspections/lookup": ["./data/pivot-packages.json"],
     "/pivots": ["./data/pivot-packages.json"],
     "/inspections/**/*": ["./data/pivot-packages.json"],
+    "/sales/packages": ["./data/pivot-packages.json"],
   },
 };
 
