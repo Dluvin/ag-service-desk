@@ -23,7 +23,11 @@ async function resolveStoreId(organizationId: string, storeId: string) {
 async function resolveSalesmanUserId(organizationId: string, userId: string) {
   if (!userId) return null;
   const user = await prisma.user.findFirst({
-    where: { id: userId, organizationId, role: { not: ROLES.FARMER } },
+    where: {
+      id: userId,
+      organizationId,
+      role: { in: [ROLES.MANAGER, ROLES.SALESPERSON] },
+    },
     select: { id: true, name: true },
   });
   return user;

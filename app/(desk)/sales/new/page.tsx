@@ -31,16 +31,21 @@ export default async function NewSalePage() {
       select: { id: true, name: true },
     }),
     prisma.user.findMany({
-      where: { organizationId: session.organizationId, role: { not: ROLES.FARMER } },
+      where: {
+        organizationId: session.organizationId,
+        role: { in: [ROLES.MANAGER, ROLES.SALESPERSON] },
+      },
       orderBy: { name: "asc" },
-      select: { id: true, name: true },
+      select: { id: true, name: true, role: true },
     }),
     ensureAssetTypes(session.organizationId),
     prisma.user.findFirst({
       where: { id: session.userId },
-      select: { id: true, name: true, storeId: true },
+      select: { id: true, name: true, storeId: true, role: true },
     }),
   ]);
+  const actorIsSalesman =
+    actor?.role === ROLES.MANAGER || actor?.role === ROLES.SALESPERSON;
 
   return (
     <div className="max-w-3xl">
@@ -62,8 +67,8 @@ export default async function NewSalePage() {
           assetTypes={assetTypes}
           mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}
           defaults={{
-            salesmanUserId: actor?.id,
-            salesmanName: actor?.name,
+            salesmanUserId: actorIsSalesman ? actor?.id : undefined,
+            salesmanName: actorIsSalesman ? actor?.name : undefined,
             storeId: actor?.storeId,
             lastContactAt: new Date(),
             status: "LEAD",
