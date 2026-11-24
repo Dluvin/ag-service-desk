@@ -33,7 +33,7 @@ export default async function NewSalePage() {
     prisma.user.findMany({
       where: {
         organizationId: session.organizationId,
-        role: { in: [ROLES.MANAGER, ROLES.SALESPERSON] },
+        role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.SALESPERSON] },
       },
       orderBy: { name: "asc" },
       select: { id: true, name: true, role: true },
@@ -45,7 +45,9 @@ export default async function NewSalePage() {
     }),
   ]);
   const actorIsSalesman =
-    actor?.role === ROLES.MANAGER || actor?.role === ROLES.SALESPERSON;
+    actor?.role === ROLES.ADMIN ||
+    actor?.role === ROLES.MANAGER ||
+    actor?.role === ROLES.SALESPERSON;
 
   return (
     <div className="max-w-3xl">

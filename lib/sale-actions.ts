@@ -26,7 +26,7 @@ async function resolveSalesmanUserId(organizationId: string, userId: string) {
     where: {
       id: userId,
       organizationId,
-      role: { in: [ROLES.MANAGER, ROLES.SALESPERSON] },
+      role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.SALESPERSON] },
     },
     select: { id: true, name: true },
   });

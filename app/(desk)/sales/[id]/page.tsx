@@ -52,7 +52,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
     prisma.user.findMany({
       where: {
         organizationId: session.organizationId,
-        role: { in: [ROLES.MANAGER, ROLES.SALESPERSON] },
+        role: { in: [ROLES.ADMIN, ROLES.MANAGER, ROLES.SALESPERSON] },
       },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
