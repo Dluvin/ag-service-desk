@@ -303,6 +303,7 @@ async function upsertTicket(organizationId, storeId, userId, farmer, pivot, row)
     invoiceAmount: closed ? 0 : null,
     scheduledAt: when,
     closedAt: closed ? when : null,
+    createdAt: when,
   };
 
   if (existing) {

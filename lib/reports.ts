@@ -42,6 +42,15 @@ function inRange(value: Date | string | null | undefined, start: Date, end: Date
   return date >= start && date <= end;
 }
 
+/** Service / log date for reports — prefer scheduled, then closed, then created. */
+function ticketServiceAt(ticket: {
+  scheduledAt: Date | null;
+  closedAt: Date | null;
+  createdAt: Date;
+}) {
+  return ticket.scheduledAt ?? ticket.closedAt ?? ticket.createdAt;
+}
+
 function moneyTotal(rows: { quantity?: number; hours?: number; unitPrice?: number | null; unitRate?: number | null }[], kind: "parts" | "labor") {
   return rows.reduce((sum, row) => {
     const qty = kind === "parts" ? (row.quantity ?? 0) : (row.hours ?? 0);
@@ -83,9 +92,9 @@ function isOpenTicket(ticket: { status: string }) {
 }
 
 function splitTickets(tickets: ReportTicket[], range: { start: Date; end: Date }) {
-  const opened = tickets.filter((ticket) => inRange(ticket.createdAt, range.start, range.end));
+  const opened = tickets.filter((ticket) => inRange(ticketServiceAt(ticket), range.start, range.end));
   const closed = tickets.filter(
-    (ticket) => isClosedTicket(ticket) && inRange(ticket.closedAt ?? ticket.updatedAt, range.start, range.end),
+    (ticket) => isClosedTicket(ticket) && inRange(ticket.closedAt ?? ticket.scheduledAt ?? ticket.updatedAt, range.start, range.end),
   );
   return { opened, closed };
 }
@@ -145,9 +154,11 @@ export async function loadReports(session: SessionUser, options: { store: string
     }),
   ]);
 
-  const opened = tickets.filter((ticket) => inRange(ticket.createdAt, range.start, range.end));
+  const opened = tickets.filter((ticket) => inRange(ticketServiceAt(ticket), range.start, range.end));
   const closed = tickets.filter(
-    (ticket) => ticket.status === "COMPLETED" && inRange(ticket.closedAt ?? ticket.updatedAt, range.start, range.end),
+    (ticket) =>
+      ticket.status === "COMPLETED" &&
+      inRange(ticket.closedAt ?? ticket.scheduledAt ?? ticket.updatedAt, range.start, range.end),
   );
 
   const byStatus = TICKET_STATUSES.map((status) => ({
@@ -202,9 +213,10 @@ export async function loadReports(session: SessionUser, options: { store: string
   for (const ticket of tickets) {
     if (!ticket.pivotId) continue;
     openByPivot.set(ticket.pivotId, (openByPivot.get(ticket.pivotId) ?? 0) + (ticket.status === "COMPLETED" || ticket.status === "CANCELLED" ? 0 : 1));
+    const serviceAt = ticketServiceAt(ticket);
     const last = lastByPivot.get(ticket.pivotId);
-    if (!last || ticket.createdAt > last) lastByPivot.set(ticket.pivotId, ticket.createdAt);
-    if (inRange(ticket.createdAt, range.start, range.end)) {
+    if (!last || serviceAt > last) lastByPivot.set(ticket.pivotId, serviceAt);
+    if (inRange(serviceAt, range.start, range.end)) {
       ticketsInRangeByPivot.set(ticket.pivotId, (ticketsInRangeByPivot.get(ticket.pivotId) ?? 0) + 1);
     }
   }
@@ -357,8 +369,9 @@ export async function loadFarmReports(session: SessionUser, options: { store: st
   const lastByFarm = new Map<string, Date>();
   for (const ticket of tickets) {
     const key = farmKey(ticket);
+    const serviceAt = ticketServiceAt(ticket);
     const last = lastByFarm.get(key);
-    if (!last || ticket.createdAt > last) lastByFarm.set(key, ticket.createdAt);
+    if (!last || serviceAt > last) lastByFarm.set(key, serviceAt);
   }
 
   const rows = farms
@@ -462,8 +475,9 @@ export async function loadAssetReports(session: SessionUser, options: { store: s
   for (const ticket of tickets) {
     if (!ticket.pivotId) continue;
     openByPivot.set(ticket.pivotId, (openByPivot.get(ticket.pivotId) ?? 0) + (isOpenTicket(ticket) ? 1 : 0));
+    const serviceAt = ticketServiceAt(ticket);
     const last = lastByPivot.get(ticket.pivotId);
-    if (!last || ticket.createdAt > last) lastByPivot.set(ticket.pivotId, ticket.createdAt);
+    if (!last || serviceAt > last) lastByPivot.set(ticket.pivotId, serviceAt);
   }
 
   const pivotRows = pivots
