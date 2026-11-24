@@ -124,6 +124,7 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
               stores={stores}
               salespeople={salespeople}
               assetTypes={assetTypes}
+              mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}
               defaults={{
                 jobLead: sale.jobLead,
                 status: sale.status,
@@ -138,6 +139,8 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
                 assetName: sale.assetName,
                 serialNumber: sale.serialNumber,
                 locationNote: sale.locationNote,
+                latitude: sale.latitude,
+                longitude: sale.longitude,
                 farmerId: sale.farmerId,
                 farmId: sale.farmId,
                 storeId: sale.storeId,
@@ -248,6 +251,11 @@ export default async function SaleDetailPage({ params }: { params: Promise<{ id:
             <p>{sale.contactPhone || "—"}</p>
             <p className="mt-4 font-semibold text-stone-800">Location</p>
             <p className="mt-2">{sale.location || "—"}</p>
+            {sale.latitude != null && sale.longitude != null ? (
+              <p className="mt-1 text-stone-600">
+                GPS: {sale.latitude.toFixed(5)}, {sale.longitude.toFixed(5)}
+              </p>
+            ) : null}
             <p className="mt-4 font-semibold text-stone-800">Salesman</p>
             <p className="mt-2">{sale.salesmanUser?.name || sale.salesmanName || "—"}</p>
           </div>

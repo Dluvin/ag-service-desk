@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { FarmSelect } from "@/components/FarmSelect";
+import { MapLocationPicker } from "@/components/MapLocationPicker";
 import { StoreSelect } from "@/components/StoreSelect";
 import type { FarmOption } from "@/lib/farms";
 import { SALE_STATUSES, SALE_STATUS_LABELS, saleDateInputValue, type SaleStatus } from "@/lib/sales";
@@ -20,6 +21,8 @@ type SaleDefaults = {
   assetName?: string | null;
   serialNumber?: string | null;
   locationNote?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   farmerId?: string | null;
   farmId?: string | null;
   storeId?: string | null;
@@ -31,6 +34,7 @@ export function SaleFormFields({
   stores,
   salespeople,
   assetTypes,
+  mapsApiKey,
   defaults,
   showStatus = true,
 }: {
@@ -39,6 +43,7 @@ export function SaleFormFields({
   stores: { id: string; name: string }[];
   salespeople: { id: string; name: string }[];
   assetTypes: { id: string; name: string; slug: string }[];
+  mapsApiKey?: string;
   defaults?: SaleDefaults;
   showStatus?: boolean;
 }) {
@@ -269,6 +274,20 @@ export function SaleFormFields({
           className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2"
         />
       </label>
+
+      <div>
+        <p className="text-sm font-medium text-stone-800">GPS location</p>
+        <p className="mt-0.5 text-xs text-stone-500">
+          Optional pin for the prospect site. Used when you finish the sale and create the asset.
+        </p>
+        <div className="mt-2">
+          <MapLocationPicker
+            apiKey={mapsApiKey}
+            defaultLat={defaults?.latitude ?? undefined}
+            defaultLng={defaults?.longitude ?? undefined}
+          />
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm font-medium">

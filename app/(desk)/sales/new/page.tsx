@@ -60,6 +60,7 @@ export default async function NewSalePage() {
           stores={stores}
           salespeople={salespeople}
           assetTypes={assetTypes}
+          mapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || undefined}
           defaults={{
             salesmanUserId: actor?.id,
             salesmanName: actor?.name,

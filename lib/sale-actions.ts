@@ -109,6 +109,19 @@ async function resolveSaleCustomer(organizationId: string, formData: FormData, s
   return { farmerId, farmId };
 }
 
+function parseOptionalGps(formData: FormData) {
+  const mapsInput = formString(formData, "mapsInput");
+  const parsed = mapsInput ? parseMapsLocation(mapsInput) : null;
+  const latRaw = formString(formData, "latitude");
+  const lngRaw = formString(formData, "longitude");
+  const latitude = parsed?.latitude ?? (latRaw ? Number(latRaw) : NaN);
+  const longitude = parsed?.longitude ?? (lngRaw ? Number(lngRaw) : NaN);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return { latitude: null as number | null, longitude: null as number | null };
+  }
+  return { latitude, longitude };
+}
+
 function saleFieldsFromForm(formData: FormData) {
   const jobLead = formString(formData, "jobLead");
   const status = formString(formData, "status") || "LEAD";
@@ -117,6 +130,7 @@ function saleFieldsFromForm(formData: FormData) {
   if (isSaleFinished(status)) {
     return { error: "Use Finish sale to complete a deal and create the asset." as const };
   }
+  const gps = parseOptionalGps(formData);
   return {
     jobLead,
     status,
@@ -130,6 +144,8 @@ function saleFieldsFromForm(formData: FormData) {
     assetName: formString(formData, "assetName") || null,
     serialNumber: formString(formData, "serialNumber") || null,
     locationNote: formString(formData, "locationNote") || null,
+    latitude: gps.latitude,
+    longitude: gps.longitude,
   };
 }
 
@@ -164,6 +180,8 @@ export async function createSaleAction(formData: FormData) {
       assetName: fields.assetName,
       serialNumber: fields.serialNumber,
       locationNote: fields.locationNote,
+      latitude: fields.latitude,
+      longitude: fields.longitude,
     },
   });
 
@@ -211,6 +229,8 @@ export async function updateSaleAction(formData: FormData) {
       assetName: fields.assetName,
       serialNumber: fields.serialNumber,
       locationNote: fields.locationNote,
+      latitude: fields.latitude,
+      longitude: fields.longitude,
     },
   });
 
