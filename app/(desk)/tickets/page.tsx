@@ -7,10 +7,12 @@ import { ticketWhere } from "@/lib/scope";
 import { requiresInvoice, ROLES, type TicketStatus } from "@/lib/roles";
 import { StatusBadge, PriorityBadge } from "@/components/Badges";
 import { TicketListControls } from "@/components/TicketListControls";
+import { StoreFilter } from "@/components/StoreFilter";
 import { formatSchedule } from "@/lib/schedule";
 import { formatMoney } from "@/lib/money";
-import { ticketStoreName } from "@/lib/stores";
+import { parseStoreParam, storeTicketWhere, ticketStoreName } from "@/lib/stores";
 import {
+  defaultDirForSort,
   groupTicketsByStatus,
   parseTicketListQuery,
   sortTickets,
@@ -29,17 +31,31 @@ type TicketRow = Prisma.TicketGetPayload<{
 export default async function TicketsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; sort?: string; dir?: string }>;
+  searchParams: Promise<{ status?: string; sort?: string; dir?: string; store?: string }>;
 }) {
   const session = await getSession();
   if (!session) redirect("/login");
   const locale = await getRequestLocale();
 
-  const query = parseTicketListQuery(await searchParams);
+  const raw = await searchParams;
+  const parsed = parseTicketListQuery(raw);
+  const stores =
+    session.role === ROLES.FARMER
+      ? []
+      : await prisma.store.findMany({
+          where: { organizationId: session.organizationId },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true },
+        });
+  const selectedStore = parseStoreParam(raw.store, stores);
+  const query: TicketListQuery = { ...parsed, store: selectedStore };
+  const storeTickets = session.role === ROLES.FARMER ? {} : storeTicketWhere(selectedStore);
+
   const tickets = sortTickets(
     await prisma.ticket.findMany({
       where: {
         ...ticketWhere(session),
+        ...storeTickets,
         ...(query.status === "all" ? {} : { status: query.status }),
       },
       include: { farmer: { include: { store: true } }, pivot: true, asset: { include: { assetType: true } }, technician: true, store: true },
@@ -63,7 +79,19 @@ export default async function TicketsPage({
           </Link>
         </div>
       </div>
-      <TicketListControls status={query.status} sort={query.sort} dir={query.dir} />
+      <TicketListControls status={query.status} sort={query.sort} dir={query.dir} store={query.store} />
+      {session.role !== ROLES.FARMER ? (
+        <StoreFilter
+          stores={stores}
+          selected={selectedStore}
+          pathname="/tickets"
+          extra={{
+            status: query.status === "all" ? undefined : query.status,
+            sort: query.sort === "status" ? undefined : query.sort,
+            dir: query.dir === defaultDirForSort(query.sort) ? undefined : query.dir,
+          }}
+        />
+      ) : null}
       <p className="mt-3 text-sm text-stone-500">{summaryText(locale, tickets.length, query)}</p>
       <div className="mt-4 overflow-hidden rounded-xl border border-stone-200 bg-white">
         <table className="w-full text-left text-sm">

@@ -1,4 +1,5 @@
 import { TICKET_STATUSES, type TicketStatus } from "./roles";
+import { STORE_ALL } from "./stores";
 
 export const TICKET_LIST_SORTS = ["status", "opened", "scheduled"] as const;
 export type TicketListSort = (typeof TICKET_LIST_SORTS)[number];
@@ -9,13 +10,19 @@ export type TicketListQuery = {
   status: TicketListStatus;
   sort: TicketListSort;
   dir: TicketListDir;
+  store: string;
 };
 
-export function parseTicketListQuery(query: { status?: string; sort?: string; dir?: string }): TicketListQuery {
+export function parseTicketListQuery(query: {
+  status?: string;
+  sort?: string;
+  dir?: string;
+  store?: string;
+}): Omit<TicketListQuery, "store"> & { store?: string } {
   const status = TICKET_STATUSES.includes(query.status as TicketStatus) ? (query.status as TicketStatus) : "all";
   const sort = TICKET_LIST_SORTS.includes(query.sort as TicketListSort) ? (query.sort as TicketListSort) : "status";
   const dir = query.dir === "asc" || query.dir === "desc" ? query.dir : defaultDirForSort(sort);
-  return { status, sort, dir };
+  return { status, sort, dir, store: query.store };
 }
 
 export function defaultDirForSort(sort: TicketListSort): TicketListDir {
@@ -27,6 +34,7 @@ export function ticketListHref(query: TicketListQuery) {
   if (query.status !== "all") params.set("status", query.status);
   if (query.sort !== "status") params.set("sort", query.sort);
   if (query.dir !== defaultDirForSort(query.sort)) params.set("dir", query.dir);
+  if (query.store && query.store !== STORE_ALL) params.set("store", query.store);
   const qs = params.toString();
   return qs ? `/tickets?${qs}` : "/tickets";
 }
