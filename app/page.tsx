@@ -11,7 +11,7 @@ import "./landing.css";
 export const metadata = {
   title: "Ag Desk Pro",
   description:
-    "Irrigation-specific work-order software for dealers, field technicians, and office teams.",
+    "Irrigation work-order desk with Lead Technicians, multi-helper crews, dispatch maps, sales packages, and Platform-tuned plans for dealers.",
 };
 
 export default async function HomePage({
@@ -35,12 +35,12 @@ export default async function HomePage({
             <div className="landing-hero-copy">
               <span className="landing-eyebrow">Irrigation-specific service software</span>
               <h1 className="landing-headline">
-                Keep irrigation work orders, assets, and technician updates in one place.
+                Dispatch Lead Technicians, helper crews, and pivot work from one desk.
               </h1>
               <p className="landing-lead">
-                Ag Desk Pro is built for irrigation dealers and service teams that need a simple way
-                to manage repair work orders, track pivots, organize departments, and keep customers
-                informed without forcing their workflow into generic help desk software.
+                Ag Desk Pro is irrigation-specific service software for dealers: digital work orders,
+                Lead Technicians with free Staff Technician helpers, sales packages, pivot maps, and
+                Platform options that match how each shop actually runs — not another generic help desk.
               </p>
               <div className="landing-cta">
                 <a className="landing-btn" href="#contact">
@@ -93,10 +93,10 @@ export default async function HomePage({
                     <div className="landing-box landing-box-on">
                       <strong>The new way</strong>
                       <ul className="landing-list">
-                        <li>Digital work orders in seconds</li>
-                        <li>Real-time job tracking</li>
-                        <li>Dispatch with navigation to the pivot, not just the front gate</li>
-                        <li>Office, techs, and customers on the same page</li>
+                        <li>Lead Technicians plus multi-helper crews on every job</li>
+                        <li>Dispatch tiles, maps, and sales packages in one desk</li>
+                        <li>Navigate to the pivot, not just the front gate</li>
+                        <li>Office, field, and customers on the same page</li>
                       </ul>
                     </div>
                   </div>
@@ -136,31 +136,58 @@ export default async function HomePage({
 
         <section className="landing-section" id="features">
           <div className="container">
-            <h2>Why this works for irrigation teams</h2>
-            <div className="landing-feature" style={{ marginTop: "1.25rem" }}>
+            <h2>Newest features for irrigation service desks</h2>
+            <p className="landing-muted" style={{ maxWidth: "68ch", marginTop: "0.5rem" }}>
+              Built for how dealers actually dispatch crews — Lead Technicians, Staff Technicians,
+              sales, maps, and Platform controls that stay flexible after you go live.
+            </p>
+            <div className="landing-capability-grid" style={{ marginTop: "1.25rem" }}>
               <article className="landing-card">
-                <h3>Built around real irrigation service work</h3>
+                <h3>Lead + helper crews</h3>
                 <p className="landing-muted">
-                  Instead of asking your team to adapt to a generic IT tool, Ag Desk Pro gives you
-                  one workflow for incoming service requests, field troubleshooting, asset history,
-                  and internal follow-up.
+                  Assign a Lead Technician, then check multiple Staff Technicians as helpers. Each
+                  lead includes three Staff Technicians free on every plan.
                 </p>
-                <ul className="landing-list">
-                  <li>Track work orders from first call to resolution.</li>
-                  <li>Link work to pivots, assets, and client records.</li>
-                  <li>Keep technicians, office staff, and customers aligned.</li>
-                  <li>Organize users, departments, and reporting in one system.</li>
-                </ul>
               </article>
-              <aside className="landing-card">
-                <h3>Built for your whole service team</h3>
-                <ul className="landing-list">
-                  <li>Create digital work orders in seconds.</li>
-                  <li>Track open, pending, and resolved jobs in one place.</li>
-                  <li>Keep office staff and field technicians on the same page.</li>
-                  <li>Give customers clearer communication and faster follow-up.</li>
-                </ul>
-              </aside>
+              <article className="landing-card">
+                <h3>Dispatch that matches the shop</h3>
+                <p className="landing-muted">
+                  List or tile boards, store filters, schedule times, and in-app maps so office and
+                  field see the same open work.
+                </p>
+              </article>
+              <article className="landing-card">
+                <h3>Sales packages</h3>
+                <p className="landing-muted">
+                  Sales people keep package catalogs next to the service desk — the same company,
+                  without mixing sales quotes into generic tickets.
+                </p>
+              </article>
+              <article className="landing-card">
+                <h3>Pivots, farms, and assets</h3>
+                <p className="landing-muted">
+                  Work orders link to the machine and the customer, with directions to the pivot
+                  point instead of only the front gate.
+                </p>
+              </article>
+              <article className="landing-card">
+                <h3>Enterprise field tools</h3>
+                <p className="landing-muted">
+                  Handwritten scans, office forms, pivot inspections, and QuickBooks Desktop
+                  estimates — on for Enterprise, and available via Platform when a Shop needs them.
+                </p>
+              </article>
+              <article className="landing-card">
+                <h3>Platform options</h3>
+                <p className="landing-muted">
+                  We set plan version, billable seats, store caps, GPS provider, SMS setup, and
+                  add-on flags per dealership from Platform — see{" "}
+                  <a href="#platform-options">
+                    <strong>pricing</strong>
+                  </a>
+                  .
+                </p>
+              </article>
             </div>
           </div>
         </section>
@@ -169,15 +196,15 @@ export default async function HomePage({
           <div className="container">
             <h2>The live desk</h2>
             <p className="landing-muted" style={{ maxWidth: "62ch", marginTop: "0.5rem" }}>
-              Work orders, reports, pivot maps, and GPS trucks — this is the same software your team
-              logs into after we approve your company.
+              Work orders with lead and helper crews, reports, pivot maps, and GPS trucks — the same
+              software your team logs into after we approve your company.
             </p>
             <div className="landing-screens" style={{ marginTop: "1.25rem" }}>
               <article className="landing-photo-card">
                 <img src="/landing/dashboard.png" alt="Open work orders map on the dashboard" />
                 <div className="landing-photo-copy">
                   <strong>Dispatch map</strong>
-                  <p>Open work orders at the pivot, with assigned trucks on the same view.</p>
+                  <p>Open work with Lead Technicians and helper crews on the same view.</p>
                 </div>
               </article>
               <article className="landing-photo-card">
@@ -191,7 +218,7 @@ export default async function HomePage({
                 <img src="/landing/fleet-map.png" alt="Fleet GPS map across south Georgia" />
                 <div className="landing-photo-copy">
                   <strong>Fleet GPS</strong>
-                  <p>See where trucks are so you are not calling around to find a tech.</p>
+                  <p>Reveal or Verizon via Platform so you are not calling around for a truck.</p>
                 </div>
               </article>
             </div>
@@ -305,9 +332,9 @@ export default async function HomePage({
                 keeps jobs, assets, and communication together.
               </p>
               <ul className="landing-list">
-                <li>Faster work order creation.</li>
+                <li>Faster work orders with Lead Technicians and helper crews.</li>
                 <li>Better visibility for managers and dispatch.</li>
-                <li>Cleaner handoff between office staff and techs.</li>
+                <li>Cleaner handoff between office, sales, and field staff.</li>
                 <li>Less time lost driving to the right pivot.</li>
               </ul>
             </article>

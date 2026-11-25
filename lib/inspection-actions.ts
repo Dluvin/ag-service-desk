@@ -192,7 +192,7 @@ export async function saveVisitAction(
 
     // Full package details only when the catalog finds a match.
     if (packageItem || serialNumber) {
-      const packages = await loadPivotPackages();
+      const packages = await loadPivotPackages(session.organizationId);
       const index = indexPivotPackages(packages);
       const byItem = packageItem
         ? packages.find((pkg) => pkg.item.toLowerCase() === packageItem.toLowerCase())

@@ -82,6 +82,7 @@ model Organization {
   assets              Asset[]
   farms               Farm[]
   sales               Sale[]
+  salesPackages       SalesPackage[]
   ocrSamples          OrgOcrSample[]
   qbwcConfig          QbwcConfig?
   qbwcSessions        QbwcSession[]
@@ -670,6 +671,31 @@ model QbEstimateJob {
 
   @@index([organizationId, status])
   @@index([ticketId])
+}
+
+/// Org-created pivot / sprinkler packages (merged with the shared QuickBooks catalog JSON).
+model SalesPackage {
+  id                  String       @id @default(cuid())
+  organizationId      String
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// PIVOT | SPRINKLER
+  kind                String
+  item                String
+  description         String
+  purchaseDescription String       @default("")
+  qty                 String       @default("0")
+  uom                 String       @default("each (ea)")
+  cost                Float        @default(0)
+  price               Float        @default(0)
+  vendor              String       @default("")
+  mpn                 String       @default("")
+  barcode             String       @default("")
+  reference           String       @default("")
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@unique([organizationId, item])
+  @@index([organizationId, kind])
 }
 
 /// Pivot / equipment sales pipeline (columns from 2026 Pivot Prospects workbook).

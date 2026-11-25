@@ -4,14 +4,15 @@ import { orgInspectionsIsOn } from "@/lib/ocr-samples";
 import { factsFromPackage, findPackagesBySerial, indexPivotPackages } from "@/lib/pivot-package-match";
 import { loadPivotPackages } from "@/lib/pivot-packages-data";
 
-let cache: { at: number; index: ReturnType<typeof indexPivotPackages> } | null = null;
+const cache = new Map<string, { at: number; index: ReturnType<typeof indexPivotPackages> }>();
 
-async function packageIndex() {
+async function packageIndex(organizationId: string) {
   const now = Date.now();
-  if (cache && now - cache.at < 60_000) return cache.index;
-  const packages = await loadPivotPackages();
+  const hit = cache.get(organizationId);
+  if (hit && now - hit.at < 60_000) return hit.index;
+  const packages = await loadPivotPackages(organizationId);
   const index = indexPivotPackages(packages);
-  cache = { at: now, index };
+  cache.set(organizationId, { at: now, index });
   return index;
 }
 
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
   }
   const serial = new URL(request.url).searchParams.get("serial")?.trim() ?? "";
   if (serial.length < 3) return NextResponse.json({ matches: [] });
-  const index = await packageIndex();
+  const index = await packageIndex(session.organizationId);
   const matches = findPackagesBySerial(index, serial).map((pkg) => {
     const facts = factsFromPackage(pkg.description);
     return {

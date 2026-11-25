@@ -1357,7 +1357,7 @@ export async function updatePivotAction(formData: FormData) {
     if (clearPackage || !serialNumber) {
       Object.assign(data, emptyPackageFields());
     } else {
-      const packages = await loadPivotPackages();
+      const packages = await loadPivotPackages(session.organizationId);
       const matches = findPackagesBySerial(indexPivotPackages(packages), serialNumber);
       if (matches.length === 1) {
         Object.assign(data, packageFieldsFromMatch(matches[0]));

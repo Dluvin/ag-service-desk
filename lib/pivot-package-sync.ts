@@ -19,7 +19,7 @@ export async function syncPivotPackagesForOrganization(
   options?: { overwrite?: boolean },
 ): Promise<PivotPackageSyncResult> {
   const overwrite = options?.overwrite === true;
-  const packages = await loadPivotPackages();
+  const packages = await loadPivotPackages(organizationId);
   const index = indexPivotPackages(packages);
   const pivots = await prisma.pivot.findMany({
     where: { organizationId },

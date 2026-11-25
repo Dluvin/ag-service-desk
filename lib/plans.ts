@@ -5,6 +5,8 @@
  * so David’s dealers keep maps after this ships. Flip a company on /platform.
  */
 
+import { FREE_HELPERS_PER_LEAD } from "./staff-seats";
+
 /** One-time fee for Ag Desk Pro to set up the dealership's Bird SMS account. Bird's own charges are separate. */
 export const SMS_SETUP_CENTS = 40000;
 
@@ -33,6 +35,13 @@ function smsSetupFeature(): LandingPlanFeature {
     label: `SMS setup ${formatPlanCents(SMS_SETUP_CENTS)} one time`,
     included: false,
     optional: true,
+  };
+}
+
+function leadHelperSeatFeature(): LandingPlanFeature {
+  return {
+    label: `Lead Technicians + ${FREE_HELPERS_PER_LEAD} free Staff Technicians each`,
+    included: true,
   };
 }
 
@@ -453,15 +462,18 @@ export function landingPlanTiles(): LandingPlanTile[] {
       id: "STARTER",
       name: starter.label,
       price: formatPlanCents(starter.monthlyCents),
-      priceNote: "per user / month",
+      priceNote: "per billable user / month",
       description:
-        "Full work-order desk for a small shop. Open in Google Maps stays on. In-app satellite maps stay off.",
+        "Full work-order desk for a small shop. Open in Google Maps stays on. In-app satellite maps stay off. Platform can unlock Enterprise add-ons when you need them.",
       features: [
-        { label: "Full desk: work orders, customers, and farms", included: true },
+        { label: "Full desk: work orders, customers, farms, and sales packages", included: true },
+        leadHelperSeatFeature(),
+        { label: "Multi-helper crews on every work order", included: true },
         { label: "Open in Google Maps and outbound directions", included: true },
         { label: "1 store", included: true },
         { label: "In-app satellite maps", included: false },
         { label: "Live vehicle GPS / Reveal", included: false },
+        { label: "Handwritten scans, office forms, pivot inspections", included: false },
         { label: "QuickBooks Desktop estimates", included: false },
         smsSetupFeature(),
       ],
@@ -470,23 +482,29 @@ export function landingPlanTiles(): LandingPlanTile[] {
       id: "SHOP",
       name: shop.label,
       price: formatPlanCents(shop.monthlyCents),
-      priceNote: `per month · ${shop.includedUsers} users included`,
-      description: `In-app maps for dispatch and the field. Extra seats ${formatPlanCents(shop.extraSeatCents)}/user/month. More than ${shop.maxStores} stores: contact sales.`,
+      priceNote: `per month · ${shop.includedUsers} billable users included`,
+      description: `In-app maps for dispatch and the field. Extra billable seats ${formatPlanCents(shop.extraSeatCents)}/user/month. More than ${shop.maxStores} stores: contact sales. Platform can enable Enterprise features per dealer.`,
       featured: true,
       features: [
-        { label: "Full desk: work orders, customers, and farms", included: true },
-        { label: "In-app satellite maps", included: true },
-        { label: `${shop.includedUsers} users included`, included: true },
-        { label: `Extra seats ${formatPlanCents(shop.extraSeatCents)}/user/month`, included: true },
+        { label: "Full desk: work orders, customers, farms, and sales packages", included: true },
+        leadHelperSeatFeature(),
+        { label: "Multi-helper crews on every work order", included: true },
+        { label: "In-app satellite maps + dispatch tiles", included: true },
+        { label: `${shop.includedUsers} billable seats included`, included: true },
+        { label: `Extra billable seats ${formatPlanCents(shop.extraSeatCents)}/user/month`, included: true },
         { label: `Up to ${shop.maxStores} stores`, included: true },
         {
           label: `Reveal GPS add-on ${formatPlanCents(shop.revealAddOnCents)}/month`,
           included: false,
           optional: true,
         },
+        {
+          label: "Handwritten scans, forms, inspections, QuickBooks (Platform)",
+          included: false,
+          optional: true,
+        },
         { label: "Unlimited users and stores", included: false },
         { label: "Live GPS included", included: false },
-        { label: "QuickBooks Desktop estimates", included: false },
         smsSetupFeature(),
       ],
     },
@@ -494,19 +512,66 @@ export function landingPlanTiles(): LandingPlanTile[] {
       id: "ENTERPRISE",
       name: enterprise.label,
       price: formatPlanCents(enterprise.monthlyCents),
-      priceNote: "per month · unlimited users",
+      priceNote: "per month · unlimited billable users",
       description:
-        "Unlimited seats and stores. Verizon GPS is included. Other GPS: contact sales, no setup fee.",
+        "Unlimited seats and stores. Verizon GPS, handwritten scans, office forms, pivot inspections, and QuickBooks Desktop are on by default. Platform can still override GPS, seats, and add-ons per dealer.",
       features: [
-        { label: "Full desk: work orders, customers, and farms", included: true },
-        { label: "In-app satellite maps", included: true },
-        { label: "Unlimited users", included: true },
-        { label: "Unlimited stores", included: true },
+        { label: "Full desk: work orders, customers, farms, and sales packages", included: true },
+        leadHelperSeatFeature(),
+        { label: "Multi-helper crews on every work order", included: true },
+        { label: "In-app satellite maps + dispatch tiles", included: true },
+        { label: "Unlimited billable users and stores", included: true },
         { label: "Verizon GPS included", included: true },
-        { label: "Other GPS: contact sales, no setup fee", included: true },
+        { label: "Other GPS via Platform (no setup fee)", included: true },
+        { label: "Handwritten work-order scans", included: true },
+        { label: "Office forms", included: true },
+        { label: "Pivot inspections", included: true },
         { label: "QuickBooks Desktop estimates", included: true },
+        {
+          label: "Inspection customer list: Ag Desk or QuickBooks",
+          included: true,
+          optional: true,
+        },
         smsSetupFeature(),
       ],
+    },
+  ];
+}
+
+/** Options Ag Desk Pro can set per company from Platform (shown on the public pricing page). */
+export function landingPlatformOptions(): { title: string; detail: string }[] {
+  return [
+    {
+      title: "Plan version",
+      detail: "Starter, Shop, or Enterprise — flip a dealer without a redeploy.",
+    },
+    {
+      title: "Billable seats & store cap",
+      detail: `Override included seats and store limits. Each Lead Technician still includes ${FREE_HELPERS_PER_LEAD} Staff Technicians free.`,
+    },
+    {
+      title: "GPS provider",
+      detail: "NONE, Reveal, Verizon, or another provider. Shop can add Reveal; Enterprise includes Verizon.",
+    },
+    {
+      title: "Handwritten scans",
+      detail: "Turn OCR work-order import on or off per company (on by default for Enterprise).",
+    },
+    {
+      title: "Office forms",
+      detail: "Enable printable office tickets and service-order capture per dealer.",
+    },
+    {
+      title: "Pivot inspections",
+      detail: "Seasonal inspection workflows, with Ag Desk or QuickBooks customer lists.",
+    },
+    {
+      title: "QuickBooks Desktop",
+      detail: "Web Connector estimates — on for Enterprise, available as a Platform flag for others.",
+    },
+    {
+      title: "SMS setup",
+      detail: `${formatPlanCents(SMS_SETUP_CENTS)} one-time Bird/10DLC setup: mark due, paid, or waived.`,
     },
   ];
 }

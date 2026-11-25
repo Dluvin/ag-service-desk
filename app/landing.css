@@ -368,6 +368,18 @@ html[data-landing-theme="dark"] .landing .landing-btn {
   gap: 1rem;
 }
 
+.landing-capability-grid,
+.landing-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.landing-capability-grid .landing-card h3,
+.landing-platform-grid .landing-box strong {
+  font-size: var(--ld-text-lg);
+}
+
 .landing-panel {
   background: var(--ld-surface);
   border: 1px solid var(--ld-border);
@@ -870,6 +882,8 @@ html[data-landing-theme="dark"] .landing-price-badge {
   .landing-pricing,
   .landing-screens,
   .landing-photos,
+  .landing-capability-grid,
+  .landing-platform-grid,
   .landing-dispatch,
   .landing-mini,
   .landing-proof {
