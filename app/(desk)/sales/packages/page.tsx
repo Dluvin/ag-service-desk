@@ -21,8 +21,8 @@ export default async function SalesPackagesPage({
   const canCreate = canManageParts(session.role);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-5">
-      <div className="grid gap-5 lg:col-span-3">
+    <div className="grid items-start gap-6 lg:grid-cols-5 lg:gap-8">
+      <div className="space-y-4 lg:col-span-3">
         <div>
           <p className="text-sm text-stone-500">
             <Link href="/sales" className="text-emerald-800 hover:underline">
