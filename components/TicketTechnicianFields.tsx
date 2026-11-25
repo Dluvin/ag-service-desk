@@ -12,7 +12,7 @@ export function TicketTechnicianFields({
   canAssign,
   canAdd,
   compact = false,
-  leadLabel = "Assign technician",
+  leadLabel = "Assign Lead Technician",
   helperLabel = "Technician helper",
   unassignedLabel = "Unassigned",
   noneLabel = "None",
