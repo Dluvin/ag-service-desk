@@ -19,7 +19,7 @@ export function DispatchAssignForm({
   helperTechnicianIds: string[];
   status: string;
   canAssign: boolean;
-  technicians: { id: string; name: string }[];
+  technicians: { id: string; name: string; role?: string }[];
   actorRole: string;
   locale: Locale;
 }) {

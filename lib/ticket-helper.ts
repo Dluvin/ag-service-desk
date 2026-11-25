@@ -63,7 +63,7 @@ async function createHelperTechnician(input: {
   if (password && password.length < 8) {
     return { error: "Helper password must be at least 8 characters, or leave it blank." };
   }
-  const seat = await assertCanAddStaff(input.organizationId);
+  const seat = await assertCanAddStaff(input.organizationId, 1, ROLES.TECHNICIAN);
   if ("error" in seat && seat.error) return { error: seat.error };
 
   const { hash, hadPassword } = await hashNewUserPassword(password);

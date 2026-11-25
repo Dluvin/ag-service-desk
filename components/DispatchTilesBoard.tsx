@@ -32,7 +32,7 @@ export function DispatchTilesBoard({
   locale,
 }: {
   tickets: TileTicket[];
-  technicians: { id: string; name: string }[];
+  technicians: { id: string; name: string; role?: string }[];
   canAssign: boolean;
   actorRole: string;
   locale: Locale;

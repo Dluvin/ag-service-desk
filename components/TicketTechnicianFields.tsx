@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { HELPER_NEW, HELPER_NONE } from "@/lib/ticket-helper-constants";
+import { ROLES } from "@/lib/roles";
 
-type Tech = { id: string; name: string };
+type Tech = { id: string; name: string; role?: string };
 
 export function TicketTechnicianFields({
   technicians,
@@ -17,7 +18,7 @@ export function TicketTechnicianFields({
   helperHelp,
   unassignedLabel = "Unassigned",
   noneLabel = "None",
-  addNewLabel = "Add new technician…",
+  addNewLabel = "Add new staff technician…",
 }: {
   technicians: Tech[];
   defaultTechnicianId?: string | null;
@@ -44,6 +45,16 @@ export function TicketTechnicianFields({
       : [...new Set((defaultHelperTechnicianIds ?? []).filter(Boolean))];
   const [helperIds, setHelperIds] = useState<string[] | null>(initialHelpers);
   const [addingNew, setAddingNew] = useState(false);
+
+  const leadOptions = useMemo(() => {
+    const leads = technicians.filter((tech) => tech.role === ROLES.TECH_LEAD);
+    // Keep a legacy non-lead assignment visible so it can be reassigned.
+    if (leadId && !leads.some((tech) => tech.id === leadId)) {
+      const current = technicians.find((tech) => tech.id === leadId);
+      if (current) return [current, ...leads];
+    }
+    return leads;
+  }, [technicians, leadId]);
 
   const helperOptions = useMemo(
     () => technicians.filter((tech) => tech.id !== leadId),
@@ -121,7 +132,7 @@ export function TicketTechnicianFields({
           className={selectClass}
         >
           <option value="">{unassignedLabel}</option>
-          {technicians.map((tech) => (
+          {leadOptions.map((tech) => (
             <option key={tech.id} value={tech.id}>
               {tech.name}
             </option>
@@ -159,7 +170,10 @@ export function TicketTechnicianFields({
                     }}
                     className="mt-0.5"
                   />
-                  <span>{tech.name}</span>
+                  <span>
+                    {tech.name}
+                    {tech.role === ROLES.TECH_LEAD ? " (lead)" : ""}
+                  </span>
                 </label>
               );
             })}
@@ -181,7 +195,6 @@ export function TicketTechnicianFields({
               </label>
             ) : null}
           </div>
-          {/* Required native check: at least one submitted helper value when lead is set */}
           <select
             className="sr-only"
             aria-hidden

@@ -17,6 +17,8 @@ import { PLAN } from "@/lib/plan";
 import { PlatformPlanForm } from "@/components/PlatformPlanForm";
 import { renameDemoIrrigationCompany } from "@/lib/rename-demo-irrigation";
 import { ensureOrgOcrSchema } from "@/lib/ocr-samples";
+import { FREE_HELPERS_PER_LEAD, staffSeatBreakdown, summarizeStaffSeats } from "@/lib/staff-seats";
+import { resolveEntitlements } from "@/lib/plans";
 
 export const dynamic = "force-dynamic";
 
@@ -50,9 +52,11 @@ export default async function PlatformHomePage() {
           </Link>
           {" "}
           (<span className="font-mono text-xs">/signup</span>). New companies stay pending until you
-          approve. Approve opens their tenant, loads a demo customer/work order, and starts a {PLAN.trialDays}-day
+          approve.           Approve opens their tenant, loads a demo customer/work order, and starts a {PLAN.trialDays}-day
           trial. Existing companies stay on Shop so live dealers keep in-app maps. Set plan, Reveal add-on, pivot
           inspections, GPS provider, and store cap below — Stripe checkout is not wired to these prices yet.
+          User count: each Lead Technician includes {FREE_HELPERS_PER_LEAD} Staff Technicians free; Staff
+          Technicians can only be helpers on a work order that already has a Lead Technician.
         </p>
         <ul className="mt-6 space-y-4">
           {tenants.length === 0 ? (
@@ -65,7 +69,8 @@ export default async function PlatformHomePage() {
             </li>
           ) : (
             tenants.map((org) => {
-              const staff = org.users.length;
+              const seats = staffSeatBreakdown(org.users);
+              const entitlements = resolveEntitlements(org);
               const adminEmail = org.users.find((user) => user.role === ROLES.ADMIN)?.email;
               return (
                 <li key={org.id} className="rounded-xl border border-stone-200 bg-white p-4">
@@ -90,8 +95,12 @@ export default async function PlatformHomePage() {
                         ) : null}
                       </p>
                       <p className="mt-1 text-sm text-stone-600">
-                        {org.slug} · {staff} staff · {org._count.farmers} customers · {org._count.tickets}{" "}
-                        work orders
+                        {org.slug} · {summarizeStaffSeats(org.users)}
+                        {entitlements.includedUsers != null
+                          ? ` · ${seats.billable}/${entitlements.includedUsers} included billable`
+                          : ""}
+                        {" · "}
+                        {org._count.farmers} customers · {org._count.tickets} work orders
                         {adminEmail ? ` · ${adminEmail}` : ""}
                       </p>
                       {org.signupPhone || org.signupCity ? (
@@ -136,7 +145,7 @@ export default async function PlatformHomePage() {
                       </ActionForm>
                     </div>
                   </div>
-                  <PlatformPlanForm org={org} />
+                  <PlatformPlanForm org={org} staffUsers={org.users} />
                   {org.stripeSubscriptionId ? (
                     <p className="mt-2 text-sm font-medium text-emerald-800">Stripe subscription is on file.</p>
                   ) : (

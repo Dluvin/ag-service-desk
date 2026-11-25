@@ -320,6 +320,11 @@ export function extraStaffSeatsFor(org: PlanOrg | null | undefined, staffCount: 
   return Math.max(0, staffCount - included);
 }
 
+/** Prefer billable seat count (helpers free with leads) when available. */
+export function extraBillableStaffSeatsFor(org: PlanOrg | null | undefined, billableCount: number) {
+  return extraStaffSeatsFor(org, billableCount);
+}
+
 export type LockedPlanNote = {
   id: string;
   title: string;
@@ -390,15 +395,17 @@ export function contactSalesStoreMessage(org: PlanOrg | null | undefined) {
 
 export function contactSalesUserMessage(org: PlanOrg | null | undefined) {
   const { maxUsers, includedUsers, extraSeatCents, label, perUser } = resolveEntitlements(org);
+  const helperNote =
+    " Each Lead Technician includes 3 Staff Technicians free. Staff Technicians can only be helpers on a work order that already has a Lead Technician.";
   if (maxUsers == null) {
     if (perUser) {
-      return `Each extra staff login is ${formatPlanCents(extraSeatCents)}/month. ${contactSalesLabel()} to update billing.`;
+      return `Each extra billable staff login is ${formatPlanCents(extraSeatCents)}/month.${helperNote} ${contactSalesLabel()} to update billing.`;
     }
-    return `Staff seats are unlimited on this plan. ${contactSalesLabel()} if you need help.`;
+    return `Staff seats are unlimited on this plan.${helperNote} ${contactSalesLabel()} if you need help.`;
   }
   const extra =
-    extraSeatCents > 0 ? ` Extra seats are ${formatPlanCents(extraSeatCents)}/month.` : "";
-  return `The ${label} plan includes ${includedUsers ?? maxUsers} staff logins.${extra} ${contactSalesLabel()} to add more.`;
+    extraSeatCents > 0 ? ` Extra billable seats are ${formatPlanCents(extraSeatCents)}/month.` : "";
+  return `The ${label} plan includes ${includedUsers ?? maxUsers} billable staff logins.${extra}${helperNote} ${contactSalesLabel()} to add more.`;
 }
 
 export function contactSalesQbwcMessage(org: PlanOrg | null | undefined) {

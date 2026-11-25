@@ -64,7 +64,9 @@ import { parseDateTimeLocal } from "./schedule";
 import { parseMoneyInput } from "./money";
 import { emailSignupToOwner } from "./signup-notify";
 import { assertCanAddStaff, assertCanAddStore, loadOrgPlan } from "./org-plan";
-import { PLANS, contactSalesGpsMessage, remainingUserSlots, showVehicleGps } from "./plans";
+import { assertLeadTechnicianId, isAssignedFieldTech } from "./scope";
+import { PLANS, contactSalesGpsMessage, resolveEntitlements, showVehicleGps } from "./plans";
+import { billableStaffCount } from "./staff-seats";
 import { defaultStoreName, storeNamesFromSignup } from "./store-names";
 import {
   ASSET_KIND,
@@ -749,7 +751,7 @@ export async function createTechnicianAction(formData: FormData) {
   if (!name || !email) return { error: "Name and email are required." };
   if (password && password.length < 8) return { error: "Password must be at least 8 characters, or leave it blank." };
 
-  const seat = await assertCanAddStaff(session.organizationId);
+  const seat = await assertCanAddStaff(session.organizationId, 1, ROLES.TECHNICIAN);
   if ("error" in seat && seat.error) return { error: seat.error };
 
   const { hash, hadPassword } = await hashNewUserPassword(password);
@@ -801,7 +803,7 @@ export async function createStaffAction(formData: FormData) {
     return { error: "You cannot add staff with that role." };
   }
 
-  const seat = await assertCanAddStaff(session.organizationId);
+  const seat = await assertCanAddStaff(session.organizationId, 1, role);
   if ("error" in seat && seat.error) return { error: seat.error };
 
   const { hash, hadPassword } = await hashNewUserPassword(password);
@@ -861,13 +863,11 @@ export async function importStaffAction(formData: FormData) {
   });
   let remainingAdmins = adminCount;
   const planLoaded = await loadOrgPlan(session.organizationId);
-  let staffCount = await prisma.user.count({
-    where: {
-      organizationId: session.organizationId,
-      role: { in: [...SHOP_STAFF_ROLES] },
-    },
+  let seatUsers = await prisma.user.findMany({
+    where: { organizationId: session.organizationId, role: { in: [...SHOP_STAFF_ROLES] } },
+    select: { id: true, role: true },
   });
-  const userSlotsLeft = planLoaded ? remainingUserSlots(planLoaded.org, staffCount) : null;
+  const maxUsers = planLoaded ? resolveEntitlements(planLoaded.org).maxUsers : null;
 
   for (const row of rows.slice(0, 500)) {
     const existing = await prisma.user.findFirst({
@@ -903,10 +903,11 @@ export async function importStaffAction(formData: FormData) {
             : {}),
         },
       });
+      seatUsers = seatUsers.map((user) => (user.id === existing.id ? { ...user, role: row.role } : user));
       updated += 1;
       continue;
     }
-    if (userSlotsLeft != null && created >= userSlotsLeft) {
+    if (maxUsers != null && billableStaffCount([...seatUsers, { role: row.role }]) > maxUsers) {
       skipped += 1;
       continue;
     }
@@ -931,6 +932,7 @@ export async function importStaffAction(formData: FormData) {
       hadPassword,
     });
     if (row.role === ROLES.ADMIN) remainingAdmins += 1;
+    seatUsers = [...seatUsers, { id: user.id, role: row.role }];
     created += 1;
   }
 
@@ -950,7 +952,7 @@ export async function createManagerAction(formData: FormData) {
   if (!name || !email) return { error: "Name and email are required." };
   if (password && password.length < 8) return { error: "Password must be at least 8 characters, or leave it blank." };
 
-  const seat = await assertCanAddStaff(session.organizationId);
+  const seat = await assertCanAddStaff(session.organizationId, 1, ROLES.MANAGER);
   if ("error" in seat && seat.error) return { error: seat.error };
 
   const { hash, hadPassword } = await hashNewUserPassword(password);
@@ -1569,8 +1571,12 @@ export async function createTicketAction(formData: FormData) {
 
   let assigned: string | null = technicianId;
   if (session.role === ROLES.FARMER) assigned = null;
-  else if (session.role === ROLES.TECHNICIAN) assigned = session.userId;
+  else if (session.role === ROLES.TECHNICIAN) assigned = null;
   else if (!canAssignTickets(session.role)) assigned = null;
+
+  const leadCheck = await assertLeadTechnicianId(session.organizationId, assigned);
+  if ("error" in leadCheck) return leadCheck;
+  assigned = leadCheck.technicianId;
 
   const helper = canAssignTickets(session.role)
     ? await resolveTicketHelper({
@@ -1671,7 +1677,9 @@ export async function editWorkOrderAction(formData: FormData) {
   if ("error" in site) return site;
   const { pivot, asset } = site;
   const farmerId = pivot?.farmerId ?? asset!.farmerId;
-  const nextTech = technicianId;
+  const leadCheck = await assertLeadTechnicianId(session.organizationId, technicianId);
+  if ("error" in leadCheck) return leadCheck;
+  const nextTech = leadCheck.technicianId;
   const helper = await resolveTicketHelper({
     organizationId: session.organizationId,
     organizationName: session.organizationName,
@@ -1799,7 +1807,7 @@ export async function updateTicketAction(formData: FormData) {
     redirect(`/tickets/${ticketId}`);
   }
 
-  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+  if (session.role === ROLES.TECHNICIAN && !isAssignedFieldTech(ticket, session.userId)) {
     return { error: "This work order is not assigned to you." };
   }
 
@@ -1826,10 +1834,10 @@ export async function updateTicketAction(formData: FormData) {
     }
   }
 
-  const nextTech =
-    canAssignTickets(session.role)
-      ? technicianId || null
-      : ticket.technicianId;
+  const requestedTech = canAssignTickets(session.role) ? technicianId || null : ticket.technicianId;
+  const leadCheck = await assertLeadTechnicianId(session.organizationId, requestedTech);
+  if ("error" in leadCheck) return leadCheck;
+  const nextTech = leadCheck.technicianId;
   const existingHelpers = parseHelperTechnicianIds(ticket.helperTechnicianIds, ticket.helperTechnicianId);
   const helper = canAssignTickets(session.role)
     ? await resolveTicketHelper({
@@ -1923,12 +1931,14 @@ export async function assignTicketAction(formData: FormData) {
   });
   if (!ticket) return { error: "Work order not found." };
 
-  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+  if (session.role === ROLES.TECHNICIAN && !isAssignedFieldTech(ticket, session.userId)) {
     return { error: "This work order is not assigned to you." };
   }
 
-  const nextTech =
-    canAssignTickets(session.role) ? technicianId || null : ticket.technicianId;
+  const requestedTech = canAssignTickets(session.role) ? technicianId || null : ticket.technicianId;
+  const leadCheck = await assertLeadTechnicianId(session.organizationId, requestedTech);
+  if ("error" in leadCheck) return leadCheck;
+  const nextTech = leadCheck.technicianId;
   const existingHelpers = parseHelperTechnicianIds(ticket.helperTechnicianIds, ticket.helperTechnicianId);
   const helper = canAssignTickets(session.role)
     ? await resolveTicketHelper({
@@ -2008,7 +2018,7 @@ export async function addTicketPartAction(formData: FormData) {
     where: { id: ticketId, organizationId: session.organizationId },
   });
   if (!ticket) return { error: "Work order not found." };
-  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+  if (session.role === ROLES.TECHNICIAN && !isAssignedFieldTech(ticket, session.userId)) {
     return { error: "This work order is not assigned to you." };
   }
   if (Number.isNaN(quantity) || quantity <= 0) {
@@ -2176,7 +2186,7 @@ export async function addTicketLaborAction(formData: FormData) {
     where: { id: ticketId, organizationId: session.organizationId },
   });
   if (!ticket) return { error: "Work order not found." };
-  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+  if (session.role === ROLES.TECHNICIAN && !isAssignedFieldTech(ticket, session.userId)) {
     return { error: "This work order is not assigned to you." };
   }
   if (Number.isNaN(hours) || hours <= 0) {
@@ -2236,7 +2246,7 @@ export async function addTicketEquipmentAction(formData: FormData) {
     where: { id: ticketId, organizationId: session.organizationId },
   });
   if (!ticket) return { error: "Work order not found." };
-  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+  if (session.role === ROLES.TECHNICIAN && !isAssignedFieldTech(ticket, session.userId)) {
     return { error: "This work order is not assigned to you." };
   }
   if (Number.isNaN(hours) || hours <= 0) {
@@ -2299,7 +2309,7 @@ export async function quickCreateTicketCatalogAction(formData: FormData) {
     where: { id: ticketId, organizationId: session.organizationId },
   });
   if (!ticket) return { error: "Work order not found." };
-  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+  if (session.role === ROLES.TECHNICIAN && !isAssignedFieldTech(ticket, session.userId)) {
     return { error: "This work order is not assigned to you." };
   }
   if (!name) return { error: "Name is required." };
@@ -2428,7 +2438,7 @@ async function requireTicketLineEdit(ticketId: string) {
     where: { id: ticketId, organizationId: session.organizationId },
   });
   if (!ticket) return { error: "Work order not found." as const };
-  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+  if (session.role === ROLES.TECHNICIAN && !isAssignedFieldTech(ticket, session.userId)) {
     return { error: "This work order is not assigned to you." as const };
   }
   return { session, ticket };
@@ -3565,7 +3575,7 @@ export async function attachOfficeFormToTicketAction(formData: FormData) {
         select: { storeId: true },
       }),
     ]);
-    const assigned = session.role === ROLES.TECHNICIAN ? session.userId : null;
+    const assigned = null;
     const ticket = await openServiceTicket({
       organizationId: session.organizationId,
       farmerId,
@@ -3768,7 +3778,7 @@ export async function applyHandwrittenTicketAction(formData: FormData) {
     where: { id: ticketId, ...ticketWhere(session) },
   });
   if (!ticket) return { error: "Work order not found." };
-  if (session.role === ROLES.TECHNICIAN && ticket.technicianId !== session.userId) {
+  if (session.role === ROLES.TECHNICIAN && !isAssignedFieldTech(ticket, session.userId)) {
     return { error: "This work order is not assigned to you." };
   }
 

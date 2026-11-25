@@ -135,7 +135,7 @@ export default async function EditTicketPage({ params }: { params: Promise<{ id:
         </label>
         <StoreSelect stores={stores} defaultValue={resolvedTicketStoreId(ticket)} label={t(locale, "common.store")} />
         <TicketTechnicianFields
-          technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name }))}
+          technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name, role: tech.role }))}
           defaultTechnicianId={ticket.technicianId}
           defaultHelperTechnicianIds={
             ticket.technicianId

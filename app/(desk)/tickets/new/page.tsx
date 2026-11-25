@@ -145,7 +145,7 @@ export default async function NewTicketPage({
           <StoreSelect stores={stores} defaultValue={actor?.storeId} label={t(locale, "common.store")} />
         ) : null}
         <TicketTechnicianFields
-          technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name }))}
+          technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name, role: tech.role }))}
           canAssign={canAssignTickets(session.role)}
           canAdd={canAddTechnicians(session.role)}
           leadLabel={t(locale, "ticket.assignTech")}

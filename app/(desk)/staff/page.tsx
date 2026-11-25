@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ROLES, SHOP_STAFF_ROLES, canDeleteRecords, canEditStaffMember, canImportStaff, canManageShopStaff, staffRolesAssignableBy } from "@/lib/roles";
+import { ROLES, canDeleteRecords, canEditStaffMember, canImportStaff, canManageShopStaff, staffRolesAssignableBy } from "@/lib/roles";
 import { roleLabel } from "@/lib/scope";
 import { createStaffAction, deleteStaffAction } from "@/lib/actions";
 import { ActionForm } from "@/components/ActionForm";
@@ -14,13 +14,14 @@ import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 import { VehicleSelect } from "@/components/VehicleSelect";
 import { storedRevealVehicles } from "@/lib/reveal";
 import { PLAN, extraStaffSeats } from "@/lib/plan";
-import { loadOrgPlan } from "@/lib/org-plan";
+import { loadOrgPlan, shopStaffUsers } from "@/lib/org-plan";
 import {
-  canAddUser,
   contactSalesUserMessage,
   extraStaffSeatsFor,
   formatPlanCents,
+  resolveEntitlements,
 } from "@/lib/plans";
+import { FREE_HELPERS_PER_LEAD, staffSeatBreakdown } from "@/lib/staff-seats";
 import { ContactSalesNote } from "@/components/ContactSalesNote";
 import { getRequestLocale } from "@/lib/user-locale";
 import { t } from "@/lib/i18n";
@@ -37,7 +38,7 @@ export default async function StaffPage({
   const roleOptions = staffRolesAssignableBy(session.role);
   const canImport = canImportStaff(session.role);
 
-  const [staff, stores, vehicles, seatCount, plan] = await Promise.all([
+  const [staff, stores, vehicles, allSeatUsers, plan] = await Promise.all([
     prisma.user.findMany({
       where: {
         organizationId: session.organizationId,
@@ -52,18 +53,16 @@ export default async function StaffPage({
       select: { id: true, name: true },
     }),
     storedRevealVehicles(session.organizationId),
-    prisma.user.count({
-      where: {
-        organizationId: session.organizationId,
-        role: { in: [...SHOP_STAFF_ROLES] },
-      },
-    }),
+    shopStaffUsers(session.organizationId),
     loadOrgPlan(session.organizationId),
   ]);
   const entitlements = plan?.entitlements;
   const includedSeats = entitlements?.includedUsers ?? PLAN.includedSeats;
-  const extraSeats = plan ? extraStaffSeatsFor(plan.org, seatCount) : extraStaffSeats(seatCount);
-  const allowUser = plan ? canAddUser(plan.org, seatCount) : true;
+  const seats = staffSeatBreakdown(allSeatUsers);
+  const billable = seats.billable;
+  const extraSeats = plan ? extraStaffSeatsFor(plan.org, billable) : extraStaffSeats(billable);
+  const maxUsers = plan ? resolveEntitlements(plan.org).maxUsers : null;
+  const allowUser = maxUsers == null || billable < maxUsers || seats.freeHelpers < seats.freeAllowance;
   const showGps = entitlements?.gpsEnabled ?? true;
   const locale = await getRequestLocale();
 
@@ -203,24 +202,27 @@ export default async function StaffPage({
             {includedSeats != null ? (
               <>
                 {" "}
-                includes <span className="font-semibold">{includedSeats} staff logins</span>
+                includes <span className="font-semibold">{includedSeats} billable staff logins</span>
               </>
             ) : (
-              " has unlimited staff logins"
+              " has unlimited billable staff logins"
             )}{" "}
             {entitlements?.perUser
               ? `at ${formatPlanCents(entitlements.extraSeatCents)}/user/month`
               : `for ${formatPlanCents(entitlements?.monthlyCents ?? PLAN.monthlyDollars * 100)}/month`}
-            . Customer logins are separate.
+            . Each Lead Technician includes {FREE_HELPERS_PER_LEAD} Staff Technicians free. Staff Technicians can
+            only be helpers on a work order with a Lead Technician. Customer logins are separate.
             {entitlements?.extraSeatCents && includedSeats != null
-              ? ` Extra staff seats are ${formatPlanCents(entitlements.extraSeatCents)}/month each.`
+              ? ` Extra billable seats are ${formatPlanCents(entitlements.extraSeatCents)}/month each.`
               : ""}{" "}
             New companies get a {PLAN.trialDays}-day trial after approval.
           </p>
           <p className="mt-2 text-sm text-stone-700">
+            {seats.leadCount} lead · {seats.helperCount} staff tech ({seats.freeHelpers}/{seats.freeAllowance} free)
+            {" · "}
             {includedSeats != null
-              ? `${seatCount} of ${includedSeats} included seats in use`
-              : `${seatCount} staff logins in use`}
+              ? `${billable} of ${includedSeats} billable seats in use`
+              : `${billable} billable seats in use`}
             {extraSeats > 0 && entitlements?.extraSeatCents
               ? ` · ${extraSeats} extra seat${extraSeats === 1 ? "" : "s"} at ${formatPlanCents(entitlements.extraSeatCents)}/month`
               : ""}

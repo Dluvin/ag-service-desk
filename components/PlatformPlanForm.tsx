@@ -13,13 +13,21 @@ import {
   type PlanOrg,
   type SmsSetupStatus,
 } from "@/lib/plans";
+import { FREE_HELPERS_PER_LEAD, staffSeatBreakdown, type StaffSeatUser } from "@/lib/staff-seats";
 
 function smsSetupValue(status: string | null | undefined): SmsSetupStatus {
   return isSmsSetupStatus(status) ? status : "NONE";
 }
 
-export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string; smsSetupStatus?: string | null } }) {
+export function PlatformPlanForm({
+  org,
+  staffUsers = [],
+}: {
+  org: PlanOrg & { id: string; smsSetupStatus?: string | null };
+  staffUsers?: StaffSeatUser[];
+}) {
   const entitlements = resolveEntitlements(org);
+  const seats = staffSeatBreakdown(staffUsers);
   // Remount after save so selects pick up the values that actually persisted.
   const formKey = [
     org.id,
@@ -53,7 +61,23 @@ export function PlatformPlanForm({ org }: { org: PlanOrg & { id: string; smsSetu
         {entitlements.gpsEnabled ? ` · GPS ${entitlements.gpsProvider}` : " · no live GPS"}
         {` · SMS setup ${smsSetupStatusLabel(org.smsSetupStatus)}`}
         {entitlements.maxStores != null ? ` · ${entitlements.maxStores} stores` : " · unlimited stores"}
+        {entitlements.includedUsers != null
+          ? ` · ${seats.billable}/${entitlements.includedUsers} billable seats`
+          : ` · ${seats.billable} billable seats`}
       </p>
+      <div className="mt-3 rounded-md border border-stone-200 bg-white px-3 py-2 text-xs text-stone-600">
+        <p className="font-semibold text-stone-800">User count</p>
+        <p className="mt-1">
+          {seats.total} staff · {seats.leadCount} Lead Technician{seats.leadCount === 1 ? "" : "s"} ·{" "}
+          {seats.helperCount} Staff Technician{seats.helperCount === 1 ? "" : "s"} ({seats.freeHelpers} free of{" "}
+          {seats.freeAllowance}; {seats.paidHelpers} paid) · {seats.otherCount} other roles ·{" "}
+          <span className="font-semibold text-stone-800">{seats.billable} billable</span>
+        </p>
+        <p className="mt-1 text-stone-500">
+          Each Lead Technician includes {FREE_HELPERS_PER_LEAD} Staff Technicians free. Staff Technicians cannot be
+          the lead on a work order — only helpers under a Lead Technician.
+        </p>
+      </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block text-xs font-medium text-stone-600">
           Version

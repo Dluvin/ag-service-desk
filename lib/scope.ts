@@ -9,7 +9,15 @@ export function ticketWhere(session: SessionUser) {
     return { organizationId: session.organizationId, farmerId: session.farmerId ?? "__none__" };
   }
   if (session.role === ROLES.TECHNICIAN) {
-    return { organizationId: session.organizationId, technicianId: session.userId };
+    // Staff technicians only see WOs where they are lead (legacy) or helper under a lead.
+    return {
+      organizationId: session.organizationId,
+      OR: [
+        { technicianId: session.userId },
+        { helperTechnicianId: session.userId },
+        { helperTechnicianIds: { contains: `"${session.userId}"` } },
+      ],
+    };
   }
   return { organizationId: session.organizationId };
 }
@@ -40,7 +48,44 @@ export async function loadTechnicians(organizationId: string) {
   return prisma.user.findMany({
     where: { organizationId, role: { in: [ROLES.TECH_LEAD, ROLES.TECHNICIAN] } },
     orderBy: [{ role: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, role: true, email: true, phone: true, storeId: true },
   });
+}
+
+/** Lead technician on a work order must be TECH_LEAD (not a staff/helper technician). */
+export async function assertLeadTechnicianId(organizationId: string, technicianId: string | null) {
+  if (!technicianId) return { technicianId: null as string | null };
+  const user = await prisma.user.findFirst({
+    where: { id: technicianId, organizationId, role: ROLES.TECH_LEAD },
+    select: { id: true },
+  });
+  if (!user) {
+    return {
+      error:
+        "Only Lead Technicians can be assigned as the lead on a work order. Staff Technicians must be helpers under a Lead Technician.",
+    };
+  }
+  return { technicianId: user.id };
+}
+
+export function isAssignedFieldTech(
+  ticket: {
+    technicianId: string | null;
+    helperTechnicianId?: string | null;
+    helperTechnicianIds?: string | null;
+  },
+  userId: string,
+) {
+  if (ticket.technicianId === userId) return true;
+  if (ticket.helperTechnicianId === userId) return true;
+  const raw = ticket.helperTechnicianIds;
+  if (!raw) return false;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) && parsed.map(String).includes(userId);
+  } catch {
+    return raw.includes(`"${userId}"`);
+  }
 }
 
 export function roleLabel(role: Role | string, locale: Locale = "en") {

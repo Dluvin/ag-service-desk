@@ -7,9 +7,9 @@ const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Company admin",
   MANAGER: "Manager",
   SALESPERSON: "Sales Person",
-  TECH_LEAD: "Tech Lead",
+  TECH_LEAD: "Lead Technician",
   CLERICAL: "Office",
-  TECHNICIAN: "Technician",
+  TECHNICIAN: "Staff Technician",
 };
 
 export function NotifyAudienceFields({

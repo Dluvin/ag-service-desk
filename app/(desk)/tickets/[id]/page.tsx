@@ -252,7 +252,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                   <StoreSelect stores={stores} defaultValue={ticket.storeId ?? ticket.farmer.storeId} label={t(locale, "common.store")} />
                   {!isFinishedStatus(ticket.status) || canAssignTickets(session.role) ? (
                     <TicketTechnicianFields
-                      technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name }))}
+                      technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name, role: tech.role }))}
                       defaultTechnicianId={ticket.technicianId}
                       defaultHelperTechnicianIds={ticket.technicianId ? helperIds : undefined}
                       canAssign={canAssignTickets(session.role)}

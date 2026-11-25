@@ -11,8 +11,9 @@ import { StaffEditForm } from "@/components/StaffEditForm";
 import { WelcomeMailNotice } from "@/components/WelcomeMailNotice";
 import { VehicleSelect } from "@/components/VehicleSelect";
 import { storedRevealVehicles } from "@/lib/reveal";
-import { loadOrgPlan, shopStaffCount } from "@/lib/org-plan";
-import { canAddUser, contactSalesUserMessage } from "@/lib/plans";
+import { loadOrgPlan, shopStaffUsers } from "@/lib/org-plan";
+import { contactSalesUserMessage, resolveEntitlements } from "@/lib/plans";
+import { staffSeatBreakdown } from "@/lib/staff-seats";
 import { ContactSalesNote } from "@/components/ContactSalesNote";
 
 export default async function TechniciansPage({
@@ -39,12 +40,15 @@ export default async function TechniciansPage({
     select: { id: true, name: true },
   });
 
-  const [vehicles, plan, seatCount] = await Promise.all([
+  const [vehicles, plan, seatUsers] = await Promise.all([
     storedRevealVehicles(session.organizationId),
     loadOrgPlan(session.organizationId),
-    shopStaffCount(session.organizationId),
+    shopStaffUsers(session.organizationId),
   ]);
-  const allowUser = plan ? canAddUser(plan.org, seatCount) : true;
+  const seats = staffSeatBreakdown(seatUsers);
+  const maxUsers = plan ? resolveEntitlements(plan.org).maxUsers : null;
+  const allowUser =
+    maxUsers == null || seats.billable < maxUsers || seats.freeHelpers < seats.freeAllowance;
   const showGps = plan?.entitlements.gpsEnabled ?? true;
 
   return (
