@@ -12,7 +12,9 @@ const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
-const CSV_PATH = path.join(__dirname, "..", "data", "rbia-wo-6mo.csv");
+const CSV_PATH = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.join(__dirname, "..", "data", "rbia-wo-6mo.csv");
 const STORE_NAME = "Americus";
 const DEFAULT_COORDS = { latitude: 32.0724, longitude: -84.2327 };
 const MAPS_CACHE = new Map();

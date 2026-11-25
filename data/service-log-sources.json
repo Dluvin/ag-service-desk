@@ -1,0 +1,58 @@
+{
+  "organizationMatch": "american irrigation|americus|heartland|demo-irrigation",
+  "googleAccount": "googlesheets_yellow-unsunk",
+  "driveAccount": "googledrive_ramate-fuze",
+  "sources": [
+    {
+      "store": "Moultrie",
+      "kind": "sheets",
+      "spreadsheetId": "13sRZ7f-gtRT540pq7KsSl14h1LXs6sVNSuTZf30OuQE",
+      "sheetTitle": "Irrig-Service Work",
+      "gid": 0,
+      "importScript": "import-moultrie-wo.cjs",
+      "csvName": "moultrie-wo-live.csv",
+      "notes": "American Irrig-Moultrie Service Log → Irrig-Service Work tab (gid=0)."
+    },
+    {
+      "store": "Live Oak",
+      "kind": "sheets",
+      "spreadsheetId": "1cw-ww5FTU5XMgV_h-G3O0vipyalhr36f3TJbVXZo_g8",
+      "sheetTitle": "JOB LOG",
+      "gid": 0,
+      "importScript": "import-live-oak-wo.cjs",
+      "csvName": "live-oak-wo-live.csv",
+      "headerRow": 2,
+      "notes": "TRI COUNTY JOB LOG; row 1 is legend, headers on row 2."
+    },
+    {
+      "store": "Fitzgerald",
+      "kind": "sheets",
+      "spreadsheetId": "1lK8q6BFz-cdXdwjLIG4PfqoCvuCWGEOZDfhRZI8Jguk",
+      "sheetTitle": "Sheet1",
+      "gid": 0,
+      "importScript": "import-fitzgerald-wo.cjs",
+      "csvName": "fitzgerald-wo-live.csv",
+      "notes": "SERVICE CALLS Sheet1."
+    },
+    {
+      "store": "Unadilla",
+      "kind": "xlsx",
+      "fileId": "1ui9dA_ifq3UJ1X8Vd14OX5m8H5FVLS5o",
+      "sheetTitle": "UNADILLA JOB LOG",
+      "gid": 1662327897,
+      "importScript": "import-unadilla-wo.cjs",
+      "csvName": "unadilla-wo-live.csv",
+      "notes": "Native .xlsx in Drive (not a Google Sheet). Download + parse UNADILLA JOB LOG."
+    },
+    {
+      "store": "Americus",
+      "kind": "sheets",
+      "spreadsheetId": "183p2yP9ViMqmJvGDH4YE0JB1EhocuPUt3PFCpr5_zyg",
+      "sheetTitle": "RBIA W/O",
+      "gid": 0,
+      "importScript": "import-rbia-wo-americus.cjs",
+      "csvName": "rbia-wo-live.csv",
+      "notes": "RBIA W/O tab."
+    }
+  ]
+}

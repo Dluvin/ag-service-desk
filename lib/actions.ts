@@ -32,7 +32,11 @@ import {
 } from "./roles";
 import { ticketSiteName } from "./ticket-site";
 import { openServiceTicket } from "./tickets";
-import { resolveTicketHelper } from "./ticket-helper";
+import {
+  parseHelperTechnicianIds,
+  resolveTicketHelper,
+  serializeHelperTechnicianIds,
+} from "./ticket-helper";
 import { INSPECTION_STATUS, STARTUP_CHECKS, STARTUP_SEASON_YEAR, checkLabel, ensureStartupTemplates, uniqueCheckKey } from "./startup";
 import { parseMapsLocation } from "./maps";
 import { parseAgSenseExport } from "./agsense";
@@ -1576,7 +1580,7 @@ export async function createTicketAction(formData: FormData) {
         leadTechnicianId: assigned,
         formData,
       })
-    : { helperTechnicianId: null as string | null };
+    : { helperTechnicianId: null as string | null, helperTechnicianIds: [] as string[] };
   if ("error" in helper) return helper;
 
   const siteFarmerId = pivot?.farmerId ?? asset!.farmerId;
@@ -1596,6 +1600,7 @@ export async function createTicketAction(formData: FormData) {
     assetId: asset?.id ?? null,
     technicianId: assigned,
     helperTechnicianId: helper.helperTechnicianId,
+    helperTechnicianIds: helper.helperTechnicianIds,
     storeId,
     userId: session.userId,
     title,
@@ -1680,9 +1685,10 @@ export async function editWorkOrderAction(formData: FormData) {
   if (!nextTech && nextStatus === "ASSIGNED") nextStatus = "OPEN";
 
   const previousTech = ticket.technicianId;
-  const previousHelper = ticket.helperTechnicianId;
+  const previousHelpers = parseHelperTechnicianIds(ticket.helperTechnicianIds, ticket.helperTechnicianId);
   const storeId = await resolveStoreId(session.organizationId, formString(formData, "storeId"));
   const scheduledAt = parseDateTimeLocal(formString(formData, "scheduledAt"));
+  const nextHelperIds = nextTech ? helper.helperTechnicianIds : [];
 
   await prisma.ticket.update({
     where: { id: ticket.id },
@@ -1694,7 +1700,8 @@ export async function editWorkOrderAction(formData: FormData) {
       pivotId: pivot?.id ?? null,
       assetId: asset?.id ?? null,
       technicianId: nextTech,
-      helperTechnicianId: helper.helperTechnicianId,
+      helperTechnicianId: nextHelperIds[0] ?? null,
+      helperTechnicianIds: serializeHelperTechnicianIds(nextHelperIds),
       status: nextStatus,
       storeId,
       scheduledAt,
@@ -1715,11 +1722,15 @@ export async function editWorkOrderAction(formData: FormData) {
       : null;
     notes.push(tech ? `technician to ${tech.name}` : "unassigned technician");
   }
-  if (helper.helperTechnicianId !== previousHelper) {
-    const helperUser = helper.helperTechnicianId
-      ? await prisma.user.findFirst({ where: { id: helper.helperTechnicianId }, select: { name: true } })
-      : null;
-    notes.push(helperUser ? `helper to ${helperUser.name}` : "helper to none");
+  if (nextHelperIds.join(",") !== previousHelpers.join(",")) {
+    if (!nextHelperIds.length) notes.push("helpers to none");
+    else {
+      const helpers = await prisma.user.findMany({
+        where: { id: { in: nextHelperIds } },
+        select: { name: true },
+      });
+      notes.push(`helpers to ${helpers.map((user) => user.name).join(", ")}`);
+    }
   }
   await prisma.ticketUpdate.create({
     data: {
@@ -1819,6 +1830,7 @@ export async function updateTicketAction(formData: FormData) {
     canAssignTickets(session.role)
       ? technicianId || null
       : ticket.technicianId;
+  const existingHelpers = parseHelperTechnicianIds(ticket.helperTechnicianIds, ticket.helperTechnicianId);
   const helper = canAssignTickets(session.role)
     ? await resolveTicketHelper({
         organizationId: session.organizationId,
@@ -1827,8 +1839,9 @@ export async function updateTicketAction(formData: FormData) {
         leadTechnicianId: nextTech,
         formData,
       })
-    : { helperTechnicianId: ticket.helperTechnicianId };
+    : { helperTechnicianId: ticket.helperTechnicianId, helperTechnicianIds: existingHelpers };
   if ("error" in helper) return helper;
+  const nextHelperIds = nextTech ? helper.helperTechnicianIds : [];
 
   const previousTech = ticket.technicianId;
   const previousStatus = ticket.status;
@@ -1837,7 +1850,8 @@ export async function updateTicketAction(formData: FormData) {
     data: {
       status,
       technicianId: nextTech,
-      helperTechnicianId: nextTech ? helper.helperTechnicianId : null,
+      helperTechnicianId: nextHelperIds[0] ?? null,
+      helperTechnicianIds: serializeHelperTechnicianIds(nextHelperIds),
       invoiceNumber: invoiceNumber || ticket.invoiceNumber,
       invoiceAmount: requiresInvoice(status) ? invoiceAmount : ticket.invoiceAmount,
       ...(formData.has("scheduledAt")
@@ -1915,6 +1929,7 @@ export async function assignTicketAction(formData: FormData) {
 
   const nextTech =
     canAssignTickets(session.role) ? technicianId || null : ticket.technicianId;
+  const existingHelpers = parseHelperTechnicianIds(ticket.helperTechnicianIds, ticket.helperTechnicianId);
   const helper = canAssignTickets(session.role)
     ? await resolveTicketHelper({
         organizationId: session.organizationId,
@@ -1923,7 +1938,7 @@ export async function assignTicketAction(formData: FormData) {
         leadTechnicianId: nextTech,
         formData,
       })
-    : { helperTechnicianId: ticket.helperTechnicianId };
+    : { helperTechnicianId: ticket.helperTechnicianId, helperTechnicianIds: existingHelpers };
   if ("error" in helper) return helper;
   let nextStatus: string = TICKET_STATUSES.includes(status as TicketStatus) ? status : ticket.status;
   if (nextTech && nextStatus === "OPEN") nextStatus = "ASSIGNED";
@@ -1934,11 +1949,13 @@ export async function assignTicketAction(formData: FormData) {
 
   const previousTech = ticket.technicianId;
   const previousStatus = ticket.status;
+  const nextHelperIds = nextTech ? helper.helperTechnicianIds : [];
   await prisma.ticket.update({
     where: { id: ticketId },
     data: {
       technicianId: nextTech,
-      helperTechnicianId: nextTech ? helper.helperTechnicianId : null,
+      helperTechnicianId: nextHelperIds[0] ?? null,
+      helperTechnicianIds: serializeHelperTechnicianIds(nextHelperIds),
       status: nextStatus,
     },
   });

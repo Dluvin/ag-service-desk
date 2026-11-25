@@ -259,7 +259,7 @@ export const REST_EN = {
   "staff.admins": "Admins",
   "staff.managers": "Managers",
   "staff.salespeople": "Sales people",
-  "staff.techLeads": "Tech leads",
+  "staff.techLeads": "Lead Technicians",
   "staff.clerical": "Office/Clerical",
   "staff.technicians": "Technicians",
   "staff.add": "Add staff",

@@ -15,6 +15,7 @@ export async function openServiceTicket(input: {
   assetId?: string | null;
   technicianId: string | null;
   helperTechnicianId?: string | null;
+  helperTechnicianIds?: string[] | null;
   storeId?: string | null;
   userId: string;
   title: string;
@@ -24,6 +25,12 @@ export async function openServiceTicket(input: {
 }) {
   const number = await nextTicketNumber(input.organizationId);
   const status = input.technicianId ? "ASSIGNED" : "OPEN";
+  const helperIds =
+    input.technicianId && input.helperTechnicianIds?.length
+      ? [...new Set(input.helperTechnicianIds.filter(Boolean))]
+      : input.technicianId && input.helperTechnicianId
+        ? [input.helperTechnicianId]
+        : [];
   return prisma.ticket.create({
     data: {
       organizationId: input.organizationId,
@@ -31,7 +38,8 @@ export async function openServiceTicket(input: {
       pivotId: input.pivotId ?? null,
       assetId: input.assetId ?? null,
       technicianId: input.technicianId,
-      helperTechnicianId: input.technicianId ? (input.helperTechnicianId ?? null) : null,
+      helperTechnicianId: helperIds[0] ?? null,
+      helperTechnicianIds: helperIds.length ? JSON.stringify(helperIds) : null,
       storeId: input.storeId ?? null,
       number,
       title: input.title,

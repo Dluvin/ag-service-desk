@@ -138,8 +138,10 @@ const EN_UI = {
 
   "dispatch.title": "Dispatch board",
   "dispatch.create": "Create work order",
-  "dispatch.listHelp": "All work orders in one list. Filter by status, hide completed, assign a technician, and see open work on the map. Filter by store to work one shop at a time.",
-  "dispatch.tilesHelp": "Open work by status, assign a technician, and see every open work order on the map. Filter by store to work one shop at a time.",
+  "dispatch.listHelp":
+    "All work orders in one list. Filter by status, hide completed, assign a lead and optional helpers (multiple allowed), and see open work on the map. Filter by store to work one shop at a time.",
+  "dispatch.tilesHelp":
+    "Open work by status, assign a lead and optional helpers (check multiple), and see every open work order on the map. Filter by store to work one shop at a time.",
   "dispatch.status": "Status",
   "dispatch.hideCompleted": "Hide completed",
   "dispatch.mapTitle": "Open work orders map",
@@ -207,7 +209,8 @@ const EN_UI = {
 
   "ticket.newTitle": "New work order",
   "ticket.requestTitle": "Request service",
-  "ticket.newHelp": "Pick a customer, choose the asset type (pivot is the default), then pick that asset. You can still add a new asset if needed.",
+  "ticket.newHelp":
+    "Pick a customer, choose the asset type (pivot is the default), then pick that asset. Assign a lead technician and optional helpers — you can check more than one. You can still add a new asset if needed.",
   "ticket.edit": "Edit work order",
   "ticket.editTitle": "Edit work order #{number}",
   "ticket.editHelp": "Change the customer, asset, title, priority, store, technician, or schedule. Status only changes if you assign or unassign a technician.",
@@ -216,10 +219,12 @@ const EN_UI = {
   "ticket.description": "Description",
   "ticket.priority": "Priority",
   "ticket.assignTech": "Assign Lead Technician",
-  "ticket.helperTech": "Technician helper",
+  "ticket.helperTech": "Technician helpers",
+  "ticket.helperTechHelp":
+    "After choosing a lead, select None or check one or more helpers who will assist on this work order. You can select multiple technicians.",
   "ticket.addHelperTech": "Add new technician…",
-  "ticket.helperWith": "Helper: {name}",
-  "ticket.helperNone": "Helper: none",
+  "ticket.helperWith": "Helpers: {name}",
+  "ticket.helperNone": "Helpers: none",
   "ticket.number": "Work order #{number}",
   "ticket.maps": "Open in Google Maps",
   "ticket.invoice": "Invoice {number}",
@@ -455,8 +460,10 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
 
   "dispatch.title": "Tablero de despacho",
   "dispatch.create": "Crear orden de trabajo",
-  "dispatch.listHelp": "Todas las órdenes en una lista. Filtre por estado, oculte las completadas, asigne un técnico y vea el trabajo abierto en el mapa. Filtre por tienda para un taller a la vez.",
-  "dispatch.tilesHelp": "Trabajo abierto por estado, asigne un técnico y vea cada orden abierta en el mapa. Filtre por tienda para un taller a la vez.",
+  "dispatch.listHelp":
+    "Todas las órdenes en una lista. Filtre por estado, oculte las completadas, asigne un líder y ayudantes opcionales (varios permitidos) y vea el trabajo abierto en el mapa. Filtre por tienda para un taller a la vez.",
+  "dispatch.tilesHelp":
+    "Trabajo abierto por estado, asigne un líder y ayudantes opcionales (puede marcar varios) y vea cada orden abierta en el mapa. Filtre por tienda para un taller a la vez.",
   "dispatch.status": "Estado",
   "dispatch.hideCompleted": "Ocultar completadas",
   "dispatch.mapTitle": "Mapa de órdenes abiertas",
@@ -526,7 +533,8 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
 
   "ticket.newTitle": "Nueva orden de trabajo",
   "ticket.requestTitle": "Pedir servicio",
-  "ticket.newHelp": "Elija un cliente, el tipo de activo (el pivote es el predeterminado) y luego el equipo. Puede agregar un activo nuevo si hace falta.",
+  "ticket.newHelp":
+    "Elija un cliente, el tipo de activo (el pivote es el predeterminado) y luego el equipo. Asigne un técnico líder y ayudantes opcionales — puede marcar más de uno. Puede agregar un activo nuevo si hace falta.",
   "ticket.edit": "Editar orden",
   "ticket.editTitle": "Editar orden #{number}",
   "ticket.editHelp": "Cambie el cliente, el activo, el título, la prioridad, la tienda, el técnico o la fecha. El estado solo cambia si asigna o desasigna un técnico.",
@@ -535,10 +543,12 @@ const ES_UI: Record<keyof typeof EN_UI, string> = {
   "ticket.description": "Descripción",
   "ticket.priority": "Prioridad",
   "ticket.assignTech": "Asignar técnico líder",
-  "ticket.helperTech": "Técnico ayudante",
+  "ticket.helperTech": "Técnicos ayudantes",
+  "ticket.helperTechHelp":
+    "Después de elegir al líder, seleccione Ninguno o marque uno o más ayudantes para esta orden. Puede seleccionar varios técnicos.",
   "ticket.addHelperTech": "Agregar técnico nuevo…",
-  "ticket.helperWith": "Ayudante: {name}",
-  "ticket.helperNone": "Ayudante: ninguno",
+  "ticket.helperWith": "Ayudantes: {name}",
+  "ticket.helperNone": "Ayudantes: ninguno",
   "ticket.number": "Orden de trabajo #{number}",
   "ticket.maps": "Abrir en Google Maps",
   "ticket.invoice": "Factura {number}",

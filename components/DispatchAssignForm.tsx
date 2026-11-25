@@ -7,7 +7,7 @@ import { statusLabel, t, type Locale } from "@/lib/i18n";
 export function DispatchAssignForm({
   ticketId,
   technicianId,
-  helperTechnicianId,
+  helperTechnicianIds,
   status,
   canAssign,
   technicians,
@@ -16,7 +16,7 @@ export function DispatchAssignForm({
 }: {
   ticketId: string;
   technicianId: string | null;
-  helperTechnicianId: string | null;
+  helperTechnicianIds: string[];
   status: string;
   canAssign: boolean;
   technicians: { id: string; name: string }[];
@@ -29,12 +29,13 @@ export function DispatchAssignForm({
       <TicketTechnicianFields
         technicians={technicians}
         defaultTechnicianId={technicianId}
-        defaultHelperTechnicianId={technicianId ? (helperTechnicianId ?? null) : undefined}
+        defaultHelperTechnicianIds={technicianId ? helperTechnicianIds : undefined}
         canAssign={canAssign}
         canAdd={canAddTechnicians(actorRole)}
         compact
         leadLabel={t(locale, "ticket.technician")}
         helperLabel={t(locale, "ticket.helperTech")}
+        helperHelp={t(locale, "ticket.helperTechHelp")}
         unassignedLabel={t(locale, "common.unassigned")}
         noneLabel={t(locale, "common.none")}
         addNewLabel={t(locale, "ticket.addHelperTech")}

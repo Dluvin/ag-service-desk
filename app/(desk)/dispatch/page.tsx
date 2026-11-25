@@ -27,6 +27,7 @@ import { loadOrgPlan } from "@/lib/org-plan";
 import { getRequestLocale } from "@/lib/user-locale";
 import { statusLabel, t } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
+import { parseHelperTechnicianIds } from "@/lib/ticket-helper";
 
 export default async function DispatchPage({
   searchParams,
@@ -133,7 +134,10 @@ export default async function DispatchPage({
                   <DispatchAssignForm
                     ticketId={ticket.id}
                     technicianId={ticket.technicianId}
-                    helperTechnicianId={ticket.helperTechnicianId}
+                    helperTechnicianIds={parseHelperTechnicianIds(
+                      ticket.helperTechnicianIds,
+                      ticket.helperTechnicianId,
+                    )}
                     status={ticket.status}
                     canAssign={canAssign}
                     technicians={technicians}

@@ -15,6 +15,7 @@ import { priorityLabel, t } from "@/lib/i18n";
 import { assetWhere, loadTechnicians, pivotWhere, ticketWhere } from "@/lib/scope";
 import { ensureAssetTypes } from "@/lib/assets";
 import { resolvedTicketStoreId } from "@/lib/stores";
+import { parseHelperTechnicianIds } from "@/lib/ticket-helper";
 
 export default async function EditTicketPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -136,11 +137,16 @@ export default async function EditTicketPage({ params }: { params: Promise<{ id:
         <TicketTechnicianFields
           technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name }))}
           defaultTechnicianId={ticket.technicianId}
-          defaultHelperTechnicianId={ticket.technicianId ? (ticket.helperTechnicianId ?? null) : undefined}
+          defaultHelperTechnicianIds={
+            ticket.technicianId
+              ? parseHelperTechnicianIds(ticket.helperTechnicianIds, ticket.helperTechnicianId)
+              : undefined
+          }
           canAssign
           canAdd={canAddTechnicians(session.role)}
           leadLabel={t(locale, "ticket.assignTech")}
           helperLabel={t(locale, "ticket.helperTech")}
+          helperHelp={t(locale, "ticket.helperTechHelp")}
           unassignedLabel={t(locale, "common.unassigned")}
           noneLabel={t(locale, "common.none")}
           addNewLabel={t(locale, "ticket.addHelperTech")}

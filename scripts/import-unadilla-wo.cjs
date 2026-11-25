@@ -12,7 +12,9 @@ const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
-const CSV_PATH = path.join(__dirname, "..", "data", "unadilla-wo-6mo.csv");
+const CSV_PATH = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.join(__dirname, "..", "data", "unadilla-wo-6mo.csv");
 const STORE_NAME = "Unadilla";
 const DEFAULT_COORDS = { latitude: 32.2596, longitude: -83.7366 };
 const MAPS_CACHE = new Map();

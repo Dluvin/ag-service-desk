@@ -91,8 +91,8 @@ export default async function StaffPage({
         ) : null}
         <p className="mt-1 text-sm text-stone-600">
           {session.role === ROLES.ADMIN
-            ? "Add and edit company admins, managers, sales people, tech leads, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."
-            : "Add and edit managers, sales people, tech leads, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."}{" "}
+            ? "Add and edit company admins, managers, sales people, lead technicians, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."
+            : "Add and edit managers, sales people, lead technicians, office/clerical, and technicians. Assign a default store so new work orders they open start at that shop."}{" "}
           Customer logins stay on the Customers page.
         </p>
         <WelcomeMailNotice status={query.welcome} />

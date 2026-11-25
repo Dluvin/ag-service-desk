@@ -370,6 +370,8 @@ model Ticket {
   technician     User?         @relation("TechnicianTickets", fields: [technicianId], references: [id], onDelete: SetNull)
   helperTechnicianId String?
   helperTechnician   User?     @relation("HelperTickets", fields: [helperTechnicianId], references: [id], onDelete: SetNull)
+  /** JSON array of helper technician user IDs (multi-helper). First id mirrors helperTechnicianId. */
+  helperTechnicianIds String?
   storeId        String?
   store          Store?        @relation(fields: [storeId], references: [id], onDelete: SetNull)
   number         Int

@@ -12,7 +12,9 @@ const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
-const CSV_PATH = path.join(__dirname, "..", "data", "live-oak-wo-6mo.csv");
+const CSV_PATH = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.join(__dirname, "..", "data", "live-oak-wo-6mo.csv");
 const STORE_NAME = "Live Oak";
 const DEFAULT_COORDS = { latitude: 30.2947, longitude: -82.9843 };
 const MAPS_CACHE = new Map();

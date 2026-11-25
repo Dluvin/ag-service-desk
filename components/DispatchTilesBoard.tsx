@@ -6,6 +6,7 @@ import { ticketStoreName } from "@/lib/stores";
 import { ticketSiteName } from "@/lib/ticket-site";
 import { formatSchedule } from "@/lib/schedule";
 import { statusLabel, t, type Locale } from "@/lib/i18n";
+import { parseHelperTechnicianIds } from "@/lib/ticket-helper";
 
 type TileTicket = {
   id: string;
@@ -15,6 +16,7 @@ type TileTicket = {
   status: string;
   technicianId: string | null;
   helperTechnicianId: string | null;
+  helperTechnicianIds: string | null;
   scheduledAt: Date | null;
   farmer: { name: string; store: { name: string } | null };
   pivot: { name: string } | null;
@@ -66,7 +68,10 @@ export function DispatchTilesBoard({
                   <DispatchAssignForm
                     ticketId={ticket.id}
                     technicianId={ticket.technicianId}
-                    helperTechnicianId={ticket.helperTechnicianId}
+                    helperTechnicianIds={parseHelperTechnicianIds(
+                      ticket.helperTechnicianIds,
+                      ticket.helperTechnicianId,
+                    )}
                     status={ticket.status}
                     canAssign={canAssign}
                     technicians={technicians}

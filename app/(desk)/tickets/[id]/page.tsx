@@ -33,6 +33,8 @@ import { visionOcrConfigured } from "@/lib/ticket-ocr";
 import { orgOcrIsOn, orgQbwcIsOn } from "@/lib/ocr-samples";
 import { ticketSite } from "@/lib/ticket-site";
 import { ticketQuickBooksCustomer } from "@/lib/qbwc-xml";
+import { parseHelperTechnicianIds } from "@/lib/ticket-helper";
+import { HELPER_NONE } from "@/lib/ticket-helper-constants";
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession();
@@ -69,8 +71,20 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   if (!ticket) notFound();
   const site = ticketSite(ticket);
   const qbCustomer = ticketQuickBooksCustomer(ticket);
+  const helperIds = parseHelperTechnicianIds(ticket.helperTechnicianIds, ticket.helperTechnicianId);
 
   const technicians = canAssignTickets(session.role) ? await loadTechnicians(session.organizationId) : [];
+  const helperTechs =
+    helperIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: helperIds }, organizationId: session.organizationId },
+          select: { id: true, name: true },
+        })
+      : [];
+  const helperNameById = new Map(helperTechs.map((tech) => [tech.id, tech.name]));
+  const helperNames = helperIds
+    .map((id) => helperNameById.get(id))
+    .filter((name): name is string => Boolean(name));
   const canDispatch = isShopStaff(session.role);
   const stores = canDispatch
     ? await prisma.store.findMany({
@@ -192,8 +206,8 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           )}
           {" · "}
           {ticket.technician ? t(locale, "ticket.assignedTo", { name: ticket.technician.name }) : t(locale, "common.unassigned")}
-          {ticket.helperTechnician
-            ? ` · ${t(locale, "ticket.helperWith", { name: ticket.helperTechnician.name })}`
+          {helperNames.length
+            ? ` · ${t(locale, "ticket.helperWith", { name: helperNames.join(", ") })}`
             : ticket.technician
               ? ` · ${t(locale, "ticket.helperNone")}`
               : ""}
@@ -240,13 +254,12 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                     <TicketTechnicianFields
                       technicians={technicians.map((tech) => ({ id: tech.id, name: tech.name }))}
                       defaultTechnicianId={ticket.technicianId}
-                      defaultHelperTechnicianId={
-                        ticket.technicianId ? (ticket.helperTechnicianId ?? null) : undefined
-                      }
+                      defaultHelperTechnicianIds={ticket.technicianId ? helperIds : undefined}
                       canAssign={canAssignTickets(session.role)}
                       canAdd={canAddTechnicians(session.role)}
                       leadLabel={t(locale, "ticket.technician")}
                       helperLabel={t(locale, "ticket.helperTech")}
+                      helperHelp={t(locale, "ticket.helperTechHelp")}
                       unassignedLabel={t(locale, "common.unassigned")}
                       noneLabel={t(locale, "common.none")}
                       addNewLabel={t(locale, "ticket.addHelperTech")}
@@ -254,7 +267,9 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                   ) : (
                     <>
                       <input type="hidden" name="technicianId" value={ticket.technicianId ?? ""} />
-                      <input type="hidden" name="helperTechnicianId" value={ticket.helperTechnicianId ?? ""} />
+                      {(helperIds.length ? helperIds : ticket.technicianId ? [HELPER_NONE] : []).map((id) => (
+                        <input key={id} type="hidden" name="helperTechnicianIds" value={id} />
+                      ))}
                     </>
                   )}
                 </>
